@@ -14,8 +14,12 @@ TPSAInterface = "575459ea-959c-4603-9b15-d63fb6693033"
 TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 
 [compat]
+BeamTracking = "0.2"
+Beamlines = "0.4"
 DataFrames = "1.7.0"
-LinearAlgebra = "1.11.0"
+GTPSA = "1.4.7"
+NonlinearNormalForm = "0.2"
+TPSAInterface = "0.2"
 TypedTables = "1.4.6"
 julia = "1.9"
 
