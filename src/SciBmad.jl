@@ -334,16 +334,20 @@ include("track.jl")
     t = twiss(fodo)
     co = find_closed_orbit(fodo)
     v0 = co.u
+    D2 = Descriptor(6, 2)
     dv = @vars(D2)
     v0 = zeros(6) 
     v = v0 + dv  
+    b0 = Bunch(v)
+    track!(b0, fodo) 
     m = DAMap(v=b0.coords.v)
     a = normal(m)
+    ai = inv(a)
+    r = ai * m * a
     c = c_map(m)
     ci = inv(c)
     r_phasor = ci * r * c
     ADT = real(-log(par(r_phasor.v[1], 1))/(2*pi*im))
-    ADT
   end
 end
 
