@@ -336,7 +336,7 @@ include("track.jl")
     v0 = zeros(6) 
     v = v0 + dv  
     b0 = Bunch(v)
-    BTBL.check_bl_bunch!(bl, b0, false) 
+    BTBL.check_bl_bunch!(fodo, b0, false) 
     track!(b0, fodo) 
     m = DAMap(v=b0.coords.v)
     a = normal(m)
