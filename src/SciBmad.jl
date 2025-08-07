@@ -324,7 +324,6 @@ include("track.jl")
     qd = Quadrupole(Kn1=DefExpr(() -> -K1), L=0.5);
     sd = Sextupole(Kn2=DefExpr(() -> -K2), L=0.2);
 
-
     fodo_line = [qf, sf, d, b, d, qd, sd, d, b, d];
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
 
@@ -332,13 +331,12 @@ include("track.jl")
     qf.Kn1
     qd.Kn1
     t = twiss(fodo)
-    co = find_closed_orbit(fodo)
-    v0 = co.u
     D2 = Descriptor(6, 2)
     dv = @vars(D2)
     v0 = zeros(6) 
     v = v0 + dv  
     b0 = Bunch(v)
+    BTBL.check_bl_bunch!(bl, b0, false) 
     track!(b0, fodo) 
     m = DAMap(v=b0.coords.v)
     a = normal(m)
