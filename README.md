@@ -1,5 +1,4 @@
 # SciBmad
-
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bmad-sim.github.io/SciBmad.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bmad-sim.github.io/SciBmad.jl/dev/)
 [![Build Status](https://github.com/bmad-sim/SciBmad.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bmad-sim/SciBmad.jl/actions/workflows/CI.yml?query=branch%3Amain)
@@ -52,4 +51,5 @@ SciBmad is a new open source, high-performance, polymorphic, and differentiable 
 - **[`NonlinearNormalForm.jl`](https://github.com/bmad-sim/NonlinearNormalForm.jl):** Map-based perturbation theory of differential-algebraic maps, which may include spin and large damping, using Lie algebraic methods
 - **[`AtomicAndPhysicalConstants.jl`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl):** Library providing physical constants and properties for any atomic or subatomic particle, in units chosen by the user, for use in simulations
 
-SciBmad can be easily used from within Python via the [`juliacall`](https://juliapy.github.io/PythonCall.jl/stable/juliacall) package.
+Users are pointed to example Jupyter notebooks in both Julia and Python in the [examples directory](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples).
+
