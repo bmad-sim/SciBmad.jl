@@ -5,6 +5,7 @@
 [![Coverage](https://codecov.io/gh/bmad-sim/SciBmad.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bmad-sim/SciBmad.jl)
 
 ```julia
+import Pkg; Pkg.add("https://github.com/bmad-sim/SciBmad.jl")
 using SciBmad
 
 qf = Quadrupole(Kn1=0.36, L=0.5)
@@ -34,13 +35,6 @@ Kn1 = 0.34 # "Updates" all quadrupoles
 b0 = Bunch([1e-3 0 0 0 0 0])
 track!(b0, ring)
 # b0.v contains coordinates after 1-turn
-
-# Forward and backward differentiable
-using DifferentiationInterface: DifferentiationInterface as DI
-using ForwardDiff, ReverseDiff
-
-
-
 ```
 
 SciBmad is a new open source, high-performance, polymorphic, and differentiable accelerator physics simulation ecosystem, consisting of a set of modular packages:
