@@ -6,7 +6,7 @@
 [![Coverage](https://codecov.io/gh/bmad-sim/SciBmad.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bmad-sim/SciBmad.jl)
 !-->
 
-SciBmad is a new open source, high-performance, polymorphic, and forwards/backwards/Taylor differentiable accelerator physics simulation ecosystem, consisting of a set of modular packages:
+SciBmad is a new open source, high-performance, polymorphic, and forwards-/backwards-/Taylor-differentiable accelerator physics simulation ecosystem, consisting of a set of modular packages:
 
 - **[`BeamTracking.jl`](https://github.com/bmad-sim/BeamTracking.jl):** Universally polymorphic, differentiable, portable, and parallelized integrators for simulating charged particle beams on the CPU and various GPUs including NVIDIA CUDA, Apple Metal, Intel oneAPI, and AMD ROCm
 - **[`GTPSA.jl`](https://github.com/bmad-sim/GTPSA.jl):** Fast high-order (Taylor mode) automatic differentiation using the Generalised Truncated Power Series Algebra (GTPSA) library
