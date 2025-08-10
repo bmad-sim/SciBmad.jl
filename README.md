@@ -6,11 +6,11 @@
 [![Coverage](https://codecov.io/gh/bmad-sim/SciBmad.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bmad-sim/SciBmad.jl)
 !-->
 
-SciBmad is a new open source, high-performance, polymorphic, and differentiable accelerator physics simulation ecosystem, consisting of a set of modular packages:
+SciBmad is a new open source, high-performance, polymorphic, and forwards/backwards/Taylor differentiable accelerator physics simulation ecosystem, consisting of a set of modular packages:
 
 - **[`BeamTracking.jl`](https://github.com/bmad-sim/BeamTracking.jl):** Universally polymorphic, differentiable, portable, and parallelized integrators for simulating charged particle beams on the CPU and various GPUs including NVIDIA CUDA, Apple Metal, Intel oneAPI, and AMD ROCm
 - **[`GTPSA.jl`](https://github.com/bmad-sim/GTPSA.jl):** Fast high-order (Taylor mode) automatic differentiation using the Generalised Truncated Power Series Algebra (GTPSA) library
-- **[`Beamlines.jl`](https://github.com/bmad-sim/Beamlines.jl):** Defines advanced accelerator lattices in a fast, flexible, fully-polymorphic, and differentiable way, providing both eagerly- and lazily-evaluated deferred expressions for interdependent parameters
+- **[`Beamlines.jl`](https://github.com/bmad-sim/Beamlines.jl):** Defines accelerator lattices in a fast, flexible, fully-polymorphic, and differentiable way, providing both eagerly- and lazily-evaluated deferred expressions for interdependent parameters
 - **[`NonlinearNormalForm.jl`](https://github.com/bmad-sim/NonlinearNormalForm.jl):** Map-based perturbation theory of differential-algebraic maps, which may include spin and large damping, using Lie algebraic methods
 - **[`AtomicAndPhysicalConstants.jl`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl):** Library providing physical constants and properties for any atomic or subatomic particle, in units chosen by the user, for use in simulations
 
