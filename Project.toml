@@ -20,7 +20,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 
 [compat]
-AtomicAndPhysicalConstants = "0.7.1"
+AtomicAndPhysicalConstants = "0.7.1, 0.8"
 BeamTracking = "0.3.0"
 Beamlines = "0.6.1"
 DifferentiationInterface = "0.7.4"
