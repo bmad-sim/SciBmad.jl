@@ -305,6 +305,11 @@ include("newton.jl")
     marker = Marker(); # nothing
     fodo_line = [qf, sf, d1, b, d2, qd, sd, d1, b, d2, rf, thin, marker, d3];
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
+    # Track scalars
+    b0s = Bunch(rand(4,6));
+    BTBL.check_bl_bunch!(fodo, b0s, false); # Do not notify
+    track!(b0s, fodo);
+    # twiss + normal
     co = find_closed_orbit(fodo);
     d2 = Descriptor(6, 2);
     b0 = Bunch(vars(d2));
