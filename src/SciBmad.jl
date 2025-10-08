@@ -1,29 +1,24 @@
 module SciBmad
 
-using LinearAlgebra,
+using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
+using Reexport
+
+@recompile_invalidations begin
+  using NonlinearNormalForm: NonlinearNormalForm as NNF
+  using DifferentiationInterface: DifferentiationInterface as DI
+  using LinearAlgebra,
       TypedTables,
-      Reexport,
       StaticArrays,
       ForwardDiff,
       RecursiveArrayTools
-
-using DifferentiationInterface: DifferentiationInterface as DI
-using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
-
-using BeamTracking
-@reexport using Beamlines
-@reexport using NonlinearNormalForm
-@reexport using GTPSA
-@reexport using AtomicAndPhysicalConstants
-using NonlinearNormalForm: NonlinearNormalForm as NNF
-#global BTBL
-const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
-# BeamTrackingBeamlinesExt
-#=
-@recompile_invalidations begin
-
+  using BeamTracking
+  @reexport using Beamlines
+  @reexport using NonlinearNormalForm
+  @reexport using GTPSA
+  @reexport using AtomicAndPhysicalConstants
 end
-=#
+
+const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
 export twiss, find_closed_orbit, track!
 
@@ -311,8 +306,19 @@ include("newton.jl")
     fodo_line = [qf, sf, d1, b, d2, qd, sd, d1, b, d2, rf, thin, marker, d3];
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
     co = find_closed_orbit(fodo);
+    d2 = Descriptor(6, 2);
+    b0 = Bunch(vars(d2));
+    BTBL.check_bl_bunch!(fodo, b0, false); # Do not notify
+    track!(b0, fodo);
+    m = DAMap(v=b0.coords.v);
+    a = normal(m);
+    # Coast:
     rf.voltage = 0;
     co = find_closed_orbit(fodo);
+    b0.coords.v .= vars(d2)';
+    track!(b0, fodo);
+    m = DAMap(v=b0.coords.v);
+    a = normal(m);
     t = twiss(fodo);
   end
 end
