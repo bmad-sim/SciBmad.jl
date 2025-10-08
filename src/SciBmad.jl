@@ -4,115 +4,98 @@ using LinearAlgebra,
       TypedTables,
       Reexport,
       StaticArrays,
-      NonlinearSolve,
       ForwardDiff,
-      RecursiveArrayTools,
-      BeamTracking
+      RecursiveArrayTools
 
+using DifferentiationInterface: DifferentiationInterface as DI
+using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
+
+using BeamTracking
 @reexport using Beamlines
 @reexport using NonlinearNormalForm
 @reexport using GTPSA
-
+@reexport using AtomicAndPhysicalConstants
 using NonlinearNormalForm: NonlinearNormalForm as NNF
-using DifferentiationInterface: DifferentiationInterface as DI
-using PrecompileTools: @setup_workload, @compile_workload 
-
-# Put AtomicAndPhysicalConstants in a box for now for safety
-include("Constants.jl")
-using .Constants: Constants, Species, massof, chargeof, C_LIGHT, isnullspecies
-export Species
-
-# BeamTrackingBeamlinesExt
+#global BTBL
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
+# BeamTrackingBeamlinesExt
+#=
+@recompile_invalidations begin
+
+end
+=#
 
 export twiss, find_closed_orbit, track!
 
-function track_a_particle!(coords, coords0, p; use_KA=false, use_explicit_SIMD=false)
-  _bl = p[1]
+function fast_coast_check(bl; use_KA=false, use_explicit_SIMD=false)
+  # Just check if dpz/dz == 0
+  coords = @MVector [ForwardDiff.Dual(0.,0.),
+                     ForwardDiff.Dual(0.,0.),
+                     ForwardDiff.Dual(0.,0.),
+                     ForwardDiff.Dual(0.,0.),
+                     ForwardDiff.Dual(0.,1.),
+                     ForwardDiff.Dual(0.,0.)]
+  b0 = Bunch(coords)
+  BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
+  track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD)
+  return b0.coords.v[1,6].partials[1] == 0 # true if coasting, false if not
+end
+
+function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false)
   coords .= coords0
   b0 = Bunch(reshape(coords, (1,6)))
-  BTBL.check_bl_bunch!(_bl, b0, false) # Do not notify
-  track!(b0, _bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD)
+  BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
+  track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD)
   return coords
 end
 
-coast_check(t,p) = track_a_particle!(t, t, p; use_KA=false, use_explicit_SIMD=false)[6]
 
-function find_closed_orbit(bl::Beamline; solver=nothing, reltol=1e-8, abstol=1e-11)
+function _co_res!(y, x, bl)
+  track_a_particle!(y, x, bl)
+  return y .= y .- x
+end
+
+function _co_res_coast!(y, x, bl)
+  track_a_particle!(
+    ArrayPartition(y, MVector{2,eltype(y)}(0,0)), 
+    SA[x[1], x[2], x[3], x[4], 0, 0],
+    bl
+  )
+  return y .= y .- x
+end
+
+const CLOSED_ORBIT_FORWARDDIFF_PREP = (
+  x = @MVector zeros(6);
+  y = @MVector zeros(6);
+  bl = Beamline([LineElement()]);
+  DI.prepare_jacobian(_co_res!, y, DI.AutoForwardDiff(), x, DI.Constant(bl))
+)
+
+const CLOSED_ORBIT_FORWARDDIFF_PREP_COAST = (
+  x = view(@MVector(zeros(6)), 1:4);
+  y = view(@MVector(zeros(6)), 1:4);
+  bl = Beamline([LineElement()]);
+  DI.prepare_jacobian(_co_res_coast!, y, DI.AutoForwardDiff(), x, DI.Constant(bl))
+)
+
+function find_closed_orbit(
+  bl::Beamline; 
+  v0=zero(MVector{6,Float64}), 
+  abstol=1e-11, 
+  max_iter=100, 
+  #backend=DI.AutoForwardDiff()
+)
   # First check if coasting, for this push a particle starting at 0 and see if
   # delta is a parameter
-  x = zero(MVector{6,Float64})
-  grad = zero(MVector{6,Float64})
-  prep = DI.prepare_gradient(coast_check, AutoForwardDiff(chunksize=6), x, DI.Constant((bl,)))
-  DI.gradient!(coast_check, grad, prep, AutoForwardDiff(chunksize=6), x, DI.Constant((bl,)))
-  if all(view(grad, 1:5) .≈ 0) && grad[6] ≈ 1
-    coast = Val{true}()
-  else
-    coast = Val{false}()
-  end
-  return @noinline _find_closed_orbit(coast, bl, solver, reltol, abstol)
-end
-
-function _find_closed_orbit(coast::Val{true}, bl, solver, reltol, abstol)
-  prob = NonlinearProblem{true}(zero(MVector{4,Float64}), (bl,)) do u, u0, p
-    track_a_particle!(ArrayPartition(u,MVector{2,eltype(u)}(0,0)), SA[u0[1], u0[2], u0[3], u0[4], 0, 0], p; use_KA=false, use_explicit_SIMD=false)
-    u .= u .- u0
-  end
-  if isnothing(solver)
-    solver = SimpleHalley(autodiff=AutoForwardDiff(chunksize = NonlinearSolve.pickchunksize(prob.u0)))
-  end
-  sol = solve(prob, solver; reltol=reltol, abstol=abstol)
-  return sol
-end
-
-function _find_closed_orbit(coast::Val{false}, bl, solver, reltol, abstol)
-  prob = NonlinearProblem{true}(zeros(6), (bl,)) do u, u0, p
-    track_a_particle!(u, u0, p; use_KA=false, use_explicit_SIMD=false)
-    u .= u .- u0
-  end
-  if isnothing(solver)
-    solver = SimpleHalley(autodiff=AutoForwardDiff(chunksize = NonlinearSolve.pickchunksize(prob.u0)))
-  end
-  sol = solve(prob, solver; reltol=reltol, abstol=abstol)
-  return sol
-end
-
-
-#=
-function find_closed_orbit(bl::Beamline; ftol=1e-13, autodiff=:forward, method=:newton, options...)
-  function track_a_particle!(coords, coords0=coords; track_options...)
-    coords .= coords0
-    b0 = Bunch(reshape(coords, (1,6)))
-    BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
-    track!(b0, bl; track_options...)
-    return coords
-  end
-  
-  # First check if coasting
-  grad = DI.gradient(t->track_a_particle!(t)[6], AutoForwardDiff(), zeros(6))
-  if all(view(grad, 1:5) .≈ 0) && grad[6] ≈ 1
-    coast = true
-  else
-    coast = false
-  end
-
+  v = zero(v0)
+  coast = fast_coast_check(bl)
   if coast
-    sol = fixedpoint(zeros(4); ftol=ftol, autodiff=autodiff, method=method, options...) do c, c0
-      track_a_particle!(ArrayPartition(c,eltype(c)[0,0]), SA[c0[1], c0[2], c0[3], c0[4], 0, 0], use_KA=false, use_explicit_SIMD=false)
-    end
-    #optf = OptimizationFunction((t,p)->sum(abs2, view(track_a_particle!([t[1],t[2],t[3],t[4],0,0]), 1:4) .- t), AD_backend)
-    #optprob = OptimizationProblem(optf, zeros(4))
-    #sol = solve(optprob, Optimization.LBFGS(); options...)
+    newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; prep=CLOSED_ORBIT_FORWARDDIFF_PREP_COAST)
   else
-    sol = fixedpoint(track_a_particle!, zeros(6); ftol=ftol, autodiff=autodiff, method=method, options...)
-    #optf = OptimizationFunction((t,p)->sum(abs2, track_a_particle!(collect(t)) .- t), AD_backend)
-    #optprob = OptimizationProblem(optf, zeros(6))
-    #sol = solve(optprob, Optimization.LBFGS(); options...)
+    newton!(_co_res!, v, v0, bl; prep=CLOSED_ORBIT_FORWARDDIFF_PREP)
   end
-
-  return sol
+  return v, coast
 end
-=#
 
 # Returns a Table of the Twiss parameters
 # See Eq. 4.28 in EBB
@@ -120,24 +103,20 @@ function twiss(
   bl::Beamline; 
   GTPSA_descriptor=Descriptor(6, 1), # GTPSA.desc_current, 
   de_moivre=false,
-  closed_orbit=find_closed_orbit(bl).u)
+  co_info=find_closed_orbit(bl)
+)
+  v0 = co_info[1]
+  coast = co_info[2]
   # First get closed orbit:
-  if length(closed_orbit) == 4
-    coast = true
-    v0 = similar(closed_orbit, 6)
-    v0[1:4] .= closed_orbit
-    v0[5:6] .= 0
-  else
-    coast = false
-    v0 = closed_orbit
-  end
   # This will get the map and tell us if coasting, etc etc
   if GTPSA_descriptor.desc == C_NULL
     GTPSA_descriptor = Descriptor(6, 1)
   end
-  Δv = @vars(GTPSA_descriptor)[1:6]
-  v = reshape(v0 + Δv, (1, 6))
-  b0 = Bunch(v)
+  Δv = vars(GTPSA_descriptor)[1:6]
+  for (Δvi, v0i) in zip(Δv, v0)
+    Δvi[0] = v0i
+  end
+  b0 = Bunch(reshape(Δv, (1,6)))
   BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
   linear = NNF.maxord(b0.coords.v[1]) == 1 ? true : false
   track!(b0, bl)
@@ -297,7 +276,9 @@ function _twiss(m::DAMap, b0::Bunch, bl::Beamline, S::Type, ::Val{linear}, ::Val
 
   return lf_table
 end
+
 include("track.jl")
+include("newton.jl")
 
   #=
   t = Table(s=s, phi_x=phase[1,:], phi_y=phase[2,:], phi_z=phase[3,:],
@@ -311,41 +292,28 @@ include("track.jl")
   =#
 
 
-
 @setup_workload begin
   @compile_workload begin   
-    K1 = 0.36;
-    K2 = 0.1;
-
-    qf = Quadrupole(Kn1=DefExpr(() -> +K1), L=0.5);
-    sf = Sextupole(Kn2=DefExpr(() -> +K2), L=0.2);
-    d  = Drift(L=0.6);
-    b  = SBend(L=6.0, angle=pi/132);
-    qd = Quadrupole(Kn1=DefExpr(() -> -K1), L=0.5);
-    sd = Sextupole(Kn2=DefExpr(() -> -K2), L=0.2);
-
-    fodo_line = [qf, sf, d, b, d, qd, sd, d, b, d];
+    # We want to compile drift-kick-drift, matrix-kick-matrix
+    # and solenoid kick for different numbers of multipoles
+    # Bend too, but that is not implemented yet.
+    qf = Quadrupole(Kn1=0.36, L=0.5); # Matrix kick, 1 multipole
+    sf = Sextupole(Kn2=0.1, L=0.2);   # Drift kick, 1 multipole
+    d1  = Drift(L=0.3, Kn3=1e-4, Kn4=1e-5); # Drift kick, 2 multipoles
+    d2  = Drift(L=0.3, Ksol=1e-6); # Solenoid kick, 1 multipole
+    b  = SBend(L=6.0, angle=pi/132); # Bend
+    qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.5); # matrix kick, 2 multipoles
+    sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
+    rf = RFCavity(L=1e-2, voltage=1e-3, rf_frequency=1e6);
+    thin = Multipole(Kn1L=1e-9); # Thin quad
+    d3 = Drift(L=0.3);
+    marker = Marker(); # nothing
+    fodo_line = [qf, sf, d1, b, d2, qd, sd, d1, b, d2, rf, thin, marker, d3];
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
-
-    K1 = 0.3
-    qf.Kn1
-    qd.Kn1
-    t = twiss(fodo)
-    D2 = Descriptor(6, 2)
-    dv = @vars(D2)
-    v0 = zeros(6) 
-    v = v0 + dv  
-    b0 = Bunch(v)
-    BTBL.check_bl_bunch!(fodo, b0, false) 
-    track!(b0, fodo) 
-    m = DAMap(v=b0.coords.v)
-    a = normal(m)
-    ai = inv(a)
-    r = ai * m * a
-    c = c_map(m)
-    ci = inv(c)
-    r_phasor = ci * r * c
-    ADT = real(-log(par(r_phasor.v[1], 1))/(2*pi*im))
+    co = find_closed_orbit(fodo);
+    rf.voltage = 0;
+    co = find_closed_orbit(fodo);
+    t = twiss(fodo);
   end
 end
 
