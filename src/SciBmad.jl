@@ -294,8 +294,8 @@ include("newton.jl")
     # Bend too, but that is not implemented yet.
     qf = Quadrupole(Kn1=0.36, L=0.5); # Matrix kick, 1 multipole
     sf = Sextupole(Kn2=0.1, L=0.2);   # Drift kick, 1 multipole
-    d1  = Drift(L=0.3, Kn3=1e-4, Kn4=1e-5); # Drift kick, 2 multipoles
-    d2  = Drift(L=0.3, Ksol=1e-6); # Solenoid kick, 1 multipole
+    d1 = Drift(L=0.3, Kn3=1e-4, Kn4=1e-5); # Drift kick, 2 multipoles
+    d2 = Drift(L=0.3, Ksol=1e-6); # Solenoid kick, 1 multipole
     b  = SBend(L=6.0, angle=pi/132); # Bend
     qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.5); # matrix kick, 2 multipoles
     sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
