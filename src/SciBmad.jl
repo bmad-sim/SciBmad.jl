@@ -20,7 +20,7 @@ end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
-export twiss, find_closed_orbit, track!
+export twiss, find_closed_orbit, track!, track
 
 function fast_coast_check(bl; use_KA=false, use_explicit_SIMD=false)
   # Just check if dpz/dz == 0

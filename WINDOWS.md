@@ -22,7 +22,7 @@ Depending on whether you plan to use SciBmad in Python or Julia, follow your lan
 
 ## Python
 
-In Python, SciBmad is currently called through the [`juliacall` package](https://juliapy.github.io/PythonCall.jl/stable/juliacall/). We'll first install this package, and set an environment variable to ensure that the long-term suppport (LTS) version of Julia is used. In a Powershell:
+In Python, SciBmad is currently called through the [`juliacall` package](https://juliapy.github.io/PythonCall.jl/stable/juliacall/). We'll first install this package, and set an environment variable to ensure that the long-term suppport (LTS) version of Julia is used. In a (Anaconda) Powershell:
 
 ```
 pip install juliacall
@@ -54,4 +54,4 @@ Finally, SciBmad can be installed with:
 julia -e 'import Pkg; Pkg.add("SciBmad");'
 ```
 
-This may take several minutes to install. After it's complete, you're ready to go! Download the [`julia.ipynb'](https://github.com/bmad-sim/SciBmad.jl/blob/main/examples/julia.ipynb) SciBmad Jupyter notebook as a simple first example to run.
+This may take several minutes to install. After it's complete, you're ready to go! Download the [julia.ipynb](https://github.com/bmad-sim/SciBmad.jl/blob/main/examples/julia.ipynb) SciBmad Jupyter notebook as a simple first example to run.
