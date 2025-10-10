@@ -18,7 +18,7 @@ SciBmad consists of a set of modular packages:
 
 ## Installation instructions
 
-SciBmad is compatible with [Windows](https://github.com/bmad-sim/SciBmad.jl/blob/main/WINDOWS.md), [Mac](https://github.com/bmad-sim/SciBmad.jl/blob/main/MAC.md), or [Linux](https://github.com/bmad-sim/SciBmad.jl/blob/main/LINUX). Click on your corresponding system to be linked to detailed installation instructions.
+SciBmad is compatible with [Windows](https://github.com/bmad-sim/SciBmad.jl/blob/main/WINDOWS.md), [Mac](https://github.com/bmad-sim/SciBmad.jl/blob/main/MAC.md), or [Linux](https://github.com/bmad-sim/SciBmad.jl/blob/main/LINUX.md). Click on your corresponding system to be linked to detailed installation instructions.
 
 ## Examples
 
