@@ -20,7 +20,7 @@ TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 
 [compat]
 AtomicAndPhysicalConstants = "0.8.0"
-BeamTracking = "0.3.3"
+BeamTracking = "0.3.6"
 Beamlines = "0.6.5"
 DifferentiationInterface = "0.7.4"
 ForwardDiff = "0.10,1"
