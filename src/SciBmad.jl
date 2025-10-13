@@ -288,6 +288,7 @@ include("newton.jl")
 
 
 @setup_workload begin
+  
   @compile_workload begin   
     # We want to compile drift-kick-drift, matrix-kick-matrix
     # and solenoid kick for different numbers of multipoles
