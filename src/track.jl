@@ -65,6 +65,7 @@ function track(
     if length(q0) == 3
       store_spin_vector_only = true
     end
+    q0 = reshape(q0, (1,length(q0)))
   elseif q0 isa AbstractMatrix
     size(q0, 2) in (3, 4) || error("Third positional argument in track must be one of the following:
                                   Uniform scaling (I) for identity quaternions for n particles, 
@@ -86,10 +87,10 @@ function track(
     res = similar(v0, n_particles, div(n_turns, save_every_n_turns)+1, 10)
   end
 
-  if q0 isa UniformScaling
+  if q0 isa UniformScaling || store_spin_vector_only
     q = similar(v0, n_particles, 4)
     q .= 0
-    q[:,1] = 1
+    q[:,1] .= 1
     b0 = Bunch(copy(v0), q)
   else
     b0 = Bunch(copy(v0), copy(q0))
@@ -97,7 +98,7 @@ function track(
   BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
   res[:,1,1:6] .= b0.coords.v
   if store_spin_vector_only
-    res[:,1,7:9] .= b0.coords.q
+    res[:,1,7:9] .= q0
   else
     res[:,1,7:10] .= b0.coords.q
   end
@@ -105,7 +106,7 @@ function track(
     track!(b0, bl)
     if mod(i, save_every_n_turns) == 0
       res[:,div(i,save_every_n_turns)+1,1:6] .= b0.coords.v
-      if track_spin_vector
+      if store_spin_vector_only
         res[:,div(i,save_every_n_turns)+1,7:9] .= rotate(q0, b0.coords.q)
       else
         res[:,div(i,save_every_n_turns)+1,7:10] .= b0.coords.q
