@@ -1,70 +1,114 @@
+# No spin tracking
 function track(
   bl::Beamline,
   v0::Union{AbstractMatrix,AbstractVector},
-  q0::Union{AbstractMatrix,AbstractVector,UniformScaling,Nothing}=nothing;
+  q0::Nothing=nothing;
   n_turns=1,
   save_every_n_turns=1,
 )
+  # Input sanity checks:
   if v0 isa AbstractVector
     length(v0) == 6 || error("track accepts a n x 6 matrix of n particle coordinates,
                           or alternatively a single particle as a vector of length 6. 
                           Received a vector of length $(length(v))")
-    v0 = reshape(v0, (1, 6))
+    n_particles = 1
   else
     size(v0, 2) == 6 || error("track accepts a n x 6 matrix of n particle coordinates,
                           or alternatively a single particle as a vector of length 6. 
                           Received a matrix of size $(size(v))")
+    n_particles = size(v0, 1)
   end
 
-  track_spin_vector = false
-  if q0 isa UniformScaling
-    q0 = repeat([1.0 0.0 0.0 0.0], size(v0, 1))
-  elseif q0 isa AbstractVector
-    length(q0) in (3,4) || error("q0 must be a vector of length 3 or 4, a uniform scaling, 
-                          a matrix with 3 or 4 columns, or nothing.
-                          Received a vector of length $(length(q0))")
+  res = similar(v0, n_particles, div(n_turns, save_every_n_turns)+1, 6)
+  b0 = Bunch(copy(v0))
+  BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
+  res[:,1,1:6] .= b0.coords.v
+  for i in 1:n_turns
+    track!(b0, bl)
+    if mod(i, save_every_n_turns) == 0
+      res[:,div(i,save_every_n_turns)+1,1:6] .= b0.coords.v
+    end
+  end
+  return res
+end
+
+# Spin tracking
+function track(
+  bl::Beamline,
+  v0::Union{AbstractMatrix,AbstractVector},
+  q0::Union{AbstractMatrix,AbstractVector,UniformScaling};
+  n_turns=1,
+  save_every_n_turns=1,
+)
+  # Input sanity checks:
+  if v0 isa AbstractVector
+    length(v0) == 6 || error("track accepts a n x 6 matrix of n particle coordinates,
+                          or alternatively a single particle as a vector of length 6. 
+                          Received a vector of length $(length(v))")
+    n_particles = 1
+  else
+    size(v0, 2) == 6 || error("track accepts a n x 6 matrix of n particle coordinates,
+                          or alternatively a single particle as a vector of length 6. 
+                          Received a matrix of size $(size(v))")
+    n_particles = size(v0, 1)
+  end
+
+  store_spin_vector_only = false
+  if q0 isa AbstractVector
+    length(q0) in (3, 4) || error("Third positional argument in track must be one of the following:
+                                  Uniform scaling (I) for identity quaternions for n particles, 
+                                  n x 4 matrix for n particle quaternions, n x 3 matrix for n particle 
+                                  spin 3-vectors, a vector of length 4 for single particle quaternion, 
+                                  or a vector of length 3 for single particle spin 3-vector
+                                  Received a vector of length $(length(q0))")
+    eltype(v0) == eltype(q0) || error("Spin array has eltype $(eltype(q0)) but orbital has $(eltype(v0))")
     if length(q0) == 3
-      track_spin_vector = true
-      q0 = reshape(q0, (1, 3))
-    else
-      q0 = reshape(q0, (1, 4))
+      store_spin_vector_only = true
     end
   elseif q0 isa AbstractMatrix
-    size(q0, 2) in (3,4) || error("q0 must be a matrix with 3 or 4 columns, a uniform scaling, or nothing.
-                          Received a matrix of size $(size(q0))")
-    size(q0, 1) == size(v0, 1) || error("q0 must have the same number of rows as v0.
-                          Received a q0 of size $(size(q0)) and v0 of size $(size(v0))")
-    track_spin_vector = (size(q0, 2) == 3)
+    size(q0, 2) in (3, 4) || error("Third positional argument in track must be one of the following:
+                                  Uniform scaling (I) for identity quaternions for n particles, 
+                                  n x 4 matrix for n particle quaternions, n x 3 matrix for n particle 
+                                  spin 3-vectors, a vector of length 4 for single particle quaternion, 
+                                  or a vector of length 3 for single particle spin 3-vector
+                                  Received a matrix of size $(size(q0))")
+    size(q0, 1) == size(v0, 1) || error("Third positional argument (spin) has $(size(q0,1)) rows (particles) but 
+                                  second positional argument has $(size(v0,1)) rows (particles). These must be the same.")
+    eltype(v0) == eltype(q0) || error("Spin array has eltype $(eltype(q0)) but orbital has $(eltype(v0))")
+    if size(q0, 2) == 3
+      store_spin_vector_only = true
+    end
+  end
+  
+  if store_spin_vector_only
+    res = similar(v0, n_particles, div(n_turns, save_every_n_turns)+1, 9)
+  else
+    res = similar(v0, n_particles, div(n_turns, save_every_n_turns)+1, 10)
   end
 
-  N_particles = size(v0, 1)
-  if isnothing(q0)
-    res = similar(v0, N_particles, div(n_turns, save_every_n_turns)+1, 6)
-  elseif track_spin_vector
-    res = similar(hcat(v0, q0), N_particles, div(n_turns, save_every_n_turns)+1, 9)
+  if q0 isa UniformScaling
+    q = similar(v0, n_particles, 4)
+    q .= 0
+    q[:,1] = 1
+    b0 = Bunch(copy(v0), q)
   else
-    res = similar(hcat(v0, q0), N_particles, div(n_turns, save_every_n_turns)+1, 10)
-  end
-  if track_spin_vector
-    b0 = Bunch(v0, repeat([1.0 0.0 0.0 0.0], size(v0, 1)))
-  else
-    b0 = Bunch(v0, q0)
+    b0 = Bunch(copy(v0), copy(q0))
   end
   BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
   res[:,1,1:6] .= b0.coords.v
-  if track_spin_vector
-    res[:,1,7:9] .= q0
-  elseif !isnothing(q0)
+  if store_spin_vector_only
+    res[:,1,7:9] .= b0.coords.q
+  else
     res[:,1,7:10] .= b0.coords.q
   end
   for i in 1:n_turns
     track!(b0, bl)
     if mod(i, save_every_n_turns) == 0
-      res[:,Int(i/save_every_n_turns)+1,1:6] .= b0.coords.v
+      res[:,div(i,save_every_n_turns)+1,1:6] .= b0.coords.v
       if track_spin_vector
-        res[:,Int(i/save_every_n_turns)+1,7:9] .= rotate(q0, b0.coords.q)
-      elseif !isnothing(q0)
-        res[:,Int(i/save_every_n_turns)+1,7:10] .= b0.coords.q
+        res[:,div(i,save_every_n_turns)+1,7:9] .= rotate(q0, b0.coords.q)
+      else
+        res[:,div(i,save_every_n_turns)+1,7:10] .= b0.coords.q
       end
     end
   end
