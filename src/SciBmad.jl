@@ -20,7 +20,7 @@ end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
-export twiss, find_closed_orbit, track!, track
+export twiss, find_closed_orbit, track!, track, Time
 
 function fast_coast_check(bl; use_KA=false, use_explicit_SIMD=false)
   # Just check if dpz/dz == 0
@@ -288,6 +288,7 @@ include("newton.jl")
 
 
 @setup_workload begin
+  
   @compile_workload begin   
     # We want to compile drift-kick-drift, matrix-kick-matrix
     # and solenoid kick for different numbers of multipoles

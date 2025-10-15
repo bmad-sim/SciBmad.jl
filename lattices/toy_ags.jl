@@ -10,8 +10,6 @@ Lb = 2 * asin(2.66666666666666652E+000 * 1.96327112309048618E-002 / 2)/1.9632711
  csnk = Marker()
  wsnk = Marker()
  end1 = Marker()
-rfbc = RFCavity(L =  1.00000000000000000E+000, harmon = 1,
-   voltage =  3.20000000000000000E+5)
 end
 
 
@@ -37,6 +35,6 @@ ring = Beamline([q1h, dr, b, dr, q2, dr, b, dr, q1h, q1h, dr, b, dr, q2, dr, b, 
    dr, b, dr, q1h, q1h, dr, b, dr, q2, dr, b, dr, q1h, q1h, dr, b, dr, q2, dr, b, dr, q1h, q1h, dr, b, dr,
    q2, dr, b, dr, q1h, q1h, dr, b, dr, q2, dr, b, dr, q1h, q1h, dr, b, dr, q2, dr, b, dr, q1h, q1h, dr, b,
    dr, q2, dr, b, dr, q1h, end1],
-   E_ref =2.40490243299096680E+010, # 3.5587247443204529E+10 + 2*1.9018517828440544e10*Time(), 
+   E_ref = 3.5587247443204529E+10 + 2*1.9018517828440544e10*Time(), #2.40490243299096680E+010
    species_ref = Species("proton"))
 

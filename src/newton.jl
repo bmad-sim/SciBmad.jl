@@ -10,7 +10,7 @@ Finds roots of f!(y, x) using Newton's method.
 
 # Keyword arguments
 - `abstol`: Convergence absolute tolerance (default: 1e-13)
-- `rektol`: Convergence relative tolerance (default: 1e-13)
+- `reltol`: Convergence relative tolerance (default: 1e-13)
 - `max_iter`: Maximum number of iterations (default: 100)
 
 Returns `NamedTuple` containing newton search results.
