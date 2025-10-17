@@ -1,11 +1,12 @@
 """
     newton!(f!, y, x; reltol=1e-13, abstol=1e-13,  max_iter=100, backend=DI.AutoForwardDiff(), check_stable=Val{false}())
 
-Finds roots of f!(y, x) using Newton's method.
+Finds roots of f!(y, x) using Newton's method. y and x will be mutated during solution.
+x will contain the result.
 
 # Arguments
 - `f!`: Function that mutates y in place with the residual vector
-- `y`: Solution vector
+- `y`: Residual vector
 - `x`: Initial guess
 
 # Keyword arguments
@@ -39,28 +40,28 @@ function newton!(
             if S
                 eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)
-                return (;u=y, converged=true, n_iters=iter, stable=stable)
+                return (;u=x, converged=true, n_iters=iter, stable=stable)
             else
-                return (;u=y, converged=true, n_iters=iter)
+                return (;u=x, converged=true, n_iters=iter)
             end
         end
-        # store in y
+        # store dx in y temporarily
         y .= -jac \ y
         if norm(y) < reltol
-            y .= x .+ y
+            x .= x .+ y
             if S
                 eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)
-                return (;u=y, converged=true, n_iters=iter, stable=stable)
+                return (;u=x, converged=true, n_iters=iter, stable=stable)
             else
-                return (;u=y, converged=true, n_iters=iter)
+                return (;u=x, converged=true, n_iters=iter)
             end
         end
         x .= x .+ y
     end
     if S
-        return (;u=y, converged=false, n_iters=max_iter, stable=false)
+        return (;u=x, converged=false, n_iters=max_iter, stable=false)
     else
-        return (;u=y, converged=false, n_iters=max_iter)
+        return (;u=x, converged=false, n_iters=max_iter)
     end
 end
