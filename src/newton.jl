@@ -5,8 +5,9 @@ Finds roots of f!(y, x) using Newton's method.
 
 # Arguments
 - `f!`: Function that mutates y in place with the residual vector
-- `y`: Solution vector
 - `x`: Initial guess
+- `y`: Solution vector
+
 
 # Keyword arguments
 - `abstol`: Convergence absolute tolerance (default: 1e-13)
@@ -17,8 +18,8 @@ Returns `NamedTuple` containing newton search results.
 """
 function newton!(
     f!::Function,  # DO NOT SPECIALIZE ON FUNCTION! This is the mistake SciML makes...
-    y::Y, 
     x::X,
+    y::Y, 
     p;             # Parameters
     reltol=1e-13,
     abstol=1e-13, 
@@ -39,9 +40,9 @@ function newton!(
             if S
                 eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)
-                return (;u=y, converged=true, n_iters=iter, stable=stable)
+                return (;u=x, converged=true, n_iters=iter, stable=stable)
             else
-                return (;u=y, converged=true, n_iters=iter)
+                return (;u=x, converged=true, n_iters=iter)
             end
         end
         # store in y
@@ -51,16 +52,16 @@ function newton!(
             if S
                 eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)
-                return (;u=y, converged=true, n_iters=iter, stable=stable)
+                return (;u=x, converged=true, n_iters=iter, stable=stable)
             else
-                return (;u=y, converged=true, n_iters=iter)
+                return (;u=x, converged=true, n_iters=iter)
             end
         end
         x .= x .+ y
     end
     if S
-        return (;u=y, converged=false, n_iters=max_iter, stable=false)
+        return (;u=x, converged=false, n_iters=max_iter, stable=false)
     else
-        return (;u=y, converged=false, n_iters=max_iter)
+        return (;u=x, converged=false, n_iters=max_iter)
     end
 end
