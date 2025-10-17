@@ -1,4 +1,4 @@
-# SciBmad Linux Installation
+# SciBmad Mac Installation
 
 1. **Install JupyterLab**
 
