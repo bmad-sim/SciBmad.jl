@@ -1,7 +1,7 @@
 name = "SciBmad"
 uuid = "7bf6e793-a2ec-421f-8700-d1465381ee80"
-authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
 version = "0.1.6"
+authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
 
 [deps]
 AtomicAndPhysicalConstants = "5c0d271c-5419-4163-b387-496237733d8b"
@@ -21,7 +21,7 @@ TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 [compat]
 AtomicAndPhysicalConstants = "0.8.2"
 BeamTracking = "0.3.7"
-Beamlines = "0.6.5"
+Beamlines = "0.6.5, 0.7"
 DifferentiationInterface = "0.7.4"
 ForwardDiff = "0.10,1"
 GTPSA = "1.4.8"
