@@ -4,15 +4,21 @@ function twiss(
   bl::Beamline; 
   GTPSA_descriptor=GTPSA.desc_current,
   de_moivre=false,
-  co_info=find_closed_orbit(bl)
+  co_info=nothing,
 )
-  v0 = co_info[1]
-  coast = co_info[2]
+
   # First get closed orbit:
   # This will get the map and tell us if coasting, etc etc
   if GTPSA_descriptor.desc == C_NULL
     GTPSA_descriptor = Descriptor(6, 1)
   end
+
+  if isnothing(co_info)
+    co_info = find_closed_orbit(bl; backend=DI.AutoGTPSA(GTPSA_descriptor))
+  end
+
+  v0 = co_info[1]
+  coast = co_info[2]
 
   # Track once through and construct a DAMap
   Δv = vars(GTPSA_descriptor)[1:6]
@@ -70,38 +76,48 @@ function _twiss(
   LF = !de_moivre ? twiss_tuple : de_moivre_tuple 
   LF_TABLE = !de_moivre ? twiss_table : de_moivre_table
   SCALAR_LF = TI.is_tps_type(T) isa TI.IsTPSType ? Val{false}() : Val{true}()
+  SCALAR_ORBIT = TI.is_tps_type(U) isa TI.IsTPSType ? Val{false}() : Val{true}()
+
+  # Note:
+  # Descriptor(6,1) with coasting beam gives SCALAR_LF = true 
+  # but SCALAR_ORBIT = false
+  # In general we will canonize using SCALAR_ORBIT, and compute 
+  # lattice functions using SCALAR_LF. 
+  # Finally we have the phases. The phases are done during 
+  # canonization, and so should have the same type as the orbit.
+
   # For some horrendous reason, processing the orbit is impacting the future lattice
   # function calc
   # no clue why
   # need to investigate futher
-  if TI.is_tps_type(T) isa TI.IsTPSType
+  if SCALAR_ORBIT isa Val{false}
     PROCESS_ORBIT = v -> begin
       StaticArrays.sacollect(SVector{6,U}, begin 
-      #if i < 6
+      if i < 6
         TI.seti!(v[i], 0, i)
-      #end
+      end
       v[i]
       end for i in 1:6)
     end
   else
     PROCESS_ORBIT = v -> StaticArrays.sacollect(SVector{6,U}, TI.scalar(v[i]) for i in 1:6)
   end
-  #PROCESS_ORBIT = v->view(v, 1:6)
   # =================================================================
 
   s::S = zero_s
   N_ele = length(bl.line)
   a = normal(m)
   NNF.setray!(a.v, scalar=m.v)
-  r = canonize(a, SCALAR_LF)
+  r = canonize(a, SCALAR_ORBIT)
   a = a ∘ r
   a0, a1, a2 = factorize(a)
   NNF_tuple = COMPUTE_TWISS(a1, SCALAR_LF)
-  lf1 = LF(S(s), SA[zero(zero_LF),zero(zero_LF),zero(zero_LF)], NNF_tuple, PROCESS_ORBIT(a0.v))
+  #return a0, a, b0.coords.v, PROCESS_ORBIT
+  lf1 = LF(S(s), SA[zero(zero_orbit),zero(zero_orbit),zero(zero_orbit)], NNF_tuple, PROCESS_ORBIT(a0.v))
   lf_table = LF_TABLE(lf1, N_ele)
-  phase = MVector{3}(zero(zero_LF),zero(zero_LF),zero(zero_LF))
+  phase = MVector{3}(zero(zero_orbit),zero(zero_orbit),zero(zero_orbit))
   for i in 1:N_ele
-    if SCALAR_LF isa Val{true}
+    if SCALAR_ORBIT isa Val{true}
       phase .= 0
     else
       TI.clear!(phase[1]); TI.clear!(phase[2]); TI.clear!(phase[3]);
@@ -110,7 +126,7 @@ function _twiss(
     track!(b0, bl.line[i])
     s = lf_table.s[i] + S((getfield(bl.line[i], :pdict)[UniversalParams]::UniversalParams).L)::S
     NNF.setray!(a.v; v=view(b0.coords.v, 1:6))
-    r = canonize(a, SCALAR_LF; phase=phase)
+    r = canonize(a, SCALAR_ORBIT; phase=phase)
     a = a ∘ r
     a0, a1, a2 = factorize(a)
     old_phases = SA[lf_table.phi_1[i], lf_table.phi_2[i], lf_table.phi_3[i]]

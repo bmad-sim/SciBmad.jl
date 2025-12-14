@@ -79,16 +79,16 @@ function find_closed_orbit(
   v0=zero(MVector{6,Float64}), 
   abstol=1e-11, 
   max_iter=100, 
-  #backend=DI.AutoForwardDiff()
+  backend=DI.AutoForwardDiff()
 )
   # First check if coasting, for this push a particle starting at 0 and see if
   # delta is a parameter
   v = zero(v0)
   coast = fast_coast_check(bl)
   if coast
-    newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; prep=CLOSED_ORBIT_FORWARDDIFF_PREP_COAST)
+    newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; backend=backend, prep=CLOSED_ORBIT_FORWARDDIFF_PREP_COAST)
   else
-    newton!(_co_res!, v, v0, bl; prep=CLOSED_ORBIT_FORWARDDIFF_PREP)
+    newton!(_co_res!, v, v0, bl; backend=backend, prep=CLOSED_ORBIT_FORWARDDIFF_PREP)
   end
   return v0, coast
 end
