@@ -25,9 +25,12 @@ function newton!(
     abstol=1e-13, 
     max_iter=100, 
     backend=DI.AutoForwardDiff(),
-    prep=DI.prepare_jacobian(f!, y, backend, x, DI.Constant(p)),
+    prep=nothing, 
     check_stable::Val{S}=Val{false}()
 ) where {Y,X,S}
+    if isnothing(prep)
+        prep = DI.prepare_jacobian(f!, y, backend, x, DI.Constant(p))
+    end
     if Y <: StaticArray && X <: StaticArray
         jac = similar(y, Size(length(Y), length(X)))
     else

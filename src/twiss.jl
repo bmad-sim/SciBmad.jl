@@ -14,7 +14,7 @@ function twiss(
   end
 
   if isnothing(co_info)
-    co_info = find_closed_orbit(bl; backend=DI.AutoGTPSA(GTPSA_descriptor))
+    co_info = find_closed_orbit(bl; backend=DI.AutoGTPSA(GTPSA_descriptor), prep=nothing)
   end
 
   v0 = co_info[1]

@@ -23,18 +23,15 @@ const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
 export twiss, find_closed_orbit, track!, track, Time
 
-function fast_coast_check(bl; use_KA=false, use_explicit_SIMD=false)
-  # Just check if dpz/dz == 0
-  coords = @MVector [ForwardDiff.Dual(0.,0.),
-                     ForwardDiff.Dual(0.,0.),
-                     ForwardDiff.Dual(0.,0.),
-                     ForwardDiff.Dual(0.,0.),
-                     ForwardDiff.Dual(0.,1.),
-                     ForwardDiff.Dual(0.,0.)]
+function fast_coast_check(bl, coast_check_step=1e-9; use_KA=false, use_explicit_SIMD=false)
+  # Just check if two particles with different pzs have same pz at end
+  # checking for exact equality here
+  coords = @MMatrix zeros(2,6)
+  coords[2,6] = coast_check_step
   b0 = Bunch(coords)
   BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
   track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD)
-  return b0.coords.v[1,6].partials[1] == 0 # true if coasting, false if not
+  return b0.coords.v[1,6] == 0 && b0.coords.v[2,6] == coast_check_step # true if coasting, false if not
 end
 
 function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false)
@@ -79,16 +76,19 @@ function find_closed_orbit(
   v0=zero(MVector{6,Float64}), 
   abstol=1e-11, 
   max_iter=100, 
-  backend=DI.AutoForwardDiff()
+  backend=DI.AutoForwardDiff(),
+  prep=CLOSED_ORBIT_FORWARDDIFF_PREP,
+  prep_coast=CLOSED_ORBIT_FORWARDDIFF_PREP_COAST,
+  coast_check_step=1e-9,
 )
   # First check if coasting, for this push a particle starting at 0 and see if
   # delta is a parameter
   v = zero(v0)
-  coast = fast_coast_check(bl)
+  coast = fast_coast_check(bl, coast_check_step) # Uses finite differences
   if coast
-    newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; backend=backend, prep=CLOSED_ORBIT_FORWARDDIFF_PREP_COAST)
+    newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; backend=backend, prep=prep_coast)
   else
-    newton!(_co_res!, v, v0, bl; backend=backend, prep=CLOSED_ORBIT_FORWARDDIFF_PREP)
+    newton!(_co_res!, v, v0, bl; backend=backend, prep=prep)
   end
   return v0, coast
 end
