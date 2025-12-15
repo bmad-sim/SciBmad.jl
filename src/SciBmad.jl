@@ -23,15 +23,30 @@ const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
 export twiss, find_closed_orbit, track!, track, Time
 
-function fast_coast_check(bl, coast_check_step=1e-9; use_KA=false, use_explicit_SIMD=false)
-  # Just check if two particles with different pzs have same pz at end
-  # checking for exact equality here
-  coords = @MMatrix zeros(2,6)
-  coords[2,6] = coast_check_step
-  b0 = Bunch(coords)
-  BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
-  track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD)
-  return b0.coords.v[1,6] == 0 && b0.coords.v[2,6] == coast_check_step # true if coasting, false if not
+function coast_check(bl, backend=DI.AutoForwardDiff())
+  x0 = zeros(6)
+  y = zeros(6)
+  jac = zeros(6, 6)
+  DI.value_and_jacobian!(track_a_particle!, y, jac, backend, x0, DI.Constant(bl))
+  return view(jac, 6, :) == SA[0, 0, 0, 0, 0, 1]
+end
+
+# Hacky temporary solution for precompile
+function coast_check(bl, backend::DI.AutoGTPSA{Nothing})
+  coords = view(vars(GTPSA.desc_current), 1:6)
+  b0 = Bunch(reshape(coords, (1,6)))
+  BTBL.check_bl_bunch!(bl, b0, false) 
+  track!(b0, bl; use_KA=false, use_explicit_SIMD=false)
+  for i in 1:5 
+    if b0.coords.v[1,6][i] != 0
+      return false
+    end
+  end
+  if b0.coords.v[1,6][6] == 1
+    return true
+  else
+    return false
+  end
 end
 
 function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false)
@@ -50,7 +65,7 @@ end
 
 function _co_res_coast!(y, x, bl)
   track_a_particle!(
-    ArrayPartition(y, MVector{2,eltype(y)}(0,0)), 
+    ArrayPartition(y, eltype(y)[0,0]), 
     SA[x[1], x[2], x[3], x[4], 0, 0],
     bl
   )
@@ -58,22 +73,22 @@ function _co_res_coast!(y, x, bl)
 end
 
 const CLOSED_ORBIT_FORWARDDIFF_PREP = (
-  x = @MVector zeros(6);
-  y = @MVector zeros(6);
+  x = zeros(6);
+  y = zeros(6);
   bl = Beamline([LineElement()]);
   DI.prepare_jacobian(_co_res!, y, DI.AutoForwardDiff(), x, DI.Constant(bl))
 )
 
 const CLOSED_ORBIT_FORWARDDIFF_PREP_COAST = (
-  x = view(@MVector(zeros(6)), 1:4);
-  y = view(@MVector(zeros(6)), 1:4);
+  x = view(zeros(6), 1:4);
+  y = view(zeros(6), 1:4);
   bl = Beamline([LineElement()]);
   DI.prepare_jacobian(_co_res_coast!, y, DI.AutoForwardDiff(), x, DI.Constant(bl))
 )
 
 function find_closed_orbit(
   bl::Beamline; 
-  v0=zero(MVector{6,Float64}), 
+  v0=zeros(6), 
   abstol=1e-11, 
   max_iter=100, 
   backend=DI.AutoForwardDiff(),
@@ -84,7 +99,7 @@ function find_closed_orbit(
   # First check if coasting, for this push a particle starting at 0 and see if
   # delta is a parameter
   v = zero(v0)
-  coast = fast_coast_check(bl, coast_check_step) # Uses finite differences
+  coast = coast_check(bl, backend)
   if coast
     newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; backend=backend, prep=prep_coast)
   else
@@ -109,7 +124,7 @@ include("twiss.jl")
   )
   =#
 
-#=
+
 @setup_workload begin
   
   @compile_workload begin   
@@ -133,24 +148,26 @@ include("twiss.jl")
     b0s = Bunch(rand(4,6));
     BTBL.check_bl_bunch!(fodo, b0s, false); # Do not notify
     track!(b0s, fodo);
-    # twiss + normal
+    # twiss
+    # first order and second order
     co = find_closed_orbit(fodo);
-    d2 = Descriptor(6, 2);
-    b0 = Bunch(vars(d2));
-    BTBL.check_bl_bunch!(fodo, b0, false); # Do not notify
-    track!(b0, fodo);
-    m = DAMap(v=b0.coords.v);
-    a = normal(m);
-    # Coast:
+    desc1 = Descriptor(6, 1);
+    t = twiss(fodo);
+    desc2 = Descriptor(6, 2);
+    t = twiss(fodo, GTPSA_descriptor=desc2);
+    # Coast, first order and second order
     rf.voltage = 0;
     co = find_closed_orbit(fodo);
-    b0.coords.v .= vars(d2)';
-    track!(b0, fodo);
-    m = DAMap(v=b0.coords.v);
-    a = normal(m);
+    t = twiss(fodo; GTPSA_descriptor=desc1);
+    t = twiss(fodo; GTPSA_descriptor=desc2);
+    # Parameters, coast and no coast:
+    descp = Descriptor(7, 1);
+    qf.Kn1 = qf.Kn1 + vars(descp)[7];
+    t = twiss(fodo);
+    rf.voltage = 1e-3;
     t = twiss(fodo);
   end
 end
-=#
+
 
 end

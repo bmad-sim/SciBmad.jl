@@ -13,8 +13,25 @@ function twiss(
     GTPSA_descriptor = Descriptor(6, 1)
   end
 
+  nn = GTPSA.numnn(GTPSA_descriptor)
+  if nn < 6
+    error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")
+  end
+
+  
+
+  # If it's greater than 6 variables, assume a parameter is
+  # set in lattice and have to use AutoGTPSA. Else use faster ForwardDiff
+  # TODO: Change AutoGTPSA type to NOT store Descriptor in type unless static descriptor resolution
   if isnothing(co_info)
-    co_info = find_closed_orbit(bl; backend=DI.AutoGTPSA(GTPSA_descriptor), prep=nothing)
+    if GTPSA.numnn(GTPSA_descriptor) == 6
+      co_info = find_closed_orbit(bl)
+    else
+      old_desc = GTPSA.desc_current
+      GTPSA.desc_current = GTPSA_descriptor
+      co_info = find_closed_orbit(bl; backend=DI.AutoGTPSA(), prep=nothing, prep_coast=nothing)
+      GTPSA.desc_current = old_desc
+    end
   end
 
   v0 = co_info[1]
@@ -124,7 +141,7 @@ function _twiss(
     end 
     b0.coords.v .= view(a.v, 1:6)'
     track!(b0, bl.line[i])
-    s = lf_table.s[i] + S((getfield(bl.line[i], :pdict)[UniversalParams]::UniversalParams).L)::S
+    s = lf_table.s[i] + S(bl.line[i].L)::S
     NNF.setray!(a.v; v=view(b0.coords.v, 1:6))
     r = canonize(a, SCALAR_ORBIT; phase=phase)
     a = a ∘ r
