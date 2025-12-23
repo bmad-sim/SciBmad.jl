@@ -18,18 +18,15 @@ function twiss(
     error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")
   end
 
-  
-
   # If it's greater than 6 variables, assume a parameter is
   # set in lattice and have to use AutoGTPSA. Else use faster ForwardDiff
-  # TODO: Change AutoGTPSA type to NOT store Descriptor in type unless static descriptor resolution
   if isnothing(co_info)
     if GTPSA.numnn(GTPSA_descriptor) == 6
       co_info = find_closed_orbit(bl)
     else
       old_desc = GTPSA.desc_current
       GTPSA.desc_current = GTPSA_descriptor
-      co_info = find_closed_orbit(bl; backend=DI.AutoGTPSA(), prep=nothing, prep_coast=nothing)
+      co_info = find_closed_orbit(bl; backend=DI.AutoGTPSA(GTPSA_descriptor), prep=nothing, prep_coast=nothing)
       GTPSA.desc_current = old_desc
     end
   end
@@ -59,6 +56,7 @@ function twiss(
     zero_LF = zero(numtype)
   end
 
+  # Type of the ORBIT
   if coast || mo > 1 && nn > 6
     zero_orbit = TI.init_tps(numtype, init)
   else
@@ -67,8 +65,6 @@ function twiss(
   
   # Type of the s coordinate
   zero_s = zero(bl.line[end].s)
-
-#  return m, b0, bl, Val{de_moivre}(), zero_LF, zero_orbit, zero_s
 
   # function barrier
   return _twiss(m, b0, bl, Val{de_moivre}(), zero_LF, zero_orbit, zero_s)
@@ -129,7 +125,6 @@ function _twiss(
   a = a ∘ r
   a0, a1, a2 = factorize(a)
   NNF_tuple = COMPUTE_TWISS(a1, SCALAR_LF)
-  #return a0, a, b0.coords.v, PROCESS_ORBIT
   lf1 = LF(S(s), SA[zero(zero_orbit),zero(zero_orbit),zero(zero_orbit)], NNF_tuple, PROCESS_ORBIT(a0.v))
   lf_table = LF_TABLE(lf1, N_ele)
   phase = MVector{3}(zero(zero_orbit),zero(zero_orbit),zero(zero_orbit))
@@ -141,8 +136,8 @@ function _twiss(
     end 
     b0.coords.v .= view(a.v, 1:6)'
     track!(b0, bl.line[i])
-    s = lf_table.s[i] + S(bl.line[i].L)::S
     NNF.setray!(a.v; v=view(b0.coords.v, 1:6))
+    s = lf_table.s[i] + S(bl.line[i].L)::S
     r = canonize(a, SCALAR_ORBIT; phase=phase)
     a = a ∘ r
     a0, a1, a2 = factorize(a)
@@ -151,81 +146,6 @@ function _twiss(
     lf_table[i+1] = lfi
   end
   return lf_table
-#=
-  if linear
-    N_ele = length(bl.line)
-    a = normal(m)
-    NNF.setray!(a.v, scalar=m.v)
-    r = canonize(a)
-    a = a ∘ r
-    NNF_tuple = COMPUTE_TWISS(a, Val{linear}())
-    if de_moivre
-      if typeof(NNF_tuple.H[1]) isa DAMap
-        T = eltype(NNF_tuple.H[1].v)
-      else
-        T = eltype(eltype(NNF_tuple.H[1]))
-      end
-    else
-      T = eltype(NNF_tuple.beta_1)
-    end
-    lf1 = LF(S(s), T.(SA[0,0,0]), COMPUTE_TWISS(a, Val{linear}()), scalar.(view(a.v, 1:6)))
-    lf_table = LF_TABLE(lf1, N_ele)
-    phase = MVector{3,T}(0,0,0)
-    for i in 1:N_ele
-      phase .= 0
-      b0.coords.v .= view(a.v, 1:6)'
-      track!(b0, bl.line[i])
-      s = lf_table.s[i] + S(bl.line[i].L)::S
-      NNF.setray!(a.v; v=view(b0.coords.v, 1:6))
-      r = canonize(a; phase=phase)
-      a = a ∘ r
-      old_phases = SA[lf_table.phi_1[i], lf_table.phi_2[i], lf_table.phi_3[i]]
-      lfi = LF(s, old_phases+phase, COMPUTE_TWISS(a, Val{linear}()), scalar.(view(a.v, 1:6)))
-      lf_table[i+1] = lfi
-    end
-  else
-    # In the nonlinear case, we need to track the FULL a, and 
-    # factorize each element. In this case, if there is coasting, 
-    # H will NOT contain the dispersion because we include that 
-    # in the parameter-dependent transformation
-    N_ele = length(bl.line)
-    a = normal(m)
-    NNF.setray!(a.v, scalar=m.v)
-    r = canonize(a, Val{linear}())
-    a = a ∘ r
-    a0, a1, a2 = factorize(a)
-    NNF_tuple = COMPUTE_TWISS(a1, Val{linear}())
-    if de_moivre
-      if !linear
-        T = eltype(NNF_tuple.H[1].v)
-      else
-        T = eltype(eltype(NNF_tuple.H[1]))
-      end
-    else
-      T = eltype(NNF_tuple.beta)
-    end
-    lf1 = LF(S(s), T.(SA[0,0,0]), NNF_tuple, view(a0.v, 1:6))
-    lf_table = LF_TABLE(lf1, N_ele)
-    phase = T[0,0,0]
-    for i in 1:N_ele
-      phase .= 0
-      b0.coords.v .= view(a.v, 1:6)'
-      track!(b0, bl.line[i])
-      s = lf_table.s[i] + S(bl.line[i].L)::S
-      NNF.setray!(a.v; v=view(b0.coords.v, 1:6))
-      r = canonize(a, Val{linear}(); phase=phase)
-      a = a ∘ r
-      a0, a1, a2 = factorize(a)
-      old_phases = SA[lf_table.phi_1[i], lf_table.phi_2[i], lf_table.phi_3[i]]
-      lfi = LF(s, old_phases+phase, COMPUTE_TWISS(a1, Val{linear}()), view(a0.v, 1:6))
-      lf_table[i+1] = lfi
-    end
-    # The lattice functions must be evaluated for each a1 specifically
-    #error("Nonlinear twiss calculation currently being developed")
-  end
-
-  return lf_table
-  =#
 end
 
 
@@ -290,18 +210,18 @@ end
 
 function twiss_table(tt, N_ele)
   S = typeof(tt.s)
-  T = typeof(tt.phi_1)
+  T = typeof(tt.beta_1)
   U = typeof(tt.orbit_x)
   if haskey(tt, :eta_1)
     t = Table(
       s = Vector{S}(undef, N_ele+1),
-      phi_1 = Vector{T}(undef, N_ele+1),
+      phi_1 = Vector{U}(undef, N_ele+1),
       beta_1 = Vector{T}(undef, N_ele+1),
       alpha_1 = Vector{T}(undef, N_ele+1),
-      phi_2 = Vector{T}(undef, N_ele+1),
+      phi_2 = Vector{U}(undef, N_ele+1),
       beta_2 = Vector{T}(undef, N_ele+1),
       alpha_2 = Vector{T}(undef, N_ele+1),
-      phi_3 = Vector{T}(undef, N_ele+1),
+      phi_3 = Vector{U}(undef, N_ele+1),
       eta_1   = Vector{T}(undef, N_ele+1),
       etap_1  = Vector{T}(undef, N_ele+1),
       eta_2   = Vector{T}(undef, N_ele+1),
@@ -328,13 +248,13 @@ function twiss_table(tt, N_ele)
   else
     t = Table(
       s = Vector{S}(undef, N_ele+1),
-      phi_1 = Vector{T}(undef, N_ele+1),
+      phi_1 = Vector{U}(undef, N_ele+1),
       beta_1 = Vector{T}(undef, N_ele+1),
       alpha_1 = Vector{T}(undef, N_ele+1),
-      phi_2 = Vector{T}(undef, N_ele+1),
+      phi_2 = Vector{U}(undef, N_ele+1),
       beta_2 = Vector{T}(undef, N_ele+1),
       alpha_2 = Vector{T}(undef, N_ele+1),
-      phi_3 = Vector{T}(undef, N_ele+1),
+      phi_3 = Vector{U}(undef, N_ele+1),
       gamma_c = Vector{T}(undef, N_ele+1),
       c11 = Vector{T}(undef, N_ele+1),
       c12 = Vector{T}(undef, N_ele+1),
@@ -373,13 +293,13 @@ end
 
 function de_moivre_table(dt, N_ele)
   S = typeof(dt.s)
-  T = typeof(dt.phi_1)
+  T = typeof(dt.H)
   U = typeof(dt.orbit_x)
   t = Table(
     s = Vector{S}(undef, N_ele+1),
-    phi_1 = Vector{T}(undef, N_ele+1),
-    phi_2 = Vector{T}(undef, N_ele+1),
-    phi_3 = Vector{T}(undef, N_ele+1),
+    phi_1 = Vector{U}(undef, N_ele+1),
+    phi_2 = Vector{U}(undef, N_ele+1),
+    phi_3 = Vector{U}(undef, N_ele+1),
     H = Vector{T}(undef, N_ele+1),
     B = Vector{T}(undef, N_ele+1),
     E = Vector{T}(undef, N_ele+1),
