@@ -113,18 +113,6 @@ include("track.jl")
 include("newton.jl")
 include("twiss.jl")
 
-  #=
-  t = Table(s=s, phi_x=phase[1,:], phi_y=phase[2,:], phi_z=phase[3,:],
-            beta_xx=map(t->t.E[1][1,1], lf),
-            alpha_xx=map(t->t.E[1][1,2], lf),
-            beta_yy=map(t->t.E[2][3,3], lf),
-            alpha_yy=map(t->t.E[2][3,4], lf),
-            eta_x=map(t->t.H[3][1,6], lf),
-            eta_y=map(t->t.H[3][3,6], lf),
-  )
-  =#
-
-#=
 @setup_workload begin
   
   @compile_workload begin   
@@ -168,6 +156,5 @@ include("twiss.jl")
     t = twiss(fodo);
   end
 end
-=#
 
 end
