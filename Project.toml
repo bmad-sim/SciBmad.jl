@@ -1,7 +1,7 @@
 name = "SciBmad"
 uuid = "7bf6e793-a2ec-421f-8700-d1465381ee80"
 authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
-version = "0.1.6"
+version = "0.2.0"
 
 [deps]
 AtomicAndPhysicalConstants = "5c0d271c-5419-4163-b387-496237733d8b"
@@ -16,20 +16,22 @@ PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+TPSAInterface = "575459ea-959c-4603-9b15-d63fb6693033"
 TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 
 [compat]
 AtomicAndPhysicalConstants = "0.8.2"
-BeamTracking = "0.3.7"
-Beamlines = "0.6.5"
+BeamTracking = "0.4.1"
+Beamlines = "0.7.2"
 DifferentiationInterface = "0.7.4"
 ForwardDiff = "0.10,1"
-GTPSA = "1.4.8"
-NonlinearNormalForm = "0.3.3"
+GTPSA = "1.4.9"
+NonlinearNormalForm = "0.4.1"
 PrecompileTools = "1.2.1"
 RecursiveArrayTools = "3.36.0"
 Reexport = "1.2.2"
 StaticArrays = "1.9.14"
+TPSAInterface = "0.2.2"
 TypedTables = "1.4.6"
 julia = "1.10"
 
