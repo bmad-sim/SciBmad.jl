@@ -56,18 +56,25 @@ function twiss(
     zero_LF = zero(numtype)
   end
 
-  # Type of the ORBIT
+  # Type of the PHASES
   if coast || mo > 1 && nn > 6
+    zero_phase = TI.init_tps(numtype, init)
+  else
+    zero_phase = zero(numtype)
+  end
+  
+  # Type of the ORBIT
+  if coast || nn > 6
     zero_orbit = TI.init_tps(numtype, init)
   else
     zero_orbit = zero(numtype)
   end
-  
+
   # Type of the s coordinate
   zero_s = zero(bl.line[end].s)
 
   # function barrier
-  return _twiss(m, b0, bl, Val{de_moivre}(), zero_LF, zero_orbit, zero_s)
+  return _twiss(m, b0, bl, Val{de_moivre}(), zero_LF, zero_phase, zero_orbit, zero_s)
 end
   
 function _twiss(
@@ -76,9 +83,10 @@ function _twiss(
   bl::Beamline, 
   ::Val{de_moivre}, 
   zero_LF::T, 
+  zero_phase::V,
   zero_orbit::U, 
   zero_s::S
-) where {de_moivre, T, U, S}
+) where {de_moivre, T, V, U, S}
   # Ripken-Wolski-Forest de Moivre coupling formalism
   # If linear is true, then we do not need to do any factorization
   # Else we must factorize at every element
@@ -89,6 +97,7 @@ function _twiss(
   LF = !de_moivre ? twiss_tuple : de_moivre_tuple 
   LF_TABLE = !de_moivre ? twiss_table : de_moivre_table
   SCALAR_LF = TI.is_tps_type(T) isa TI.IsTPSType ? Val{false}() : Val{true}()
+  SCALAR_PHASE = TI.is_tps_type(V) isa TI.IsTPSType ? Val{false}() : Val{true}()
   SCALAR_ORBIT = TI.is_tps_type(U) isa TI.IsTPSType ? Val{false}() : Val{true}()
 
   # Note:
@@ -121,15 +130,15 @@ function _twiss(
   N_ele = length(bl.line)
   a = normal(m)
   NNF.setray!(a.v, scalar=m.v)
-  r = canonize(a, SCALAR_ORBIT)
+  r = canonize(a, SCALAR_PHASE)
   a = a ∘ r
   a0, a1, a2 = factorize(a)
   NNF_tuple = COMPUTE_TWISS(a1, SCALAR_LF)
-  lf1 = LF(S(s), SA[zero(zero_orbit),zero(zero_orbit),zero(zero_orbit)], NNF_tuple, PROCESS_ORBIT(a0.v))
+  lf1 = LF(S(s), SA[zero(zero_phase),zero(zero_phase),zero(zero_phase)], NNF_tuple, PROCESS_ORBIT(a0.v))
   lf_table = LF_TABLE(lf1, N_ele)
-  phase = MVector{3}(zero(zero_orbit),zero(zero_orbit),zero(zero_orbit))
+  phase = MVector{3}(zero(zero_phase),zero(zero_phase),zero(zero_phase))
   for i in 1:N_ele
-    if SCALAR_ORBIT isa Val{true}
+    if SCALAR_PHASE isa Val{true}
       phase .= 0
     else
       TI.clear!(phase[1]); TI.clear!(phase[2]); TI.clear!(phase[3]);
@@ -138,7 +147,7 @@ function _twiss(
     track!(b0, bl.line[i])
     NNF.setray!(a.v; v=view(b0.coords.v, 1:6))
     s = lf_table.s[i] + S(bl.line[i].L)::S
-    r = canonize(a, SCALAR_ORBIT; phase=phase)
+    r = canonize(a, SCALAR_PHASE; phase=phase)
     a = a ∘ r
     a0, a1, a2 = factorize(a)
     old_phases = SA[lf_table.phi_1[i], lf_table.phi_2[i], lf_table.phi_3[i]]
@@ -210,18 +219,19 @@ end
 
 function twiss_table(tt, N_ele)
   S = typeof(tt.s)
+  V = typeof(tt.phi_1)
   T = typeof(tt.beta_1)
   U = typeof(tt.orbit_x)
   if haskey(tt, :eta_1)
     t = Table(
       s = Vector{S}(undef, N_ele+1),
-      phi_1 = Vector{U}(undef, N_ele+1),
+      phi_1 = Vector{V}(undef, N_ele+1),
       beta_1 = Vector{T}(undef, N_ele+1),
       alpha_1 = Vector{T}(undef, N_ele+1),
-      phi_2 = Vector{U}(undef, N_ele+1),
+      phi_2 = Vector{V}(undef, N_ele+1),
       beta_2 = Vector{T}(undef, N_ele+1),
       alpha_2 = Vector{T}(undef, N_ele+1),
-      phi_3 = Vector{U}(undef, N_ele+1),
+      phi_3 = Vector{V}(undef, N_ele+1),
       eta_1   = Vector{T}(undef, N_ele+1),
       etap_1  = Vector{T}(undef, N_ele+1),
       eta_2   = Vector{T}(undef, N_ele+1),
@@ -248,13 +258,13 @@ function twiss_table(tt, N_ele)
   else
     t = Table(
       s = Vector{S}(undef, N_ele+1),
-      phi_1 = Vector{U}(undef, N_ele+1),
+      phi_1 = Vector{V}(undef, N_ele+1),
       beta_1 = Vector{T}(undef, N_ele+1),
       alpha_1 = Vector{T}(undef, N_ele+1),
-      phi_2 = Vector{U}(undef, N_ele+1),
+      phi_2 = Vector{V}(undef, N_ele+1),
       beta_2 = Vector{T}(undef, N_ele+1),
       alpha_2 = Vector{T}(undef, N_ele+1),
-      phi_3 = Vector{U}(undef, N_ele+1),
+      phi_3 = Vector{V}(undef, N_ele+1),
       gamma_c = Vector{T}(undef, N_ele+1),
       c11 = Vector{T}(undef, N_ele+1),
       c12 = Vector{T}(undef, N_ele+1),
@@ -293,13 +303,14 @@ end
 
 function de_moivre_table(dt, N_ele)
   S = typeof(dt.s)
+  V = typeof(dt.phi_1)
   T = typeof(dt.H)
   U = typeof(dt.orbit_x)
   t = Table(
     s = Vector{S}(undef, N_ele+1),
-    phi_1 = Vector{U}(undef, N_ele+1),
-    phi_2 = Vector{U}(undef, N_ele+1),
-    phi_3 = Vector{U}(undef, N_ele+1),
+    phi_1 = Vector{V}(undef, N_ele+1),
+    phi_2 = Vector{V}(undef, N_ele+1),
+    phi_3 = Vector{V}(undef, N_ele+1),
     H = Vector{T}(undef, N_ele+1),
     B = Vector{T}(undef, N_ele+1),
     E = Vector{T}(undef, N_ele+1),
