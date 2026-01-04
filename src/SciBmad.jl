@@ -21,7 +21,8 @@ end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
-export twiss, find_closed_orbit, track!, track, Time
+export twiss, find_closed_orbit, track!, track, Time, Yoshida, MatrixKick, BendKick, 
+        SolenoidKick, DriftKick, Exact, Bunch
 
 function coast_check(bl, backend=DI.AutoForwardDiff())
   x0 = zeros(6)
