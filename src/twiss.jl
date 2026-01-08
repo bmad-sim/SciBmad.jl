@@ -2,17 +2,13 @@
 # See Eq. 4.28 in EBB
 function twiss(
   bl::Beamline; 
-  GTPSA_descriptor=GTPSA.desc_current,
+  GTPSA_descriptor=Descriptor(6, 1),
   de_moivre=false,
   co_info=nothing,
 )
 
   # First get closed orbit:
   # This will get the map and tell us if coasting, etc etc
-  if GTPSA_descriptor.desc == C_NULL
-    GTPSA_descriptor = Descriptor(6, 1)
-  end
-
   nn = GTPSA.numnn(GTPSA_descriptor)
   if nn < 6
     error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")

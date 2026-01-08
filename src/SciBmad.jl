@@ -152,9 +152,9 @@ include("twiss.jl")
     # Parameters, coast and no coast:
     descp = Descriptor(7, 1);
     qf.Kn1 = qf.Kn1 + vars(descp)[7];
-    t = twiss(fodo);
+    t = twiss(fodo; GTPSA_descriptor=descp);
     rf.voltage = 1e-3;
-    t = twiss(fodo);
+    t = twiss(fodo; GTPSA_descriptor=descp);
   end
 end
 
