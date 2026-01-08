@@ -36,12 +36,29 @@ function newton!(
     else
         jac = similar(y, length(y), length(x))
     end
+    let _f! = f!, _prep = prep, _backend = backend
+        val_and_jac!(_y, _jac, _x, _p) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, DI.Constant(_p))
+        return newton!(val_and_jac!, y, jac, x, p; reltol=reltol, abstol=abstol, max_iter=max_iter, check_stable=check_stable)
+    end
+end
+
+function newton!(
+    val_and_jac!::Function,
+    y,
+    jac,
+    x,
+    p; # Parameters
+    reltol=1e-13,
+    abstol=1e-13, 
+    max_iter=100, 
+    check_stable::Val{S}=Val{false}(),
+) where {S}
     for iter in 1:max_iter
-        DI.value_and_jacobian!(f!, y, jac, prep, backend, x, DI.Constant(p)) 
+        val_and_jac!(y, jac, x, p)
         # Check convergence
         if norm(y) < abstol
             if S
-                eg = eigen(jac)
+            eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)
                 return (;u=x, converged=true, n_iters=iter, stable=stable)
             else
