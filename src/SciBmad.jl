@@ -29,7 +29,7 @@ function coast_check(bl, backend=DI.AutoForwardDiff())
   y = zeros(6)
   jac = zeros(6, 6)
   DI.value_and_jacobian!(track_a_particle!, y, jac, backend, x0, DI.Constant(bl))
-  return view(jac, 6, :) == SA[0, 0, 0, 0, 0, 1]
+  return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 1]
 end
 
 # Hacky temporary solution for precompile
@@ -43,7 +43,7 @@ function coast_check(bl, backend::DI.AutoGTPSA{Nothing})
       return false
     end
   end
-  if b0.coords.v[1,6][6] == 1
+  if b0.coords.v[1,6][6] ≈ 1
     return true
   else
     return false
@@ -55,6 +55,9 @@ function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=
   b0 = Bunch(reshape(coords, (1,6)))
   BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
   track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD)
+  if b0.coords.state[1] != 0x1
+    @warn "Particle lost in tracking"
+  end
   return coords
 end
 
@@ -90,23 +93,34 @@ const CLOSED_ORBIT_FORWARDDIFF_PREP_COAST = (
 function find_closed_orbit(
   bl::Beamline; 
   v0=zeros(6), 
-  abstol=1e-11, 
+  reltol=1e-13,
+  abstol=1e-13, 
   max_iter=100, 
   backend=DI.AutoForwardDiff(),
   prep=CLOSED_ORBIT_FORWARDDIFF_PREP,
   prep_coast=CLOSED_ORBIT_FORWARDDIFF_PREP_COAST,
   coast_check_step=1e-9,
-)
+  lambda=1,
+  coast::Val{C}=Val{Nothing}(),
+) where {C}
   # First check if coasting, for this push a particle starting at 0 and see if
   # delta is a parameter
   v = zero(v0)
-  coast = coast_check(bl, backend)
-  if coast
-    newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; backend=backend, prep=prep_coast)
+  if C == Nothing
+    _coast = coast_check(bl, backend)
   else
-    newton!(_co_res!, v, v0, bl; backend=backend, prep=prep)
+    _coast = C
   end
-  return v0, coast
+  if _coast
+    if !newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep_coast, lambda=lambda).converged
+      error("Closed orbit finder not converging")
+    end
+  else
+    if !newton!(_co_res!, v, v0, bl; reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
+      error("Closed orbit finder not converging")
+    end
+  end
+  return v0, _coast
 end
 
 
@@ -127,11 +141,12 @@ include("twiss.jl")
     b  = SBend(L=6.0, angle=pi/132); # Bend
     qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.5); # matrix kick, 2 multipoles
     sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
-    rf = RFCavity(L=1e-2, voltage=1e-3, rf_frequency=1e6);
+    kicker = Sextupole(Kn0=1e-5, L=0.01)
+    rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6);
     thin = Multipole(Kn1L=1e-9); # Thin quad
     d3 = Drift(L=0.3);
     marker = Marker(); # nothing
-    fodo_line = [qf, sf, d1, b, d2, qd, sd, d1, b, d2, rf, thin, marker, d3];
+    fodo_line = [qf, sf, d1, b, d2, qd, sd, d1, b, d2, rf, thin, marker, d3, kicker];
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
     # Track scalars
     b0s = Bunch(rand(4,6));
@@ -152,9 +167,9 @@ include("twiss.jl")
     # Parameters, coast and no coast:
     descp = Descriptor(7, 1);
     qf.Kn1 = qf.Kn1 + vars(descp)[7];
-    t = twiss(fodo);
-    rf.voltage = 1e-3;
-    t = twiss(fodo);
+    t = twiss(fodo; GTPSA_descriptor=descp);
+    rf.voltage = 1e6;
+    t = twiss(fodo; GTPSA_descriptor=descp);
   end
 end
 

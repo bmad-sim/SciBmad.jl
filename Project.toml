@@ -1,7 +1,7 @@
 name = "SciBmad"
 uuid = "7bf6e793-a2ec-421f-8700-d1465381ee80"
 authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
-version = "0.2.2"
+version = "0.2.3"
 
 [deps]
 AtomicAndPhysicalConstants = "5c0d271c-5419-4163-b387-496237733d8b"
@@ -26,7 +26,7 @@ Beamlines = "0.7.2"
 DifferentiationInterface = "0.7.4"
 ForwardDiff = "0.10,1"
 GTPSA = "1.4.10"
-NonlinearNormalForm = "0.4.1"
+NonlinearNormalForm = "0.4.2"
 PrecompileTools = "1.2.1"
 RecursiveArrayTools = "3.36.0"
 Reexport = "1.2.2"
