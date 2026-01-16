@@ -5,6 +5,7 @@ function twiss(
   GTPSA_descriptor=Descriptor(6, 1),
   de_moivre=false,
   co_info=nothing,
+  symplectic_tol=1e-8, # Tolerance below which to include damping
 )
 
   # First get closed orbit:
@@ -37,8 +38,6 @@ function twiss(
   end
   b0 = Bunch(reshape(Δv, (1,6)))
   BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
-  track!(b0, bl)
-  m = DAMap(v=dropdims(b0.coords.v; dims=1))
 
   # type of the LATTICE FUNCTIONS
   # linear_LF = true -> floats, linear_LF = false -> TPSs
@@ -46,6 +45,18 @@ function twiss(
   init = TI.getinit(b0.coords.v[1])
   mo = TI.maxord(init)
   nn = TI.ndiffs(init)
+  nv = 6
+  np = nn-nv
+  if coast
+    nv -= 1
+    np += 1
+  end
+  track!(b0, bl)
+  m = DAMap(nv=nv, np=np, v=view(dropdims(b0.coords.v; dims=1), 1:nv))
+
+  # Check if symplectic or not
+  damping = norm(NNF.checksymp(NNF.jacobian(m))) > symplectic_tol
+
   if mo > 1 && (coast || nn > 6)
     zero_LF = TI.init_tps(numtype, init)
   else
@@ -70,7 +81,7 @@ function twiss(
   zero_s = zero(bl.line[end].s)
 
   # function barrier
-  return _twiss(m, b0, bl, Val{de_moivre}(), zero_LF, zero_phase, zero_orbit, zero_s)
+  return _twiss(m, b0, bl, Val{de_moivre}(), damping, zero_LF, zero_phase, zero_orbit, zero_s)
 end
   
 function _twiss(
@@ -78,6 +89,7 @@ function _twiss(
   b0::Bunch, 
   bl::Beamline, 
   ::Val{de_moivre}, 
+  damping,
   zero_LF::T, 
   zero_phase::V,
   zero_orbit::U, 
@@ -126,7 +138,7 @@ function _twiss(
   N_ele = length(bl.line)
   a = normal(m)
   NNF.setray!(a.v, scalar=m.v)
-  r = canonize(a, SCALAR_PHASE)
+  r = canonize(a, SCALAR_PHASE; damping=damping)
   a = a ∘ r
   a0, a1, a2 = factorize(a)
   NNF_tuple = COMPUTE_TWISS(a1, SCALAR_LF)
@@ -143,7 +155,7 @@ function _twiss(
     track!(b0, bl.line[i])
     NNF.setray!(a.v; v=view(b0.coords.v, 1:6))
     s = lf_table.s[i] + S(bl.line[i].L)::S
-    r = canonize(a, SCALAR_PHASE; phase=phase)
+    r = canonize(a, SCALAR_PHASE; phase=phase, damping=damping)
     a = a ∘ r
     a0, a1, a2 = factorize(a)
     old_phases = SA[lf_table.phi_1[i], lf_table.phi_2[i], lf_table.phi_3[i]]
