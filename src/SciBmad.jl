@@ -24,6 +24,17 @@ const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 export twiss, find_closed_orbit, track!, track, Time, Yoshida, MatrixKick, BendKick, 
         SolenoidKick, DriftKick, Exact, Bunch
 
+function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false, scalar_params=true)
+  coords .= coords0
+  b0 = Bunch(reshape(coords, (1,6)))
+  BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
+  track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD, scalar_params=scalar_params)
+  if b0.coords.state[1] != 0x1
+    @warn "Particle lost in tracking"
+  end
+  return coords
+end
+
 function coast_check(bl, backend=DI.AutoForwardDiff())
   x0 = zeros(6)
   y = zeros(6)
@@ -32,6 +43,7 @@ function coast_check(bl, backend=DI.AutoForwardDiff())
   return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 1]
 end
 
+#=
 # Hacky temporary solution for precompile
 function coast_check(bl, backend::DI.AutoGTPSA{Nothing})
   coords = view(vars(GTPSA.desc_current), 1:6)
@@ -49,18 +61,7 @@ function coast_check(bl, backend::DI.AutoGTPSA{Nothing})
     return false
   end
 end
-
-function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false)
-  coords .= coords0
-  b0 = Bunch(reshape(coords, (1,6)))
-  BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
-  track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD)
-  if b0.coords.state[1] != 0x1
-    @warn "Particle lost in tracking"
-  end
-  return coords
-end
-
+=#
 
 function _co_res!(y, x, bl)
   track_a_particle!(y, x, bl)
@@ -99,7 +100,6 @@ function find_closed_orbit(
   backend=DI.AutoForwardDiff(),
   prep=CLOSED_ORBIT_FORWARDDIFF_PREP,
   prep_coast=CLOSED_ORBIT_FORWARDDIFF_PREP_COAST,
-  coast_check_step=1e-9,
   lambda=1,
   coast::Val{C}=Val{Nothing}(),
 ) where {C}
