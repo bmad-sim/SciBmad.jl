@@ -2,11 +2,17 @@
 # See Eq. 4.28 in EBB
 function twiss(
   bl::Beamline; 
-  GTPSA_descriptor=Descriptor(6, 1),
+  GTPSA_descriptor=nothing, #Descriptor(6, 1),
   de_moivre=false,
-  co_info=nothing,
+  co_info=find_closed_orbit(bl),
   symplectic_tol=1e-8, # Tolerance below which to include damping
 )
+
+  if isnothing(GTPSA_descriptor)
+    storedesc = GTPSA.desc_current
+    GTPSA_descriptor = Descriptor(6,1)
+    GTPSA.desc_current = storedesc # Don't reset the global
+  end
 
   # First get closed orbit:
   # This will get the map and tell us if coasting, etc etc
@@ -17,6 +23,7 @@ function twiss(
 
   # If it's greater than 6 variables, assume a parameter is
   # set in lattice and have to use AutoGTPSA. Else use faster ForwardDiff
+  #=
   if isnothing(co_info)
     if GTPSA.numnn(GTPSA_descriptor) == 6
       co_info = find_closed_orbit(bl)
@@ -27,7 +34,7 @@ function twiss(
       GTPSA.desc_current = old_desc
     end
   end
-
+=#
   v0 = co_info[1]
   coast = co_info[2]
 
