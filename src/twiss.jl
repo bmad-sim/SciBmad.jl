@@ -71,6 +71,10 @@ function twiss(
   # function barrier:
   tunes, a = _tunes_and_a(m, mo, coast)
 
+  if !coast && mo == 1
+    tunes = TI.scalar.(tunes)
+  end
+
   if at isa Colon || (at isa AbstractArray && length(at) > 0)
     if !(at isa Colon)
       if eltype(at) != LineElement
@@ -85,6 +89,7 @@ function twiss(
     # Check if symplectic or not
     damping = norm(NNF.checksymp(NNF.jacobian(m))) > symplectic_tol
 
+    # Type of the LATTICE FUNCTIONS
     if mo > 1 && (coast || nn > 6)
       zero_LF = TI.init_tps(numtype, init)
     else
@@ -95,6 +100,7 @@ function twiss(
     if coast || mo > 1 && nn > 6
       zero_phase = TI.init_tps(numtype, init)
     else
+      tunes = TI.scalar.(tunes)
       zero_phase = zero(numtype)
     end
     
