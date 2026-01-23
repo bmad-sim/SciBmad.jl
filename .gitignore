@@ -7,3 +7,5 @@
 /examples/.ipynb_checkpoints*
 /lattices/.ipynb_checkpoints*
 /examples/*/.ipynb_checkpoints*
+.DS_Store
+/examples/.DS_Store
