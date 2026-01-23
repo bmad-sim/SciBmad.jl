@@ -152,6 +152,9 @@ include("twiss.jl")
     b0s = Bunch(rand(4,6));
     BTBL.check_bl_bunch!(fodo, b0s, false); # Do not notify
     track!(b0s, fodo);
+    b0s = Bunch(rand(4,6), [1. 0. 0. 0.; 1. 0. 0. 0; 1. 0. 0. 0.; 1. 0. 0. 0.]);
+    BTBL.check_bl_bunch!(fodo, b0s, false); # Do not notify
+    track!(b0s, fodo);
     # twiss
     # first order and second order
     co = find_closed_orbit(fodo);
@@ -159,17 +162,22 @@ include("twiss.jl")
     t = twiss(fodo);
     desc2 = Descriptor(6, 2);
     t = twiss(fodo, GTPSA_descriptor=desc2);
+    t = twiss(fodo, GTPSA_descriptor=desc2, spin=true);
     # Coast, first order and second order
     rf.voltage = 0;
     co = find_closed_orbit(fodo);
     t = twiss(fodo; GTPSA_descriptor=desc1);
     t = twiss(fodo; GTPSA_descriptor=desc2);
+    t = twiss(fodo; GTPSA_descriptor=desc1, spin=true);
+    t = twiss(fodo; GTPSA_descriptor=desc2, spin=true);
     # Parameters, coast and no coast:
     descp = Descriptor(7, 1);
     qf.Kn1 = qf.Kn1 + vars(descp)[7];
     t = twiss(fodo; GTPSA_descriptor=descp);
+    t = twiss(fodo; GTPSA_descriptor=descp, spin=true);
     rf.voltage = 1e6;
     t = twiss(fodo; GTPSA_descriptor=descp);
+    t = twiss(fodo; GTPSA_descriptor=descp, spin=true);
   end
 end
 
