@@ -1,6 +1,6 @@
 using Beamlines
 
-@eles begin
+@elements begin
 IP6__1 =  Marker()
 D000001__1 =  Drift( L = 5.3)
 Q1ER_6 =  Quadrupole( L = 1.8, Kn1 = -0.2291420342)

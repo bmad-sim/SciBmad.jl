@@ -1,7 +1,7 @@
 using Beamlines, BeamTracking
 
 Lb = 2 * asin(2.66666666666666652E+000 * 1.96327112309048618E-002 / 2)/1.96327112309048618E-002
-@eles begin
+@elements begin
  q1h = Quadrupole(L =  1.33333333333333348E+000, Kn1 = -4.38353456948131909E-002*1.33333333333333348E+000)
  dr = Drift(L =  6.66666666666666519E-001)
  b = SBend(L =  Lb, 

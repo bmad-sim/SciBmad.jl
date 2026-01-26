@@ -1,6 +1,36 @@
 struct Twiss{S,T}
+  coasting_beam::Bool
   tunes::S
   table::T
+end
+
+function Base.show(io::IO, tw::Twiss)
+  println(io, "Twiss:")
+  width = length(" coasting_beam")
+  println(io, rpad(" coasting_beam", width), " = ", tw.coasting_beam)
+  spin = length(tw.tunes) == 4
+
+  print(io, rpad(" tunes[1:$(length(tw.tunes))]", width), " = [Qx, Qy")
+  if tw.coasting_beam
+    print(io, ", slip")
+  end
+  if spin
+    print(io, ", Qspin")
+  end
+
+  print(io, "]\n")
+
+  if !isnothing(tw.table)
+    print(io, rpad(" table", width), " has columns: ") 
+    cols = keys(getfield(tw.table, :data))
+    for col in cols
+      print(io, String(col))
+      if col != last(cols)
+        print(io, ", ")
+      end
+    end
+  end
+  return
 end
 
 # Returns a Table of the Twiss parameters
@@ -104,25 +134,35 @@ function twiss(
       zero_orbit = zero(numtype)
     end
 
-    N_ele = at isa Colon ? length(bl.line) : length(at)
+    N_ele = at isa Colon ? length(bl.line)+1 : length(at)
     # Fill the s array now for each at
+    # as well as names and beamline_idxs
     stmp = Vector{Any}(undef, N_ele)
+    names = Vector{String}(undef, N_ele)
+    idxs = Vector{Int}(undef, N_ele)
     scur = 0f0
     idx = 1
     for ele in bl.line
       if at isa Colon || ele in at
         stmp[idx] = scur
+        idxs[idx] = ((ele.BeamlineParams)::BeamlineParams).beamline_index
+        names[idx] = ((ele.UniversalParams)::UniversalParams).name
         idx += 1
       end
       scur += ele.L
     end
+    if at isa Colon
+      stmp[end] = scur
+      idxs[end] = -1
+      names[end] = "END OF BEAMLINE"
+    end
     s = typeof(scur).(stmp)
-    lf_table = _twiss(a, b0, bl, s, Val{de_moivre}(), damping, zero_LF, zero_phase, zero_orbit, at)
+    lf_table = _twiss(a, b0, bl, idxs, names, s, Val{de_moivre}(), damping, zero_LF, zero_phase, zero_orbit, at)
   else
     lf_table = nothing
   end
 
-  return Twiss(tunes, lf_table)
+  return Twiss(coast, tunes, lf_table)
 end
 
 function _tunes_and_a(m::DAMap, mo, coast)
@@ -150,6 +190,8 @@ function _twiss(
   a::DAMap{<:Any,<:Any,Q}, 
   b0::Bunch, 
   bl::Beamline, 
+  idxs, 
+  names,
   s,
   ::Val{de_moivre}, 
   damping,
@@ -205,7 +247,7 @@ function _twiss(
   end
   # =================================================================
   if C == Colon
-    N_ele = length(bl.line)
+    N_ele = length(bl.line)+1
   else
     N_ele = length(at)
   end
@@ -217,7 +259,7 @@ function _twiss(
   a = a ∘ r
   fc = factorize(a)
   NNF_tuple = COMPUTE_TWISS(fc.a1, SCALAR_LF)
-  lf1 = LF(zero(first(s)), SA[zero(zero_phase),zero(zero_phase),zero(zero_phase)], NNF_tuple, PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a))
+  lf1 = LF(idxs[1], names[1], zero(first(s)), SA[zero(zero_phase),zero(zero_phase),zero(zero_phase)], NNF_tuple, PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a))
   lf_table = LF_TABLE(lf1, N_ele)
 
   idx = 1
@@ -231,7 +273,7 @@ function _twiss(
 
   phase = MVector{3}(zero(zero_phase),zero(zero_phase),zero(zero_phase))
   len = length(bl.line)
-  for i in 1:(len-1)
+  for i in 1:len
     b0.coords.v .= view(a.v, 1:6)'
     if Q != Nothing
       b0.coords.q[1] = a.q.q0
@@ -249,7 +291,7 @@ function _twiss(
     a = a ∘ r
     if C == Colon || bl.line[i] in at
       fc = factorize(a)
-      lfi = LF(s[idx], SA[copy(phase[1]), copy(phase[2]), copy(phase[3])], COMPUTE_TWISS(fc.a1, SCALAR_LF), PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a))
+      lfi = LF(idxs[idx], names[idx], s[idx], SA[copy(phase[1]), copy(phase[2]), copy(phase[3])], COMPUTE_TWISS(fc.a1, SCALAR_LF), PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a))
       lf_table[idx] = lfi
       idx += 1
       if idx > N_ele
@@ -260,12 +302,18 @@ function _twiss(
   return lf_table
 end
 
+# a
+# b
+# c
 
-function twiss_tuple(s, phi, NNF_tuple::T, orbit, n::Nothing) where {T}
+
+function twiss_tuple(beamline_index, name, s, phi, NNF_tuple::T, orbit, n::Nothing) where {T}
   if haskey(NNF_tuple, :eta) # NOT coasting
     # eta, zeta, and slip are APPROXIMATIONS
     # In coasting case all quantities are exact and in a0
     return (;
+      beamline_index = beamline_index,
+      name = name,
       s = s,
       phi_1 = phi[1],
       beta_1 = NNF_tuple.beta[1],
@@ -297,6 +345,8 @@ function twiss_tuple(s, phi, NNF_tuple::T, orbit, n::Nothing) where {T}
     )
   else
     return (;
+      beamline_index = beamline_index,
+      name = name,
       s = s,
       phi_1 = phi[1],
       beta_1 = NNF_tuple.beta[1],
@@ -320,11 +370,13 @@ function twiss_tuple(s, phi, NNF_tuple::T, orbit, n::Nothing) where {T}
   end
 end
 
-function twiss_tuple(s, phi, NNF_tuple::T, orbit, n) where {T}
+function twiss_tuple(beamline_index, name, s, phi, NNF_tuple::T, orbit, n) where {T}
   if haskey(NNF_tuple, :eta) # NOT coasting
     # eta, zeta, and slip are APPROXIMATIONS
     # In coasting case all quantities are exact and in a0
     return (;
+      beamline_index = beamline_index,
+      name = name,
       s = s,
       phi_1 = phi[1],
       beta_1 = NNF_tuple.beta[1],
@@ -359,6 +411,8 @@ function twiss_tuple(s, phi, NNF_tuple::T, orbit, n) where {T}
     )
   else
     return (;
+      beamline_index = beamline_index,
+      name = name,
       s = s,
       phi_1 = phi[1],
       beta_1 = NNF_tuple.beta[1],
@@ -393,6 +447,8 @@ function twiss_table(tt, N_ele)
   if !haskey(tt, :n_x)
     if haskey(tt, :eta_1)
       t = Table(
+        beamline_index = Vector{Int}(undef, N_ele),
+        name = Vector{String}(undef, N_ele),
         s = Vector{S}(undef, N_ele),
         phi_1 = Vector{V}(undef, N_ele),
         beta_1 = Vector{T}(undef, N_ele),
@@ -425,6 +481,8 @@ function twiss_table(tt, N_ele)
       return t
     else
       t = Table(
+        beamline_index = Vector{Int}(undef, N_ele),
+        name = Vector{String}(undef, N_ele),
         s = Vector{S}(undef, N_ele),
         phi_1 = Vector{V}(undef, N_ele),
         beta_1 = Vector{T}(undef, N_ele),
@@ -451,6 +509,8 @@ function twiss_table(tt, N_ele)
     W = typeof(tt.n_x)
     if haskey(tt, :eta_1)
       t = Table(
+        beamline_index = Vector{Int}(undef, N_ele),
+        name = Vector{String}(undef, N_ele),
         s = Vector{S}(undef, N_ele),
         phi_1 = Vector{V}(undef, N_ele),
         beta_1 = Vector{T}(undef, N_ele),
@@ -486,6 +546,8 @@ function twiss_table(tt, N_ele)
       return t
     else
       t = Table(
+        beamline_index = Vector{Int}(undef, N_ele),
+        name = Vector{String}(undef, N_ele),
         s = Vector{S}(undef, N_ele),
         phi_1 = Vector{V}(undef, N_ele),
         beta_1 = Vector{T}(undef, N_ele),
@@ -514,8 +576,10 @@ function twiss_table(tt, N_ele)
   end
 end
 
-function de_moivre_tuple(s, phi, NNF_tuple, orbit, n::Nothing)
+function de_moivre_tuple(beamline_index, name, s, phi, NNF_tuple, orbit, n::Nothing)
   return (;
+    beamline_index = beamline_index,
+    name = name,
     s = s,
     phi_1 = phi[1],
     phi_2 = phi[2],
@@ -533,8 +597,10 @@ function de_moivre_tuple(s, phi, NNF_tuple, orbit, n::Nothing)
   )
 end
 
-function de_moivre_tuple(s, phi, NNF_tuple, orbit, n)
+function de_moivre_tuple(beamline_index, name, s, phi, NNF_tuple, orbit, n)
   return (;
+    beamline_index = beamline_index,
+    name = name,
     s = s,
     phi_1 = phi[1],
     phi_2 = phi[2],
@@ -562,6 +628,8 @@ function de_moivre_table(dt, N_ele)
   U = typeof(dt.orbit_x)
   if !haskey(dt, :n_x)
     t = Table(
+      beamline_index = Vector{Int}(undef, N_ele),
+      name = Vector{String}(undef, N_ele),
       s = Vector{S}(undef, N_ele),
       phi_1 = Vector{V}(undef, N_ele),
       phi_2 = Vector{V}(undef, N_ele),
@@ -581,6 +649,8 @@ function de_moivre_table(dt, N_ele)
   else
     W = typeof(dt.n_x)
     t = Table(
+      beamline_index = Vector{Int}(undef, N_ele),
+      name = Vector{String}(undef, N_ele),
       s = Vector{S}(undef, N_ele),
       phi_1 = Vector{V}(undef, N_ele),
       phi_2 = Vector{V}(undef, N_ele),
