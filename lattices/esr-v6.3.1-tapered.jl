@@ -7171,4 +7171,4 @@ ring = Beamline([ ip6_1, drift0, q1er_6, drift1, q2er_6, drift2, d2er_6, drift3,
    drift2649, q5ef_6, drift2650, sq5ef_6, drift2651, q4ef_6, drift2652, sq4ef_6, drift2653, q3ef_6,
    drift2654, rf_crab_2, drift2655, q2ef_6, drift2656, sq2ef_6, drift2657, d2ef_6_1, drift2658, d2ef_6_2,
    drift2659, d1ef_6, drift2660, mcoll_mask, q1ef_6, drift2661, q0ef_6, drift2662, ip6_2,
-   end1]; R_ref = -59.5287244902766, species_ref = Species("electron"))
+   end1]; p_over_q_ref = -59.5287244902766, species_ref = Species("electron"))
