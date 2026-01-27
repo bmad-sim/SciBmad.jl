@@ -50,8 +50,8 @@ function newton!(
     jac,
     x,
     p; # Parameters
-    reltol=1e-13,
-    abstol=1e-15, 
+    reltol=1e-9,
+    abstol=1e-14, 
     max_iter=100, 
     check_stable::Val{S}=Val{false}(),
     lambda=1,
@@ -60,7 +60,8 @@ function newton!(
     for iter in 1:max_iter
         val_and_jac!(y, jac, x, p)
         dx .= lambda.*(-jac \ y)
-        if norm(dx) < abstol || norm(dx) < reltol*norm(x)
+        if norm(dx) < reltol*norm(x) || norm(y) < abstol
+            @show iter
             x .= x .+ dx
             if S
                 eg = eigen(jac)
