@@ -61,7 +61,6 @@ function newton!(
         val_and_jac!(y, jac, x, p)
         dx .= lambda.*(-jac \ y)
         if norm(dx) < reltol*norm(x) || norm(y) < abstol
-            @show iter
             x .= x .+ dx
             if S
                 eg = eigen(jac)
