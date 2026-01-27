@@ -28,6 +28,7 @@ function newton!(
     prep=nothing, 
     check_stable::Val{S}=Val{false}(),
     lambda=1,
+    dx=zero.(x), # Temporary
 ) where {Y,X,S}
     if isnothing(prep)
         prep = DI.prepare_jacobian(f!, y, backend, x, DI.Constant(p))
@@ -39,7 +40,7 @@ function newton!(
     end
     let _f! = f!, _prep = prep, _backend = backend
         val_and_jac!(_y, _jac, _x, _p) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, DI.Constant(_p))
-        return newton!(val_and_jac!, y, jac, x, p; reltol=reltol, abstol=abstol, max_iter=max_iter, check_stable=check_stable, lambda=lambda)
+        return newton!(val_and_jac!, y, jac, x, p; reltol=reltol, abstol=abstol, max_iter=max_iter, check_stable=check_stable, lambda=lambda, dx=dx)
     end
 end
 
@@ -50,25 +51,17 @@ function newton!(
     x,
     p; # Parameters
     reltol=1e-13,
-    abstol=1e-13, 
+    abstol=1e-15, 
     max_iter=100, 
     check_stable::Val{S}=Val{false}(),
     lambda=1,
+    dx=zero.(x),
 ) where {S}
     for iter in 1:max_iter
         val_and_jac!(y, jac, x, p)
-        # Check convergence
-        if norm(y) < abstol
-            if S
-            eg = eigen(jac)
-                stable = all(t->norm(t)<=1, eg.values)
-                return (;u=x, converged=true, n_iters=iter, stable=stable)
-            else
-                return (;u=x, converged=true, n_iters=iter)
-            end
-        end
-        if norm(lambda.*(-jac \ y)) < reltol
-            x .= x .+ y
+        dx .= lambda.*(-jac \ y)
+        if norm(dx) < abstol || norm(dx) < reltol*norm(x)
+            x .= x .+ dx
             if S
                 eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)
@@ -77,7 +70,7 @@ function newton!(
                 return (;u=x, converged=true, n_iters=iter)
             end
         end
-        x .= x .+ lambda.*(-jac \ y)
+        x .= x .+ dx
     end
     if S
         return (;u=x, converged=false, n_iters=max_iter, stable=false)
