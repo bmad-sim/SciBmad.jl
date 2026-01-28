@@ -34,7 +34,7 @@ Finally, we'll install SciBmad using the following command:
 python -c 'from juliacall import Main as jl; jl.seval("import Pkg;"); jl.Pkg.add("SciBmad")'
 ```
 
-This may take several minutes to install. After it's complete, you're ready to go! Download the [python.ipynb](https://github.com/bmad-sim/SciBmad.jl/blob/main/examples/python.ipynb) SciBmad Jupyter notebook as a simple first example to run.
+This may take several minutes to install. After it's complete, you're ready to go! Download the [python/nonlinear-twiss.ipynb](https://github.com/bmad-sim/SciBmad.jl/blob/main/examples/python/nonlinear-twiss.ipynb) SciBmad Jupyter notebook as a simple first example to run.
 
 ### Julia
 
@@ -52,4 +52,4 @@ Finally, SciBmad can be installed with:
 julia -e 'import Pkg; Pkg.add("SciBmad");'
 ```
 
-This may take several minutes to install. After it's complete, you're ready to go! Download the [julia.ipynb](https://github.com/bmad-sim/SciBmad.jl/blob/main/examples/julia.ipynb) SciBmad Jupyter notebook as a simple first example to run.
+This may take several minutes to install. After it's complete, you're ready to go! Download the [julia/nonlinear-twiss.ipynb](https://github.com/bmad-sim/SciBmad.jl/blob/main/examples/julia/nonlinear-twiss.ipynb) SciBmad Jupyter notebook as a simple first example to run.

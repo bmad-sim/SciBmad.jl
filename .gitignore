@@ -9,3 +9,4 @@
 /examples/*/.ipynb_checkpoints*
 .DS_Store
 /examples/.DS_Store
+.ipynbcheckpoints
