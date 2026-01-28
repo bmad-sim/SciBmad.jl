@@ -289,7 +289,7 @@ function _twiss(
     #s = lf_table.s[i] + S(bl.line[i].L)::S
     r = canonize(a, SCALAR_PHASE; phase=phase, damping=damping)
     a = a ∘ r
-    if C == Colon || bl.line[i] in at
+    if C == Colon || (i != 1 && bl.line[i] in at)
       fc = factorize(a)
       lfi = LF(idxs[idx], names[idx], s[idx], SA[copy(phase[1]), copy(phase[2]), copy(phase[3])], COMPUTE_TWISS(fc.a1, SCALAR_LF), PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a))
       lf_table[idx] = lfi

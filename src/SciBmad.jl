@@ -17,12 +17,13 @@ using Reexport
   @reexport using NonlinearNormalForm
   @reexport using GTPSA
   @reexport using AtomicAndPhysicalConstants
+  using DelimitedFiles
 end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
 export twiss, find_closed_orbit, track!, track, Time, Yoshida, MatrixKick, BendKick, 
-        SolenoidKick, DriftKick, Exact, Bunch
+        SolenoidKick, DriftKick, Exact, Bunch, dynamic_aperture
 
 function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false, scalar_params=true)
   coords .= coords0
@@ -42,26 +43,6 @@ function coast_check(bl, backend=DI.AutoForwardDiff())
   DI.value_and_jacobian!(track_a_particle!, y, jac, backend, x0, DI.Constant(bl))
   return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 1]
 end
-
-#=
-# Hacky temporary solution for precompile
-function coast_check(bl, backend::DI.AutoGTPSA{Nothing})
-  coords = view(vars(GTPSA.desc_current), 1:6)
-  b0 = Bunch(reshape(coords, (1,6)))
-  BTBL.check_bl_bunch!(bl, b0, false) 
-  track!(b0, bl; use_KA=false, use_explicit_SIMD=false)
-  for i in 1:5 
-    if b0.coords.v[1,6][i] != 0
-      return false
-    end
-  end
-  if b0.coords.v[1,6][6] ≈ 1
-    return true
-  else
-    return false
-  end
-end
-=#
 
 function _co_res!(y, x, bl)
   track_a_particle!(y, x, bl)
@@ -127,6 +108,7 @@ end
 include("track.jl")
 include("newton.jl")
 include("twiss.jl")
+include("dynamic_aperture.jl")
 
 @setup_workload begin
   
