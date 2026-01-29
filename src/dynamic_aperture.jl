@@ -13,7 +13,7 @@ function dynamic_aperture(
 
   # Optional kwargs:
   backend=KA.CPU(),
-  coordinates_number_type::Type=backend isa KA.CPU ? Float64 : Float32, # Default to Float32 on GPU
+  coordinates_number_type::Type=Float32, # Default to Float32 for performance
   emit_3::Real=0,
   sig_pz::Real=0,
   output_file=nothing,
