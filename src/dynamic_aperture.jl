@@ -89,9 +89,9 @@ function dynamic_aperture(
 
   b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
   for i in 1:n_turns
-    print("\rTracking turn: $i out of $n_turns")
-    flush(stdout) 
     track!(b0, bl; scalar_params=true, track_kwargs...)
+    print("\rFinished turn $i out of $n_turns")
+    flush(stdout) 
   end
   println("\nTracking complete")
 
