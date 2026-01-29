@@ -82,7 +82,7 @@ function dynamic_aperture(
   if backend isa KA.GPU
     println("Initializing bunch on GPU")
     vt = KA.zeros(backend, coordinates_number_type, size(v))
-    vt .= v
+    copy!(vt, v)
   else
     vt = v
   end
@@ -96,7 +96,7 @@ function dynamic_aperture(
   println("\nTracking complete")
 
   if backend isa KA.GPU
-    v .= vt
+    copy!(v, vt)
   end
 
   state = Array(b0.coords.state)
