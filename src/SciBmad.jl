@@ -21,6 +21,7 @@ using Reexport
 end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
+const KA = BeamTracking.KernelAbstractions
 
 export twiss, find_closed_orbit, track!, track, Time, Yoshida, MatrixKick, BendKick, 
         SolenoidKick, DriftKick, Exact, Bunch, dynamic_aperture

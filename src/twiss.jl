@@ -13,6 +13,8 @@ function Base.show(io::IO, tw::Twiss)
   print(io, rpad(" tunes[1:$(length(tw.tunes))]", width), " = [Qx, Qy")
   if tw.coasting_beam
     print(io, ", slip")
+  else
+    print(io, ", Qz")
   end
   if spin
     print(io, ", Qspin")
