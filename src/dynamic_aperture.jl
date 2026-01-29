@@ -1,5 +1,7 @@
 function dynamic_aperture(
   bl::Beamline;
+
+  # Required kwargs:
   n_r::Int,
   n_theta::Int,
   deltas::AbstractArray,
@@ -7,30 +9,52 @@ function dynamic_aperture(
   max_sig_y::Real,
   emit_1::Real,
   emit_2::Real,
-  emit_3::Real,
   n_turns::Int,
+
+  # Optional kwargs:
+  backend=KA.CPU(),
+  coordinates_number_type::Type=backend isa KA.CPU ? Float64 : Float32, # Default to Float32 on GPU
+  emit_3::Real=0,
+  sig_pz::Real=0,
   output_file=nothing,
   theta_lims=(0, pi),
+  track_kwargs... # Get passed to track!
 )
   Base.require_one_based_indexing(deltas)
   tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
   t = tw.table
 
-  # Now compute sigmas at first element
+  # Now compute sigmas at first element, just first order:
   E = t.E[1]
-  sig_x = sqrt(E[1][1,1]*emit_1 + E[2][1,1]*emit_2) #+ E[3][1,1]*emit_3)
-  sig_y = sqrt(E[1][3,3]*emit_1 + E[2][3,3]*emit_2) # + E[3][3,3]*emit_3)
+  sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 
+  sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 
 
   if length(E) == 3 # rf is on
+    if emit_3 == 0 && sig_pz != 0
+      error("You specified sig_pz, but the longitudinal plane has pseudo-harmonic oscillations.
+             Please specify emit_3 instead.")
+    end
     sig_x += E[3][1,1]*emit_3
     sig_y += E[3][3,3]*emit_3
+  else
+    if sig_pz == 0 && emit_3 != 0
+      error("You specified emit_3, but the longitudinal plane is coasting.
+             Please specify sig_pz instead.")
+    end
+    eta_x = t.orbit_x[1][6]
+    eta_y = t.orbit_y[1][6]
+    sig_x += (eta_x*sig_pz)^2
+    sig_y += (eta_y*sig_pz)^2
   end
+
+  sig_x = sqrt(sig_x)
+  sig_y = sqrt(sig_y)
 
   thetas = range(theta_lims[1], theta_lims[2], length=n_theta)
   rs = range(0, 1, length=n_r)[2:end]
 
   n_particles = length(deltas)*(1+length(rs)*length(thetas))
-  println("Initializing dynamic_aperture with n_particles = $n_particles")
+  println("Initializing dynamic_aperture with $n_particles particles")
   v0 = zeros(n_particles, 6)
   idx_particle = 1
   for delta in deltas
@@ -55,17 +79,27 @@ function dynamic_aperture(
       v[i,:] = co + v0[i,:]
   end
 
-  b0 = Bunch(v; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
+  if backend isa KA.GPU
+    println("Initializing bunch on GPU")
+    vt = KA.zeros(backend, coordinates_number_type, size(v))
+    vt .= v
+  else
+    vt = v
+  end
+
+  b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
   for i in 1:n_turns
     print("\rTracking turn: $i out of $n_turns")
     flush(stdout) 
-    track!(b0, bl, scalar_params=true)
+    track!(b0, bl; scalar_params=true, track_kwargs...)
   end
   println("\nTracking complete")
 
-  writedlm("state.dlm", b0.coords.state)
-  writedlm("v.dlm", b0.coords.v)
-  println()
+  if backend isa KA.GPU
+    v .= vt
+  end
+
+  state = Array(b0.coords.state)
 
   # each column is a DA line
   x_norm_da = zeros(length(thetas), length(deltas))
@@ -74,7 +108,7 @@ function dynamic_aperture(
   # Loop thru the thetas, find max for each along r
   idx_particle = 1
   for i in LinearIndices(deltas)
-      if b0.coords.state[idx_particle] != 0x1
+      if state[idx_particle] != 0x1
           idx_particle += length(thetas)*length(rs)
           continue
       end
@@ -85,35 +119,44 @@ function dynamic_aperture(
           x = v0[idx_particle:idx_particle+length(rs)-1,1]./(max_sig_x.*sig_x)
           y = v0[idx_particle:idx_particle+length(rs)-1,3]./(max_sig_y.*sig_y)
           for (xi, yi) in zip(x,y)
+            #=
               if !(atan(yi,xi) ≈ thetas[j])
-                  error("Something went wrong")
+                  writedlm("error.dlm", state)
+                  writedlm("error.dlm", v)
+                  println()
+                  error("Something went wrong with the analysis. Submit an issue including output files.")
               end
+              =#
           end
           
-          if !isnothing(findfirst(t->t != 0x1, b0.coords.state[idx_particle:idx_particle+length(rs)-1]))
-            idx_da = idx_particle-1 + findfirst(t->t != 0x1, b0.coords.state[idx_particle:idx_particle+length(rs)-1])
+          if !isnothing(findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1]))
+            idx_da = idx_particle-1 + findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1])
 
             # Sanity check:
-            if idx_da-(idx_particle-1) != 1 && b0.coords.state[idx_da-1] != 0x1
+            #=
+            if idx_da-(idx_particle-1) != 1 && state[idx_da-1] != 0x1
                 error("Something went wrong")
             end
-            
+            =#
             x_norm_da[j,i] = v0[idx_da,1]/sig_x
             y_norm_da[j,i] = v0[idx_da,3]/sig_y
             idx_particle += length(rs)
           else
-            x_norm_da[j,i] = Inf #v0[idx_da,1]/sig_x
-            y_norm_da[j,i] = Inf #v0[idx_da,3]/sig_y
+            x_norm_da[j,i] = Inf
+            y_norm_da[j,i] = Inf
             idx_particle += length(rs)
           end
       end
   end
 
+  # output file will have first 6 columns as INITIAL coordinates wrt
+  # closed orbit, followed by the state (alive or dead)
   if !isnothing(output_file)
-    drow = vcat(deltas, deltas)
-    da_norms = hcat(x_norm_da, y_norm_da)
-    output_matrix = vcat(drow', da_norms)
-    writedlm(output_file, output_matrix, ';')
+    hcat(v0, state)
+    #drow = vcat(deltas, deltas)
+    #da_norms = hcat(x_norm_da, y_norm_da)
+    #output_matrix = vcat(drow', da_norms)
+    writedlm(output_file, hcat(v0, state), ';')
   end
 
   return x_norm_da, y_norm_da
