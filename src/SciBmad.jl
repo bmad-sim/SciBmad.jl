@@ -23,8 +23,8 @@ end
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 const KA = BeamTracking.KernelAbstractions
 
-export twiss, find_closed_orbit, track!, track, Time, Yoshida, MatrixKick, BendKick, 
-        SolenoidKick, DriftKick, Exact, Bunch, dynamic_aperture
+export twiss, find_closed_orbit, track!, Time, Yoshida, MatrixKick, BendKick, 
+        SolenoidKick, DriftKick, Exact, Bunch, dynamic_aperture, track, rotate_spins, rotate_spins!
 
 function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false, scalar_params=true)
   coords .= coords0
@@ -105,7 +105,7 @@ function find_closed_orbit(
   return v0, _coast
 end
 
-
+include("utils.jl")
 include("track.jl")
 include("newton.jl")
 include("twiss.jl")
