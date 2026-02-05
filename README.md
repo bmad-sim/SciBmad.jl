@@ -5,7 +5,12 @@
 [![Build Status](https://github.com/bmad-sim/SciBmad.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bmad-sim/SciBmad.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/bmad-sim/SciBmad.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bmad-sim/SciBmad.jl)
 !-->
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bmad-sim.github.io/SciBmad.jl/dev/)
+
+[Slides](https://github.com/user-attachments/files/25094046/scibmad-eic-02-02-2026.pdf)
+
+[Examples](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples)
+
+---
 
 SciBmad is a new open source, high-performance, CPU/GPU compatible, polymorphic, and forwards-/backwards-/Taylor-differentiable accelerator physics simulation ecosystem, usable within either Python and Julia.
 
