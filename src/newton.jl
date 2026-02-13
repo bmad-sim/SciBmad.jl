@@ -24,7 +24,8 @@ function newton!(
     reltol=1e-13,
     abstol=1e-13, 
     max_iter=100, 
-    backend=DI.AutoForwardDiff(),
+    # On GPU need to use ForwardDiff from primitive (pushforward) for no scalar indexing
+    backend=KA.get_backend(x) isa KA.GPU ? DI.AutoForwardFromPrimitive(AutoForwardDiff()) : DI.AutoForwardDiff(),
     prep=nothing, 
     check_stable::Val{S}=Val{false}(),
     lambda=1,
