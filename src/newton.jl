@@ -28,9 +28,10 @@ function newton!(
     backend=KA.get_backend(x) isa KA.GPU ? DI.AutoForwardFromPrimitive(AutoForwardDiff()) : DI.AutoForwardDiff(),
     prep=nothing, 
     check_stable::Val{S}=Val{false}(),
+    use_pinv::Val{T}=Val{false}(),
     lambda=1,
     dx=zero.(x), # Temporary
-) where {Y,X,S}
+) where {Y,X,S,T}
     if isnothing(prep)
         prep = DI.prepare_jacobian(f!, y, backend, x, DI.Constant(p))
     end
@@ -41,7 +42,7 @@ function newton!(
     end
     let _f! = f!, _prep = prep, _backend = backend
         val_and_jac!(_y, _jac, _x, _p) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, DI.Constant(_p))
-        return newton!(val_and_jac!, y, jac, x, p; reltol=reltol, abstol=abstol, max_iter=max_iter, check_stable=check_stable, lambda=lambda, dx=dx)
+        return newton!(val_and_jac!, y, jac, x, p; reltol=reltol, abstol=abstol, max_iter=max_iter, check_stable=check_stable, use_pinv=use_pinv, lambda=lambda, dx=dx)
     end
 end
 
@@ -55,14 +56,22 @@ function newton!(
     abstol=1e-14, 
     max_iter=100, 
     check_stable::Val{S}=Val{false}(),
+    use_pinv::Val{T}=Val{false}(),
     lambda=1,
     dx=zero.(x),
-) where {S}
+) where {S,T}
+    dx .= 0
+    ly = length(y)
+    sdx = size(dx)
     for iter in 1:max_iter
         val_and_jac!(y, jac, x, p)
-        dx .= lambda.*(-jac \ y)
+        if T
+            dx .= reshape(lambda.*(-pinv(jac)*reshape(y, ly)), sdx)
+        else
+            dx .= reshape(lambda.*(-jac \ reshape(y, ly)), sdx)
+        end
+        x .= x .+ dx
         if norm(dx) < reltol*norm(x) || norm(y) < abstol
-            x .= x .+ dx
             if S
                 eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)
@@ -71,7 +80,6 @@ function newton!(
                 return (;u=x, converged=true, n_iters=iter)
             end
         end
-        x .= x .+ dx
     end
     if S
         return (;u=x, converged=false, n_iters=max_iter, stable=false)
