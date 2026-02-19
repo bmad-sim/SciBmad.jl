@@ -56,6 +56,10 @@ function _co_res!(
   set_kernel!(v_res, v, N_particles; ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
   track!(b0, bl)
+  lostidx = findfirst(x->x != 0x1, b0.coords.state)
+  if !isnothing(lostidx)
+    error("Unable to find closed orbit for particle $lostidx (particle lost in tracking)")
+  end
   sub_kernel!(v_res, v, N_particles, Val{false}(); ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
   return v_res
@@ -78,7 +82,6 @@ function _co_res_coast!(
   @assert N_particles == size(v_constant, 1) "Incorrect size for particle constant array given v_coast input"
   b0 = Bunch(v_cache)
   SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify  
-
   set_kernel!(v_res, v_cache, v_constant, v_coast, N_particles; ndrange=N_particles)
   KA.synchronize(KA.get_backend(v_cache))
   track!(b0, bl, scalar_params=true)
