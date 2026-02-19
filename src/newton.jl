@@ -20,7 +20,7 @@ function newton!(
     f!::Function,  # DO NOT SPECIALIZE ON FUNCTION! This is the mistake SciML makes...
     y::Y, 
     x::X,
-    p;             # Parameters
+    contexts::Vararg{DI.Context};
     reltol=1e-13,
     abstol=1e-13, 
     max_iter=100, 
@@ -33,7 +33,7 @@ function newton!(
     dx=zero.(x), # Temporary
 ) where {Y,X,S,T}
     if isnothing(prep)
-        prep = DI.prepare_jacobian(f!, y, backend, x, DI.Constant(p))
+        prep = DI.prepare_jacobian(f!, y, backend, x, contexts...)
     end
     if Y <: StaticArray && X <: StaticArray
         jac = similar(y, Size(length(Y), length(X)))
@@ -41,8 +41,8 @@ function newton!(
         jac = similar(y, length(y), length(x))
     end
     let _f! = f!, _prep = prep, _backend = backend
-        val_and_jac!(_y, _jac, _x, _p) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, DI.Constant(_p))
-        return newton!(val_and_jac!, y, jac, x, p; reltol=reltol, abstol=abstol, max_iter=max_iter, check_stable=check_stable, use_pinv=use_pinv, lambda=lambda, dx=dx)
+        val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
+        return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, max_iter=max_iter, check_stable=check_stable, use_pinv=use_pinv, lambda=lambda, dx=dx)
     end
 end
 
@@ -51,7 +51,7 @@ function newton!(
     y,
     jac,
     x,
-    p; # Parameters
+    contexts::Vararg{DI.Context};
     reltol=1e-9,
     abstol=1e-14, 
     max_iter=100, 
@@ -64,7 +64,7 @@ function newton!(
     ly = length(y)
     sdx = size(dx)
     for iter in 1:max_iter
-        val_and_jac!(y, jac, x, p)
+        val_and_jac!(y, jac, x, contexts)
         if T
             dx .= reshape(lambda.*(-pinv(jac)*reshape(y, ly)), sdx)
         else

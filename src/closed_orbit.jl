@@ -2,20 +2,35 @@
 # Because track! is many kernels, unfortunately all must be separate kernels
 
 # For setting before tracking
-@kernel function set_v_res!(v_res, v, N_particles, ::Val{coast}) where {coast}
+@kernel function set_v!(v_res, v, N_particles)
   i = @index(Global)
   @inbounds v_res[i + 0*N_particles] = v[i,1]
   @inbounds v_res[i + 1*N_particles] = v[i,2]
   @inbounds v_res[i + 2*N_particles] = v[i,3]
   @inbounds v_res[i + 3*N_particles] = v[i,4]
-  if !coast
-    @inbounds v_res[i + 4*N_particles] = v[i,5]
-    @inbounds v_res[i + 5*N_particles] = v[i,6]
-  end
+  @inbounds v_res[i + 4*N_particles] = v[i,5]
+  @inbounds v_res[i + 5*N_particles] = v[i,6]
+end
+
+@kernel function set_v_coast!(v_res, v_cache, v_constant, v_coast, N_particles)
+  i = @index(Global)
+
+  @inbounds v_cache[i,5] = v_constant[i,5]
+  @inbounds v_cache[i,6] = v_constant[i,6]
+
+  @inbounds v_cache[i,1] = v_coast[i,1]
+  @inbounds v_cache[i,2] = v_coast[i,2]
+  @inbounds v_cache[i,3] = v_coast[i,3]
+  @inbounds v_cache[i,4] = v_coast[i,4]
+
+  @inbounds v_res[i + 0*N_particles] = v_cache[i,1]
+  @inbounds v_res[i + 1*N_particles] = v_cache[i,2]
+  @inbounds v_res[i + 2*N_particles] = v_cache[i,3]
+  @inbounds v_res[i + 3*N_particles] = v_cache[i,4]
 end
 
 # For subtracting after tracking
-@kernel function sub_v_res!(v_res, v, N_particles, ::Val{coast}) where {coast}
+@kernel function sub_v!(v_res, v, N_particles, ::Val{coast}) where {coast}
   i = @index(Global)
   @inbounds v_res[i + 0*N_particles] -= v[i,1]
   @inbounds v_res[i + 1*N_particles] -= v[i,2]
@@ -27,31 +42,52 @@ end
   end
 end
 
-get_val_parameter(::Val{T}) where {T} = T
-
-
 function _co_res!(
   v_res, 
   v, 
-  p::T,
-) where {T}
-  bl = p[1]
-  set_kernel! = p[2]
-  sub_kernel! = p[3]
-  coast = get_val_parameter(p[4])
-  if coast
-    @assert length(v_res) == size(v, 1)*4 "Incorrect size for residual vector"
-  else
-    @assert length(v_res) == size(v, 1)*6 "Incorrect size for residual vector"
-  end
+  bl::Beamline,
+  set_kernel!,
+  sub_kernel!,
+)
   N_particles = size(v, 1)
+  @assert length(v_res) == N_particles*6 "Incorrect size for residual vector"
   b0 = Bunch(v)
   SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
-  set_kernel!(v_res, v, N_particles, Val{coast}(); ndrange=N_particles)
+  set_kernel!(v_res, v, N_particles; ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
   track!(b0, bl)
-  sub_kernel!(v_res, v, N_particles, Val{coast}(); ndrange=N_particles)
+  sub_kernel!(v_res, v, N_particles, Val{false}(); ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
+  return v_res
+end
+
+# In the coasting beam case, a separate read/write 
+# must be made to/from an N x 4 array to the N x 6 Bunch array
+function _co_res_coast!(
+  v_res, 
+  v_coast, # N x 4 
+  bl::Beamline,
+  set_kernel!,
+  sub_kernel!,
+  v_cache,
+  v_constant,
+)
+  N_particles = size(v_coast, 1)
+  @assert length(v_res) == N_particles*4 "Incorrect size for residual vector"
+  @assert N_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
+  @assert N_particles == size(v_constant, 1) "Incorrect size for particle constant array given v_coast input"
+  b0 = Bunch(v_cache)
+  SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify  
+
+  set_kernel!(v_res, v_cache, v_constant, v_coast, N_particles; ndrange=N_particles)
+  KA.synchronize(KA.get_backend(v_cache))
+  track!(b0, bl, scalar_params=true)
+  lostidx = findfirst(x->x != 0x1, b0.coords.state)
+  if !isnothing(lostidx)
+    error("Unable to find closed orbit for particle $lostidx (particle lost in tracking)")
+  end
+  sub_kernel!(v_res, v_cache, N_particles, Val{true}(); ndrange=N_particles)
+  KA.synchronize(KA.get_backend(v_cache))
   return v_res
 end
 
@@ -59,9 +95,9 @@ function coast_check(bl, backend=DI.AutoForwardDiff())
   v0 = zeros(1,6)
   v = zeros(1,6)
   jac = zeros(6,6)
-  set_kernel! = set_v_res!(KA.get_backend(v))
-  sub_kernel! = sub_v_res!(KA.get_backend(v))
-  DI.value_and_jacobian!(_co_res!, v, jac, backend, v0, DI.Constant((bl,set_kernel!,sub_kernel!,Val{false}())))
+  set_kernel! = set_v!(KA.get_backend(v))
+  sub_kernel! = sub_v!(KA.get_backend(v))
+  DI.value_and_jacobian!(_co_res!, v, jac, backend, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!))
   return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 0]
 end
 
@@ -85,20 +121,22 @@ function find_closed_orbit(
   else
     _coast = C
   end
-  if _coast    
+  if _coast
+    v0_cache = copy(v0)    
     v = similar(v0, (size(v0, 1), 4))
-    set_kernel! = set_v_res!(KA.get_backend(v))
-    sub_kernel! = sub_v_res!(KA.get_backend(v))
-    p = (bl, set_kernel!, sub_kernel!, Val{_coast}())
-    if !newton!(_co_res!, v, v0, p; reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
+    v_coast = similar(v0, (size(v0, 1), 4))
+    v_coast .= 0
+    set_kernel! = set_v_coast!(KA.get_backend(v))
+    sub_kernel! = sub_v!(KA.get_backend(v))
+    if !newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
       error("Closed orbit finder not converging")
     end
+    return v_coast
   else
     v = similar(v0, (size(v0, 1), 6))
-    set_kernel! = set_v_res!(KA.get_backend(v))
-    sub_kernel! = sub_v_res!(KA.get_backend(v))
-    p = (bl, set_kernel!, sub_kernel!, Val{_coast}())
-    if !newton!(_co_res!, v, v0, p; reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
+    set_kernel! = set_v!(KA.get_backend(v))
+    sub_kernel! = sub_v!(KA.get_backend(v))
+    if !newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
       error("Closed orbit finder not converging")
     end
   end
@@ -109,8 +147,8 @@ const CLOSED_ORBIT_FORWARDDIFF_PREP = (
   x = zeros(1,6);
   y = zeros(1,6);
   bl = Beamline([LineElement()]);
-  set_kernel! = set_v_res!(KA.get_backend(x));
-  sub_kernel! = sub_v_res!(KA.get_backend(x));
+  set_kernel! = set_v!(KA.get_backend(x));
+  sub_kernel! = sub_v!(KA.get_backend(x));
   p = (bl, set_kernel!, sub_kernel!, Val{false}());
   DI.prepare_jacobian(_co_res!, y, DI.AutoForwardDiff(), x, DI.Constant(p))
 )
@@ -119,8 +157,8 @@ const CLOSED_ORBIT_FORWARDDIFF_COAST_PREP = (
   x = zeros(1,6);
   y = zeros(1,6);
   bl = Beamline([LineElement()]);
-  set_kernel! = set_v_res!(KA.get_backend(x));
-  sub_kernel! = sub_v_res!(KA.get_backend(x));
+  set_kernel! = set_v!(KA.get_backend(x));
+  sub_kernel! = sub_v!(KA.get_backend(x));
   p = (bl, set_kernel!, sub_kernel!, Val{true}());
   DI.prepare_jacobian(_co_res!, y, DI.AutoForwardDiff(), x, DI.Constant(p))
 )
