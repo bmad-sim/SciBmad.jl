@@ -4,6 +4,7 @@ authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
 version = "0.3.1"
 
 [deps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 AtomicAndPhysicalConstants = "5c0d271c-5419-4163-b387-496237733d8b"
 BeamTracking = "8ef5c10a-4ca3-437f-8af5-b84d8af36df0"
 Beamlines = "5bb90b03-0719-46b8-8ce4-1ef3afd3cd4b"
@@ -17,14 +18,16 @@ NonlinearNormalForm = "05e19671-dec8-4f15-984f-54eaa6ca64be"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SparseMatrixColorings = "0a514795-09f3-496d-8182-132a7b665d35"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TPSAInterface = "575459ea-959c-4603-9b15-d63fb6693033"
 TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 
 [compat]
 AtomicAndPhysicalConstants = "0.8.2"
-BeamTracking = "0.5.5"
-Beamlines = "0.8.2"
+BeamTracking = "0.5.6"
+Beamlines = "0.8.5"
 DelimitedFiles = "1"
 DifferentiationInterface = "0.7.4"
 ForwardDiff = "0.10,1"

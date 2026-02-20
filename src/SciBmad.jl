@@ -14,13 +14,16 @@ using Reexport
       TypedTables,
       StaticArrays,
       ForwardDiff,
-      RecursiveArrayTools
+      RecursiveArrayTools,
+      DelimitedFiles,
+      ADTypes,
+      SparseArrays,
+      SparseMatrixColorings
   using BeamTracking
   @reexport using Beamlines
   @reexport using NonlinearNormalForm
   @reexport using GTPSA
   @reexport using AtomicAndPhysicalConstants
-  using DelimitedFiles
 end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)

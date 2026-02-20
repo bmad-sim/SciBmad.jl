@@ -73,7 +73,6 @@ function newton!(
         end
         x .= x .+ dx
         if norm(dx)< reltol*norm(x) || norm(y) < fabstol
-            @show iter
             if S
                 eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)

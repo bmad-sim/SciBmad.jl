@@ -2,5 +2,6 @@ using SciBmad
 using Test
 
 @testset "SciBmad.jl" begin
-    # Write your tests here.
+    # See SciBmad's subpackages for all of the unit tests
 end
+
