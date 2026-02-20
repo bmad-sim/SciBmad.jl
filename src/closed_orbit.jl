@@ -125,8 +125,8 @@ function _co_sparse_detector_and_coloring_alg(v0, N_particles, N_coords)
     rows_s = similar(v0, Int, nnz)
     cols_s = similar(v0, Int, nnz)
     mat = similar(v0, nnz)
-    rows_s .= rows
-    cols_s .= cols
+    copyto!(row_s, rows)
+    copyto!(cols_s, cols)
     mat .= 1
     pattern = sparse(rows_s, cols_s, mat, N_particles*N_coords, N_particles*N_coords)
     detector = ADTypes.KnownJacobianSparsityDetector(pattern)
