@@ -52,8 +52,8 @@ function newton!(
     jac,
     x,
     contexts::Vararg{DI.Context};
-    reltol=1e-9,
-    abstol=1e-14, 
+    reltol=1e-13,
+    abstol=1e-13, 
     max_iter=100, 
     check_stable::Val{S}=Val{false}(),
     use_pinv::Val{T}=Val{false}(),
@@ -62,6 +62,7 @@ function newton!(
 ) where {S,T}
     dx .= 0
     ly = length(y)
+    fabstol = abstol*sqrt(ly)
     sdx = size(dx)
     for iter in 1:max_iter
         val_and_jac!(y, jac, x, contexts)
@@ -71,7 +72,8 @@ function newton!(
             dx .= reshape(lambda.*(-jac \ reshape(y, ly)), sdx)
         end
         x .= x .+ dx
-        if norm(dx) < reltol*norm(x) || norm(y) < abstol
+        if norm(dx)< reltol*norm(x) || norm(y) < fabstol
+            @show iter
             if S
                 eg = eigen(jac)
                 stable = all(t->norm(t)<=1, eg.values)

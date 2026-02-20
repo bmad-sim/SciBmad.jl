@@ -2,7 +2,7 @@
 # Because track! is many kernels, unfortunately all must be separate kernels
 
 # For setting before tracking
-@kernel function set_v!(v_res, v, N_particles)
+@kernel function set_v!(v_res, v_cache, @Const(v), @Const(N_particles))
   i = @index(Global)
   @inbounds v_res[i + 0*N_particles] = v[i,1]
   @inbounds v_res[i + 1*N_particles] = v[i,2]
@@ -10,9 +10,16 @@
   @inbounds v_res[i + 3*N_particles] = v[i,4]
   @inbounds v_res[i + 4*N_particles] = v[i,5]
   @inbounds v_res[i + 5*N_particles] = v[i,6]
+
+  @inbounds v_cache[i,1] = v[i,1]
+  @inbounds v_cache[i,2] = v[i,2]
+  @inbounds v_cache[i,3] = v[i,3]
+  @inbounds v_cache[i,4] = v[i,4]
+  @inbounds v_cache[i,5] = v[i,5]
+  @inbounds v_cache[i,6] = v[i,6]
 end
 
-@kernel function set_v_coast!(v_res, v_cache, v_constant, v_coast, N_particles)
+@kernel function set_v_coast!(v_res, v_cache, @Const(v_constant), @Const(v_coast), @Const(N_particles))
   i = @index(Global)
 
   @inbounds v_cache[i,5] = v_constant[i,5]
@@ -23,10 +30,18 @@ end
   @inbounds v_cache[i,3] = v_coast[i,3]
   @inbounds v_cache[i,4] = v_coast[i,4]
 
-  @inbounds v_res[i + 0*N_particles] = v_cache[i,1]
-  @inbounds v_res[i + 1*N_particles] = v_cache[i,2]
-  @inbounds v_res[i + 2*N_particles] = v_cache[i,3]
-  @inbounds v_res[i + 3*N_particles] = v_cache[i,4]
+  @inbounds v_res[i + 0*N_particles] = v_coast[i,1]
+  @inbounds v_res[i + 1*N_particles] = v_coast[i,2]
+  @inbounds v_res[i + 2*N_particles] = v_coast[i,3]
+  @inbounds v_res[i + 3*N_particles] = v_coast[i,4]
+end
+
+@kernel function set_v_coast_final!(v0, v_coast)
+  i = @index(Global)
+  @inbounds v0[i,1] = v_coast[i,1]
+  @inbounds v0[i,2] = v_coast[i,2]
+  @inbounds v0[i,3] = v_coast[i,3]
+  @inbounds v0[i,4] = v_coast[i,4]
 end
 
 # For subtracting after tracking
@@ -48,19 +63,20 @@ function _co_res!(
   bl::Beamline,
   set_kernel!,
   sub_kernel!,
+  v_cache,
 )
   N_particles = size(v, 1)
   @assert length(v_res) == N_particles*6 "Incorrect size for residual vector"
-  b0 = Bunch(v)
+  b0 = Bunch(v_cache)
   SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
-  set_kernel!(v_res, v, N_particles; ndrange=N_particles)
+  set_kernel!(v_res, v_cache, v, N_particles; ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
   track!(b0, bl)
   lostidx = findfirst(x->x != 0x1, b0.coords.state)
   if !isnothing(lostidx)
     error("Unable to find closed orbit for particle $lostidx (particle lost in tracking)")
   end
-  sub_kernel!(v_res, v, N_particles, Val{false}(); ndrange=N_particles)
+  sub_kernel!(v_res, v_cache, N_particles, Val{false}(); ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
   return v_res
 end
@@ -97,10 +113,11 @@ end
 function coast_check(bl, backend=DI.AutoForwardDiff())
   v0 = zeros(1,6)
   v = zeros(1,6)
+  v_cache = copy(v0)
   jac = zeros(6,6)
   set_kernel! = set_v!(KA.get_backend(v))
   sub_kernel! = sub_v!(KA.get_backend(v))
-  DI.value_and_jacobian!(_co_res!, v, jac, backend, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!))
+  DI.value_and_jacobian!(_co_res!, v, jac, backend, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache))
   return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 0]
 end
 
@@ -129,17 +146,21 @@ function find_closed_orbit(
     v = similar(v0, (size(v0, 1), 4))
     v_coast = similar(v0, (size(v0, 1), 4))
     v_coast .= 0
-    set_kernel! = set_v_coast!(KA.get_backend(v))
-    sub_kernel! = sub_v!(KA.get_backend(v))
+    kernel_backend = KA.get_backend(v)
+    set_kernel! = set_v_coast!(kernel_backend)
+    sub_kernel! = sub_v!(kernel_backend)
     if !newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
       error("Closed orbit finder not converging")
     end
-    return v_coast
+    set_v_coast_final!(kernel_backend)(v0, v_coast; ndrange=size(v0, 1))
+    KA.synchronize(kernel_backend)
   else
+    v0_cache = copy(v0)  
     v = similar(v0, (size(v0, 1), 6))
-    set_kernel! = set_v!(KA.get_backend(v))
-    sub_kernel! = sub_v!(KA.get_backend(v))
-    if !newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
+    kernel_backend = KA.get_backend(v)
+    set_kernel! = set_v!(kernel_backend)
+    sub_kernel! = sub_v!(kernel_backend)
+    if !newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
       error("Closed orbit finder not converging")
     end
   end

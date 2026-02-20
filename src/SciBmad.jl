@@ -6,7 +6,7 @@ using Reexport
 
 @recompile_invalidations begin
   using KernelAbstractions: KernelAbstractions as KA
-  using KernelAbstractions: @index, @kernel
+  using KernelAbstractions: @index, @kernel, @Const
   using NonlinearNormalForm: NonlinearNormalForm as NNF
   using TPSAInterface: TPSAInterface as TI
   using DifferentiationInterface: DifferentiationInterface as DI
