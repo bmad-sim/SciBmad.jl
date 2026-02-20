@@ -172,7 +172,7 @@ function find_closed_orbit(
   if _coast
     # Use AutoSparse ALWAYS if more than 1 particle
     if N_particles > 1
-      detector, alg = _co_sparse_detector_and_coloring_alg(N_particles, 4)
+      detector, alg = _co_sparse_detector_and_coloring_alg(v0, N_particles, 4)
       backend = AutoSparse(backend; 
         sparsity_detector=detector,
         coloring_algorithm=alg,
@@ -192,7 +192,7 @@ function find_closed_orbit(
   else
     # Use AutoSparse ALWAYS if more than 1 particle
     if N_particles > 1
-      detector, alg = _co_sparse_detector_and_coloring_alg(N_particles, 6)
+      detector, alg = _co_sparse_detector_and_coloring_alg(v0, N_particles, 6)
       backend = AutoSparse(backend; 
         sparsity_detector=detector,
         coloring_algorithm=alg,
