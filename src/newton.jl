@@ -35,10 +35,14 @@ function newton!(
     if isnothing(prep)
         prep = DI.prepare_jacobian(f!, y, backend, x, contexts...)
     end
-    if Y <: StaticArray && X <: StaticArray
-        jac = similar(y, Size(length(Y), length(X)))
+    if backend isa AutoSparse
+        jac = similar(sparsity_pattern(prep), eltype(y))
     else
-        jac = similar(y, length(y), length(x))
+        if Y <: StaticArray && X <: StaticArray
+            jac = similar(y, Size(length(Y), length(X)))
+        else
+            jac = similar(y, length(y), length(x))
+        end
     end
     let _f! = f!, _prep = prep, _backend = backend
         val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
