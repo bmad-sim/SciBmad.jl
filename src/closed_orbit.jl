@@ -110,7 +110,7 @@ function _co_res_coast!(
   return v_res
 end
 
-function _co_sparse_detector_and_coloring_alg(N_particles, N_coords)
+function _co_sparse_detector_and_coloring_alg(v0, N_particles, N_coords)
     nnz = N_particles * N_coords^2
     rows = Vector{Int}(undef, nnz)
     cols = Vector{Int}(undef, nnz)
@@ -122,7 +122,9 @@ function _co_sparse_detector_and_coloring_alg(N_particles, N_coords)
         idx += N_particles
       end
     end
-    pattern = sparse(rows, cols, ones(nnz), N_particles*N_coords, N_particles*N_coords)
+    mat = similar(v0, nnz)
+    mat .= 1
+    pattern = sparse(rows, cols, mat, N_particles*N_coords, N_particles*N_coords)
     detector = ADTypes.KnownJacobianSparsityDetector(pattern)
     color = repeat(1:N_coords, inner=N_particles)  # column (kc-1)*N+i gets color kc
     alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
