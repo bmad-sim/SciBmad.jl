@@ -70,6 +70,8 @@ function newton!(
     sdx = size(dx)
     for iter in 1:max_iter
         val_and_jac!(y, jac, x, contexts)
+        @show jac
+        @show x
         if T
             dx .= reshape(lambda.*(-pinv(jac)*reshape(y, ly)), sdx)
         else

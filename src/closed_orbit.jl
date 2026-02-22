@@ -110,7 +110,10 @@ function _co_res_coast!(
   return v_res
 end
 
-function _co_sparse_detector_and_coloring_alg(v0, N_particles, N_coords)
+# For CUDA, this must be overridden to construct CuSparseMatrixCSR (Julia default is CSC)
+device_specific_sparse(m, device) = m
+
+function _co_sparse_detector_and_coloring_alg(N_particles, N_coords, device)
     nnz = N_particles * N_coords^2
     rows = Vector{Int}(undef, nnz)
     cols = Vector{Int}(undef, nnz)
@@ -122,13 +125,7 @@ function _co_sparse_detector_and_coloring_alg(v0, N_particles, N_coords)
         idx += N_particles
       end
     end
-    rows_s = similar(v0, Int, nnz)
-    cols_s = similar(v0, Int, nnz)
-    mat = similar(v0, nnz)
-    copyto!(rows_s, rows)
-    copyto!(cols_s, cols)
-    mat .= 1
-    pattern = sparse(rows_s, cols_s, mat, N_particles*N_coords, N_particles*N_coords)
+    pattern = device_specific_sparse(sparse(rows, cols, ones(nnz), N_particles*N_coords, N_particles*N_coords), device)
     detector = ADTypes.KnownJacobianSparsityDetector(pattern)
     color = repeat(1:N_coords, inner=N_particles)  # column (kc-1)*N+i gets color kc
     alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
@@ -170,13 +167,13 @@ function find_closed_orbit(
   end
   
   N_particles = size(v0, 1)
-  kernel_backend = KA.get_backend(v0)
+  device = KA.get_backend(v0)
 
 
   if _coast
     # Use AutoSparse ALWAYS if more than 1 particle
     if N_particles > 1
-      detector, alg = _co_sparse_detector_and_coloring_alg(v0, N_particles, 4)
+      detector, alg = _co_sparse_detector_and_coloring_alg(N_particles, 4, device)
       backend = AutoSparse(backend; 
         sparsity_detector=detector,
         coloring_algorithm=alg,
@@ -186,17 +183,17 @@ function find_closed_orbit(
     v = similar(v0, (N_particles, 4))
     v_coast = similar(v0, (N_particles, 4))
     v_coast .= 0
-    set_kernel! = set_v_coast!(kernel_backend)
-    sub_kernel! = sub_v!(kernel_backend)
+    set_kernel! = set_v_coast!(device)
+    sub_kernel! = sub_v!(device)
     if !newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
       error("Closed orbit finder not converging")
     end
-    set_v_coast_final!(kernel_backend)(v0, v_coast; ndrange=N_particles)
-    KA.synchronize(kernel_backend)
+    set_v_coast_final!(device)(v0, v_coast; ndrange=N_particles)
+    KA.synchronize(device)
   else
     # Use AutoSparse ALWAYS if more than 1 particle
     if N_particles > 1
-      detector, alg = _co_sparse_detector_and_coloring_alg(v0, N_particles, 6)
+      detector, alg = _co_sparse_detector_and_coloring_alg(N_particles, 6, device)
       backend = AutoSparse(backend; 
         sparsity_detector=detector,
         coloring_algorithm=alg,
@@ -204,8 +201,8 @@ function find_closed_orbit(
     end
     v0_cache = copy(v0)  
     v = similar(v0, (N_particles, 6))
-    set_kernel! = set_v!(kernel_backend)
-    sub_kernel! = sub_v!(kernel_backend)
+    set_kernel! = set_v!(device)
+    sub_kernel! = sub_v!(device)
     if !newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
       error("Closed orbit finder not converging")
     end
