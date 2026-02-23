@@ -65,6 +65,9 @@ function _co_res!(
   sub_kernel!,
   v_cache,
 )
+  v_res = transpose(v_res)
+  v = transpose(v)
+  v_cache = transpose(v_cache)
   N_particles = size(v, 1)
   @assert length(v_res) == N_particles*6 "Incorrect size for residual vector"
   b0 = Bunch(v_cache)
@@ -83,9 +86,12 @@ end
 
 # In the coasting beam case, a separate read/write 
 # must be made to/from an N x 4 array to the N x 6 Bunch array
+
+# NOTE: THIS FUNCTION IS CALLED IN THE CLOSED ORBIT FINDER, WHICH 
+# TAKES AOS FOR BATCH PERFORMANCE. THEREFORE THE INPUTS ARE TRANSPOSED.
 function _co_res_coast!(
   v_res, 
-  v_coast, # N x 4 
+  v_coast,
   bl::Beamline,
   set_kernel!,
   sub_kernel!,
@@ -115,8 +121,8 @@ function _co_res_coast!(
 end
 
 function coast_check(bl, autodiff=AutoForwardDiff())
-  v0 = zeros(1,6)
-  v = zeros(1,6)
+  v0 = transpose(zeros(1,6))
+  v = transpose(zeros(1,6))
   v_cache = copy(v0)
   jac = zeros(6,6)
   set_kernel! = set_v!(KA.get_backend(v))
@@ -155,6 +161,8 @@ function find_closed_orbit(
     batchsize = nothing
   end
 
+  # Newton requires AoS for batching, so 
+  # all residual functions 6 x N or 4 x N (coast)
   v0_cache = transpose(copy(v0))   
 
   if _coast
