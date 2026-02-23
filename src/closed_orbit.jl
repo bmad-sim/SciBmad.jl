@@ -141,7 +141,7 @@ function find_closed_orbit(
     reltol=1e-13,
     abstol=1e-13, 
     maxiter=100, 
-    autodiff=KA.get_backend(v0) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
+    autodiff=KA.get_backend(v0) isa KA.GPU ? DI.AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
     prep=nothing,
     coast::Val{C}=Val{Nothing}(),
 ) where {C}
