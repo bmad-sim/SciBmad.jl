@@ -110,29 +110,7 @@ function _co_res_coast!(
   return v_res
 end
 
-# For CUDA, this must be overridden to construct CuSparseMatrixCSR (Julia default is CSC)
-device_specific_sparse(m, device) = m
-
-function _co_sparse_detector_and_coloring_alg(N_particles, N_coords, device)
-    nnz = N_particles * N_coords^2
-    rows = Vector{Int}(undef, nnz)
-    cols = Vector{Int}(undef, nnz)
-    idx = 1
-    for kr in 1:N_coords
-      for kc in 1:N_coords
-        rows[idx:idx+N_particles-1] .= (kr-1)*N_particles+1 : kr*N_particles
-        cols[idx:idx+N_particles-1] .= (kc-1)*N_particles+1 : kc*N_particles
-        idx += N_particles
-      end
-    end
-    pattern = device_specific_sparse(sparse(rows, cols, ones(nnz), N_particles*N_coords, N_particles*N_coords), device)
-    detector = ADTypes.KnownJacobianSparsityDetector(pattern)
-    color = repeat(1:N_coords, inner=N_particles)  # column (kc-1)*N+i gets color kc
-    alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
-    return detector, alg
-end
-
-function coast_check(bl, backend=DI.AutoForwardDiff())
+function coast_check(bl, backend=AutoForwardDiff())
   v0 = zeros(1,6)
   v = zeros(1,6)
   v_cache = copy(v0)
@@ -153,7 +131,7 @@ function find_closed_orbit(
     reltol=1e-13,
     abstol=1e-13, 
     max_iter=100, 
-    backend=KA.get_backend(v0) isa KA.GPU ? DI.AutoForwardFromPrimitive(AutoForwardDiff()) : DI.AutoForwardDiff(),
+    backend=KA.get_backend(v0) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
     prep=nothing,
     lambda=1,
     coast::Val{C}=Val{Nothing}(),
@@ -217,7 +195,7 @@ const CLOSED_ORBIT_FORWARDDIFF_PREP = (
   set_kernel! = set_v!(KA.get_backend(x));
   sub_kernel! = sub_v!(KA.get_backend(x));
   p = (bl, set_kernel!, sub_kernel!, Val{false}());
-  DI.prepare_jacobian(_co_res!, y, DI.AutoForwardDiff(), x, DI.Constant(p))
+  DI.prepare_jacobian(_co_res!, y, AutoForwardDiff(), x, DI.Constant(p))
 )
 
 const CLOSED_ORBIT_FORWARDDIFF_COAST_PREP = (
@@ -227,7 +205,7 @@ const CLOSED_ORBIT_FORWARDDIFF_COAST_PREP = (
   set_kernel! = set_v!(KA.get_backend(x));
   sub_kernel! = sub_v!(KA.get_backend(x));
   p = (bl, set_kernel!, sub_kernel!, Val{true}());
-  DI.prepare_jacobian(_co_res!, y, DI.AutoForwardDiff(), x, DI.Constant(p))
+  DI.prepare_jacobian(_co_res!, y, AutoForwardDiff(), x, DI.Constant(p))
 )
 =#
 
@@ -241,7 +219,7 @@ const CLOSED_ORBIT_FORWARDDIFF_PREP = (
   x = zeros(1,6);
   y = zeros(6);
   bl = Beamline([LineElement()]);
-  DI.prepare_jacobian(_co_res!, y, DI.AutoForwardDiff(), x, DI.Constant(bl))
+  DI.prepare_jacobian(_co_res!, y, AutoForwardDiff(), x, DI.Constant(bl))
 )
 
 
@@ -257,7 +235,7 @@ function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=
   return coords
 end
 
-function coast_check(bl, backend=DI.AutoForwardDiff())
+function coast_check(bl, backend=AutoForwardDiff())
   x0 = zeros(6)
   y = zeros(6)
   jac = zeros(6, 6)
@@ -278,7 +256,7 @@ function find_closed_orbit(
   reltol=1e-13,
   abstol=1e-13, 
   max_iter=100, 
-  backend=DI.AutoForwardDiff(),
+  backend=AutoForwardDiff(),
   prep=CLOSED_ORBIT_FORWARDDIFF_PREP,
   lambda=1,
   coast::Val{C}=Val{Nothing}(),
