@@ -92,6 +92,10 @@ function _co_res_coast!(
   v_cache,
   v_constant,
 )
+  v_res = transpose(v_res)
+  v_coast = transpose(v_coast)
+  v_cache = transpose(v_cache)
+  v_constant = transpose(v_constant)
   N_particles = size(v_coast, 1)
   @assert length(v_res) == N_particles*4 "Incorrect size for residual vector"
   @assert N_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
@@ -110,14 +114,14 @@ function _co_res_coast!(
   return v_res
 end
 
-function coast_check(bl, backend=AutoForwardDiff())
+function coast_check(bl, autodiff=AutoForwardDiff())
   v0 = zeros(1,6)
   v = zeros(1,6)
   v_cache = copy(v0)
   jac = zeros(6,6)
   set_kernel! = set_v!(KA.get_backend(v))
   sub_kernel! = sub_v!(KA.get_backend(v))
-  DI.value_and_jacobian!(_co_res!, v, jac, backend, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache))
+  DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache))
   return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 0]
 end
 
@@ -130,58 +134,45 @@ function find_closed_orbit(
     v0=zeros(1,6), 
     reltol=1e-13,
     abstol=1e-13, 
-    max_iter=100, 
-    backend=KA.get_backend(v0) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
+    maxiter=100, 
+    autodiff=KA.get_backend(v0) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
     prep=nothing,
-    lambda=1,
     coast::Val{C}=Val{Nothing}(),
 ) where {C}
 
   # First do a coast check:
   if C == Nothing
-    _coast = coast_check(bl, backend)
+    _coast = coast_check(bl, autodiff)
   else
     _coast = C
   end
   
   N_particles = size(v0, 1)
   device = KA.get_backend(v0)
+  if N_particles > 1
+    batchsize = N_particles
+  else
+    batchsize = nothing
+  end
 
+  v0_cache = transpose(copy(v0))   
 
   if _coast
-    # Use AutoSparse ALWAYS if more than 1 particle
-    if N_particles > 1
-      detector, alg = _co_sparse_detector_and_coloring_alg(N_particles, 4, device)
-      backend = AutoSparse(backend; 
-        sparsity_detector=detector,
-        coloring_algorithm=alg,
-      )
-    end
-    v0_cache = copy(v0)    
-    v = similar(v0, (N_particles, 4))
-    v_coast = similar(v0, (N_particles, 4))
+    v = transpose(similar(v0, (N_particles, 4)))
+    v_coast = transpose(similar(v0, (N_particles, 4)))
     v_coast .= 0
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    if !newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
+    if !newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batchsize=batchsize).converged
       error("Closed orbit finder not converging")
     end
-    set_v_coast_final!(device)(v0, v_coast; ndrange=N_particles)
+    set_v_coast_final!(device)(v0, transpose(v_coast); ndrange=N_particles)
     KA.synchronize(device)
   else
-    # Use AutoSparse ALWAYS if more than 1 particle
-    if N_particles > 1
-      detector, alg = _co_sparse_detector_and_coloring_alg(N_particles, 6, device)
-      backend = AutoSparse(backend; 
-        sparsity_detector=detector,
-        coloring_algorithm=alg,
-      )
-    end
-    v0_cache = copy(v0)  
-    v = similar(v0, (N_particles, 6))
+    v = transpose(similar(v0, (N_particles, 6)))
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    if !newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
+    if !newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batchsize=batchsize).converged
       error("Closed orbit finder not converging")
     end
   end
@@ -255,7 +246,7 @@ function find_closed_orbit(
   v0=zeros(6), 
   reltol=1e-13,
   abstol=1e-13, 
-  max_iter=100, 
+  maxiter=100, 
   backend=AutoForwardDiff(),
   prep=CLOSED_ORBIT_FORWARDDIFF_PREP,
   lambda=1,
@@ -270,11 +261,11 @@ function find_closed_orbit(
     _coast = C
   end
   if _coast
-    if !newton!(_co_res!, v, v0, bl; reltol=reltol, abstol=abstol, max_iter=max_iter, subspace=(1:4,1:4), backend=backend, prep=prep, lambda=lambda).converged
+    if !newton!(_co_res!, v, v0, bl; reltol=reltol, abstol=abstol, maxiter=maxiter, subspace=(1:4,1:4), backend=backend, prep=prep).converged
       error("Closed orbit finder not converging")
     end
   else
-    if !newton!(_co_res!, v, v0, bl; reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
+    if !newton!(_co_res!, v, v0, bl; reltol=reltol, abstol=abstol, maxiter=maxiter, backend=backend, prep=prep).converged
       error("Closed orbit finder not converging")
     end
   end

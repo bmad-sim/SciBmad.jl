@@ -1,5 +1,7 @@
+const DEFAULT_NEWTON_SOLVER = (dx, jac, y, batchsize)->(dx .= -jac \ y)
+
 """
-    newton!(f!, y, x; reltol=1e-13, abstol=1e-13,  max_iter=100, backend=AutoForwardDiff(), check_stable=Val{false}())
+    newton!(f!, y, x; reltol=1e-13, abstol=1e-13,  maxiter=100, autodiff=AutoForwardDiff(), checkstable=Val{false}())
 
 Finds roots of f!(y, x) using Newton's method. y and x will be mutated during solution.
 x will contain the result.
@@ -12,7 +14,7 @@ x will contain the result.
 # Keyword arguments
 - `abstol`: Convergence absolute tolerance (default: 1e-13)
 - `reltol`: Convergence relative tolerance (default: 1e-13)
-- `max_iter`: Maximum number of iterations (default: 100)
+- `maxiter`: Maximum number of iterations (default: 100)
 
 Returns `NamedTuple` containing newton search results.
 """
@@ -23,22 +25,24 @@ function newton!(
   contexts::Vararg{DI.Context};
   reltol=1e-13,
   abstol=1e-13, 
-  max_iter=100, 
+  maxiter=100, 
   # On GPU need to use ForwardDiff from primitive (pushforward) for no scalar indexing
-  backend=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
+  autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
   prep=nothing, 
-  check_stable::Val{S}=Val{false}(),
-  solver!::T=(dx, jac, y)->(dx .= -jac \ y), # We do specialize on the solver tho
+  checkstable::Val{_checkstable}=Val{false}(),
+  solver::T=DEFAULT_NEWTON_SOLVER, # We do specialize on the solver tho
   batchsize::Union{Integer,Nothing}=nothing, # If not nothing, then batch processing will be done
   dx=zero.(x), # Temporary
-) where {Y,X,S,T}
+) where {Y,X,_checkstable,T}
   if !isnothing(batchsize)
     # Batch MUST have x and y stored as MATRICES where each COLUMN is one element in the batch
-    # This is important because in fact this would be AoS if the batch are particles, however for 
-    # Newton search with AD, there is no SIMD anyways. The biggest benefit here is that now memory-wise
-    # the Jacobian is block diagonal, which means a CSC sparse jacobian layout would give us each submatrix
-    # one after the other in memory. This makes it easy to then do CUDA.getrf_batched!, and maybe 
-    # doing each dense matrix serially is faster than the sparse solver? We can check.
+    # This makes the Jacobian block diagonal, which means a CSC sparse jacobian layout would give us 
+    # each submatrix one after the other in memory. This makes it easy to then do CUDA.getrf_batched!, 
+    # and maybe doing each dense matrix serially is faster than the sparse solver? We can check.
+
+    # Note that if you still want SoA layout, you can allocate as SoA and transpose. Then the cost 
+    # will be WRITING to the Jacobian matrix, but not in EVALUATING the Jacobian matrix if the function 
+    # is accelerated by SoA
     # Sanity checks
     if size(x, 2) != size(y, 2)
         error("Input/output matrix size mismatch for batched newton: number of columns for 
@@ -48,10 +52,10 @@ function newton!(
         error("Invalid batchsize specified: size(x, 2) / batchsize = $(size(x, 2)/batchsize) which is NOT an integer")
     end
 
-    # If we are batch and the user has NOT specified an AutoSparse backend, set it up for them
-    if !(backend isa AutoSparse)
+    # If we are batch and the user has NOT specified an AutoSparse autodiff, set it up for them
+    if !(autodiff isa AutoSparse)
       if !isnothing(prep)
-        @warn "You provided AD prep and a batchsize, but your AD backend is NOT AutoSparse, which is required for batched-Newton.
+        @warn "You provided AD prep and a batchsize, but your AD autodiff is NOT AutoSparse, which is required for batched-Newton.
                Your prep will therefore NOT be used"
         prep = nothing
       end
@@ -64,7 +68,7 @@ function newton!(
       rows = Vector{Int}(undef, nnz)
       cols = Vector{Int}(undef, nnz)
       idx = 1 
-      for b in 0:num_blocks-1
+      for b in 0:n_blocks-1
           row_offset = b * n_rows
           col_offset = b * n_cols
 
@@ -89,7 +93,7 @@ function newton!(
       detector = ADTypes.KnownJacobianSparsityDetector(pattern)
       color = repeat(1:n_cols, outer=n_blocks) 
       alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
-      backend = AutoSparse(backend; 
+      autodiff = AutoSparse(autodiff; 
         sparsity_detector=detector,
         coloring_algorithm=alg,
       )
@@ -97,9 +101,9 @@ function newton!(
   end
 
   if isnothing(prep)
-    prep = DI.prepare_jacobian(f!, y, backend, x, contexts...)
+    prep = DI.prepare_jacobian(f!, y, autodiff, x, contexts...)
   end
-  if backend isa AutoSparse
+  if autodiff isa AutoSparse
     jac = similar(sparsity_pattern(prep), eltype(y))
   else
     if Y <: StaticArray && X <: StaticArray
@@ -108,9 +112,9 @@ function newton!(
       jac = similar(y, length(y), length(x))
     end
   end
-  let _f! = f!, _prep = prep, _backend = backend
+  let _f! = f!, _prep = prep, _backend = autodiff
     val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
-    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, max_iter=max_iter, check_stable=check_stable, solver!=solver!, dx=dx)
+    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, solver=solver, batchsize=batchsize, dx=dx)
   end
 end
 
@@ -122,21 +126,27 @@ function newton!(
   contexts::Vararg{DI.Context};
   reltol=1e-13,
   abstol=1e-13, 
-  max_iter=100, 
-  check_stable::Val{S}=Val{false}(),
-  solver!::T=(dx, jac, y)->(dx .= -jac \ y), 
+  maxiter=100, 
+  checkstable::Val{_checkstable}=Val{false}(),
+  solver::T=DEFAULT_NEWTON_SOLVER , 
+  batchsize::Union{Integer,Nothing}=nothing, 
   dx=zero.(x),
-) where {S,T}
+) where {_checkstable,T}
   dx .= 0
-  ly = length(y)
-  fabstol = abstol*sqrt(ly)
   lx = length(x)
-  for iter in 1:max_iter
+  ly = length(y)
+  for iter in 1:maxiter
     val_and_jac!(y, jac, x, contexts)
-    solver!(reshape(dx, lx), jac, reshape(y, ly))
+    solver(reshape(dx, lx), jac, reshape(y, ly), batchsize)
     x .= x .+ dx
-    if norm(dx)< reltol*norm(x) || norm(y) < fabstol
-      if S
+    if isnothing(batchsize)
+      converged = norm(dx) < reltol*norm(x) || norm(y) < abstol
+    else
+      # Keep going until each block in the batch converged individually
+      converged = all(sum(abs2, dx; dims=1) .< reltol .* sum(abs2, x; dims=1)) || all(sum(abs2, y; dims=1) .< abstol)
+    end
+    if converged
+      if _checkstable
         eg = eigen(jac)
         stable = all(t->norm(t)<=1, eg.values)
         return (;u=x, converged=true, n_iters=iter, stable=stable)
@@ -145,9 +155,9 @@ function newton!(
       end
     end
   end
-  if S
-      return (;u=x, converged=false, n_iters=max_iter, stable=false)
+  if _checkstable
+      return (;u=x, converged=false, n_iters=maxiter, stable=false)
   else
-      return (;u=x, converged=false, n_iters=max_iter)
+      return (;u=x, converged=false, n_iters=maxiter)
   end
 end
