@@ -11,6 +11,7 @@ Beamlines = "5bb90b03-0719-46b8-8ce4-1ef3afd3cd4b"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
 GTPSA = "b27dd330-f138-47c5-815b-40db9dd9b6e8"
 KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -30,6 +31,7 @@ CUDSS = "45b445bb-4962-46a0-9369-b4df9d0f772e"
 
 [extensions]
 SciBmadCUDAExt = ["CUDA", "CUDSS"]
+SciBmadGPUArraysCoreExt = ["GPUArraysCore", "DifferentiationInterface", "LinearAlgebra"]
 
 [compat]
 AtomicAndPhysicalConstants = "0.8.2"
@@ -40,6 +42,7 @@ CUDSS = "0.6.6"
 DelimitedFiles = "1"
 DifferentiationInterface = "0.7.4"
 ForwardDiff = "0.10,1"
+GPUArraysCore = "0.2.0"
 GTPSA = "1.5.3"
 NonlinearNormalForm = "0.4.3"
 PrecompileTools = "1.2.1"
