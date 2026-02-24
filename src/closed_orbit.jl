@@ -155,11 +155,7 @@ function find_closed_orbit(
   
   N_particles = size(v0, 1)
   device = KA.get_backend(v0)
-  if N_particles > 1
-    batchsize = N_particles
-  else
-    batchsize = nothing
-  end
+  batched = Val{N_particles > 1}()
 
   # Newton requires AoS for batching, so 
   # all residual functions 6 x N or 4 x N (coast)
@@ -171,7 +167,7 @@ function find_closed_orbit(
     v_coast .= 0
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    if !newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batchsize=batchsize).converged
+    if !newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched).converged
       error("Closed orbit finder not converging")
     end
     set_v_coast_final!(device)(v0, transpose(v_coast); ndrange=N_particles)
@@ -180,7 +176,7 @@ function find_closed_orbit(
     v = transpose(similar(v0, (N_particles, 6)))
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    if !newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batchsize=batchsize).converged
+    if !newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched).converged
       error("Closed orbit finder not converging")
     end
   end
