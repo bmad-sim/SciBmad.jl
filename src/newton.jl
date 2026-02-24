@@ -1,4 +1,4 @@
-function default_solver(_y, _x, batched)
+function default_solver(device, _y, _x, batched)
   _lx = length(_x)
   _ly = length(_y)
   let lx=_lx, ly=_ly
@@ -37,7 +37,7 @@ function newton!(
   prep=nothing, 
   checkstable::Val{_checkstable}=Val{false}(),
   batched::Val{_batched}=Val{false}(), # If Val{true}(), then batch processing will be done
-  solver::T=default_solver(y, x, batched), # We do specialize on the solver tho
+  solver::T=default_solver(KA.get_backend(x), y, x, batched), # We do specialize on the solver tho
   dx=zero.(x), # Temporary
 ) where {Y,X,_checkstable,_batched,T}
   if _batched
@@ -132,7 +132,7 @@ function newton!(
   maxiter=100, 
   checkstable::Val{_checkstable}=Val{false}(),
   batched::Val{_batched}=Val{false}(), 
-  solver::T=default_solver(y, x, batched), 
+  solver::T=default_solver(KA.get_backend(x), y, x, batched), 
   dx=zero.(x),
 ) where {_checkstable,_batched,T}
   dx .= 0
