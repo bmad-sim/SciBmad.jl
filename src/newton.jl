@@ -1,4 +1,4 @@
-const DEFAULT_NEWTON_SOLVER = (dx, jac, y, batchsize)->(dx .= -jac \ y)
+default_solver(::KA.CPU, batchsize) = (dx, jac, y)->(dx .= -jac \ y)
 
 """
     newton!(f!, y, x; reltol=1e-13, abstol=1e-13,  maxiter=100, autodiff=AutoForwardDiff(), checkstable=Val{false}())
@@ -30,8 +30,8 @@ function newton!(
   autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
   prep=nothing, 
   checkstable::Val{_checkstable}=Val{false}(),
-  solver::T=DEFAULT_NEWTON_SOLVER, # We do specialize on the solver tho
   batchsize::Union{Integer,Nothing}=nothing, # If not nothing, then batch processing will be done
+  solver::T=default_solver(KA.get_backend(x), batchsize), # We do specialize on the solver tho
   dx=zero.(x), # Temporary
 ) where {Y,X,_checkstable,T}
   if !isnothing(batchsize)
@@ -114,7 +114,7 @@ function newton!(
   end
   let _f! = f!, _prep = prep, _backend = autodiff
     val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
-    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, solver=solver, batchsize=batchsize, dx=dx)
+    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, batchsize=batchsize, solver=solver, dx=dx)
   end
 end
 
@@ -128,7 +128,7 @@ function newton!(
   abstol=1e-13, 
   maxiter=100, 
   checkstable::Val{_checkstable}=Val{false}(),
-  solver::T=DEFAULT_NEWTON_SOLVER , 
+  solver::T=default_solver(KA.get_backend(x), batchsize), 
   batchsize::Union{Integer,Nothing}=nothing, 
   dx=zero.(x),
 ) where {_checkstable,T}
