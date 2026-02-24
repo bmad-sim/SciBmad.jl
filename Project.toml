@@ -35,7 +35,7 @@ SciBmadGPUArraysCoreExt = ["GPUArraysCore", "DifferentiationInterface", "LinearA
 [compat]
 AtomicAndPhysicalConstants = "0.8.2"
 BeamTracking = "0.5.6"
-Beamlines = "0.8.5"
+Beamlines = "0.8.6"
 CUDA = "5.9"
 DelimitedFiles = "1"
 DifferentiationInterface = "0.7.4"
