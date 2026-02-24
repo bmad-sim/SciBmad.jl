@@ -21,8 +21,8 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{_batched}) where
 
   # Each element of a batch is a COLUMN
   # Number of rows = number of variables in an element of a batch
-  _batchsize = size(x, 2)
-  _n = size(x, 1)
+  _batchsize = size(_x, 2)
+  _n = size(_x, 1)
   _pivot = CUDA.zeros(Int32, _n, _batchsize)
   _info = CUDA.zeros(Int32, _batchsize)
 
