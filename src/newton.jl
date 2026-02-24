@@ -1,4 +1,10 @@
-default_solver(::KA.CPU, batchsize) = (dx, jac, y)->(dx .= -jac \ y)
+function default_solver(_y, _x, batched)
+  _lx = length(_x)
+  _ly = length(_y)
+  let lx=_lx, ly=_ly
+    return (dx, jac, y)->(reshape(dx, lx) .= -jac \ reshape(y, ly))
+  end
+end
 
 """
     newton!(f!, y, x; reltol=1e-13, abstol=1e-13,  maxiter=100, autodiff=AutoForwardDiff(), checkstable=Val{false}())
@@ -30,11 +36,11 @@ function newton!(
   autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
   prep=nothing, 
   checkstable::Val{_checkstable}=Val{false}(),
-  batchsize::Union{Integer,Nothing}=nothing, # If not nothing, then batch processing will be done
-  solver::T=default_solver(KA.get_backend(x), batchsize), # We do specialize on the solver tho
+  batched::Val{_batched}=Val{false}(), # If Val{true}(), then batch processing will be done
+  solver::T=default_solver(y, x, batched), # We do specialize on the solver tho
   dx=zero.(x), # Temporary
-) where {Y,X,_checkstable,T}
-  if !isnothing(batchsize)
+) where {Y,X,_checkstable,_batched,T}
+  if _batched
     # Batch MUST have x and y stored as MATRICES where each COLUMN is one element in the batch
     # This makes the Jacobian block diagonal, which means a CSC sparse jacobian layout would give us 
     # each submatrix one after the other in memory. This makes it easy to then do CUDA.getrf_batched!, 
@@ -48,27 +54,24 @@ function newton!(
         error("Input/output matrix size mismatch for batched newton: number of columns for 
                 input and output must be equal, received $(size(x, 2)) and $(size(y, 2)) respectively.")
     end
-    if !isinteger(size(x, 2)/batchsize)
-        error("Invalid batchsize specified: size(x, 2) / batchsize = $(size(x, 2)/batchsize) which is NOT an integer")
-    end
 
     # If we are batch and the user has NOT specified an AutoSparse autodiff, set it up for them
     if !(autodiff isa AutoSparse)
       if !isnothing(prep)
-        @warn "You provided AD prep and a batchsize, but your AD autodiff is NOT AutoSparse, which is required for batched-Newton.
+        @warn "You specified batched and provided AD prep, but your AD autodiff is NOT AutoSparse, which is required for batched-Newton.
                Your prep will therefore NOT be used"
         prep = nothing
       end
 
       # Make it on the CPU
-      n_blocks = size(x, 2)
+      batchsize = size(x, 2)
       n_rows = size(y, 1)
       n_cols = size(x, 1)
-      nnz = n_blocks * n_rows * n_cols
+      nnz = batchsize * n_rows * n_cols
       rows = Vector{Int}(undef, nnz)
       cols = Vector{Int}(undef, nnz)
       idx = 1 
-      for b in 0:n_blocks-1
+      for b in 0:batchsize-1
           row_offset = b * n_rows
           col_offset = b * n_cols
 
@@ -88,10 +91,10 @@ function newton!(
       d_mat .= 1
 
       # CSC by default with sparse, even with CUDA
-      pattern = sparse(d_rows, d_cols, d_mat, n_blocks*n_rows, n_blocks*n_cols)
+      pattern = sparse(d_rows, d_cols, d_mat, batchsize*n_rows, batchsize*n_cols)
 
       detector = ADTypes.KnownJacobianSparsityDetector(pattern)
-      color = repeat(1:n_cols, outer=n_blocks) 
+      color = repeat(1:n_cols, outer=batchsize) 
       alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
       autodiff = AutoSparse(autodiff; 
         sparsity_detector=detector,
@@ -114,7 +117,7 @@ function newton!(
   end
   let _f! = f!, _prep = prep, _backend = autodiff
     val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
-    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, batchsize=batchsize, solver=solver, dx=dx)
+    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, batched=batched, solver=solver, dx=dx)
   end
 end
 
@@ -128,18 +131,16 @@ function newton!(
   abstol=1e-13, 
   maxiter=100, 
   checkstable::Val{_checkstable}=Val{false}(),
-  solver::T=default_solver(KA.get_backend(x), batchsize), 
-  batchsize::Union{Integer,Nothing}=nothing, 
+  batched::Val{_batched}=Val{false}(), 
+  solver::T=default_solver(y, x, batched), 
   dx=zero.(x),
-) where {_checkstable,T}
+) where {_checkstable,_batched,T}
   dx .= 0
-  lx = length(x)
-  ly = length(y)
   for iter in 1:maxiter
     val_and_jac!(y, jac, x, contexts)
-    solver(reshape(dx, lx), jac, reshape(y, ly), batchsize)
+    solver(dx, jac, y)
     x .= x .+ dx
-    if isnothing(batchsize)
+    if !_batched
       converged = norm(dx) < reltol*norm(x) || norm(y) < abstol
     else
       # Keep going until each block in the batch converged individually
