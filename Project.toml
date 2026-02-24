@@ -26,11 +26,10 @@ TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-CUDSS = "45b445bb-4962-46a0-9369-b4df9d0f772e"
 GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
 
 [extensions]
-SciBmadCUDAExt = ["CUDA", "CUDSS"]
+SciBmadCUDAExt = "CUDA"
 SciBmadGPUArraysCoreExt = ["GPUArraysCore", "DifferentiationInterface", "LinearAlgebra"]
 
 [compat]
