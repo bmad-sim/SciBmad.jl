@@ -1,6 +1,5 @@
 module SciBmadCUDAExt
 using CUDA
-using CUDSS # Sparse CUDA matrix solving on the device
 import SciBmad: default_solver
 
 function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{_batched}) where {_batched}
