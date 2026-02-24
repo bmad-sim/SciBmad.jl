@@ -28,7 +28,7 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{_batched}) where
 
   let pivot=_pivot, info=_info, batchsize=_batchsize, n=_n
     return (dx, jac, y)-> begin
-      jacs = reshape(jac, n, n, batchsize)
+      jacs = reshape(jac.nzVal, n, n, batchsize)
       ys = reshape(y, n, 1, batchsize)
       CUBLAS.getrf_strided_batched!(jacs, pivot, info)
       CUBLAS.getrs_strided_batched!('N', jacs, ys, pivot)
