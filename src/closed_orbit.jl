@@ -159,11 +159,11 @@ function find_closed_orbit(
 
   # Newton requires AoS for batching, so 
   # all residual functions 6 x N or 4 x N (coast)
-  v0_cache = transpose(copy(v0))   
+  v0_cache = similar(v0, (size(v0, 2), size(v0, 1)))
 
   if _coast
-    v = transpose(similar(v0, (N_particles, 4)))
-    v_coast = transpose(similar(v0, (N_particles, 4)))
+    v = similar(v0, (4, N_particles))
+    v_coast = similar(v0, (4, N_particles))
     v_coast .= 0
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
@@ -173,7 +173,7 @@ function find_closed_orbit(
     set_v_coast_final!(device)(v0, transpose(v_coast); ndrange=N_particles)
     KA.synchronize(device)
   else
-    v = transpose(similar(v0, (N_particles, 6)))
+    v = similar(v0, (6, N_particles))
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
     if !newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched).converged
