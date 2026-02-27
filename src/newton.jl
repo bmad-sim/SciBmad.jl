@@ -121,6 +121,7 @@ function newton!(
   end
 end
 
+# Converged should really be an array for batched
 function newton!(
   val_and_jac!::Function,
   y,

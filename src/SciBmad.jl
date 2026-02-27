@@ -20,6 +20,7 @@ using Reexport
       SparseArrays,
       SparseMatrixColorings
   using BeamTracking
+  using BeamTracking: vifelse
   @reexport using Beamlines
   @reexport using NonlinearNormalForm
   @reexport using GTPSA
