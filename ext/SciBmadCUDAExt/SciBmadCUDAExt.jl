@@ -2,7 +2,7 @@ module SciBmadCUDAExt
 using CUDA
 import SciBmad: default_solver
 
-function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{true}) where {_batched}
+function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{true})
   _lx = length(_x)
   _ly = length(_y)
 
