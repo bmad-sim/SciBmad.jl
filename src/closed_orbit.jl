@@ -149,6 +149,7 @@ function find_closed_orbit(
     prep=nothing,
     coast::Union{Nothing,Bool}=nothing,
     checkconverged::Bool=true,
+    checkstable::Bool=true,
 )
   # First do a coast check:
   if isnothing(coast)
@@ -169,26 +170,19 @@ function find_closed_orbit(
     v_coast .= transpose(view(v0, :, 1:4))
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, checkconverged=Val{checkconverged}(), batched=batched)
-    if batched isa Val{false} && haskey(sol, :converged)
-      if !sol.converged
-        error("Closed orbit finder not converging")
-      end
-    end
+    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, checkconverged=Val{checkconverged}(), checkstable=Val{checkstable}(), batched=batched)
     set_v_coast_final!(device)(v0, transpose(v_coast); ndrange=N_particles)
     KA.synchronize(device)
+    @reset sol.u = v0
+    sol = merge(sol, (;coast=true))
   else
     v = similar(v0, (6, N_particles))
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, checkconverged=Val{checkconverged}(), batched=batched)
-    if batched isa Val{false} && haskey(sol, :converged)
-      if !sol.converged
-        error("Closed orbit finder not converging")
-      end
-    end
+    sol = newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, checkconverged=Val{checkconverged}(), checkstable=Val{checkstable}(), batched=batched)
+    sol = merge(sol, (;coast=false))
   end
-  return v0, coast
+  return sol
 end
 #=
 const CLOSED_ORBIT_FORWARDDIFF_PREP = (

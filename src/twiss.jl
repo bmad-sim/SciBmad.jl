@@ -42,7 +42,7 @@ function twiss(
   GTPSA_descriptor=nothing, #Descriptor(6, 1),
   spin=false,
   de_moivre=false,
-  co_info=find_closed_orbit(bl),
+  co_sol=find_closed_orbit(bl),
   symplectic_tol=1e-8, # Tolerance below which to include damping
   at::Union{Colon,AbstractArray}=:, # Colon means all elements, nothing means no elements
 )
@@ -59,9 +59,8 @@ function twiss(
   if nn < 6
     error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")
   end
-
-  v0 = co_info[1]
-  coast = co_info[2]
+  coast = co_sol.coast
+  v0 = co_sol.u
 
   # Track once through and construct a DAMap
   Δv = vars(GTPSA_descriptor)[1:6]

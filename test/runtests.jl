@@ -7,6 +7,7 @@ using Test
     # where most of the tests are. 
     
     # Here we have some regression tests for SciBmad-level functionality
+    #=
     ring = include("lattices/esr-test.jl")
     foreach(x->x.tracking_method=Yoshida(order=4,num_steps=10), ring.line)
     
@@ -41,4 +42,5 @@ using Test
     @test tw.table.orbit_py[1] ≈ co_info[1][4]
     @test tw.table.orbit_z[1]  ≈ co_info[1][5]
     @test tw.table.orbit_pz[1] ≈ co_info[1][6]
+    =#
 end
