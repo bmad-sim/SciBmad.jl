@@ -36,10 +36,11 @@ function newton!(
   autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
   prep=nothing, 
   checkstable::Val{_checkstable}=Val{false}(),
+  checkconverged::Val{_checkconverged}=Val{true}(),
   batched::Val{_batched}=Val{false}(), # If Val{true}(), then batch processing will be done
   solver::T=default_solver(KA.get_backend(x), y, x, batched), # We do specialize on the solver tho
   dx=zero.(x), # Temporary
-) where {Y,X,_checkstable,_batched,T}
+) where {Y,X,_checkstable,_checkconverged,_batched,T}
   if _batched
     # Batch MUST have x and y stored as MATRICES where each COLUMN is one element in the batch
     # This makes the Jacobian block diagonal, which means a CSC sparse jacobian layout would give us 
@@ -117,7 +118,7 @@ function newton!(
   end
   let _f! = f!, _prep = prep, _backend = autodiff
     val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
-    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, batched=batched, solver=solver, dx=dx)
+    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, checkconverged=checkconverged, batched=batched, solver=solver, dx=dx)
   end
 end
 
@@ -145,17 +146,16 @@ function newton!(
   if _checkconverged
     out = merge(out, (; converged=false, n_iters=0))
   end
-
   # Newton:
   dx .= 0
   for iter in 1:maxiter
     val_and_jac!(y, jac, x, contexts)
-    if any(y .== Inf) # Infinite residual
+    if any(yi->yi == Inf, y) # Stop if infinite residual
       return out
     end
     solver(dx, jac, y)
     x .= x .+ dx
-    if _checkconverged && norm(dx) < reltol*norm(x) || norm(y) < abstol
+    if _checkconverged && (norm(dx) < reltol*norm(x) || norm(y) < abstol)
       @reset out.converged = true
       @reset out.n_iters = iter
       if _checkstable
@@ -167,7 +167,7 @@ function newton!(
   end
   return out
 end
-
+#=
 function newton!(
   val_and_jac!::Function,
   y,
@@ -209,3 +209,4 @@ function newton!(
       return (;u=x, converged=false, n_iters=maxiter)
   end
 end
+=#

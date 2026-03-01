@@ -5,6 +5,7 @@ using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidati
 using Reexport
 
 @recompile_invalidations begin
+  using Accessors
   using KernelAbstractions: KernelAbstractions as KA
   using KernelAbstractions: @index, @kernel, @Const
   using NonlinearNormalForm: NonlinearNormalForm as NNF
