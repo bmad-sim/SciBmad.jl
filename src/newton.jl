@@ -121,6 +121,53 @@ function newton!(
   end
 end
 
+# Non-batched:
+function newton!(
+  val_and_jac!::Function,
+  y,
+  jac,
+  x,
+  contexts::Vararg{DI.Context};
+  reltol=1e-13,
+  abstol=1e-13, 
+  maxiter=100, 
+  checkstable::Val{_checkstable}=Val{false}(),
+  checkconverged::Val{_checkconverged}=Val{true}(), # n_iter will only be return if _checkconverged == true
+  batched::Val{false}=Val{false}(), 
+  solver::T=default_solver(KA.get_backend(x), y, x, batched), 
+  dx=zero.(x),
+) where {_checkstable,_checkconverged,T}
+  # Setup:
+  out = (; u=x)
+  if _checkstable
+    out = merge(out, (; stable=false))
+  end
+  if _checkconverged
+    out = merge(out, (; converged=false, n_iters=0))
+  end
+
+  # Newton:
+  dx .= 0
+  for iter in 1:maxiter
+    val_and_jac!(y, jac, x, contexts)
+    if any(y .== Inf) # Infinite residual
+      return out
+    end
+    solver(dx, jac, y)
+    x .= x .+ dx
+    if _checkconverged && norm(dx) < reltol*norm(x) || norm(y) < abstol
+      @reset out.converged = true
+      @reset out.n_iters = iter
+      if _checkstable
+        eg = eigen(jac)
+        @reset out.stable = all(t->norm(t)<=1, eg.values)
+      end
+      return out
+    end
+  end
+  return out
+end
+
 function newton!(
   val_and_jac!::Function,
   y,
