@@ -48,6 +48,15 @@ end
 # If a particle is lost, it should set that particle's residual to Inf
 @kernel function sub_v!(v_res, v, state, N_particles, ::Val{coast}) where {coast}
   i = @index(Global)
+  @inbounds v_res[i + 0*N_particles] -= v[i,1]
+  @inbounds v_res[i + 1*N_particles] -= v[i,2]
+  @inbounds v_res[i + 2*N_particles] -= v[i,3]
+  @inbounds v_res[i + 3*N_particles] -= v[i,4]
+  if !coast
+    @inbounds v_res[i + 4*N_particles] -= v[i,5]
+    @inbounds v_res[i + 5*N_particles] -= v[i,6]
+  end
+  #=
   inf = eltype(v)(Inf)
   @inbounds v_res[i + 0*N_particles] += vifelse(state[i] == 0x1, -v[i,1], inf)
   @inbounds v_res[i + 1*N_particles] += vifelse(state[i] == 0x1, -v[i,2], inf)
@@ -57,6 +66,7 @@ end
     @inbounds v_res[i + 4*N_particles] += vifelse(state[i] == 0x1, -v[i,5], inf)
     @inbounds v_res[i + 5*N_particles] += vifelse(state[i] == 0x1, -v[i,6], inf)
   end
+  =#
 end
 
 function _co_res!(
@@ -161,8 +171,11 @@ function find_closed_orbit(
     v_coast .= 0
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    if !newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched).converged
-      error("Closed orbit finder not converging")
+    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched)
+    if batched isa Val{false} && haskey(sol, :converged)
+      if !sol.converged
+        error("Closed orbit finder not converging")
+      end
     end
     set_v_coast_final!(device)(v0, transpose(v_coast); ndrange=N_particles)
     KA.synchronize(device)
@@ -170,8 +183,11 @@ function find_closed_orbit(
     v = similar(v0, (6, N_particles))
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    if !newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched).converged
-      error("Closed orbit finder not converging")
+    sol = newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched)
+    if batched isa Val{false} && haskey(sol, :converged)
+      if !sol.converged
+        error("Closed orbit finder not converging")
+      end
     end
   end
   return v0, _coast

@@ -1,8 +1,31 @@
-function default_solver(device, _y, _x, batched)
+function default_solver(device, _y, _x, ::Val{false})
   _lx = length(_x)
   _ly = length(_y)
   let lx=_lx, ly=_ly
-    return (dx, jac, y)->(reshape(dx, lx) .= -jac \ reshape(y, ly))
+    return (dx, jac, y)->(@show jac; reshape(dx, lx) .-= jac \ reshape(y, ly))
+  end
+end
+
+# For batched on CPU, do each matrix individually
+function default_solver(device, _y, _x, ::Val{true})
+  _batchsize = size(_x, 2)
+  _n_rows = size(_y, 1)
+  _n_cols = size(_x, 1)
+  let n_rows=_n_rows, n_cols=_n_cols, batchsize=_batchsize, stride=_n_rows*_n_cols
+    return (dx, jac::SparseMatrixCSC, y)->begin
+      for i in 1:batchsize
+        jac_offset = (i-1)*stride
+        curjac = reshape(view(jac.nzval, (jac_offset+1):(jac_offset+stride)), (n_rows, n_cols))
+        @show curjac
+        @show y
+        if !ArrayInterface.issingular(curjac) # Only keep going if not singular
+          dx_offset = (i-1)*n_cols
+          y_offset = (i-1)*n_rows
+          view(dx, (dx_offset+1):(dx_offset+n_cols)) .-= curjac \ view(y, (y_offset+1):(y_offset+n_rows))
+        end
+      end
+      return dx
+    end
   end
 end
 
@@ -36,8 +59,8 @@ function newton!(
   autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
   prep=nothing, 
   checkstable::Val{_checkstable}=Val{false}(),
-  checkconverged::Val{_checkconverged}=Val{true}(), # will check and stop if convergence is reached
   batched::Val{_batched}=Val{false}(), # If Val{true}(), then batch processing will be done
+  checkconverged::Val{_checkconverged}=batched isa Val{false} ? Val{true}() : Val{false}(), # will check and stop if convergence is reached
   solver::T=default_solver(KA.get_backend(x), y, x, batched), # We do specialize on the solver tho
   dx=zero.(x), # Temporary
 ) where {Y,X,_checkstable,_checkconverged,_batched,T}
@@ -122,6 +145,7 @@ function newton!(
   end
 end
 
+# NON-BATCHED:
 function newton!(
   val_and_jac!::Function,
   y,
@@ -133,40 +157,119 @@ function newton!(
   maxiter=100, 
   checkstable::Val{_checkstable}=Val{false}(),
   checkconverged::Val{_checkconverged}=Val{true}(), # n_iter will only be return if _checkconverged == true
-  batched::Val{false}=Val{false}(), 
+  batched::Val{_batched}=Val{false}(), 
+  solver::T=default_solver(KA.get_backend(x), y, x, batched), 
+  dx=zero.(x),
+) where {_checkstable,_batched,_checkconverged,T}
+  if !_batched
+    # Setup:
+    out = (; u=x)
+    if _checkstable
+      out = merge(out, (; stable=false))
+    end
+    if _checkconverged
+      out = merge(out, (; converged=false, n_iters=0))
+    end
+    # Newton:
+    dx .= 0
+    for iter in 1:maxiter
+      val_and_jac!(y, jac, x, contexts)
+      if any(isinf, y) # Stop if infinite residual
+        return out
+      end
+      solver(dx, jac, y)
+      @show dx
+      x .= x .+ dx
+      if _checkconverged && (norm(dx) < reltol*norm(x) || norm(y) < abstol)
+        @reset out.converged = true
+        @reset out.n_iters = iter
+        if _checkstable
+          eg = eigen(jac)
+          @reset out.stable = all(t->norm(t)<=1, eg.values)
+        end
+        return out
+      end
+    end
+    if _checkconverged
+      @reset out.n_iters=maxiter
+    end
+    return out
+  else
+    # Setup:
+    out = (; u=x)
+    if _checkstable
+      error("Stability checking for batched-Newton is not currently implemented") # TODO
+      # This will include an array for stable with each element corresponding to an 
+      # element in the batch
+    end
+    if _checkconverged
+      error("Convergence checking for batched-Newton is not currently implemented") # TODO
+      # This will include an array for n_iter and converged with each element corresponding
+      # to an element in the batch
+    end
+    # Newton:
+    dx .= 0
+    for iter in 1:maxiter
+      val_and_jac!(y, jac, x, contexts)
+
+      # If an element in the batch has an infinite residual,
+      # set that sub-Jacobian equal to the identity to ensure
+      # matrix
+      if any(isinf, y) # Stop if infinite residual
+        return out
+      end
+      solver(dx, jac, y)
+      x .= x .+ dx
+    end
+    return out
+  end
+end
+#=
+# BATCHED:
+function newton!(
+  val_and_jac!::Function,
+  y,
+  jac,
+  x,
+  contexts::Vararg{DI.Context};
+  reltol=1e-13,
+  abstol=1e-13, 
+  maxiter=100, 
+  checkstable::Val{_checkstable}=Val{false}(),
+  checkconverged::Val{_checkconverged}=Val{true}(), # n_iter will only be return if _checkconverged == true
+  batched::Val{true}, 
   solver::T=default_solver(KA.get_backend(x), y, x, batched), 
   dx=zero.(x),
 ) where {_checkstable,_checkconverged,T}
   # Setup:
   out = (; u=x)
   if _checkstable
-    out = merge(out, (; stable=false))
+    error("Stability checking for batched-Newton is not currently implemented") # TODO
+    # This will include an array for stable with each element corresponding to an 
+    # element in the batch
   end
   if _checkconverged
-    out = merge(out, (; converged=false, n_iters=0))
+    error("Convergence checking for batched-Newton is not currently implemented") # TODO
+    # This will include an array for n_iter and converged with each element corresponding
+    # to an element in the batch
   end
   # Newton:
   dx .= 0
   for iter in 1:maxiter
     val_and_jac!(y, jac, x, contexts)
+
+    # If an element in the batch has an infinite residual,
+    # set that sub-Jacobian equal to the identity to ensure
+    # matrix
     if any(isinf, y) # Stop if infinite residual
       return out
     end
     solver(dx, jac, y)
     x .= x .+ dx
-    if _checkconverged && (norm(dx) < reltol*norm(x) || norm(y) < abstol)
-      @reset out.converged = true
-      @reset out.n_iters = iter
-      if _checkstable
-        eg = eigen(jac)
-        @reset out.stable = all(t->norm(t)<=1, eg.values)
-      end
-      return out
-    end
   end
   return out
 end
-
+=#
 #=
 # Batched, converged is an array, as well as n_iters
 function newton!(
