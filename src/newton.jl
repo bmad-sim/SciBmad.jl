@@ -122,8 +122,6 @@ function newton!(
   end
 end
 
-
-# Non-batched:
 function newton!(
   val_and_jac!::Function,
   y,
@@ -151,7 +149,7 @@ function newton!(
   dx .= 0
   for iter in 1:maxiter
     val_and_jac!(y, jac, x, contexts)
-    if any(yi->yi == Inf, y) # Stop if infinite residual
+    if any(isinf, y) # Stop if infinite residual
       return out
     end
     solver(dx, jac, y)
@@ -168,6 +166,7 @@ function newton!(
   end
   return out
 end
+
 #=
 # Batched, converged is an array, as well as n_iters
 function newton!(
