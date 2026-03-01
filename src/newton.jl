@@ -122,6 +122,7 @@ function newton!(
   end
 end
 
+
 # Non-batched:
 function newton!(
   val_and_jac!::Function,
@@ -146,17 +147,16 @@ function newton!(
   if _checkconverged
     out = merge(out, (; converged=false, n_iters=0))
   end
-
   # Newton:
   dx .= 0
   for iter in 1:maxiter
     val_and_jac!(y, jac, x, contexts)
-    if any(y .== Inf) # Infinite residual
+    if any(yi->yi == Inf, y) # Stop if infinite residual
       return out
     end
     solver(dx, jac, y)
     x .= x .+ dx
-    if _checkconverged && norm(dx) < reltol*norm(x) || norm(y) < abstol
+    if _checkconverged && (norm(dx) < reltol*norm(x) || norm(y) < abstol)
       @reset out.converged = true
       @reset out.n_iters = iter
       if _checkstable

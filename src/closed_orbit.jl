@@ -48,13 +48,14 @@ end
 # If a particle is lost, it should set that particle's residual to Inf
 @kernel function sub_v!(v_res, v, state, N_particles, ::Val{coast}) where {coast}
   i = @index(Global)
-  @inbounds v_res[i + 0*N_particles] += vifelse(state[i] == 0x1, -v[i,1], Inf)
-  @inbounds v_res[i + 1*N_particles] += vifelse(state[i] == 0x1, -v[i,2], Inf)
-  @inbounds v_res[i + 2*N_particles] += vifelse(state[i] == 0x1, -v[i,3], Inf)
-  @inbounds v_res[i + 3*N_particles] += vifelse(state[i] == 0x1, -v[i,4], Inf)
+  inf = eltype(v)(Inf)
+  @inbounds v_res[i + 0*N_particles] += vifelse(state[i] == 0x1, -v[i,1], inf)
+  @inbounds v_res[i + 1*N_particles] += vifelse(state[i] == 0x1, -v[i,2], inf)
+  @inbounds v_res[i + 2*N_particles] += vifelse(state[i] == 0x1, -v[i,3], inf)
+  @inbounds v_res[i + 3*N_particles] += vifelse(state[i] == 0x1, -v[i,4], inf)
   if !coast
-    @inbounds v_res[i + 4*N_particles] += vifelse(state[i] == 0x1, -v[i,5], Inf)
-    @inbounds v_res[i + 5*N_particles] += vifelse(state[i] == 0x1, -v[i,6], Inf)
+    @inbounds v_res[i + 4*N_particles] += vifelse(state[i] == 0x1, -v[i,5], inf)
+    @inbounds v_res[i + 5*N_particles] += vifelse(state[i] == 0x1, -v[i,6], inf)
   end
 end
 
