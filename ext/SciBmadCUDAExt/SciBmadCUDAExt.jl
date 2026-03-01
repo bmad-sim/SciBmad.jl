@@ -2,17 +2,9 @@ module SciBmadCUDAExt
 using CUDA
 import SciBmad: default_solver
 
-function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{_batched}) where {_batched}
+function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{true}) where {_batched}
   _lx = length(_x)
   _ly = length(_y)
-
-  # Preallocate stuff to include in the returned closure
-  # If not batch, then just do regular dense matrix solver
-  if !_batched
-    let lx=_lx, ly=_ly
-      return (dx, jac, y)->(reshape(dx, lx) .= -jac \ reshape(y, ly))
-    end
-  end
 
   # Batch:
   if _ly != _lx
