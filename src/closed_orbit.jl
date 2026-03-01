@@ -48,13 +48,13 @@ end
 # If a particle is lost, it should set that particle's residual to Inf
 @kernel function sub_v!(v_res, v, state, N_particles, ::Val{coast}) where {coast}
   i = @index(Global)
-  @inbounds v_res[i + 0*N_particles] += vifelse(state[i] == 0x1 ? -v[i,1] : Inf)
-  @inbounds v_res[i + 1*N_particles] += vifelse(state[i] == 0x1 ? -v[i,2] : Inf)
-  @inbounds v_res[i + 2*N_particles] += vifelse(state[i] == 0x1 ? -v[i,3] : Inf)
-  @inbounds v_res[i + 3*N_particles] += vifelse(state[i] == 0x1 ? -v[i,4] : Inf)
+  @inbounds v_res[i + 0*N_particles] += vifelse(state[i] == 0x1, -v[i,1], Inf)
+  @inbounds v_res[i + 1*N_particles] += vifelse(state[i] == 0x1, -v[i,2], Inf)
+  @inbounds v_res[i + 2*N_particles] += vifelse(state[i] == 0x1, -v[i,3], Inf)
+  @inbounds v_res[i + 3*N_particles] += vifelse(state[i] == 0x1, -v[i,4], Inf)
   if !coast
-    @inbounds v_res[i + 4*N_particles] += vifelse(state[i] == 0x1 ? -v[i,5] : Inf)
-    @inbounds v_res[i + 5*N_particles] += vifelse(state[i] == 0x1 ? -v[i,6] : Inf)
+    @inbounds v_res[i + 4*N_particles] += vifelse(state[i] == 0x1, -v[i,5], Inf)
+    @inbounds v_res[i + 5*N_particles] += vifelse(state[i] == 0x1, -v[i,6], Inf)
   end
 end
 
@@ -75,7 +75,7 @@ function _co_res!(
   SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
   set_kernel!(v_res, v_cache, v, N_particles; ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
-  track!(b0, bl)
+  track!(b0, bl, scalar_params=true)
   sub_kernel!(v_res, v_cache, b0.coords.state, N_particles, Val{false}(); ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
   return v_res
@@ -108,10 +108,6 @@ function _co_res_coast!(
   set_kernel!(v_res, v_cache, v_constant, v_coast, N_particles; ndrange=N_particles)
   KA.synchronize(KA.get_backend(v_cache))
   track!(b0, bl, scalar_params=true)
-  lostidx = findfirst(x->x != 0x1, b0.coords.state)
-  if !isnothing(lostidx)
-    error("Unable to find closed orbit for particle $lostidx (particle lost in tracking)")
-  end
   sub_kernel!(v_res, v_cache, b0.coords.state, N_particles, Val{true}(); ndrange=N_particles)
   KA.synchronize(KA.get_backend(v_cache))
   return v_res

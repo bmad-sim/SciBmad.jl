@@ -36,10 +36,11 @@ function newton!(
   autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
   prep=nothing, 
   checkstable::Val{_checkstable}=Val{false}(),
+  checkconverged::Val{_checkconverged}=Val{true}(), # will check and stop if convergence is reached
   batched::Val{_batched}=Val{false}(), # If Val{true}(), then batch processing will be done
   solver::T=default_solver(KA.get_backend(x), y, x, batched), # We do specialize on the solver tho
   dx=zero.(x), # Temporary
-) where {Y,X,_checkstable,_batched,T}
+) where {Y,X,_checkstable,_checkconverged,_batched,T}
   if _batched
     # Batch MUST have x and y stored as MATRICES where each COLUMN is one element in the batch
     # This makes the Jacobian block diagonal, which means a CSC sparse jacobian layout would give us 
@@ -117,11 +118,11 @@ function newton!(
   end
   let _f! = f!, _prep = prep, _backend = autodiff
     val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
-    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, batched=batched, solver=solver, dx=dx)
+    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, checkconverged=checkconverged, batched=batched, solver=solver, dx=dx)
   end
 end
 
-# Converged should really be an array for batched
+# Non-batched:
 function newton!(
   val_and_jac!::Function,
   y,
@@ -132,26 +133,90 @@ function newton!(
   abstol=1e-13, 
   maxiter=100, 
   checkstable::Val{_checkstable}=Val{false}(),
-  batched::Val{_batched}=Val{false}(), 
+  checkconverged::Val{_checkconverged}=Val{true}(), # n_iter will only be return if _checkconverged == true
+  batched::Val{false}=Val{false}(), 
   solver::T=default_solver(KA.get_backend(x), y, x, batched), 
   dx=zero.(x),
-) where {_checkstable,_batched,T}
+) where {_checkstable,_checkconverged,T}
+  # Setup:
+  out = (; u=x)
+  if _checkstable
+    out = merge(out, (; stable=false))
+  end
+  if _checkconverged
+    out = merge(out, (; converged=false, n_iters=0))
+  end
+
+  # Newton:
   dx .= 0
   for iter in 1:maxiter
     val_and_jac!(y, jac, x, contexts)
+    if any(y .== Inf) # Infinite residual
+      return out
+    end
+    solver(dx, jac, y)
+    x .= x .+ dx
+    if _checkconverged && norm(dx) < reltol*norm(x) || norm(y) < abstol
+      @reset out.converged = true
+      @reset out.n_iters = iter
+      if _checkstable
+        eg = eigen(jac)
+        @reset out.stable = all(t->norm(t)<=1, eg.values)
+      end
+      return out
+    end
+  end
+  return out
+end
+#=
+# Batched, converged is an array, as well as n_iters
+function newton!(
+  val_and_jac!::Function,
+  y,
+  jac,
+  x,
+  contexts::Vararg{DI.Context};
+  reltol=1e-13,
+  abstol=1e-13, 
+  maxiter=100, 
+  stable=nothing,
+  converged=nothing,
+  batched::Val{true},
+  solver::T=default_solver(KA.get_backend(x), y, x, batched), 
+  dx=zero.(x),
+) where {T}
+  if !isnothing(converged)
+    error("Jacobian stability checking not yet implemented for batched-Newton")
+  end
+  converged = zeros(Bool, size(x, 2))
+  n_iters = zeros(Int, size(x, 2))
+  dx .= 0
+  for iter in 1:maxiter
+    val_and_jac!(y, jac, x, contexts)
+    if !_batched
+      if any(y .== Inf) # Infinite residual
+        if _checkstable
+          return (;u=x, converged=converged, n_iters=iter, stable=false)
+        else
+          return (;u=x, converged=converged, n_iters=iter)
+        end
+      end
+    else
+      # For batched, we need to check each residual and set Jacobian to 
+    end
     solver(dx, jac, y)
     x .= x .+ dx
     if !_batched
-      converged = norm(dx) < reltol*norm(x) || norm(y) < abstol
+      isconverged = norm(dx) < reltol*norm(x) || norm(y) < abstol
     else
       # Keep going until each block in the batch converged individually
-      converged = all(sum(abs2, dx; dims=1) .< reltol .* sum(abs2, x; dims=1)) || all(sum(abs2, y; dims=1) .< abstol)
-    end
-    if converged
+    isconverged = all(sum(abs2, dx; dims=1) .< reltol .* sum(abs2, x; dims=1)) || all(sum(abs2, y; dims=1) .< abstol)
+    if isconverged
+      converged = 
       if _checkstable
         eg = eigen(jac)
         stable = all(t->norm(t)<=1, eg.values)
-        return (;u=x, converged=true, n_iters=iter, stable=stable)
+        return (;u=x, converged=con, n_iters=iter, stable=stable)
       else
         return (;u=x, converged=true, n_iters=iter)
       end
@@ -163,3 +228,4 @@ function newton!(
       return (;u=x, converged=false, n_iters=maxiter)
   end
 end
+=#
