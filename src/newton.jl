@@ -2,7 +2,7 @@ function default_solver(device, _y, _x, ::Val{false})
   _lx = length(_x)
   _ly = length(_y)
   let lx=_lx, ly=_ly
-    return (dx, jac, y)->(@show jac; reshape(dx, lx) .-= jac \ reshape(y, ly))
+    return (dx, jac, y)->(reshape(dx, lx) .= -jac \ reshape(y, ly))
   end
 end
 
@@ -16,12 +16,10 @@ function default_solver(device, _y, _x, ::Val{true})
       for i in 1:batchsize
         jac_offset = (i-1)*stride
         curjac = reshape(view(jac.nzval, (jac_offset+1):(jac_offset+stride)), (n_rows, n_cols))
-        @show curjac
-        @show y
         if !ArrayInterface.issingular(curjac) # Only keep going if not singular
           dx_offset = (i-1)*n_cols
           y_offset = (i-1)*n_rows
-          view(dx, (dx_offset+1):(dx_offset+n_cols)) .-= curjac \ view(y, (y_offset+1):(y_offset+n_rows))
+          view(dx, (dx_offset+1):(dx_offset+n_cols)) .= -curjac \ view(y, (y_offset+1):(y_offset+n_rows))
         end
       end
       return dx
@@ -178,7 +176,6 @@ function newton!(
         return out
       end
       solver(dx, jac, y)
-      @show dx
       x .= x .+ dx
       if _checkconverged && (norm(dx) < reltol*norm(x) || norm(y) < abstol)
         @reset out.converged = true

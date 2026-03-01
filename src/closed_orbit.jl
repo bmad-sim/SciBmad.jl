@@ -147,14 +147,12 @@ function find_closed_orbit(
     maxiter=100, 
     autodiff=KA.get_backend(v0) isa KA.GPU ? DI.AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
     prep=nothing,
-    coast::Val{C}=Val{Nothing}(),
-) where {C}
-
+    coast::Union{Nothing,Bool}=nothing,
+    checkconverged::Bool=true,
+)
   # First do a coast check:
-  if C == Nothing
-    _coast = coast_check(bl, autodiff)
-  else
-    _coast = C
+  if isnothing(coast)
+    coast = coast_check(bl, autodiff)
   end
   
   N_particles = size(v0, 1)
@@ -165,13 +163,13 @@ function find_closed_orbit(
   # all residual functions 6 x N or 4 x N (coast)
   v0_cache = similar(v0, (size(v0, 2), size(v0, 1)))
 
-  if _coast
+  if coast
     v = similar(v0, (4, N_particles))
     v_coast = similar(v0, (4, N_particles))
-    v_coast .= 0
+    v_coast .= transpose(view(v0, :, 1:4))
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched)
+    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, checkconverged=Val{checkconverged}(), batched=batched)
     if batched isa Val{false} && haskey(sol, :converged)
       if !sol.converged
         error("Closed orbit finder not converging")
@@ -183,14 +181,14 @@ function find_closed_orbit(
     v = similar(v0, (6, N_particles))
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batched=batched)
+    sol = newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, checkconverged=Val{checkconverged}(), batched=batched)
     if batched isa Val{false} && haskey(sol, :converged)
       if !sol.converged
         error("Closed orbit finder not converging")
       end
     end
   end
-  return v0, _coast
+  return v0, coast
 end
 #=
 const CLOSED_ORBIT_FORWARDDIFF_PREP = (
