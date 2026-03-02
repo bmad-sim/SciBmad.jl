@@ -25,7 +25,7 @@ function dynamic_aperture(
   # First, let's turn off all the cavities and store their strengths in 
   # an array
   cavities = filter(x->x.voltage != 0, bl.line)
-  rfparams = map(x->x.RFParams, bl.line)
+  rfparams = map(x->x.RFParams, cavities)
   # Turn them all off:
   foreach(x->x.RFParams=nothing, cavities)
 
