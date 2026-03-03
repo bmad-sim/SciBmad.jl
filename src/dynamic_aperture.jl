@@ -85,9 +85,6 @@ function dynamic_aperture(
     end
   end
 
-  @show v
-  return
-
   if backend isa KA.GPU
     println("Initializing bunch on GPU")
     vt = KA.zeros(backend, coordinates_number_type, size(v))
