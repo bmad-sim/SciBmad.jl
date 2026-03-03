@@ -70,7 +70,7 @@ function dynamic_aperture(
     delta = deltas[i]
     # Initialize v0 in closed orbit basis, v in integration basis:
     v0[idx_particle,:] = [0, 0, 0, 0, 0, delta]
-    v[idx_particle,:] = co[i,:] + [0, 0, 0, 0, 0, delta]
+    v[idx_particle,:] = co[i,:] + [0, 0, 0, 0, 0, 0]
     idx_particle += 1
     for theta in thetas
       for r in rs
@@ -79,11 +79,14 @@ function dynamic_aperture(
         x = x_grid * sig_x
         y = y_grid * sig_y
         v0[idx_particle,:] = [x, 0, y, 0, 0, delta]
-        v[idx_particle,:] = co[i,:] + [x, 0, y, 0, 0, delta]
+        v[idx_particle,:] = co[i,:] + [x, 0, y, 0, 0, 0]
         idx_particle += 1
       end
     end
   end
+
+  @show v
+  return
 
   if backend isa KA.GPU
     println("Initializing bunch on GPU")
