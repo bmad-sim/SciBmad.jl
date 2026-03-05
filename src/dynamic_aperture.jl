@@ -13,14 +13,16 @@ function dynamic_aperture(
 
   # Optional kwargs:
   backend=KA.CPU(),
-  coordinates_number_type::Type=Float32, # Default to Float32 for performance
-  #emit_3::Real=0, no longer specifiable
+  coordinates_number_type::Type=Float32, 
+  emit_3::Real=0, 
   sig_pz::Real=0,
   output_file=nothing,
   theta_lims=(0, pi),
   track_kwargs... # Get passed to track!
 )
   Base.require_one_based_indexing(deltas)
+
+  # 
 
   # First, let's turn off all the cavities and store their strengths in 
   # an array
