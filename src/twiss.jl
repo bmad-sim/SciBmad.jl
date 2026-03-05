@@ -90,7 +90,11 @@ function twiss(
   end
   track!(b0, bl)
 
-  m = DAMap(nv=nv, np=np, v=view(dropdims(b0.coords.v; dims=1), 1:nv), q=b0.coords.q)
+  vrow = dropdims(b0.coords.v; dims=1)
+  m = DAMap(nv=nv, np=np, v=view(vrow, 1:nv), q=b0.coords.q)
+  @inbounds for i in 1:nv
+    m.v0[i] = TI.geti(vrow[i], 0)
+  end
 
   # twiss will ALWAYS compute the (amplitude-dependent) tunes, even when `at` is empty
   # function barrier:
@@ -254,9 +258,6 @@ function _twiss(
     N_ele = length(at)
   end
 
-  # a = normal(m)
-  # This should not be necessary anymore with fixing of normal:
-  # NNF.setray!(a.v, scalar=m.v)
   r = canonize(a, SCALAR_PHASE; damping=damping)
   a = a ∘ r
   fc = factorize(a)
