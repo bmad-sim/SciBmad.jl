@@ -1,0 +1,280 @@
+
+# Because track! is many kernels, unfortunately all must be separate kernels
+
+# For setting before tracking
+@kernel function set_v!(v_res, v_cache, @Const(v), @Const(N_particles))
+  i = @index(Global)
+  @inbounds v_res[i + 0*N_particles] = v[i,1]
+  @inbounds v_res[i + 1*N_particles] = v[i,2]
+  @inbounds v_res[i + 2*N_particles] = v[i,3]
+  @inbounds v_res[i + 3*N_particles] = v[i,4]
+  @inbounds v_res[i + 4*N_particles] = v[i,5]
+  @inbounds v_res[i + 5*N_particles] = v[i,6]
+
+  @inbounds v_cache[i,1] = v[i,1]
+  @inbounds v_cache[i,2] = v[i,2]
+  @inbounds v_cache[i,3] = v[i,3]
+  @inbounds v_cache[i,4] = v[i,4]
+  @inbounds v_cache[i,5] = v[i,5]
+  @inbounds v_cache[i,6] = v[i,6]
+end
+
+@kernel function set_v_coast!(v_res, v_cache, @Const(v_constant), @Const(v_coast), @Const(N_particles))
+  i = @index(Global)
+
+  @inbounds v_cache[i,5] = v_constant[i,5]
+  @inbounds v_cache[i,6] = v_constant[i,6]
+
+  @inbounds v_cache[i,1] = v_coast[i,1]
+  @inbounds v_cache[i,2] = v_coast[i,2]
+  @inbounds v_cache[i,3] = v_coast[i,3]
+  @inbounds v_cache[i,4] = v_coast[i,4]
+
+  @inbounds v_res[i + 0*N_particles] = v_coast[i,1]
+  @inbounds v_res[i + 1*N_particles] = v_coast[i,2]
+  @inbounds v_res[i + 2*N_particles] = v_coast[i,3]
+  @inbounds v_res[i + 3*N_particles] = v_coast[i,4]
+end
+
+@kernel function set_v_coast_final!(v0, v_coast)
+  i = @index(Global)
+  @inbounds v0[i,1] = v_coast[i,1]
+  @inbounds v0[i,2] = v_coast[i,2]
+  @inbounds v0[i,3] = v_coast[i,3]
+  @inbounds v0[i,4] = v_coast[i,4]
+end
+
+# For subtracting after tracking
+# If a particle is lost, it should set that particle's residual to Inf
+@kernel function sub_v!(v_res, v, state, N_particles, ::Val{coast}) where {coast}
+  i = @index(Global)
+  @inbounds v_res[i + 0*N_particles] -= v[i,1]
+  @inbounds v_res[i + 1*N_particles] -= v[i,2]
+  @inbounds v_res[i + 2*N_particles] -= v[i,3]
+  @inbounds v_res[i + 3*N_particles] -= v[i,4]
+  if !coast
+    @inbounds v_res[i + 4*N_particles] -= v[i,5]
+    @inbounds v_res[i + 5*N_particles] -= v[i,6]
+  end
+  #=
+  inf = eltype(v)(Inf)
+  @inbounds v_res[i + 0*N_particles] += vifelse(state[i] == 0x1, -v[i,1], inf)
+  @inbounds v_res[i + 1*N_particles] += vifelse(state[i] == 0x1, -v[i,2], inf)
+  @inbounds v_res[i + 2*N_particles] += vifelse(state[i] == 0x1, -v[i,3], inf)
+  @inbounds v_res[i + 3*N_particles] += vifelse(state[i] == 0x1, -v[i,4], inf)
+  if !coast
+    @inbounds v_res[i + 4*N_particles] += vifelse(state[i] == 0x1, -v[i,5], inf)
+    @inbounds v_res[i + 5*N_particles] += vifelse(state[i] == 0x1, -v[i,6], inf)
+  end
+  =#
+end
+
+function _co_res!(
+  v_res, 
+  v, 
+  bl::Beamline,
+  set_kernel!,
+  sub_kernel!,
+  v_cache,
+)
+  v_res = transpose(v_res)
+  v = transpose(v)
+  v_cache = transpose(v_cache)
+  N_particles = size(v, 1)
+  @assert length(v_res) == N_particles*6 "Incorrect size for residual vector"
+  b0 = Bunch(v_cache)
+  SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
+  set_kernel!(v_res, v_cache, v, N_particles; ndrange=N_particles)
+  KA.synchronize(KA.get_backend(v))
+  track!(b0, bl, scalar_params=true)
+  sub_kernel!(v_res, v_cache, b0.coords.state, N_particles, Val{false}(); ndrange=N_particles)
+  KA.synchronize(KA.get_backend(v))
+  return v_res
+end
+
+# In the coasting beam case, a separate read/write 
+# must be made to/from an N x 4 array to the N x 6 Bunch array
+
+# NOTE: THIS FUNCTION IS CALLED IN THE CLOSED ORBIT FINDER, WHICH 
+# TAKES AOS FOR BATCH PERFORMANCE. THEREFORE THE INPUTS ARE TRANSPOSED.
+function _co_res_coast!(
+  v_res, 
+  v_coast,
+  bl::Beamline,
+  set_kernel!,
+  sub_kernel!,
+  v_cache,
+  v_constant,
+)
+  v_res = transpose(v_res)
+  v_coast = transpose(v_coast)
+  v_cache = transpose(v_cache)
+  v_constant = transpose(v_constant)
+  N_particles = size(v_coast, 1)
+  @assert length(v_res) == N_particles*4 "Incorrect size for residual vector"
+  @assert N_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
+  @assert N_particles == size(v_constant, 1) "Incorrect size for particle constant array given v_coast input"
+  b0 = Bunch(v_cache)
+  SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify  
+  set_kernel!(v_res, v_cache, v_constant, v_coast, N_particles; ndrange=N_particles)
+  KA.synchronize(KA.get_backend(v_cache))
+  track!(b0, bl, scalar_params=true)
+  sub_kernel!(v_res, v_cache, b0.coords.state, N_particles, Val{true}(); ndrange=N_particles)
+  KA.synchronize(KA.get_backend(v_cache))
+  return v_res
+end
+
+function coast_check(bl, autodiff=AutoForwardDiff())
+  v0 = transpose(zeros(1,6))
+  v = transpose(zeros(1,6))
+  v_cache = copy(v0)
+  jac = zeros(6,6)
+  set_kernel! = set_v!(KA.get_backend(v))
+  sub_kernel! = sub_v!(KA.get_backend(v))
+  DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache))
+  return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 0]
+end
+
+# v0 is the array of initial particles
+# should be equal to number of batch parameters
+# or if coasting, set equal to number of coasting 
+# particles WITH delta set accordingly already
+function find_closed_orbit(
+    bl::Beamline;
+    v0=zeros(1,6), 
+    reltol=1e-13,
+    abstol=1e-13, 
+    maxiter=100, 
+    autodiff=KA.get_backend(v0) isa KA.GPU ? DI.AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
+    prep=nothing,
+    coast::Union{Nothing,Bool}=nothing,
+    checkconverged::Bool=true,
+    checkstable::Bool=true,
+)
+  # First do a coast check:
+  if isnothing(coast)
+    coast = coast_check(bl, autodiff)
+  end
+  
+  N_particles = size(v0, 1)
+  device = KA.get_backend(v0)
+  batched = Val{N_particles > 1}()
+
+  # Newton requires AoS for batching, so 
+  # all residual functions 6 x N or 4 x N (coast)
+  v0_cache = similar(v0, (size(v0, 2), size(v0, 1)))
+
+  if coast
+    v = similar(v0, (4, N_particles))
+    v_coast = similar(v0, (4, N_particles))
+    v_coast .= transpose(view(v0, :, 1:4))
+    set_kernel! = set_v_coast!(device)
+    sub_kernel! = sub_v!(device)
+    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(transpose(v0)); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, checkconverged=Val{checkconverged}(), checkstable=Val{checkstable}(), batched=batched)
+    set_v_coast_final!(device)(v0, transpose(v_coast); ndrange=N_particles)
+    KA.synchronize(device)
+    @reset sol.u = v0
+    sol = merge(sol, (;coast=true))
+  else
+    v = similar(v0, (6, N_particles))
+    set_kernel! = set_v!(device)
+    sub_kernel! = sub_v!(device)
+    sol = newton!(_co_res!, v, transpose(v0), DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, checkconverged=Val{checkconverged}(), checkstable=Val{checkstable}(), batched=batched)
+    sol = merge(sol, (;coast=false))
+  end
+  return sol
+end
+#=
+const CLOSED_ORBIT_FORWARDDIFF_PREP = (
+  x = zeros(1,6);
+  y = zeros(1,6);
+  bl = Beamline([LineElement()]);
+  set_kernel! = set_v!(KA.get_backend(x));
+  sub_kernel! = sub_v!(KA.get_backend(x));
+  p = (bl, set_kernel!, sub_kernel!, Val{false}());
+  DI.prepare_jacobian(_co_res!, y, AutoForwardDiff(), x, DI.Constant(p))
+)
+
+const CLOSED_ORBIT_FORWARDDIFF_COAST_PREP = (
+  x = zeros(1,6);
+  y = zeros(1,6);
+  bl = Beamline([LineElement()]);
+  set_kernel! = set_v!(KA.get_backend(x));
+  sub_kernel! = sub_v!(KA.get_backend(x));
+  p = (bl, set_kernel!, sub_kernel!, Val{true}());
+  DI.prepare_jacobian(_co_res!, y, AutoForwardDiff(), x, DI.Constant(p))
+)
+=#
+
+#=
+backend = get_backend(v)
+kernel! = generic_kernel!(backend)
+kernel!(coords, kc; ndrange=N_particle)
+KernelAbstractions.synchronize(backend)
+
+const CLOSED_ORBIT_FORWARDDIFF_PREP = (
+  x = zeros(1,6);
+  y = zeros(6);
+  bl = Beamline([LineElement()]);
+  DI.prepare_jacobian(_co_res!, y, AutoForwardDiff(), x, DI.Constant(bl))
+)
+
+
+
+function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false, scalar_params=true)
+  coords .= coords0
+  b0 = Bunch(reshape(coords, (1,6)))
+  BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
+  track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD, scalar_params=scalar_params)
+  if b0.coords.state[1] != 0x1
+    @warn "Particle lost in tracking"
+  end
+  return coords
+end
+
+function coast_check(bl, backend=AutoForwardDiff())
+  x0 = zeros(6)
+  y = zeros(6)
+  jac = zeros(6, 6)
+  DI.value_and_jacobian!(track_a_particle!, y, jac, backend, x0, DI.Constant(bl))
+  return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 1]
+end
+
+function _co_res!(y, x, bl)
+  track_a_particle!(y, x, bl)
+  return y .= y .- x
+end
+
+
+
+function find_closed_orbit(
+  bl::Beamline; 
+  v0=zeros(6), 
+  reltol=1e-13,
+  abstol=1e-13, 
+  maxiter=100, 
+  backend=AutoForwardDiff(),
+  prep=CLOSED_ORBIT_FORWARDDIFF_PREP,
+  lambda=1,
+  coast::Val{C}=Val{Nothing}(),
+) where {C}
+  # First check if coasting, for this push a particle starting at 0 and see if
+  # delta is a parameter
+  v = zero(v0)
+  if C == Nothing
+    _coast = coast_check(bl, backend)
+  else
+    _coast = C
+  end
+  if _coast
+    if !newton!(_co_res!, v, v0, bl; reltol=reltol, abstol=abstol, maxiter=maxiter, subspace=(1:4,1:4), backend=backend, prep=prep).converged
+      error("Closed orbit finder not converging")
+    end
+  else
+    if !newton!(_co_res!, v, v0, bl; reltol=reltol, abstol=abstol, maxiter=maxiter, backend=backend, prep=prep).converged
+      error("Closed orbit finder not converging")
+    end
+  end
+  return v0, _coast
+end
+=#

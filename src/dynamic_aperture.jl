@@ -13,14 +13,24 @@ function dynamic_aperture(
 
   # Optional kwargs:
   backend=KA.CPU(),
-  coordinates_number_type::Type=Float32, # Default to Float32 for performance
-  emit_3::Real=0,
+  coordinates_number_type::Type=Float32, 
+  emit_3::Real=0, 
   sig_pz::Real=0,
   output_file=nothing,
   theta_lims=(0, pi),
   track_kwargs... # Get passed to track!
 )
   Base.require_one_based_indexing(deltas)
+
+  # 
+
+  # First, let's turn off all the cavities and store their strengths in 
+  # an array
+  cavities = filter(x->!isnothing(x.RFParams), bl.line)
+  rfparams = map(x->x.RFParams, cavities)
+  # Turn them all off:
+  foreach(x->x.RFParams=nothing, cavities)
+
   tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
   t = tw.table
 
@@ -28,27 +38,27 @@ function dynamic_aperture(
   E = t.E[1]
   sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 
   sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 
-
-  if length(E) == 3 # rf is on
-    if emit_3 == 0 && sig_pz != 0
-      error("You specified sig_pz, but the longitudinal plane has pseudo-harmonic oscillations.
-             Please specify emit_3 instead.")
-    end
-    sig_x += E[3][1,1]*emit_3
-    sig_y += E[3][3,3]*emit_3
-  else
-    if sig_pz == 0 && emit_3 != 0
-      error("You specified emit_3, but the longitudinal plane is coasting.
-             Please specify sig_pz instead.")
-    end
-    eta_x = t.orbit_x[1][6]
-    eta_y = t.orbit_y[1][6]
-    sig_x += (eta_x*sig_pz)^2
-    sig_y += (eta_y*sig_pz)^2
-  end
-
+  eta_x = t.orbit_x[1][6]
+  eta_y = t.orbit_y[1][6]
+  sig_x += (eta_x*sig_pz)^2
+  sig_y += (eta_y*sig_pz)^2
   sig_x = sqrt(sig_x)
   sig_y = sqrt(sig_y)
+
+  # Compute delta-dependent closed orbits (with RF off)
+  co = zeros(length(deltas), 6)
+  for i in 1:length(deltas)
+    co[i,6] = deltas[i]
+    sol = find_closed_orbit(bl, v0=co[i,:]')
+    if sol.converged == false
+      error("Unable for find delta-dependent closed orbit (with RF off) for delta = $delta.
+             Please remove this delta from the input deltas.")
+    end
+    co[i,:] = sol.u
+  end
+
+  # OK now we can turn the cavities back on:
+  foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfparams)
 
   thetas = range(theta_lims[1], theta_lims[2], length=n_theta)
   rs = range(0, 1, length=n_r)[2:end]
@@ -56,27 +66,25 @@ function dynamic_aperture(
   n_particles = length(deltas)*(1+length(rs)*length(thetas))
   println("Initializing dynamic_aperture with $n_particles particles")
   v0 = zeros(n_particles, 6)
-  idx_particle = 1
-  for delta in deltas
-      v0[idx_particle,:] = [0, 0, 0, 0, 0, delta]
-      idx_particle += 1
-      for theta in thetas
-          for r in rs
-              x_grid = max_sig_x * r * cos(theta)
-              y_grid = max_sig_y * r * sin(theta)
-              x = x_grid * sig_x
-              y = y_grid * sig_y
-              v0[idx_particle,:] = [x, 0, y, 0, 0, delta]
-              idx_particle += 1
-          end
-      end
-  end
-
-  # These coordinates are in closed orbit basis, need to put in integration frame
-  co =  scalar.([t.orbit_x[1], t.orbit_px[1], t.orbit_y[1], t.orbit_py[1], t.orbit_z[1], t.orbit_pz[1]])
   v = zeros(n_particles, 6)
-  for i in 1:n_particles
-      v[i,:] = co + v0[i,:]
+  idx_particle = 1
+  for i in 1:length(deltas)
+    delta = deltas[i]
+    # Initialize v0 in closed orbit basis, v in integration basis:
+    v0[idx_particle,:] = [0, 0, 0, 0, 0, delta]
+    v[idx_particle,:] = co[i,:] + [0, 0, 0, 0, 0, 0]
+    idx_particle += 1
+    for theta in thetas
+      for r in rs
+        x_grid = max_sig_x * r * cos(theta)
+        y_grid = max_sig_y * r * sin(theta)
+        x = x_grid * sig_x
+        y = y_grid * sig_y
+        v0[idx_particle,:] = [x, 0, y, 0, 0, delta]
+        v[idx_particle,:] = co[i,:] + [x, 0, y, 0, 0, 0]
+        idx_particle += 1
+      end
+    end
   end
 
   if backend isa KA.GPU
