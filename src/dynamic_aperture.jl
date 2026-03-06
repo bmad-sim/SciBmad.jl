@@ -14,21 +14,19 @@ function dynamic_aperture(
   # Optional kwargs:
   backend=KA.CPU(),
   coordinates_number_type::Type=Float32, 
-  emit_3::Real=0, 
   sig_pz::Real=0,
+  delta_dependent_orbits::Bool=true,
   output_file=nothing,
   theta_lims=(0, pi),
   track_kwargs... # Get passed to track!
 )
   Base.require_one_based_indexing(deltas)
 
-  # 
-
-  # First, let's turn off all the cavities and store their strengths in 
+  # First, turn off all the cavities and store their strengths in 
   # an array
   cavities = filter(x->!isnothing(x.RFParams), bl.line)
-  rfparams = map(x->x.RFParams, cavities)
-  # Turn them all off:
+  rfps = map(x->x.RFParams, cavities)
+  # Turn them all off (doing this way to ensure inheritance + DefExpr remains):
   foreach(x->x.RFParams=nothing, cavities)
 
   tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
@@ -45,20 +43,31 @@ function dynamic_aperture(
   sig_x = sqrt(sig_x)
   sig_y = sqrt(sig_y)
 
-  # Compute delta-dependent closed orbits (with RF off)
   co = zeros(length(deltas), 6)
-  for i in 1:length(deltas)
-    co[i,6] = deltas[i]
-    sol = find_closed_orbit(bl, v0=co[i,:]')
-    if sol.converged == false
-      error("Unable for find delta-dependent closed orbit (with RF off) for delta = $delta.
-             Please remove this delta from the input deltas.")
+  if delta_dependent_orbits
+    # Compute delta-dependent closed orbits (with RF off)
+    for i in 1:length(deltas)
+      co[i,6] = deltas[i]
+      sol = find_closed_orbit(bl, v0=co[i,:]')
+      if sol.converged == false
+        error("Unable for find delta-dependent closed orbit (with RF off) for delta = $delta.
+              Please remove this delta from the input deltas.")
+      end
+      co[i,:] = sol.u
     end
-    co[i,:] = sol.u
+    # OK now we can turn the cavities back on:
+    foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
+  else
+    # Turn RF back on, get the only closed orbit
+    foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
+    sol = find_closed_orbit(ring)
+    if sol.converged == false
+        error("Unable to find closed orbit")
+    end
+    for i in 1:length(deltas)
+      co[i,:] = sol.u
+    end
   end
-
-  # OK now we can turn the cavities back on:
-  foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfparams)
 
   thetas = range(theta_lims[1], theta_lims[2], length=n_theta)
   rs = range(0, 1, length=n_r)[2:end]
