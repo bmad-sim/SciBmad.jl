@@ -1,35 +1,116 @@
+#=
+
+The different cases someone might want:
+
+1) Coasting beam, delta scan 
+  - Requires sig_pz and deltas
+
+2) Non-coasting, delta scan
+  - Inject on parameter-dependent closed orbit
+  - In this case, accept either sig_pz or emit_3 to compute sig_x and sig_y
+  - WARNING issued about checking the synchrotron tune
+
+3) Non-coasting, z scan
+  - In this case, only accept emit_3 to compute sig_x and sig_y
+  - Inject around closed orbit
+
+=#
 function dynamic_aperture(
   bl::Beamline;
 
   # Required kwargs:
   n_r::Int,
   n_theta::Int,
-  deltas::AbstractArray,
   max_sig_x::Real,
   max_sig_y::Real,
   emit_1::Real,
   emit_2::Real,
   n_turns::Int,
 
+  # Required kwargs for various use cases
+  deltas::AbstractArray=nothing,
+  zs::AbstractArray=nothing,
+  sig_pz::Real=nothing,
+  emit_3::Real=nothing,
+
   # Optional kwargs:
   backend=KA.CPU(),
-  coordinates_number_type::Type=Float32, 
-  emit_3::Real=0, 
-  sig_pz::Real=0,
+  coordinates_number_type::Type=Float32, # Default to 32 bit floats for most GPUs
   output_file=nothing,
   theta_lims=(0, pi),
   track_kwargs... # Get passed to track!
 )
   Base.require_one_based_indexing(deltas)
 
-  # 
+  # Determine which of the three cases:
+  co_sol = find_closed_orbit(bl)
 
-  # First, let's turn off all the cavities and store their strengths in 
-  # an array
-  cavities = filter(x->!isnothing(x.RFParams), bl.line)
-  rfparams = map(x->x.RFParams, cavities)
-  # Turn them all off:
-  foreach(x->x.RFParams=nothing, cavities)
+  delta_dependent_co = false
+
+  if co_sol.coast
+    # Checks
+    isnothing(emit_3) || error("Beam is coasting, but you specified a longitudinal emittance. Specify sig_pz instead.")
+    isnothing(zs) || error("Beam is coasting, but you specified an array of z's to scan. Specify an array of deltas instead.")
+    !isnothing(deltas) || error("An array of deltas to scan must be specified for dynamic_aperture with a coasting beam")
+    !isnothing(sig_pz) || error("sig_pz must be specified for dynamic_aperture with a coasting beam")
+    
+    delta_dependent_co = true
+    tw = twiss(bl, at=[first(bl.line)], de_moivre=true, co_sol=co_sol)
+    t = tw.table
+    # Now compute sigmas at first element, just first order:
+    E = t.E[1]
+    sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 
+    sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 
+    eta_x = t.orbit_x[1][6]
+    eta_y = t.orbit_y[1][6]
+    sig_x += (eta_x*sig_pz)^2
+    sig_y += (eta_y*sig_pz)^2
+    sig_x = sqrt(sig_x)
+    sig_y = sqrt(sig_y)
+  elseif !isnothing(deltas)
+    isnothing(zs) || error("Please specify only one of deltas or zs")
+    xor(isnothing(sig_pz), isnothing(emit_3)) || error("Please specify only one of either sig_pz or emit_3")
+    tw = twiss(bl, at=[], de_moivre=true, co_sol=co_sol)
+    @warn "You specified deltas to dynamic_aperture, but the beam is NOT coasting. 
+            dynamic_aperture will still run by turning off RF to compute the delta-
+            dependent orbits around which particles will be launched for each delta,
+            but it is your responsibility to check that Qz << Qx, Qy to ensure the 
+            delta-dependent closed orbit retains any adiabatic meaning.
+            
+            Qx = $(tw.tunes[1]), Qy = $(tw.tunes[2]), Qz = $(tw.tunes[3])"
+
+    if isnothing(emit_3)
+      @info "You specified a sig_pz, but the beam is NOT coasting. Therefore, RF will 
+              be turned off for the calculation of sig_x and sig_y, and then be turned 
+              back on for the dynamic_aperture scan."
+
+      cavities = filter(x->!isnothing(x.RFParams), bl.line)
+      rfparams = map(x->x.RFParams, cavities)
+      # Turn them all off:
+      foreach(x->x.RFParams=nothing, cavities)
+
+      tw = twiss(bl, at=[first(bl.line)], de_moivre=true, co_sol=co_sol)
+      t = tw.table
+      # Now compute sigmas at first element, just first order:
+      E = t.E[1]
+      sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 
+      sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 
+
+      # Turn off cavities to compute sig_x, sig_y:
+      eta_x = t.orbit_x[1][6]
+      eta_y = t.orbit_y[1][6]
+      sig_x += (eta_x*sig_pz)^2
+      sig_y += (eta_y*sig_pz)^2
+      sig_x = sqrt(sig_x)
+      sig_y = sqrt(sig_y)
+    else
+
+    end
+  else
+
+  end
+
+
 
   tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
   t = tw.table
