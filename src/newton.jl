@@ -158,9 +158,9 @@ function newton!(
   solver::T=default_solver(KA.get_backend(x), y, x, batched), 
   dx=zero.(x),
 ) where {_checkstable,_batched,_checkconverged,T}
+  # Setup:
+  out = (; u=x, jac=jac)
   if !_batched
-    # Setup:
-    out = (; u=x, jac=jac)
     if _checkstable
       out = merge(out, (; stable=false))
     end
@@ -191,8 +191,6 @@ function newton!(
     end
     return out
   else
-    # Setup:
-    out = (; u=x)
     if _checkstable
       error("Stability checking for batched-Newton is not currently implemented") # TODO
       # This will include an array for stable with each element corresponding to an 
