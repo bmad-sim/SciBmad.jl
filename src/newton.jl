@@ -160,7 +160,7 @@ function newton!(
 ) where {_checkstable,_batched,_checkconverged,T}
   if !_batched
     # Setup:
-    out = (; u=x)
+    out = (; u=x, jac=jac)
     if _checkstable
       out = merge(out, (; stable=false))
     end
