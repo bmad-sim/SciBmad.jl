@@ -22,8 +22,8 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{true})
     return (dx, jac, y)-> begin
       jacs = reshape(jac.nzVal, n, n, batchsize)
       ys = reshape(y, n, 1, batchsize)
-      CUBLAS.getrf_strided_batched!(jacs, pivot, info)
-      CUBLAS.getrs_strided_batched!('N', jacs, ys, pivot)
+      CUBLAS.getrf_strided_batched(jacs, pivot, info)
+      CUBLAS.getrs_strided_batched('N', jacs, ys, pivot)
       dx .= -y
     end
   end
