@@ -66,7 +66,7 @@ function dynamic_aperture(
     end
     for i in 1:length(deltas)
       co[i,:] = sol.u
-      co[i,6] = deltas[i]
+      co[i,6] += deltas[i]
     end
   end
 
@@ -82,7 +82,7 @@ function dynamic_aperture(
     delta = deltas[i]
     # Initialize v0 in closed orbit basis, v in integration basis:
     v0[idx_particle,:] = [0, 0, 0, 0, 0, delta]
-    v[idx_particle,:] = co[i,:] + [0, 0, 0, 0, 0, 0]
+    v[idx_particle,:] = co[i,:]
     idx_particle += 1
     for theta in thetas
       for r in rs
@@ -104,6 +104,8 @@ function dynamic_aperture(
   else
     vt = v
   end
+ # @show vt
+ # @show v0
 
   b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
   for i in 1:n_turns
@@ -127,7 +129,7 @@ function dynamic_aperture(
   idx_particle = 1
   for i in LinearIndices(deltas)
       if state[idx_particle] != 0x1
-          idx_particle += length(thetas)*length(rs)
+          idx_particle += length(thetas)*length(rs)+1
           continue
       end
       idx_particle += 1
@@ -135,27 +137,29 @@ function dynamic_aperture(
           
         # Sanity check:
           x = v0[idx_particle:idx_particle+length(rs)-1,1]./(max_sig_x.*sig_x)
+          @show x
+          @show y
           y = v0[idx_particle:idx_particle+length(rs)-1,3]./(max_sig_y.*sig_y)
           for (xi, yi) in zip(x,y)
-            #=
+            
               if !(atan(yi,xi) ≈ thetas[j])
                   writedlm("error.dlm", state)
                   writedlm("error.dlm", v)
                   println()
                   error("Something went wrong with the analysis. Submit an issue including output files.")
               end
-              =#
+              
           end
           
           if !isnothing(findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1]))
             idx_da = idx_particle-1 + findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1])
 
             # Sanity check:
-            #=
+            
             if idx_da-(idx_particle-1) != 1 && state[idx_da-1] != 0x1
                 error("Something went wrong")
             end
-            =#
+            
             x_norm_da[j,i] = v0[idx_da,1]/sig_x
             y_norm_da[j,i] = v0[idx_da,3]/sig_y
             idx_particle += length(rs)
