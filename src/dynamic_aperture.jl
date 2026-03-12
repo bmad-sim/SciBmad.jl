@@ -66,6 +66,7 @@ function dynamic_aperture(
     end
     for i in 1:length(deltas)
       co[i,:] = sol.u
+      co[i,6] = deltas[i]
     end
   end
 
