@@ -31,7 +31,7 @@ end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
-export twiss, find_closed_orbit, track!, Time, Yoshida, MatrixKick, BendKick, BatchParam,
+export twiss, find_closed_orbit, track!, Time, Yoshida, MatrixKick, BendKick, BatchParam, TimeDependentParam,
         SolenoidKick, DriftKick, Exact, Bunch, dynamic_aperture, track, rotate_spins, rotate_spins!
 
 include("closed_orbit.jl") 

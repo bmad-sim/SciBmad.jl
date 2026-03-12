@@ -60,7 +60,7 @@ function dynamic_aperture(
   else
     # Turn RF back on, get the only closed orbit
     foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
-    sol = find_closed_orbit(ring)
+    sol = find_closed_orbit(bl)
     if sol.converged == false
         error("Unable to find closed orbit")
     end
