@@ -28,7 +28,7 @@ function default_solver(device, _y, _x, ::Val{true})
 end
 
 """
-    newton!(f!, y, x; reltol=1e-13, abstol=1e-13,  maxiter=100, autodiff=AutoForwardDiff(), checkstable=Val{false}())
+    newton!(f!, y, x; reltol=1e-13, abstol=1e-13,  maxiter=100, autodiff=AutoForwardDiff())
 
 Finds roots of f!(y, x) using Newton's method. y and x will be mutated during solution.
 x will contain the result.
@@ -56,12 +56,11 @@ function newton!(
   # On GPU need to use ForwardDiff from primitive (pushforward) for no scalar indexing
   autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
   prep=nothing, 
-  checkstable::Val{_checkstable}=Val{false}(),
   batched::Val{_batched}=Val{false}(), # If Val{true}(), then batch processing will be done
   checkconverged::Val{_checkconverged}=batched isa Val{false} ? Val{true}() : Val{false}(), # will check and stop if convergence is reached
   solver::T=default_solver(KA.get_backend(x), y, x, batched), # We do specialize on the solver tho
   dx=zero.(x), # Temporary
-) where {Y,X,_checkstable,_checkconverged,_batched,T}
+) where {Y,X,_checkconverged,_batched,T}
   if _batched
     # Batch MUST have x and y stored as MATRICES where each COLUMN is one element in the batch
     # This makes the Jacobian block diagonal, which means a CSC sparse jacobian layout would give us 
@@ -139,7 +138,7 @@ function newton!(
   end
   let _f! = f!, _prep = prep, _backend = autodiff
     val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
-    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkstable=checkstable, checkconverged=checkconverged, batched=batched, solver=solver, dx=dx)
+    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkconverged=checkconverged, batched=batched, solver=solver, dx=dx)
   end
 end
 
@@ -152,18 +151,14 @@ function newton!(
   reltol=1e-13,
   abstol=1e-13, 
   maxiter=100, 
-  checkstable::Val{_checkstable}=Val{false}(),
   checkconverged::Val{_checkconverged}=Val{true}(), # n_iter will only be return if _checkconverged == true
   batched::Val{_batched}=Val{false}(), 
   solver::T=default_solver(KA.get_backend(x), y, x, batched), 
   dx=zero.(x),
-) where {_checkstable,_batched,_checkconverged,T}
+) where {_batched,_checkconverged,T}
   # Setup:
   out = (; u=x, jac=jac)
   if !_batched
-    if _checkstable
-      out = merge(out, (; stable=false))
-    end
     if _checkconverged
       out = merge(out, (; converged=false, n_iters=0))
     end
@@ -179,10 +174,6 @@ function newton!(
       if _checkconverged && (norm(dx) < reltol*norm(x) || norm(y) < abstol)
         @reset out.converged = true
         @reset out.n_iters = iter
-        if _checkstable
-          eg = eigen(jac)
-          @reset out.stable = all(t->norm(t)<=1, eg.values)
-        end
         return out
       end
     end
@@ -191,11 +182,6 @@ function newton!(
     end
     return out
   else
-    if _checkstable
-      error("Stability checking for batched-Newton is not currently implemented") # TODO
-      # This will include an array for stable with each element corresponding to an 
-      # element in the batch
-    end
     if _checkconverged
       error("Convergence checking for batched-Newton is not currently implemented") # TODO
       # This will include an array for n_iter and converged with each element corresponding
