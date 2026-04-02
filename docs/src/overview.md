@@ -1,6 +1,6 @@
 # Overview
 
-# SciBmad
+## SciBmad
 
 Documentation for [SciBmad](https://github.com/bmad-sim/SciBmad.jl).
 
