@@ -9,6 +9,15 @@ from pathlib import Path
 docs_dir = Path(__file__).parent
 project_root = docs_dir.parent
 
+# Instantiate the docs Julia environment
+print("Instantiating docs Julia environment...")
+result = subprocess.run(
+    ["julia", f"--project={docs_dir}", "-e", "using Pkg; Pkg.instantiate()"],
+    cwd=project_root
+)
+if result.returncode != 0:
+    exit(1)
+
 # Build Documenter first (Sphinx intersphinx needs its objects.inv)
 print("Building Documenter.jl documentation...")
 result = subprocess.run(
@@ -17,6 +26,15 @@ result = subprocess.run(
 )
 if result.returncode != 0:
     exit(1)
+
+## Install Sphinx dependencies
+#print("\nInstalling Sphinx dependencies...")
+#result = subprocess.run(
+#    ["pip", "install", "-r", "requirements.txt"],
+#    cwd=docs_dir
+#)
+#if result.returncode != 0:
+#    exit(1)
 
 # Build Sphinx
 print("\nBuilding Sphinx documentation...")

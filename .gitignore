@@ -4,6 +4,7 @@
 /Manifest*.toml
 /docs/Manifest*.toml
 /docs/build/
+/docs/api/build/
 /examples/.ipynb_checkpoints*
 /lattices/.ipynb_checkpoints*
 /examples/*/.ipynb_checkpoints*
