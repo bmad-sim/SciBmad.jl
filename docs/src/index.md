@@ -1,14 +1,13 @@
-```@meta
-CurrentModule = SciBmad
+# User Guide
+
+This section provides detailed information about using SciBmad.jl.
+
+## Contents
+
+```{toctree}
+:maxdepth: 2
 ```
 
-# SciBmad
+## Overview
 
-Documentation for [SciBmad](https://github.com/bmad-sim/SciBmad.jl).
-
-```@index
-```
-
-```@autodocs
-Modules = [SciBmad]
-```
+TODO: Core concepts (LineElements, SciBmad, Parameter Groups, Deferred Expressions, Controllers, etc.).
