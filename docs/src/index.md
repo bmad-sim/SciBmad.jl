@@ -21,4 +21,3 @@ coordinates
 
 ## Overview
 
-TODO: Core concepts (LineElements, SciBmad, Parameter Groups, Deferred Expressions, Controllers, etc.).
