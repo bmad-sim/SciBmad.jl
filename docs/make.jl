@@ -21,3 +21,8 @@ makedocs(;
     ],
     warnonly=true,  # Don't fail on warnings
 )
+
+## deploydocs(;
+##     repo="github.com/bmad-sim/SciBmad.jl",
+##     devbranch="main",
+## )
