@@ -48,10 +48,29 @@ pip install -r docs/requirements.txt
 julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
 ```
 
-### Build API Reference (Documenter.jl) — must run first
+### Build All (Combined Documenter + Sphinx) Documentation
 
-Sphinx uses intersphinx to cross-reference into the API docs, so Documenter's
-`objects.inv` must exist before building Sphinx.
+```bash
+# Build with:
+python docs/build.py
+
+# Open documentation with the command:
+start gh-pages/index.html  # Windows
+open gh-pages/index.html   # macOS
+xdg-open gh-pages/index.html  # Linux
+```
+
+### Viewing Documentation Generated With a GitHub Pull Request
+
+There is an "artifact" generated on GitHub when the documentation test is run for a pull request.
+This artifact is a zip file containing the documentation and the artifact can be downloaded
+to your local machine and viewed. To down
+
+### Only Build Julia API Reference (Documenter.jl)
+
+If, for some reason, you only want to build the Julia documentation, do the following.
+Note: Sphinx uses intersphinx to cross-reference into the API docs, so Documenter's
+`objects.inv` must exist before building Sphinx below.
 
 ```bash
 julia --project=docs docs/api/make.jl
@@ -59,26 +78,16 @@ julia --project=docs docs/api/make.jl
 
 Output: `docs/api/build/`
 
-### Build Narrative Documentation (Sphinx)
+### Only Build Narrative Documentation (Sphinx)
 
+If, for some reason, you only want to build Sphinx/Myst, do the following.
+Note: Documenter's documentation must exist before building Sphinx.
 ```bash
 cd docs
 sphinx-build -b html src build/html
 ```
 
 Output: `docs/build/html/`
-
-### Build Combined Documentation
-
-```bash
-# Or just use the build script, which handles ordering automatically:
-python docs/build.py
-
-# Open
-start gh-pages/index.html  # Windows
-open gh-pages/index.html   # macOS
-xdg-open gh-pages/index.html  # Linux
-```
 
 ## Contributing to Documentation
 
