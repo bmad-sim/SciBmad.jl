@@ -1,12 +1,14 @@
 using Beamlines
+using SciBmad
 using Documenter
 
 DocMeta.setdocmeta!(Beamlines, :DocTestSetup, :(using Beamlines); recursive=true)
+DocMeta.setdocmeta!(SciBmad, :DocTestSetup, :(using SciBmad); recursive=true)
 
 makedocs(;
-    modules=[Beamlines],
+    modules=[Beamlines, SciBmad],
     authors="mattsignorelli <mgs255@cornell.edu> and contributors",
-    sitename="Beamlines.jl API Reference",
+    sitename="SciBmad.jl API Reference",
     format=Documenter.HTML(;
         canonical="https://bmad-sim.github.io/Beamlines.jl",
         edit_link="main",

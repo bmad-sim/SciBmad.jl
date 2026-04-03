@@ -2,56 +2,22 @@
 
 This directory contains all documentation for SciBmad.jl, combining narrative documentation (Sphinx/MyST) with API reference (Documenter.jl).
 
-## Quick Start
-
-**Build all documentation:**
-```bash
-python docs/build.py
-```
-
-This builds Documenter first (to generate `objects.inv` for intersphinx), then Sphinx, and combines them into `gh-pages/`.
-
-## Directory Structure
-
-```
-docs/
-├── src/                    # Narrative documentation (Sphinx/MyST)
-│   ├── conf.py            # Sphinx configuration
-│   ├── index.md           # Main landing page
-│   ├── getting-started.md # Installation and basic usage
-│   ├── user-guide/        # Detailed usage guides
-│   ├── examples/          # Practical examples
-│   ├── developer-guide/   # Contributing guidelines
-│   ├── _static/           # CSS, images, and other static files
-│   └── _templates/        # Custom HTML templates
-├── api/                    # API reference (Documenter.jl)
-│   ├── src/
-│   │   ├── index.md       # API reference landing page
-│   │   └── main-docs.md   # Redirect to main docs
-│   └── make.jl            # Documenter build script
-├── requirements.txt        # Python dependencies (Sphinx)
-├── Project.toml           # Julia dependencies (Documenter)
-└── README.md              # This file
-```
-
 ## Building Documentation
 
 ### Prerequisites
 
-**Python dependencies:**
 ```bash
+# Python dependency
 pip install -r docs/requirements.txt
-```
-
-**Julia dependencies:**
-```bash
+# Julia dependency
 julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
 ```
 
 ### Build All (Combined Documenter + Sphinx) Documentation
 
 ```bash
-# Build with:
+# Build all documentation:
+# This builds Documenter first (to generate `objects.inv` for intersphinx), then Sphinx, and combines them into `gh-pages/`.
 python docs/build.py
 
 # Open documentation with the command:
@@ -88,6 +54,29 @@ sphinx-build -b html src build/html
 ```
 
 Output: `docs/build/html/`
+
+## Directory Structure
+
+```
+docs/
+├── src/                    # Narrative documentation (Sphinx/MyST)
+│   ├── conf.py            # Sphinx configuration
+│   ├── index.md           # Main landing page
+│   ├── getting-started.md # Installation and basic usage
+│   ├── user-guide/        # Detailed usage guides
+│   ├── examples/          # Practical examples
+│   ├── developer-guide/   # Contributing guidelines
+│   ├── _static/           # CSS, images, and other static files
+│   └── _templates/        # Custom HTML templates
+├── api/                    # API reference (Documenter.jl)
+│   ├── src/
+│   │   ├── index.md       # API reference landing page
+│   │   └── main-docs.md   # Redirect to main docs
+│   └── make.jl            # Documenter build script
+├── requirements.txt        # Python dependencies (Sphinx)
+├── Project.toml           # Julia dependencies (Documenter)
+└── README.md              # This file
+```
 
 ## Contributing to Documentation
 
