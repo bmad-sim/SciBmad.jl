@@ -30,7 +30,13 @@ xdg-open gh-pages/index.html  # Linux
 
 There is an "artifact" generated on GitHub when the documentation test is run for a pull request.
 This artifact is a zip file containing the documentation and the artifact can be downloaded
-to your local machine and viewed. To down
+to your local machine and viewed. To download, do the following:
+- Go to the PR page.
+- Click on any one of the tests.
+- Near the upper left corner, click on the `Summary` button.
+- Near the top, click on the `Artifacts` button.
+
+Note: Artifacts get deleted by GitHub after 90 days.
 
 ### Only Build Julia API Reference (Documenter.jl)
 
