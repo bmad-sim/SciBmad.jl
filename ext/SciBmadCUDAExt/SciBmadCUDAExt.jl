@@ -1,6 +1,5 @@
 module SciBmadCUDAExt
 using CUDA
-using CondaPkg, PythonCall
 import SciBmad: default_solver
 
 function default_solver(device::CUDA.CUDABackend, _y, _x, ::Val{true})

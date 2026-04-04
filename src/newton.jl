@@ -137,7 +137,7 @@ function newton!(
     end
   end
   let _f! = f!, _prep = prep, _backend = autodiff
-    val_and_jac!(_y, _jac, _x, _contexts) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
+    val_and_jac!(_y, _jac, _x, _contexts...) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
     return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkconverged=checkconverged, batched=batched, solver=solver, dx=dx)
   end
 end
@@ -147,7 +147,7 @@ function newton!(
   y,
   jac,
   x,
-  contexts::Vararg{DI.Context};
+  contexts...;
   reltol=1e-13,
   abstol=1e-13, 
   maxiter=100, 
@@ -165,13 +165,15 @@ function newton!(
     # Newton:
     dx .= 0
     for iter in 1:maxiter
-      val_and_jac!(y, jac, x, contexts)
-      if any(isinf, y) # Stop if infinite residual
+      val_and_jac!(y, jac, x, contexts...)
+      solver(dx, jac, y)
+      if _checkconverged && norm(y) < abstol
+        @reset out.converged = true
+        @reset out.n_iters = iter
         return out
       end
-      solver(dx, jac, y)
       x .= x .+ dx
-      if _checkconverged && (norm(dx) < reltol*norm(x) || norm(y) < abstol)
+      if _checkconverged && norm(dx) < reltol*norm(x)
         @reset out.converged = true
         @reset out.n_iters = iter
         return out
@@ -190,14 +192,7 @@ function newton!(
     # Newton:
     dx .= 0
     for iter in 1:maxiter
-      val_and_jac!(y, jac, x, contexts)
-
-      # If an element in the batch has an infinite residual,
-      # set that sub-Jacobian equal to the identity to ensure
-      # matrix
-      if any(isinf, y) # Stop if infinite residual
-        return out
-      end
+      val_and_jac!(y, jac, x, contexts...)
       solver(dx, jac, y)
       x .= x .+ dx
     end

@@ -1,5 +1,0 @@
-[deps]
-pytorch = ""
-
-[pip.deps]
-torch-linear-assignment = ""
