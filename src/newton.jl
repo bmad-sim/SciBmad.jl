@@ -122,7 +122,7 @@ function newton!(
       pattern = sparse(d_rows, d_cols, d_mat, batchsize*n_rows, batchsize*n_cols)
       color = (batchdim == 1) ? repeat(1:n_cols, inner=batchsize) : repeat(1:n_cols, outer=batchsize) 
       alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
-      @show color
+      #@show color
       #        problem = ColoringProblem(; structure=:nonsymmetric, partition=:row)
       #  result = coloring(pattern, problem, GreedyColoringAlgorithm())
       #  @show row_colors(result)
