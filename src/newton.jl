@@ -1,3 +1,8 @@
+# Wish I could use Enum but not GPU compatible.
+const RETCODE_SUCCESS = 0x0
+const RETCODE_FAILURE = 0x1
+const RETCODE_MAXITERS = 0x2
+
 function default_solver(device, _y, _x, batchdim)
   _lx = length(_x)
   _ly = length(_y)
@@ -16,7 +21,11 @@ function default_solver(device, _y, _x, batchdim)
           curjac = reshape(view(jac.nzval, (jac_offset+1):(jac_offset+jacsize)), (n_rows, n_cols))
           dx_offset = (i-1)*n_cols
           y_offset = (i-1)*n_rows
-          view(dx, (dx_offset+1):(dx_offset+n_cols)) .= -curjac \ view(y, (y_offset+1):(y_offset+n_rows))
+          if ArrayInterface.issingular(curjac)
+            view(dx, (dx_offset+1):(dx_offset+n_cols)) .= NaN32
+          else
+            view(dx, (dx_offset+1):(dx_offset+n_cols)) .= -curjac \ view(y, (y_offset+1):(y_offset+n_rows))
+          end
         end
       end
     end
@@ -27,7 +36,11 @@ function default_solver(device, _y, _x, batchdim)
       return (dx, jac::SparseMatrixCSC, y)->begin
         for i in 1:batchsize
           curjac = view(reshape(jac.nzval, n_rows, :), :, i:batchsize:ylen)
-          view(dx, i:batchsize:xlen) .= -curjac \ view(y, i:batchsize:ylen)
+          if ArrayInterface.issingular(curjac)
+            view(dx, i:batchsize:xlen) .= NaN32
+          else
+            view(dx, i:batchsize:xlen) .= -curjac \ view(y, i:batchsize:ylen)
+          end
         end
       end
     end
@@ -122,25 +135,7 @@ function newton!(
       pattern = sparse(d_rows, d_cols, d_mat, batchsize*n_rows, batchsize*n_cols)
       color = (batchdim == 1) ? repeat(1:n_cols, inner=batchsize) : repeat(1:n_cols, outer=batchsize) 
       alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
-      #@show color
-      #        problem = ColoringProblem(; structure=:nonsymmetric, partition=:row)
-      #  result = coloring(pattern, problem, GreedyColoringAlgorithm())
-      #  @show row_colors(result)
-#=
-      # CSC for batchdim=2, CSR for batchdim=1
-      if batchdim == 1
-        pattern = transpose(sparse(d_cols, d_rows, d_mat, batchsize*n_cols, batchsize*n_rows))
-        color = repeat(1:n_cols, inner=batchsize)
-        #=
-        @show color
-        problem = ColoringProblem(; structure=:nonsymmetric, partition=:column)
-        result = coloring(pattern, problem, GreedyColoringAlgorithm())
-        @show column_colors(result)=#
-        alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
-      else
 
-      end
-      =#
       detector = ADTypes.KnownJacobianSparsityDetector(pattern)
       autodiff = AutoSparse(autodiff; 
         sparsity_detector=detector,
@@ -153,17 +148,6 @@ function newton!(
     prep = DI.prepare_jacobian(f!, y, autodiff, x, contexts...)
   end
   if autodiff isa AutoSparse
-    #=
-    p = sparsity_pattern(prep)
-    # Because SparseArrays is annoying and they only have API for CSC:
-    if p isa Transpose
-      jac = transpose(similar(transpose(p), eltype(y)))
-    elseif p isa Adjoint
-      jac = adjoint(similar(adjoint(p), eltype(y)))
-    else
-      jac = similar(p, eltype(y))
-    end
-    =#
     jac = similar(sparsity_pattern(prep), eltype(y))
   else
     if Y <: StaticArray && X <: StaticArray
@@ -188,8 +172,8 @@ function newton!(
   abstol=1e-13, 
   maxiter=100, 
   batchdim::Union{Nothing,Integer}=nothing, 
-  n_iters=nothing, # If batch, then array that should be modified in-place with the iteration when convergence reached
-  converged=nothing,
+  n_iters=isnothing(batchdim) ? nothing : similar(x, Int, size(x, batchdim)), # If batch, then array that should be modified in-place with the iteration when convergence reached
+  retcode=isnothing(batchdim) ? nothing : similar(x, UInt8, size(x, batchdim)),
   solver::T=default_solver(KA.get_backend(x), y, x, batchdim), 
   dx=zero.(x),
 ) where {T}
@@ -200,24 +184,28 @@ function newton!(
       @warn "You provided `n_iters`, but this is only used for batched-Newton. Non-batched Newton 
              always returns a scalar `n_iters`."
     end
-    if !isnothing(converged)
-      @warn "You provided `converged`, but this is only used for batched-Newton. Non-batched Newton 
-             always returns a Bool `converged`."
+    if !isnothing(retcode)
+      @warn "You provided `retcode`, but this is only used for batched-Newton. Non-batched Newton 
+             always returns a scalar `retcode`."
     end
-    out = merge(out, (; converged=false, n_iters=0))
+    out = merge(out, (; retcode=RETCODE_MAXITERS, n_iters=0))
     # Newton:
     dx .= 0
     for iter in 1:maxiter
       val_and_jac!(y, jac, x, contexts...)
       solver(dx, jac, y)
-      if norm(y) < abstol
-        @reset out.converged = true
+      if any(isnan(dx))
+        @reset out.retcode = RETCODE_FAILURE
+        @reset out.n_iters = iter-1
+        return out
+      elseif norm(y) < abstol
+        @reset out.retcode = RETCODE_SUCCESS
         @reset out.n_iters = iter-1
         return out
       end
       x .= x .+ dx
       if norm(dx) < reltol*norm(x)
-        @reset out.converged = true
+        @reset out.retcode = RETCODE_SUCCESS
         @reset out.n_iters = iter
         return out
       end
@@ -225,15 +213,33 @@ function newton!(
     @reset out.n_iters=maxiter
     return out
   else
-    if !isnothing(n_iters) || !isnothing(converged)
-      error("Providing n_iters or converged is not implemented yet for batched-Newton")
-    end
+    otherdim = mod(batchdim, 2)+1
+    abstol2 = abstol^2
+    reltol2 = reltol^2
+    fill!(retcode, RETCODE_MAXITERS)
+    fill!(n_iters, -1)
+    out = merge(out, (; retcode=retcode, n_iters=n_iters))
     # Newton:
     dx .= 0
     for iter in 1:maxiter
       val_and_jac!(y, jac, x, contexts...)
       solver(dx, jac, y)
-      x .= x .+ dx
+      out.retcode .= ifelse.(any(isnan, dx, dims=otherdim), RETCODE_FAILURE, out.retcode)
+      out.n_iters .= ifelse.(
+        (sum(abs2, y, dims=otherdim) .< abstol2 .|| out.retcode .== RETCODE_FAILURE) .&& out.n_iters .== -1, 
+        iter-1, 
+        out.n_iters
+      )
+      x .= x .+ (out.n_iters .== -1) .* dx
+      out.n_iters .= ifelse.(
+        sum(abs2, dx, dims=otherdim) .< reltol2.*sum(abs2, x, dims=otherdim) .&& out.n_iters .== -1,
+        iter,
+        out.n_iters
+      )
+      out.retcode .= ifelse.(out.n_iters .!= -1 .&& out.retcode .== RETCODE_MAXITERS, RETCODE_SUCCESS, out.retcode)
+      if all(out.retcode .!= RETCODE_MAXITERS)
+        break
+      end
     end
     return out
   end
