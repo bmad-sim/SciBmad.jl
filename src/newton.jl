@@ -3,7 +3,7 @@ function default_solver(device, _y, _x, batchdim)
   _ly = length(_y)
   if isnothing(batchdim)
     let lx=_lx, ly=_ly
-      return (dx, jac, y)->(reshape(dx, lx) .= -jac \ reshape(y, ly))
+      return (dx, jac, y)->(@show jac; reshape(dx, lx) .= -jac \ reshape(y, ly))
     end
   elseif batchdim == 2 # Do each serially
     _batchsize = size(_x, 2)
@@ -23,12 +23,11 @@ function default_solver(device, _y, _x, batchdim)
   elseif batchdim == 1
     _batchsize = size(_x, 1)
     _n_rows = size(_y, 2)
-    _n_cols = size(_x, 2)
-    let n_rows=_n_rows, n_cols=_n_cols, batchsize=_batchsize, len=_n_rows*_n_cols*_batchsize, xlen=length(x), ylen=length(y)
+    let n_rows=_n_rows, batchsize=_batchsize, xlen=length(_x), ylen=length(_y)
       return (dx, jac::SparseMatrixCSC, y)->begin
         for i in 1:batchsize
-          curjac = reshape(view(jac.nzval, i:n_rows:len), (n_rows, n_cols))
-          view(dx, i:n_cols:xlen) .= -curjac \ view(y, i:n_rows:ylen)
+          curjac = view(reshape(jac.nzval, n_rows, :), :, i:batchsize:ylen)
+          dx[i:batchsize:xlen] .= -curjac \ view(y, i:batchsize:ylen)
         end
       end
     end
@@ -120,12 +119,29 @@ function newton!(
       copyto!(d_cols, cols)
       d_mat .= 1
 
-      # CSC by default with sparse, even with CUDA
       pattern = sparse(d_rows, d_cols, d_mat, batchsize*n_rows, batchsize*n_cols)
-
-      detector = ADTypes.KnownJacobianSparsityDetector(pattern)
-      color = repeat(1:n_cols, outer=batchsize) 
+      color = (batchdim == 1) ? repeat(1:n_cols, inner=batchsize) : repeat(1:n_cols, outer=batchsize) 
       alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
+      @show color
+      #        problem = ColoringProblem(; structure=:nonsymmetric, partition=:row)
+      #  result = coloring(pattern, problem, GreedyColoringAlgorithm())
+      #  @show row_colors(result)
+#=
+      # CSC for batchdim=2, CSR for batchdim=1
+      if batchdim == 1
+        pattern = transpose(sparse(d_cols, d_rows, d_mat, batchsize*n_cols, batchsize*n_rows))
+        color = repeat(1:n_cols, inner=batchsize)
+        #=
+        @show color
+        problem = ColoringProblem(; structure=:nonsymmetric, partition=:column)
+        result = coloring(pattern, problem, GreedyColoringAlgorithm())
+        @show column_colors(result)=#
+        alg = ConstantColoringAlgorithm(pattern, color; partition=:column)
+      else
+
+      end
+      =#
+      detector = ADTypes.KnownJacobianSparsityDetector(pattern)
       autodiff = AutoSparse(autodiff; 
         sparsity_detector=detector,
         coloring_algorithm=alg,
@@ -137,6 +153,17 @@ function newton!(
     prep = DI.prepare_jacobian(f!, y, autodiff, x, contexts...)
   end
   if autodiff isa AutoSparse
+    #=
+    p = sparsity_pattern(prep)
+    # Because SparseArrays is annoying and they only have API for CSC:
+    if p isa Transpose
+      jac = transpose(similar(transpose(p), eltype(y)))
+    elseif p isa Adjoint
+      jac = adjoint(similar(adjoint(p), eltype(y)))
+    else
+      jac = similar(p, eltype(y))
+    end
+    =#
     jac = similar(sparsity_pattern(prep), eltype(y))
   else
     if Y <: StaticArray && X <: StaticArray

@@ -13,11 +13,6 @@ function find_one_torus(
     order=3,          # Order of frequencies to eliminate in cross check
     fdmode=:central,  # Either :forward or :central
     n_turns=500,      # Number of turns to track each iteration
-    reltol=1e-13,
-    abstol=1e-13, 
-    autodiff=KA.get_backend(v0) isa KA.GPU ? DI.AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
-    prep=nothing,
-    coast::Union{Nothing,Bool}=nothing,
     checkconverged::Bool=true,
 )
   # First do a coast check:
