@@ -1,29 +1,39 @@
-function default_solver(device, _y, _x, ::Val{false})
+function default_solver(device, _y, _x, batchdim)
   _lx = length(_x)
   _ly = length(_y)
-  let lx=_lx, ly=_ly
-    return (dx, jac, y)->(reshape(dx, lx) .= -jac \ reshape(y, ly))
-  end
-end
-
-# For batched on CPU, do each matrix individually
-function default_solver(device, _y, _x, ::Val{true})
-  _batchsize = size(_x, 2)
-  _n_rows = size(_y, 1)
-  _n_cols = size(_x, 1)
-  let n_rows=_n_rows, n_cols=_n_cols, batchsize=_batchsize, stride=_n_rows*_n_cols
-    return (dx, jac::SparseMatrixCSC, y)->begin
-      for i in 1:batchsize
-        jac_offset = (i-1)*stride
-        curjac = reshape(view(jac.nzval, (jac_offset+1):(jac_offset+stride)), (n_rows, n_cols))
-        if !ArrayInterface.issingular(curjac) # Only keep going if not singular
+  if isnothing(batchdim)
+    let lx=_lx, ly=_ly
+      return (dx, jac, y)->(reshape(dx, lx) .= -jac \ reshape(y, ly))
+    end
+  elseif batchdim == 2 # Do each serially
+    _batchsize = size(_x, 2)
+    _n_rows = size(_y, 1)
+    _n_cols = size(_x, 1)
+    let n_rows=_n_rows, n_cols=_n_cols, batchsize=_batchsize, jacsize=_n_rows*_n_cols
+      return (dx, jac::SparseMatrixCSC, y)->begin
+        for i in 1:batchsize
+          jac_offset = (i-1)*jacsize 
+          curjac = reshape(view(jac.nzval, (jac_offset+1):(jac_offset+jacsize)), (n_rows, n_cols))
           dx_offset = (i-1)*n_cols
           y_offset = (i-1)*n_rows
           view(dx, (dx_offset+1):(dx_offset+n_cols)) .= -curjac \ view(y, (y_offset+1):(y_offset+n_rows))
         end
       end
-      return dx
     end
+  elseif batchdim == 1
+    _batchsize = size(_x, 1)
+    _n_rows = size(_y, 2)
+    _n_cols = size(_x, 2)
+    let n_rows=_n_rows, n_cols=_n_cols, batchsize=_batchsize, len=_n_rows*_n_cols*_batchsize, xlen=length(x), ylen=length(y)
+      return (dx, jac::SparseMatrixCSC, y)->begin
+        for i in 1:batchsize
+          curjac = reshape(view(jac.nzval, i:n_rows:len), (n_rows, n_cols))
+          view(dx, i:n_cols:xlen) .= -curjac \ view(y, i:n_rows:ylen)
+        end
+      end
+    end
+  else
+    error("Invalid batchdim (must be either 1, 2, or nothing)")
   end
 end
 
@@ -56,50 +66,49 @@ function newton!(
   # On GPU need to use ForwardDiff from primitive (pushforward) for no scalar indexing
   autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
   prep=nothing, 
-  batched::Val{_batched}=Val{false}(), # If Val{true}(), then batch processing will be done
-  checkconverged::Val{_checkconverged}=batched isa Val{false} ? Val{true}() : Val{false}(), # will check and stop if convergence is reached
-  solver::T=default_solver(KA.get_backend(x), y, x, batched), # We do specialize on the solver tho
+  batchdim::Union{Nothing,Integer}=nothing,
+  solver::T=default_solver(KA.get_backend(x), y, x, batchdim), # We do specialize on the solver tho
   dx=zero.(x), # Temporary
-) where {Y,X,_checkconverged,_batched,T}
-  if _batched
-    # Batch MUST have x and y stored as MATRICES where each COLUMN is one element in the batch
-    # This makes the Jacobian block diagonal, which means a CSC sparse jacobian layout would give us 
-    # each submatrix one after the other in memory. This makes it easy to then do CUDA.getrf_batched!, 
-    # and maybe doing each dense matrix serially is faster than the sparse solver? We can check.
+) where {Y,X,T}
+  if !isnothing(batchdim)
+    if !(batchdim in (1,2))
+      error("batchdim must be either 1 or 2")
+    end
 
-    # Note that if you still want SoA layout, you can allocate as SoA and transpose. Then the cost 
-    # will be WRITING to the Jacobian matrix, but not in EVALUATING the Jacobian matrix if the function 
-    # is accelerated by SoA
     # Sanity checks
-    if size(x, 2) != size(y, 2)
-        error("Input/output matrix size mismatch for batched newton: number of columns for 
-                input and output must be equal, received $(size(x, 2)) and $(size(y, 2)) respectively.")
+    if size(x, batchdim) != size(y, batchdim)
+        error("Input/output matrix size mismatch for batched newton: batched-dimension $batchdim size for 
+                the input and output must be equal. Received $(size(x, batchdim)) and $(size(y, batchdim)) respectively.")
     end
 
     # If we are batch and the user has NOT specified an AutoSparse autodiff, set it up for them
     if !(autodiff isa AutoSparse)
       if !isnothing(prep)
-        @warn "You specified batched and provided AD prep, but your AD autodiff is NOT AutoSparse, which is required for batched-Newton.
-               Your prep will therefore NOT be used"
+        @warn "You specified a batchdim and provided AD prep, but your AD autodiff is NOT AutoSparse, which is required for batched-Newton.
+               Your prep will therefore NOT be used."
         prep = nothing
       end
 
+
+      batchsize = size(x, batchdim)
+      otherdim = mod(batchdim, 2) + 1
+      n_rows = size(y, otherdim)
+      n_cols = size(x, otherdim)
+
       # Make it on the CPU
-      batchsize = size(x, 2)
-      n_rows = size(y, 1)
-      n_cols = size(x, 1)
       nnz = batchsize * n_rows * n_cols
       rows = Vector{Int}(undef, nnz)
       cols = Vector{Int}(undef, nnz)
-      idx = 1 
-      for b in 0:batchsize-1
-          row_offset = b * n_rows
-          col_offset = b * n_cols
 
-          for j in 1:n_cols       
-              for i in 1:n_rows
-                  rows[idx] = row_offset + i
-                  cols[idx] = col_offset + j
+      rs, ri = batchdim == 1 ? (1, batchsize) : (n_rows, 1)
+      cs, ci = batchdim == 1 ? (1, batchsize) : (n_cols, 1)
+
+      idx = 1
+      for i in 1:batchsize
+          for r in 1:n_rows
+              for c in 1:n_cols
+                  rows[idx] = (i-1)*rs + (r-1)*ri + 1
+                  cols[idx] = (i-1)*cs + (c-1)*ci + 1
                   idx += 1
               end
           end
@@ -138,7 +147,7 @@ function newton!(
   end
   let _f! = f!, _prep = prep, _backend = autodiff
     val_and_jac!(_y, _jac, _x, _contexts...) = DI.value_and_jacobian!(_f!, _y, _jac, _prep, _backend, _x, _contexts...)
-    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, checkconverged=checkconverged, batched=batched, solver=solver, dx=dx)
+    return newton!(val_and_jac!, y, jac, x, contexts...; reltol=reltol, abstol=abstol, maxiter=maxiter, batchdim=batchdim, solver=solver, dx=dx)
   end
 end
 
@@ -151,43 +160,46 @@ function newton!(
   reltol=1e-13,
   abstol=1e-13, 
   maxiter=100, 
-  checkconverged::Val{_checkconverged}=Val{true}(), # n_iter will only be return if _checkconverged == true
-  batched::Val{_batched}=Val{false}(), 
-  solver::T=default_solver(KA.get_backend(x), y, x, batched), 
+  batchdim::Union{Nothing,Integer}=nothing, 
+  n_iters=nothing, # If batch, then array that should be modified in-place with the iteration when convergence reached
+  converged=nothing,
+  solver::T=default_solver(KA.get_backend(x), y, x, batchdim), 
   dx=zero.(x),
-) where {_batched,_checkconverged,T}
+) where {T}
   # Setup:
   out = (; u=x, jac=jac)
-  if !_batched
-    if _checkconverged
-      out = merge(out, (; converged=false, n_iters=0))
+  if isnothing(batchdim)
+    if !isnothing(n_iters)
+      @warn "You provided `n_iters`, but this is only used for batched-Newton. Non-batched Newton 
+             always returns a scalar `n_iters`."
     end
+    if !isnothing(converged)
+      @warn "You provided `converged`, but this is only used for batched-Newton. Non-batched Newton 
+             always returns a Bool `converged`."
+    end
+    out = merge(out, (; converged=false, n_iters=0))
     # Newton:
     dx .= 0
     for iter in 1:maxiter
       val_and_jac!(y, jac, x, contexts...)
       solver(dx, jac, y)
-      if _checkconverged && norm(y) < abstol
+      if norm(y) < abstol
         @reset out.converged = true
-        @reset out.n_iters = iter
+        @reset out.n_iters = iter-1
         return out
       end
       x .= x .+ dx
-      if _checkconverged && norm(dx) < reltol*norm(x)
+      if norm(dx) < reltol*norm(x)
         @reset out.converged = true
         @reset out.n_iters = iter
         return out
       end
     end
-    if _checkconverged
-      @reset out.n_iters=maxiter
-    end
+    @reset out.n_iters=maxiter
     return out
   else
-    if _checkconverged
-      error("Convergence checking for batched-Newton is not currently implemented") # TODO
-      # This will include an array for n_iter and converged with each element corresponding
-      # to an element in the batch
+    if !isnothing(n_iters) || !isnothing(converged)
+      error("Providing n_iters or converged is not implemented yet for batched-Newton")
     end
     # Newton:
     dx .= 0
@@ -198,4 +210,4 @@ function newton!(
     end
     return out
   end
-end
+end 
