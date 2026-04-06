@@ -27,7 +27,7 @@ function default_solver(device, _y, _x, batchdim)
       return (dx, jac::SparseMatrixCSC, y)->begin
         for i in 1:batchsize
           curjac = view(reshape(jac.nzval, n_rows, :), :, i:batchsize:ylen)
-          dx[i:batchsize:xlen] .= -curjac \ view(y, i:batchsize:ylen)
+          view(dx, i:batchsize:xlen) .= -curjac \ view(y, i:batchsize:ylen)
         end
       end
     end
