@@ -20,6 +20,7 @@ SciBmad consists of a set of modular packages:
 - **[`GTPSA.jl`](https://github.com/bmad-sim/GTPSA.jl):** Fast high-order (Taylor mode) automatic differentiation using the Generalised Truncated Power Series Algebra (GTPSA) library
 - **[`Beamlines.jl`](https://github.com/bmad-sim/Beamlines.jl):** Defines accelerator lattices in a fast, flexible, fully-polymorphic, and differentiable way, providing both eagerly- and lazily-evaluated deferred expressions for interdependent parameters
 - **[`NonlinearNormalForm.jl`](https://github.com/bmad-sim/NonlinearNormalForm.jl):** Map-based perturbation theory of differential-algebraic maps, which may include spin and large damping, using Lie algebraic methods
+- **[`FundamentalFrequencies.jl`](https://github.com/bmad-sim/FundamentalFrequencies.jl):** GPU-batchable Numerical Analysis of Fundamental Frequencies (NAFF)
 - **[`AtomicAndPhysicalConstants.jl`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl):** Library providing physical constants and properties for any atomic or subatomic particle for use in simulations
 
 ## Installation instructions
