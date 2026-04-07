@@ -49,7 +49,7 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
         # Now need to permutedims back
         permutedims!(reshape(y, batchsize, 1, n), rhs, (3, 2, 1))
         # ready to go
-        dx .= reshape(ifelse.(reshape(info, 1, batchsize) .!= 0, NaN32, -reshape(rhs, n, batchsize)), :)
+        dx .= ifelse.(reshape(info, 1, batchsize) .!= 0, NaN32, -reshape(y, batchsize, n))
       end
     end
   else
