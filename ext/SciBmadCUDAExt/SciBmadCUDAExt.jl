@@ -51,7 +51,7 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
         # ready to go
         @show size(dx)
         @show size(y)
-        dx .= ifelse.(reshape(info, 1, batchsize) .!= 0, NaN32, -reshape(y, batchsize, n))
+        dx .= ifelse.(reshape(info, batchsize, 1) .!= 0, NaN32, -reshape(y, batchsize, n))
       end
     end
   else
