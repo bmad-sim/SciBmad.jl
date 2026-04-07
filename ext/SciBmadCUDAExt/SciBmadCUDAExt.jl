@@ -25,30 +25,27 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
         ys = reshape(y, n, 1, batchsize)
         CUBLAS.getrf_strided_batched(jacs, pivot, info)
         CUBLAS.getrs_strided_batched('N', jacs, ys, pivot)
-        dx .= reshape(ifelse.(reshape(info, 1, batchsize) .!= 0, NaN32, reshape(-y, n, batchsize)), :)
+        dx .= reshape(ifelse.(reshape(info, 1, batchsize) .!= 0, NaN32, -reshape(y, n, batchsize)), :)
         #dx .= -y
       end
     end
   elseif batchdim == 1
-    #= Claude proposes:
-       _batchsize = size(_x, 1)
+    # Claude proposes:
+    _batchsize = size(_x, 1)
     _n = size(_y, 2)
     _pivot = CUDA.zeros(Int32, _n, _batchsize)
     _info = CUDA.zeros(Int32, _batchsize)
     _jac_dense = CUDA.zeros(eltype(_y), _n, _n, _batchsize)
-    _rhs = CUDA.zeros(eltype(_y), _n, 1, _batchsize)
     let pivot=_pivot, info=_info, batchsize=_batchsize, n=_n, jac_dense=_jac_dense, rhs=_rhs
       return (dx, jac, y) -> begin
         nzval_3d = reshape(jac.nzval, n, batchsize, n)  # (n_rows, batchsize, n_cols)
-        permutedims!(@view(jac_dense[:, :, :]), nzval_3d, (1, 3, 2))  # → (n_rows, n_cols, batchsize)
-        rhs .= reshape(y, n, 1, batchsize)
+        permutedims!(jac_dense, nzval_3d, (1, 3, 2))  # → (n_rows, n_cols, batchsize)
+        rhs = reshape(y, n, 1, batchsize)
         CUBLAS.getrf_strided_batched(jac_dense, pivot, info)
         CUBLAS.getrs_strided_batched('N', jac_dense, rhs, pivot)
         dx .= reshape(ifelse.(reshape(info, 1, batchsize) .!= 0, NaN32, -reshape(rhs, n, batchsize)), :)
       end
     end
-  =#
-
   else
     error("Invalid batchdim (must be either 1, 2, or nothing)")
   end
