@@ -18,7 +18,7 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
     _n = size(_x, 1)
     _pivot = CUDA.zeros(Int32, _n, _batchsize)
     _info = CUDA.zeros(Int32, _batchsize)
-    _jacscratch = CUDA.zeros(eltype(_y), n, n, batchsize)
+    _jacscratch = CUDA.zeros(eltype(_y), _n, _n, _batchsize)
 
     let pivot=_pivot, info=_info, batchsize=_batchsize, n=_n, jacscratch=_jacscratch
       return (dx, jac, y)-> begin
@@ -34,7 +34,7 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
     _n = size(_y, 2)
     _pivot = CUDA.zeros(Int32, _n, _batchsize)
     _info = CUDA.zeros(Int32, _batchsize)
-    _jacscratch = CUDA.zeros(eltype(_y), n, n, batchsize)
+    _jacscratch = CUDA.zeros(eltype(_y), _n, _n, _batchsize)
     _rhs = CUDA.zeros(eltype(_y), _n, 1, _batchsize)
 
     let pivot=_pivot, info=_info, batchsize=_batchsize, n=_n, jacscratch=_jacscratch, rhs=_rhs
