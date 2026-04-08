@@ -38,13 +38,13 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
     _jac_dense = CUDA.zeros(eltype(_y), _n, _n, _batchsize)
     _rhs = CUDA.zeros(eltype(_y), _n, 1, _batchsize)
 
-    let pivot=_pivot, info=_info, batchsize=_batchsize, n=_n, jac_dense=_jac_dense, rhs=_rhs
+    let pivot=_pivot, info=_info, batchsize=_batchsize, n=_n, jac_dense=_jac_dense
       return (dx, jac, y) -> begin
         nzval_3d = reshape(jac.nzVal, n, batchsize, n)  # (n_rows, batchsize, n_cols)
         permutedims!(jac_dense, nzval_3d, (1, 3, 2))  # → (n_rows, n_cols, batchsize)
         @show jac_dense
         # Also need to permute y dims from (batchsize, 1, n_rows) to (n_rows, 1, batchsize)
-        permutedims!(rhs, reshape(y, batchsize, 1, n), (3, 2, 1))
+        rhs = permutedims(reshape(y, batchsize, 1, n), (3, 2, 1))
         @show pivot
         @show rhs
         CUBLAS.getrf_strided_batched(jac_dense, pivot, info)
