@@ -230,6 +230,7 @@ function newton!(
         iter-1, 
         out.n_iters
       )
+      @show view(dx, 1, :)
       x .= x .+ (out.n_iters .== -1) .* dx
       out.n_iters .= ifelse.(
         sum(abs2, dx, dims=otherdim) .< reltol2.*sum(abs2, x, dims=otherdim) .&& out.n_iters .== -1,
