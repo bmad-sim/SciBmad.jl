@@ -41,19 +41,12 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
       return (dx, jac, y) -> begin
         nzval_3d = reshape(jac.nzVal, n, batchsize, n)  # (n_rows, batchsize, n_cols)
         permutedims!(jacscratch, nzval_3d, (1, 3, 2))  # → (n_rows, n_cols, batchsize)
-        @show jacscratch
         # Also need to permute y dims from (batchsize, 1, n_rows) to (n_rows, 1, batchsize)
         permutedims!(rhs, reshape(y, batchsize, 1, n), (3, 2, 1))
-        @show pivot
-        @show rhs
         CUBLAS.getrf_strided_batched!(jacscratch, pivot, info)
-        @show pivot
         CUBLAS.getrs_strided_batched!('N', jacscratch, rhs, pivot)
-        @show rhs
-        @show pivot
         # Now need to permutedims back
         permutedims!(reshape(y, batchsize, 1, n), rhs, (3, 2, 1))
-        @show y
         # ready to go
         dx .= ifelse.(reshape(info, batchsize, 1) .!= 0, NaN32, -reshape(y, batchsize, n))
       end
