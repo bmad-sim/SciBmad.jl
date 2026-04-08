@@ -48,7 +48,9 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
         CUBLAS.getrf_strided_batched(jac_dense, pivot, info)
         CUBLAS.getrs_strided_batched('N', jac_dense, rhs, pivot)
         # Now need to permutedims back
+        @show rhs
         permutedims!(reshape(y, batchsize, 1, n), rhs, (3, 2, 1))
+        @show y
         # ready to go
         dx .= ifelse.(reshape(info, batchsize, 1) .!= 0, NaN32, -reshape(y, batchsize, n))
       end

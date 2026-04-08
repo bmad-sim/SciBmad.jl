@@ -37,6 +37,7 @@ function default_solver(device, _y, _x, batchdim)
         for i in 1:batchsize
           curjac = view(reshape(jac.nzval, n_rows, :), :, i:batchsize:ylen)
           @show curjac
+          @show view(y, i:batchsize:ylen)
           if ArrayInterface.issingular(curjac)
             view(dx, i:batchsize:xlen) .= NaN32
           else
@@ -195,7 +196,6 @@ function newton!(
     for iter in 1:maxiter
       val_and_jac!(y, jac, x, contexts...)
       solver(dx, jac, y)
-      @show dx
       if any(isnan.(dx))
         @reset out.retcode = RETCODE_FAILURE
         @reset out.n_iters = iter-1
@@ -232,6 +232,7 @@ function newton!(
         iter-1, 
         out.n_iters
       )
+      @show dx
       x .= x .+ (out.n_iters .== -1) .* dx
       out.n_iters .= ifelse.(
         sum(abs2, dx, dims=otherdim) .< reltol2.*sum(abs2, x, dims=otherdim) .&& out.n_iters .== -1,
