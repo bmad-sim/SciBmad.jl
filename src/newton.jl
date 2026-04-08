@@ -36,6 +36,7 @@ function default_solver(device, _y, _x, batchdim)
       return (dx, jac::SparseMatrixCSC, y)->begin
         for i in 1:batchsize
           curjac = view(reshape(jac.nzval, n_rows, :), :, i:batchsize:ylen)
+          @show curjac
           if ArrayInterface.issingular(curjac)
             view(dx, i:batchsize:xlen) .= NaN32
           else
@@ -72,8 +73,8 @@ function newton!(
   y::Y, 
   x::X,
   contexts::Vararg{DI.Context};
-  reltol=1e-13,
-  abstol=1e-13, 
+  reltol=sqrt(eps(eltype(x))), #1e-13,
+  abstol=sqrt(eps(eltype(y))), 
   maxiter=100, 
   # On GPU need to use ForwardDiff from primitive (pushforward) for no scalar indexing
   autodiff=KA.get_backend(x) isa KA.GPU ? AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
@@ -168,8 +169,8 @@ function newton!(
   jac,
   x,
   contexts...;
-  reltol=1e-13,
-  abstol=1e-13, 
+  reltol=sqrt(eps(eltype(x))), #1e-13,
+  abstol=sqrt(eps(eltype(y))), 
   maxiter=100, 
   batchdim::Union{Nothing,Integer}=nothing, 
   n_iters=isnothing(batchdim) ? nothing : similar(x, Int, size(x, batchdim)), # If batch, then array that should be modified in-place with the iteration when convergence reached
@@ -194,7 +195,8 @@ function newton!(
     for iter in 1:maxiter
       val_and_jac!(y, jac, x, contexts...)
       solver(dx, jac, y)
-      if any(isnan(dx))
+      @show dx
+      if any(isnan.(dx))
         @reset out.retcode = RETCODE_FAILURE
         @reset out.n_iters = iter-1
         return out
@@ -230,7 +232,6 @@ function newton!(
         iter-1, 
         out.n_iters
       )
-      @show view(dx, 1, :)
       x .= x .+ (out.n_iters .== -1) .* dx
       out.n_iters .= ifelse.(
         sum(abs2, dx, dims=otherdim) .< reltol2.*sum(abs2, x, dims=otherdim) .&& out.n_iters .== -1,
