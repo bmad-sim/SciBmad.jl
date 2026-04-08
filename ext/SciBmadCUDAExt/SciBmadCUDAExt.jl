@@ -30,7 +30,6 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
       end
     end
   elseif batchdim == 1
-    # Claude proposes:
     _batchsize = size(_x, 1)
     _n = size(_y, 2)
     _pivot = CUDA.zeros(Int32, _n, _batchsize)
@@ -42,7 +41,7 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
       return (dx, jac, y) -> begin
         nzval_3d = reshape(jac.nzVal, n, batchsize, n)  # (n_rows, batchsize, n_cols)
         permutedims!(jacscratch, nzval_3d, (1, 3, 2))  # → (n_rows, n_cols, batchsize)
-        @show jac_dense
+        @show jacscratch
         # Also need to permute y dims from (batchsize, 1, n_rows) to (n_rows, 1, batchsize)
         permutedims!(rhs, reshape(y, batchsize, 1, n), (3, 2, 1))
         @show pivot
