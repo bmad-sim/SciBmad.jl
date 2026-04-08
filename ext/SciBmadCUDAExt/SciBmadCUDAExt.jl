@@ -45,10 +45,14 @@ function default_solver(device::CUDA.CUDABackend, _y, _x, batchdim::Integer)
         @show jac_dense
         # Also need to permute y dims from (batchsize, 1, n_rows) to (n_rows, 1, batchsize)
         permutedims!(rhs, reshape(y, batchsize, 1, n), (3, 2, 1))
-        CUBLAS.getrf_strided_batched(jac_dense, pivot, info)
-        CUBLAS.getrs_strided_batched('N', jac_dense, rhs, pivot)
-        # Now need to permutedims back
+        @show pivot
         @show rhs
+        CUBLAS.getrf_strided_batched(jac_dense, pivot, info)
+        @show pivot
+        CUBLAS.getrs_strided_batched('N', jac_dense, rhs, pivot)
+        @show rhs
+        @show pivot
+        # Now need to permutedims back
         permutedims!(reshape(y, batchsize, 1, n), rhs, (3, 2, 1))
         @show y
         # ready to go
