@@ -1,0 +1,7 @@
+.sidebar-tree .caption,
+.sidebar-tree :not(.caption) > .caption-text,
+.toctree-wrapper.compound .caption,
+.toctree-wrapper.compound :not(.caption) > .caption-text {
+    text-transform: none;
+    font-size: 1.2rem;
+}

@@ -16,6 +16,8 @@ extensions = [
     'sphinx.ext.mathjax',
 ]
 
+numfig = True
+
 # -- Intersphinx configuration -----------------------------------------------
 _docs_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _api_base_url = 'https://bmad-sim.github.io/SciBmad.jl/api/'
@@ -106,6 +108,7 @@ html_theme_options = {
 
 html_title = 'SciBmad.jl Documentation'
 html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 # Sidebar settings with custom external links
 html_sidebars = {
