@@ -1,67 +1,36 @@
-(sagan.cavity)=
-# SaganCavity
+(sagancavity.physics)=
+# SaganCavity Physics
 
 ## Introduction
 
 The `SagaņCavity` RF cavity tracking method, implemented in `BeamTracking`, 
-has both longitudinal energy
-gain and transverse focusing effects.
-
+has both longitudinal energy gain and transverse focusing effects.
+For a listing of parameters used in the tracking see the 
+[SaganCavity Tracking Method](#sagancavity.tracking) section.
 
 ## Justification
 
-A fully self-consistent approach would integrate particle motion through 
-the cavity's electromagnetic field map, but such maps are generally only
-approximately Maxwellian, are not symplectic, and are computationally
-expensive.  At the other extreme, zero-length thin-lens cavity models
-provide rapid computation but ignore transverse focusing entirely,
+The SaganCavity model described here occupies a practical middle ground
+between trying to integrate through a cavity's field which can be slow
+and the simple zero-length thin-lens cavity model that provides rapid computation
+but generally ignores transverse focusing entirely,
 leading to unphysical emittance growth predictions in low-energy
 linacs.
 
-The SaganCavity model described here occupies a practical middle ground.  
-It is based on a kick-drift-kick symplectic integrator applied to the paraxial
-Hamiltonian, using analytic RF field expressions consistent with
-Maxwell's equations. Rosenzweig--Serafini (R&S) edge focusing is
+The SaganCavity model is based on a kick-drift-kick symplectic integrator applied to a paraxial
+Hamiltonian. Rosenzweig--Serafini (R&S) edge focusing is
 included via a symplectic fringe Hamiltonian, and an additional
 pondermotive focusing term is applied for standing-wave cavities.
 Static (DC) solenoid and multipole components can be superimposed on the cavity.
 
-(sc:params)=
-## Input parameters.
-
-RF parameters that can be set are:
-```{code} julia
-voltage::T                    # Voltage in Volts
-rf_frequency::T               # RF frequency in Hz
-harmon::T                     # Harmonic number
-phi0::T                       # RF phase relative to the zero phase.
-zero_phase::PhaseReference.T  # RF phase at phi0 = 0.
-traveling_wave::Bool          # Traveling wave or standing wave?
-is_crabcavity::Bool           # Is this a crab cavity?
-```
-See the documentation on the [RF parameter group](#rf.group) for more details.
-
-The `SaganCavity` tracking method itself has parameters:
-```{code} yaml
-num_cells::Int                # Negative => Use approx half wavelength between cells, Zero => single kick.
-L_active::Float64             # Negative => Use L as the active length.
-radiation_damping_on::Bool
-radiation_fluctuations_on::Bool
-```
-
-
-Example:
-```{code} yaml
-sc1 = RFCavity(L = 2.0, voltage = 1e6, rf_frequency =1e9, dE_ref = 0.1e9, traveling_wave = false, phi0 = 0.1,
-           tracking_method = SaganCavity(num_cells = 2, L_active = 1.6, zero_phase = PhaseReference.BelowTransition),
-           Ksol = 0.01)
-```
 
 (sc:kdk)=
 ## Kick-Drift-Kick Model
 
-The cavity of total length $L$ is divided into $N_s$ equal-width
-sections.  Inside each section particles are tracked as free particles
+The cavity of total length `L` has an `active` length specified by `L_active`
+which is the length over which there is a finite RF field. 
+is divided into `num_cells` equal-width
+sections. Inside each section particles are tracked as free particles
 (or through a solenoid field if a solenoid component is present).
 Longitudinal energy kicks are applied at the section boundaries, with
 half-kicks at the entrance and exit ends of the element and full kicks

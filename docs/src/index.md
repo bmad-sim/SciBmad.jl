@@ -17,7 +17,7 @@ miscellaneous
 :maxdepth: 1
 :caption: Physics
 
-sagancavity
+sagancavity-physics
 coordinates
 ```
 

@@ -1,4 +1,3 @@
-(rf.group)=
 ## RF Parameter Group
 
 The `RFParams` parameter group holds parameters for RF cavity elements.

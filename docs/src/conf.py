@@ -14,9 +14,13 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
+    'sphinxcontrib.bibtex',
 ]
 
 numfig = True
+bibtex_bibfiles = ['bibliography.bib']
+exclude_patterns = ['parameters']
+suppress_warnings = ["myst.header"]   # So a file does not cause a "Document headings start at H2, not H1" warning
 
 # -- Intersphinx configuration -----------------------------------------------
 _docs_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

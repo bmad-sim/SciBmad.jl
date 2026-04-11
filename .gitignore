@@ -12,3 +12,6 @@
 /examples/.DS_Store
 .ipynbcheckpoints
 gh-pages
+
+# MyST build outputs
+_build
