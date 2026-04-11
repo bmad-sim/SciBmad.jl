@@ -2,3 +2,4 @@ sphinx>=7.0
 myst-parser>=3.0
 furo
 linkify-it-py
+sphinxcontrib-bibtex

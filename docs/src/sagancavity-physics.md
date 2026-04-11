@@ -29,7 +29,7 @@ Static (DC) solenoid and multipole components can be superimposed on the cavity.
 
 The cavity of total length `L` has an `active` length specified by `L_active`
 which is the length over which there is a finite RF field. 
-is divided into `num_cells` equal-width
+`L_active` is divided into `num_cells` equal-width
 sections. Inside each section particles are tracked as free particles
 (or through a solenoid field if a solenoid component is present).
 Longitudinal energy kicks are applied at the section boundaries, with
