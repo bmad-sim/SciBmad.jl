@@ -14,9 +14,11 @@ is_crabcavity::Bool           # Is this a crab cavity?
 Where `T` is some type like a float or Taylor series. The `zero_phase` enum sets what the
 RF phase is at zero `phi0`. Possible settings for `zero_phase`
 are:
-- `PhaseReference.Accelerating`      # Zero phase is the maximum accelerating phase.
-- `PhaseReference.BelowTransition`   # Zero phase is at the stable zero crossing for particles below transition.
-- `PhaseReference.AboveTransition`   # Zero phase is at the stable zero crossing for particles above transition.
+```{code} julia
+PhaseReference.Accelerating      # phi0 = 0 is the maximum accelerating phase.
+PhaseReference.BelowTransition   # phi0 = 0 is at the stable zero crossing for particles below transition.
+PhaseReference.AboveTransition   # phi0 = 0 is at the stable zero crossing for particles above transition.
+```
 
 The `RFParams` parameter group structure has the following components:
 ```{code} julia
@@ -30,10 +32,10 @@ mutable struct RFParams{T} <: AbstractParams
   is_crabcavity::Bool               # Is this a crab cavity?
 end
 ```
-The `rate_meaning` enum records whether `rf_frequency` or `harmon` has been set by the User.
-Possible settings for `rate_meaning` are:
-- `RFFrequency`       # `rf_frequency` has been set.
-- `Harmon`            # `harmon` has been set.
-- `Indeterminate`     # Neither `rf_frequency` nor `harmon` has been set.
-
-
+The `rate_meaning` parameter records whether `rf_frequency` or `harmon` has been set by the User.
+Possible enum settings for `rate_meaning` are:
+```{code} julia
+RateMeaning.RFFrequency       # rf_frequency has been set.
+RateMeaning.Harmon            # harmon has been set.
+RateMeaning.Indeterminate     # Neither rf_frequency nor harmon has been set.
+```

@@ -20,13 +20,15 @@ radiation_fluctuations_on::Bool
 
 The cavity of total length `L` has an `active` length specified by `L_active`
 which is the length over which there is a finite RF field. If not set or is negative, 
-`L_active` defaults to `L`. 
-The active region is always centered on the element.
+`L_active` defaults to `L`.
+The active region is always centered on the element and `L_active` is not permitted to be greater
+than `L`.
 
-The `num_cells` parameter is the number of RF cells. The `SaganCavity` drift-kick model uses
-one kick per cell. If not set, the number of cells is chosen such that the cell width
+The `num_cells` parameter is the number of RF cells. The `SaganCavity` drift-kick model puts
+kicks at the ends of the cells with a "drift" in between.
+If not set, the number of cells is chosen such that the cell width
 is approximately one-half wavelength and is commensurate with `L_active`.
-If `num_cells` is set to zero, a single kick is applied.
+If `num_cells` is set to zero, a single kick is applied at the center of the element.
 
 ### RF Parameters
 
