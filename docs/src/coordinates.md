@@ -15,11 +15,11 @@ In construction...
 :width: 70%
 :name: f:coords
 
-The coordinate systems to describe a machine: The `floor` rectangular (Cartesian) coordinate system
-is independent of the accelerator.  The `branch` curvilinear coordinate system follows the bends
-of the accelerator. The `branch reference curve` is the {math}`x = y = 0` curve of the curvilinear coordinate
-system. Each lattice element has `element body` coordinates which, if the element has no
-alignment shifts (not "misaligned"), is the same as the `branch` coordinates.
+The coordinate systems to describe a machine: The "floor" Cartesian coordinate system
+is independent of the accelerator.  The "branch" curvilinear coordinate system follows the bends
+of the accelerator. The "branch reference curve" is the {math}`x = y = 0` curve of the curvilinear coordinate
+system. Each lattice element has "element body" coordinates which, if the element has no
+alignment shifts (not "misaligned"), is the same as the branch coordinates.
 ```
 
 %---------------------------------------------------------------------------------------------------

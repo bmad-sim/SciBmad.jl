@@ -18,7 +18,7 @@ leading to unphysical emittance growth predictions in low-energy
 linacs.
 
 The SaganCavity model is based on a kick-drift-kick symplectic integrator applied to a paraxial
-Hamiltonian. Rosenzweig--Serafini (R&S) edge focusing is
+Hamiltonian. Rosenzweig--Serafini (R&S) {cite}`Rosenzweig:RF` edge focusing is
 included via a symplectic fringe Hamiltonian, and an additional
 pondermotive focusing term is applied for standing-wave cavities.
 Static (DC) solenoid and multipole components can be superimposed on the cavity.
@@ -157,13 +157,12 @@ the $N_s + 1$ kick points with the half-kick factor $\kappa$.
 
 ## Solenoid and Multipole Components
 
-A solenoid field component can be superimposed on the cavity by
-specifying a solenoid strength `ks`.  In this case the free
-drift within each cell is replaced by symplectic tracking through a
+A solenoid field component can be superimposed on the cavity.
+In this case, the free drift within each cell is replaced by symplectic tracking through a
 uniform solenoid, using the exact analytic solenoid map.
 
 Thin-lens multipole kicks (normal and skew, up to arbitrary order)
-can also be applied at the kick points alongside the RF kicks.  The
+can also be applied at the kick points alongside the RF kicks. The
 combination is still symplectic because each individual map is
 symplectic.
 
