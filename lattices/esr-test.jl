@@ -40,7 +40,7 @@ using Beamlines
   drift15 = Drift(L =  1.50000000000005684E-001)
   q8er_6 = Quadrupole(L =  1.19999999999999996E+000, Kn1 =  6.36093344591120019E-002)
   drift16 = Drift(L =  5.00000000000000000E-001)
-  rf_crab = CrabCavity(L =  4.00000000000000000E+000, rf_frequency =  3.94000000000000000E+008)
+  rf_crab = CrabCavity(L =  4.00000000000000000E+000, rf_frequency =  3.94000000000000000E+008, is_crabcavity=true)
   drift17 = Drift(L =  5.00000000000014211E-001)
   q9er_6 = Quadrupole(L =  1.19999999999999996E+000, Kn1 =  7.65931285536529949E-002)
   drift18 = Drift(L =  3.12601800000000196E+000)

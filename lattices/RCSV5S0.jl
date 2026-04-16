@@ -7816,7 +7816,7 @@ BPM(; kwargs...) = SciBmad.LineElement(; kind="BPM", kwargs...)
 @elements rfc = RFCavity(L =  1.00000000000000000E+000, x1_limit = -1.81599999999999991E-00,
    x2_limit =  1.81599999999999991E-00, y1_limit = -1.81599999999999991E-00,
    y2_limit =  1.81599999999999991E-00, rf_frequency =  5.57405443457203984E+008,
-   voltage =  1.12000000000000000E+006)
+   voltage =  1.12000000000000000E+006, zero_phase=PhaseReference.AboveTransition)
 @elements strrf_2 = Drift(L =  2.20699999999999985E+000, x1_limit = -1.81599999999999991E-00,
    x2_limit =  1.81599999999999991E-00, y1_limit = -1.81599999999999991E-00,
    y2_limit =  1.81599999999999991E-00)
