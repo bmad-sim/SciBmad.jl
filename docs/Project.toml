@@ -1,3 +1,4 @@
 [deps]
+Beamlines = "5bb90b03-0719-46b8-8ce4-1ef3afd3cd4b"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 SciBmad = "7bf6e793-a2ec-421f-8700-d1465381ee80"
