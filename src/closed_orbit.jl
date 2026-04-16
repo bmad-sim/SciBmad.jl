@@ -1,4 +1,10 @@
 
+struct ClosedOrbitResult{V,S}
+  v0::V         # Initial particle array modified in-place to be the closed orbit solution
+  sol::S        # NamedTuple solution from newton! in BatchSolve
+  coast::Bool   # Bool specifying if coasting beam or not
+end
+
 # Because track! is many kernels, unfortunately all must be separate kernels
 
 # For setting before tracking
@@ -44,9 +50,7 @@ end
   @inbounds v0[i,4] = v_coast[i,4]
 end
 
-# For subtracting after tracking
-# If a particle is lost, it should set that particle's residual to Inf
-@kernel function sub_v!(v_res, v, state, N_particles, ::Val{coast}) where {coast}
+@kernel function sub_v!(v_res, v, N_particles, ::Val{coast}) where {coast}
   i = @index(Global)
   @inbounds v_res[i + 0*N_particles] -= v[i,1]
   @inbounds v_res[i + 1*N_particles] -= v[i,2]
@@ -73,7 +77,7 @@ function _co_res!(
   set_kernel!(v_res, v_cache, v, N_particles; ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
   track!(b0, bl, scalar_params=true)
-  sub_kernel!(v_res, v_cache, b0.coords.state, N_particles, Val{false}(); ndrange=N_particles)
+  sub_kernel!(v_res, v_cache, N_particles, Val{false}(); ndrange=N_particles)
   KA.synchronize(KA.get_backend(v))
   return v_res
 end
@@ -96,12 +100,15 @@ function _co_res_coast!(
   set_kernel!(v_res, v_cache, v_constant, v_coast, N_particles; ndrange=N_particles)
   KA.synchronize(KA.get_backend(v_cache))
   track!(b0, bl, scalar_params=true)
-  sub_kernel!(v_res, v_cache, b0.coords.state, N_particles, Val{true}(); ndrange=N_particles)
+  sub_kernel!(v_res, v_cache, N_particles, Val{true}(); ndrange=N_particles)
   KA.synchronize(KA.get_backend(v_cache))
   return v_res
 end
 
 function coast_check(bl, autodiff=AutoForwardDiff())
+  if isnothing(autodiff)
+    autodiff=AutoForwardDiff()
+  end
   v0 = zeros(1,6)
   v = zeros(1,6)
   v_cache = copy(v0)
@@ -117,19 +124,32 @@ end
 # or if coasting, set equal to number of coasting 
 # particles WITH delta set accordingly already
 function find_closed_orbit(
-    bl::Beamline;
-    v0=zeros(1,6), 
-    reltol=1e-13,
-    abstol=1e-13, 
-    maxiter=100, 
-    autodiff=KA.get_backend(v0) isa KA.GPU ? DI.AutoForwardFromPrimitive(AutoForwardDiff()) : AutoForwardDiff(),
-    prep=nothing,
-    coast=coast_check(bl, autodiff),
-)
+  bl::Beamline;
+
+  # Newton kwargs:
+  reltol=1e-13,
+  abstol=1e-13, 
+  maxiter=100, 
+  autodiff=nothing,
+  prep=nothing,
+
+  # Closed orbit finder kwargs
+  v0=zeros(1,6), 
+  coast=coast_check(bl, autodiff),
+  batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
+  warn=true,
+) where {_batch}
   N_particles = size(v0, 1)
   device = KA.get_backend(v0)
   v0_cache = similar(v0)
-  batchdim = N_particles > 1 ? 1 : nothing
+  
+  if _batch
+    batchdim = 1
+  else
+    batchdim = nothing
+  end
+  
+  newton_kwargs = filter(x->!isnothing(x), (; reltol, abstol, maxiter, autodiff, prep, batchdim))
 
   if coast
     v = similar(v0, (N_particles, 4))
@@ -137,17 +157,22 @@ function find_closed_orbit(
     v_coast .= view(v0, :, 1:4) 
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batchdim=batchdim)
+    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0); newton_kwargs...)
     set_v_coast_final!(device)(v0, v_coast; ndrange=N_particles)
     KA.synchronize(device)
-    @reset sol.u = v0
-    sol = merge(sol, (;coast=true))
   else
     v = similar(v0)
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); reltol=reltol, abstol=abstol, maxiter=maxiter, autodiff=autodiff, prep=prep, batchdim=batchdim)
-    sol = merge(sol, (;coast=false))
+    sol = newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); newton_kwargs...)
   end
-  return sol
+
+  if warn
+    bad = findall(sol.retcode .!= RETCODE_SUCCESS)
+    if length(bad) > 0
+      @warn "Closed orbit finder did not converge for particles $(bad)."
+    end
+  end
+
+  return ClosedOrbitResult(v0, sol, coast)
 end

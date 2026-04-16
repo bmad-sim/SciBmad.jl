@@ -60,7 +60,7 @@ function twiss(
     error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")
   end
   coast = co_sol.coast
-  v0 = co_sol.u
+  v0 = co_sol.v0
 
   # Track once through and construct a DAMap
   Δv = vars(GTPSA_descriptor)[1:6]

@@ -1,28 +1,22 @@
-__precompile__(false)
 module SciBmad
-
 using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
 using Reexport
 
 @recompile_invalidations begin
+  using BatchSolve
+  using BatchSolve: RETCODE_SUCCESS, RETCODE_FAILURE, RETCODE_MAXITER
   using KernelAbstractions: KernelAbstractions as KA
   using KernelAbstractions: @index, @kernel, @Const
   using NonlinearNormalForm: NonlinearNormalForm as NNF
   using TPSAInterface: TPSAInterface as TI
   using DifferentiationInterface: DifferentiationInterface as DI
-  using Accessors,
-      ArrayInterface,
-      LinearAlgebra,
-      TypedTables,
-      StaticArrays,
-      ForwardDiff,
-      RecursiveArrayTools,
-      DelimitedFiles,
-      ADTypes,
-      SparseArrays,
-      SparseMatrixColorings
-  using BeamTracking
-  using BeamTracking: vifelse
+  using LinearAlgebra,
+        TypedTables,
+        StaticArrays,
+        ForwardDiff,
+        DelimitedFiles
+  @reexport using ADTypes      
+  @reexport using BeamTracking
   @reexport using Beamlines
   @reexport using NonlinearNormalForm
   @reexport using GTPSA
@@ -31,13 +25,17 @@ end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
-export twiss, find_closed_orbit, track!, Time, Yoshida, MatrixKick, BendKick, BatchParam, TimeDependentParam,
-        SolenoidKick, DriftKick, Exact, Bunch, dynamic_aperture, track, rotate_spins, rotate_spins!
+export  twiss, 
+        find_closed_orbit, 
+        track!,
+        dynamic_aperture,
+        track,
+        rotate_spins,
+        rotate_spins!
 
 include("closed_orbit.jl") 
 include("utils.jl")
 include("track.jl")
-include("newton.jl")
 include("twiss.jl")
 include("dynamic_aperture.jl")
 
@@ -55,7 +53,7 @@ include("dynamic_aperture.jl")
     qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.5); # matrix kick, 2 multipoles
     sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
     kicker = Sextupole(Kn0=1e-5, L=0.01)
-    rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6);
+    rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6, zero_phase=PhaseReference.AboveTransition);
     thin = Multipole(Kn1L=1e-9); # Thin quad
     d3 = Drift(L=0.3);
     marker = Marker(); # nothing
