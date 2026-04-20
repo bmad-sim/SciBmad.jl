@@ -1,10 +1,3 @@
-
-struct ClosedOrbitResult{V,S}
-  v0::V         # Initial particle array modified in-place to be the closed orbit solution
-  sol::S        # NamedTuple solution from newton! in BatchSolve
-  coast::Bool   # Bool specifying if coasting beam or not
-end
-
 # Because track! is many kernels, unfortunately all must be separate kernels
 
 # For setting before tracking
@@ -135,7 +128,7 @@ function find_closed_orbit(
 
   # Closed orbit finder kwargs
   v0=zeros(1,6), 
-  coast=coast_check(bl, autodiff),
+  coasting_beam=coast_check(bl, autodiff),
   batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
   warn=true,
 ) where {_batch}
@@ -151,7 +144,7 @@ function find_closed_orbit(
   
   newton_kwargs = filter(x->!isnothing(x), (; reltol, abstol, maxiter, autodiff, prep, batchdim))
 
-  if coast
+  if coasting_beam
     v = similar(v0, (N_particles, 4))
     v_coast = similar(v0, (N_particles, 4))
     v_coast .= view(v0, :, 1:4) 
@@ -174,5 +167,5 @@ function find_closed_orbit(
     end
   end
 
-  return ClosedOrbitResult(v0, sol, coast)
+  return (; v0=v0, coasting_beam=coasting_beam, sol=sol)
 end

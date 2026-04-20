@@ -39,13 +39,22 @@ end
 # See Eq. 4.28 in EBB
 function twiss(
   bl::Beamline; 
-  GTPSA_descriptor=nothing, #Descriptor(6, 1),
+  GTPSA_descriptor=nothing, 
   spin=false,
   de_moivre=false,
-  co_sol=find_closed_orbit(bl),
+  v0=zeros(1,6),
+  co_sol=find_closed_orbit(bl; v0=v0, batch=Val{false}()),
   symplectic_tol=1e-8, # Tolerance below which to include damping
   at::Union{Colon,AbstractArray}=:, # Colon means all elements, nothing means no elements
 )
+  if co_sol.sol.retcode != RETCODE_SUCCESS
+    error("""
+      Unable to compute twiss: closed orbit finder did not converge. Try a different 
+      initial guess by specifying the `v0` keyword argument.
+    """)
+  end
+
+  coasting_beam = co_sol.coasting_beam
 
   if isnothing(GTPSA_descriptor)
     storedesc = GTPSA.desc_current
@@ -59,8 +68,7 @@ function twiss(
   if nn < 6
     error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")
   end
-  coast = co_sol.coast
-  v0 = co_sol.v0
+
 
   # Track once through and construct a DAMap
   Δv = vars(GTPSA_descriptor)[1:6]
@@ -83,7 +91,7 @@ function twiss(
   nn = TI.ndiffs(init)
   nv = 6
   np = nn-nv
-  if coast
+  if coasting_beam
     nv -= 1
     np += 1
   end
@@ -93,9 +101,9 @@ function twiss(
 
   # twiss will ALWAYS compute the (amplitude-dependent) tunes, even when `at` is empty
   # function barrier:
-  tunes, a = _tunes_and_a(m, mo, coast)
+  tunes, a = _tunes_and_a(m, mo, coasting_beam)
 
-  if !coast && mo == 1
+  if !coasting_beam && mo == 1
     tunes = TI.scalar.(tunes)
   end
 
@@ -114,14 +122,14 @@ function twiss(
     damping = norm(NNF.checksymp(NNF.jacobian(m))) > symplectic_tol
 
     # Type of the LATTICE FUNCTIONS
-    if mo > 1 && (coast || nn > 6)
+    if mo > 1 && (coasting_beam || nn > 6)
       zero_LF = TI.init_tps(numtype, init)
     else
       zero_LF = zero(numtype)
     end
 
     # Type of the PHASES
-    if coast || mo > 1 && nn > 6
+    if coasting_beam || mo > 1 && nn > 6
       zero_phase = TI.init_tps(numtype, init)
     else
       tunes = TI.scalar.(tunes)
@@ -129,7 +137,7 @@ function twiss(
     end
     
     # Type of the ORBIT
-    if coast || nn > 6
+    if coasting_beam || nn > 6
       zero_orbit = TI.init_tps(numtype, init)
     else
       zero_orbit = zero(numtype)
@@ -163,17 +171,17 @@ function twiss(
     lf_table = nothing
   end
 
-  return Twiss(coast, tunes, lf_table)
+  return Twiss(coasting_beam, tunes, lf_table)
 end
 
-function _tunes_and_a(m::DAMap, mo, coast)
+function _tunes_and_a(m::DAMap, mo, coasting_beam)
   a = normal(m)
   c = c_map(m) # Transform to phasor basis
   r = inv(c) ∘ inv(a) ∘ m ∘ a ∘ c
   # Need to cut highest order
   Q_x = cutord(real(-log(SciBmad.NNF.factor_out(r.v[1], 1))/(2*pi*im)), mo)
   Q_y = cutord(real(-log(SciBmad.NNF.factor_out(r.v[3], 3))/(2*pi*im)), mo)
-  if coast
+  if coasting_beam
     Q_s = real(r.v[5])
     TI.seti!(Q_s, 0, 5) # subtract time identity
   else
