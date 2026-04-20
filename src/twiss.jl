@@ -46,7 +46,7 @@ function twiss(
   co_sol=find_closed_orbit(bl; v0=v0, batch=Val{false}()),
   symplectic_tol=1e-8, # Tolerance below which to include damping
   at::Union{Colon,AbstractArray}=:, # Colon means all elements, nothing means no elements
-)
+  )
   if co_sol.sol.retcode != RETCODE_SUCCESS
     error("""
       Unable to compute twiss: closed orbit finder did not converge. Try a different 
@@ -196,19 +196,19 @@ function _tunes_and_a(m::DAMap, mo, coasting_beam)
 end
   
 function _twiss(
-  a::DAMap{<:Any,<:Any,Q}, 
-  b0::Bunch, 
-  bl::Beamline, 
-  idxs, 
-  names,
-  s,
-  ::Val{de_moivre}, 
-  damping,
-  zero_LF::T, 
-  zero_phase::V,
-  zero_orbit::U, 
-  at::C,
-) where {de_moivre, Q, T, V, U, C}
+    a::DAMap{<:Any,<:Any,Q}, 
+    b0::Bunch, 
+    bl::Beamline, 
+    idxs, 
+    names,
+    s,
+    ::Val{de_moivre}, 
+    damping,
+    zero_LF::T, 
+    zero_phase::V,
+    zero_orbit::U, 
+    at::C,
+  ) where {de_moivre, Q, T, V, U, C}
   # Ripken-Wolski-Forest de Moivre coupling formalism
   
   # These checks should all be static ================================
@@ -220,7 +220,7 @@ function _twiss(
   SCALAR_PHASE = TI.is_tps_type(V) isa TI.IsTPSType ? Val{false}() : Val{true}()
   SCALAR_ORBIT = TI.is_tps_type(U) isa TI.IsTPSType ? Val{false}() : Val{true}()
   if Q == Nothing
-    PROCESS_SPIN = a -> nothing
+    PROCESS_SPIN = at -> nothing
   else
     PROCESS_SPIN = at -> begin
       i2 = zero(at)

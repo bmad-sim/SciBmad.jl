@@ -1,25 +1,25 @@
 function dynamic_aperture(
-  bl::Beamline;
+    bl::Beamline;
 
-  # Required kwargs:
-  n_r::Int,
-  n_theta::Int,
-  deltas::AbstractArray,
-  max_sig_x::Real,
-  max_sig_y::Real,
-  emit_1::Real,
-  emit_2::Real,
-  n_turns::Int,
+    # Required kwargs:
+    n_r::Int,
+    n_theta::Int,
+    deltas::AbstractArray,
+    max_sig_x::Real,
+    max_sig_y::Real,
+    emit_1::Real,
+    emit_2::Real,
+    n_turns::Int,
 
-  # Optional kwargs:
-  backend=KA.CPU(),
-  coordinates_number_type::Type=Float32, 
-  sig_pz::Real=0,
-  delta_dependent_orbits::Bool=true,
-  output_file=nothing,
-  theta_lims=(0, pi),
-  track_kwargs... # Get passed to track!
-)
+    # Optional kwargs:
+    backend=KA.CPU(),
+    coordinates_number_type::Type=Float32, 
+    sig_pz::Real=0,
+    delta_dependent_orbits::Bool=true,
+    output_file=nothing,
+    theta_lims=(0, pi),
+    track_kwargs... # Get passed to track!
+  )
   Base.require_one_based_indexing(deltas)
 
   # First, turn off all the cavities and store their strengths in 

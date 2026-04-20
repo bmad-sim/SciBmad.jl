@@ -30,9 +30,9 @@ export  twiss,
         track!,
         dynamic_aperture,
         track,
-        rotate_spins,
-        rotate_spins!
-
+        TrackingResult,
+        TrackingConfig
+        
 include("closed_orbit.jl") 
 include("utils.jl")
 include("track.jl")

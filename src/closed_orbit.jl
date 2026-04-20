@@ -56,13 +56,13 @@ end
 end
 
 function _co_res!(
-  v_res, 
-  v, 
-  bl::Beamline,
-  set_kernel!,
-  sub_kernel!,
-  v_cache,
-)
+    v_res, 
+    v, 
+    bl::Beamline,
+    set_kernel!,
+    sub_kernel!,
+    v_cache,
+  )
   N_particles = size(v, 1)
   @assert length(v_res) == N_particles*6 "Incorrect size for residual vector"
   b0 = Bunch(v_cache)
@@ -76,14 +76,14 @@ function _co_res!(
 end
 
 function _co_res_coast!(
-  v_res, 
-  v_coast,
-  bl::Beamline,
-  set_kernel!,
-  sub_kernel!,
-  v_cache,
-  v_constant
-)
+    v_res, 
+    v_coast,
+    bl::Beamline,
+    set_kernel!,
+    sub_kernel!,
+    v_cache,
+    v_constant
+  )
   N_particles = size(v_coast, 1)
   @assert length(v_res) == N_particles*4 "Incorrect size for residual vector"
   @assert N_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
@@ -117,21 +117,21 @@ end
 # or if coasting, set equal to number of coasting 
 # particles WITH delta set accordingly already
 function find_closed_orbit(
-  bl::Beamline;
+    bl::Beamline;
 
-  # Newton kwargs:
-  reltol=1e-13,
-  abstol=1e-13, 
-  maxiter=100, 
-  autodiff=nothing,
-  prep=nothing,
+    # Newton kwargs:
+    reltol=1e-13,
+    abstol=1e-13, 
+    maxiter=100, 
+    autodiff=nothing,
+    prep=nothing,
 
-  # Closed orbit finder kwargs
-  v0=zeros(1,6), 
-  coasting_beam=coast_check(bl, autodiff),
-  batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
-  warn=true,
-) where {_batch}
+    # Closed orbit finder kwargs
+    v0=zeros(1,6), 
+    coasting_beam=coast_check(bl, autodiff),
+    batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
+    warn=true,
+  ) where {_batch}
   N_particles = size(v0, 1)
   device = KA.get_backend(v0)
   v0_cache = similar(v0)
