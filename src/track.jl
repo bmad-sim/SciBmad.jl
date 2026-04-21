@@ -5,7 +5,7 @@
   ramp_particle_energy_without_rf::Bool = false
   verbose::Bool                         = false
   groupsize::Int                        = 0 # autoselect
-  cpu_multithread::Bool                 = (Threads.nthreads() > 1 ? true : false)
+  use_cpu_multithreading::Bool          = (Threads.nthreads() > 1 ? true : false)
   use_KA::Bool                          = true
   use_explicit_SIMD::Bool               = !use_KA
 end
@@ -22,7 +22,7 @@ end
 
 struct TrackingResult{S,V,Q}
   config::TrackingConfig
-  execution_time::Float64 # in minutes
+  elapsed_time::Float64 # in minutes
   state::S
   v::V
   q::Q
@@ -39,7 +39,7 @@ function Base.show(io::IO, res::TrackingResult)
     println(io, " ", rpad(String(field), width), " = ", repr(getproperty(config, field)))
   end
   println(io)
-  println(io, "execution_time = ", res.execution_time/60, " minutes")
+  println(io, "elapsed_time = ", res.elapsed_time, " seconds")
   println(io)
   if res.config.save_every_n_turns == 1
     turnstr = "turn"
@@ -54,14 +54,6 @@ function Base.show(io::IO, res::TrackingResult)
   end
   println(io, "")
   println(io, "bunch:\tBunch at the end of tracking")
-#=
-  fields = fieldnames(typeof(config))
-  width = maximum(length, String.(fields))
-  println(io, nameof(typeof(config)))
-  for field in fields
-    println(io, " ", rpad(String(field), width), " = ", repr(getproperty(config, field)))
-  end
-  =#
   return
 end
 
@@ -91,7 +83,7 @@ function track(
 
     # Low-level launch! kwargs (these are not considered stable API and may change):
     groupsize                       = config.groupsize,
-    cpu_multithread                 = config.cpu_multithread,
+    use_cpu_multithreading          = config.use_cpu_multithreading,
     use_KA                          = config.use_KA,
     use_explicit_SIMD               = config.use_explicit_SIMD,
   )  
@@ -103,7 +95,7 @@ function track(
     ramp_particle_energy_without_rf,
     verbose,
     groupsize,
-    cpu_multithread,
+    use_cpu_multithreading,
     use_KA,
     use_explicit_SIMD,
   )
@@ -120,7 +112,7 @@ function _track(bl, bunch, config, groupsize)
   scalar_params                   = config.scalar_params
   ramp_particle_energy_without_rf = config.ramp_particle_energy_without_rf
   verbose                         = config.verbose
-  cpu_multithread                 = config.cpu_multithread
+  use_cpu_multithreading          = config.use_cpu_multithreading
   use_KA                          = config.use_KA
   use_explicit_SIMD               = config.use_explicit_SIMD
 
@@ -139,7 +131,7 @@ function _track(bl, bunch, config, groupsize)
   end
 
   t = @elapsed for i in 1:n_turns
-    track!(bunch, bl; scalar_params, ramp_particle_energy_without_rf, groupsize, use_KA, use_explicit_SIMD, cpu_multithread)
+    track!(bunch, bl; scalar_params, ramp_particle_energy_without_rf, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
     if mod(i, save_every_n_turns) == 0
       idx = div(i,save_every_n_turns)+1
       state_data[:,idx] .= state
@@ -158,3 +150,70 @@ function _track(bl, bunch, config, groupsize)
   end
   return TrackingResult(config, t, state_data, v_data, q_data, bunch)
 end
+
+"""
+    track_spin(s0::AbstractVecOrMat, q::AbstractArray{<:Any,3})
+
+Given initial spin(s) `s0` and the quaternion output tensor `q` from `track`, 
+returns a tensor `s` of size `(n_particles, 3, n_saved_turns)` of the particles' 
+spins at each stored turn.
+
+If `s0` is a vector (of length 3), then all particles are assumed to have initial spin 
+`s0`. If `s0` is a matrix (of size `(n_particles, 3)`), then the i-th particle will have
+initial spin `s0[i,:]`.
+"""
+function track_spin(q::AbstractArray{<:Any,3}, s0::AbstractVecOrMat)
+  s = similar(q, (size(q, 1), 3, size(q,3)))
+  track_spin!(s, q, s0)
+  return s
+end
+
+function track_spin!(s::AbstractArray{<:Any,3}, q::AbstractArray{<:Any,3},  s0::AbstractVecOrMat)
+  @assert size(s, 1) == size(q, 1) "Number of rows (particles) in spin output array s and quaternion input array q not equal"
+  @assert size(s, 2) == 3 "Number of columns of spin output array s not equal to 3"
+  @assert size(q, 2) == 4 "Number of columns of quaternion input array q not equal to 4"
+  @assert size(s, 3) == size(q, 3) "Size of 3rd dimension (number of saved turns) of spin output array s and quaternion input array q not equal"
+  if s0 isa AbstractMatrix
+    @assert size(s, 1) == size(q, 1) "Number of rows (particles) in spin input array s0 and quaternion input array q not equal"
+  else
+    @assert length(s0) == 3 "Length of spin input vector not equal to 3"
+  end
+  device = KA.get_backend(s)
+  _rotate_spins!(device)(s, q, s0; ndrange=size(s, 1))
+  KA.synchronize(device)
+  return s
+end
+
+@kernel function _rotate_spins!(s, @Const(q), @Const(s0))
+  i = @index(Global)
+  @inbounds begin
+    # Set initial condition:
+    if s0 isa AbstractVector
+      sx = s0[1]
+      sy = s0[2]
+      sz = s0[3]
+    else
+      sx = s0[i,1]
+      sy = s0[i,2]
+      sz = s0[i,3]
+    end
+
+    s[i,1,1] = sx
+    s[i,2,1] = sy
+    s[i,3,1] = sz
+
+    # Now the loop:
+    for j in 2:size(q, 3)
+      a  = q[i,1,j]; bx = q[i,2,j]; by = q[i,3,j]; bz = q[i,4,j]
+      
+      tx = 2 * (by*sz - bz*sy)
+      ty = 2 * (bz*sx - bx*sz)
+      tz = 2 * (bx*sy - by*sx)
+
+      s[i,1,j] = sx + a*tx + (by*tz - bz*ty)
+      s[i,2,j] = sy + a*ty + (bz*tx - bx*tz)
+      s[i,3,j] = sz + a*tz + (bx*ty - by*tx)
+    end
+  end
+end
+

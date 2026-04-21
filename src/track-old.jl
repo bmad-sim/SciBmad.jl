@@ -8,12 +8,12 @@ end
 =#
 # No spin tracking
 function track(
-  bl::Beamline,
-  v0::Union{AbstractMatrix,AbstractVector},
-  q0::Nothing=nothing;
-  n_turns=1,
-  save_every_n_turns=1,
-)
+    bl::Beamline,
+    v0::Union{AbstractMatrix,AbstractVector},
+    q0::Nothing=nothing;
+    n_turns=1,
+    save_every_n_turns=1,
+  )
   # Input sanity checks:
   if v0 isa AbstractVector
     length(v0) == 6 || error("track accepts a n x 6 matrix of n particle coordinates,

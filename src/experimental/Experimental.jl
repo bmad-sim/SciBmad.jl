@@ -1,16 +1,51 @@
 module Experimental
 using ..SciBmad, FundamentalFrequencies
 
-function compute_nearest_harmonics(
-    x, 
-    Q; 
+function transverse_frequencies(
+    bl,
+    v0, 
+    Q;
     multol=1e-4, 
     n_frequencies=20,
-    N_turns=500,
+    n_turns=500,
     order=3,
+    verbose=true,
+    window_order=5,
   )
-  coords = similar(x, size(x, 1), 6, N_turns+1)
+  n_particles = size(v0, 1)
+  res = track(bl; v0, n_turns, verbose)
+  coords = res.v
+  data = reshape(permutedims(coords, (2,1,3)), n_particles*6, n_turns+1) 
   
+  # Now this makes it x + im*px, etc:
+  data = reinterpret(ComplexF64, data)
+  # Remove the mean:
+  data = data .- mean(data, dims=2)
+  
+  # Batched NAFF
+  frequencies, amplitudes = naff(data, n_frequencies; window_order, warnings=false)
+
+
+  # Select dominant frequency (longitudinal mode)
+  f3, idx3 = findmin(abs.((view(Q, :, 3) .- frequencies) ./ view(Q[3], :, 3)) ./ abs.(amplitudes), dims=2)
+  f3tru, idx3tru = findmin(reshape(f3, 3, n_particles), dims=1)
+  good = f3tru .< 1/multol
+  Q3 = good .* (reshape(frequencies[idx3], 3, n_particles)[idx3tru]) .+ .!good .* view(Q, :, 3)
+  amp3 = good .* reshape(amplitudes[idx3], 3, n_particles)[idx3tru] # amp is zero if not good
+
+  # "Remove this" and all integer multiples from the result 
+  # by setting those frequencies to gigantic. This will make sure 
+  # we don't accidentally find them, however does not 
+  # handle the cross terms yet.
+  # Each column of Q3 corresponds to a chunk of 3-rows in frequencies 
+  # multol = 1e-1
+  for i in 1:length(Q3)
+      fv = view(frequencies, ((i-1)*3+1):((i-1)*3+3),:)
+      for j in 0:order
+          ismul = abs.(fv .- j .* Q3[i]) .< multol .|| abs.(fv .+ j .* Q3[i]) .< multol
+          fv .+= (ismul .* 1e10) # Make gigantic if is multiple
+      end
+  end
 end
 
 function obj_val_jac!(y, jac, x, p)

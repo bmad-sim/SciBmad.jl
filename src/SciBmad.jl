@@ -30,6 +30,8 @@ export  twiss,
         track!,
         dynamic_aperture,
         track,
+        track_spin,
+        track_spin!,
         TrackingResult,
         TrackingConfig
         

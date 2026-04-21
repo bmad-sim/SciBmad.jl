@@ -1,14 +1,14 @@
 # Because track! is many kernels, unfortunately all must be separate kernels
 
 # For setting before tracking
-@kernel function set_v!(v_res, v_cache, @Const(v), @Const(N_particles))
+@kernel function set_v!(v_res, v_cache, @Const(v), @Const(n_particles))
   i = @index(Global)
-  @inbounds v_res[i + 0*N_particles] = v[i,1]
-  @inbounds v_res[i + 1*N_particles] = v[i,2]
-  @inbounds v_res[i + 2*N_particles] = v[i,3]
-  @inbounds v_res[i + 3*N_particles] = v[i,4]
-  @inbounds v_res[i + 4*N_particles] = v[i,5]
-  @inbounds v_res[i + 5*N_particles] = v[i,6]
+  @inbounds v_res[i + 0*n_particles] = v[i,1]
+  @inbounds v_res[i + 1*n_particles] = v[i,2]
+  @inbounds v_res[i + 2*n_particles] = v[i,3]
+  @inbounds v_res[i + 3*n_particles] = v[i,4]
+  @inbounds v_res[i + 4*n_particles] = v[i,5]
+  @inbounds v_res[i + 5*n_particles] = v[i,6]
 
   @inbounds v_cache[i,1] = v[i,1]
   @inbounds v_cache[i,2] = v[i,2]
@@ -18,7 +18,7 @@
   @inbounds v_cache[i,6] = v[i,6]
 end
 
-@kernel function set_v_coast!(v_res, v_cache, @Const(v_constant), @Const(v_coast), @Const(N_particles))
+@kernel function set_v_coast!(v_res, v_cache, @Const(v_constant), @Const(v_coast), @Const(n_particles))
   i = @index(Global)
 
   @inbounds v_cache[i,5] = v_constant[i,5]
@@ -29,10 +29,10 @@ end
   @inbounds v_cache[i,3] = v_coast[i,3]
   @inbounds v_cache[i,4] = v_coast[i,4]
 
-  @inbounds v_res[i + 0*N_particles] = v_coast[i,1]
-  @inbounds v_res[i + 1*N_particles] = v_coast[i,2]
-  @inbounds v_res[i + 2*N_particles] = v_coast[i,3]
-  @inbounds v_res[i + 3*N_particles] = v_coast[i,4]
+  @inbounds v_res[i + 0*n_particles] = v_coast[i,1]
+  @inbounds v_res[i + 1*n_particles] = v_coast[i,2]
+  @inbounds v_res[i + 2*n_particles] = v_coast[i,3]
+  @inbounds v_res[i + 3*n_particles] = v_coast[i,4]
 end
 
 @kernel function set_v_coast_final!(v0, v_coast)
@@ -43,15 +43,15 @@ end
   @inbounds v0[i,4] = v_coast[i,4]
 end
 
-@kernel function sub_v!(v_res, v, N_particles, ::Val{coast}) where {coast}
+@kernel function sub_v!(v_res, v, n_particles, ::Val{coast}) where {coast}
   i = @index(Global)
-  @inbounds v_res[i + 0*N_particles] -= v[i,1]
-  @inbounds v_res[i + 1*N_particles] -= v[i,2]
-  @inbounds v_res[i + 2*N_particles] -= v[i,3]
-  @inbounds v_res[i + 3*N_particles] -= v[i,4]
+  @inbounds v_res[i + 0*n_particles] -= v[i,1]
+  @inbounds v_res[i + 1*n_particles] -= v[i,2]
+  @inbounds v_res[i + 2*n_particles] -= v[i,3]
+  @inbounds v_res[i + 3*n_particles] -= v[i,4]
   if !coast
-    @inbounds v_res[i + 4*N_particles] -= v[i,5]
-    @inbounds v_res[i + 5*N_particles] -= v[i,6]
+    @inbounds v_res[i + 4*n_particles] -= v[i,5]
+    @inbounds v_res[i + 5*n_particles] -= v[i,6]
   end
 end
 
@@ -63,14 +63,14 @@ function _co_res!(
     sub_kernel!,
     v_cache,
   )
-  N_particles = size(v, 1)
-  @assert length(v_res) == N_particles*6 "Incorrect size for residual vector"
+  n_particles = size(v, 1)
+  @assert length(v_res) == n_particles*6 "Incorrect size for residual vector"
   b0 = Bunch(v_cache)
   SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
-  set_kernel!(v_res, v_cache, v, N_particles; ndrange=N_particles)
+  set_kernel!(v_res, v_cache, v, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
   track!(b0, bl, scalar_params=true)
-  sub_kernel!(v_res, v_cache, N_particles, Val{false}(); ndrange=N_particles)
+  sub_kernel!(v_res, v_cache, n_particles, Val{false}(); ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
   return v_res
 end
@@ -84,16 +84,16 @@ function _co_res_coast!(
     v_cache,
     v_constant
   )
-  N_particles = size(v_coast, 1)
-  @assert length(v_res) == N_particles*4 "Incorrect size for residual vector"
-  @assert N_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
-  @assert N_particles == size(v_constant, 1) "Incorrect size for particle constant array given v_coast input"
+  n_particles = size(v_coast, 1)
+  @assert length(v_res) == n_particles*4 "Incorrect size for residual vector"
+  @assert n_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
+  @assert n_particles == size(v_constant, 1) "Incorrect size for particle constant array given v_coast input"
   b0 = Bunch(v_cache)
   SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify  
-  set_kernel!(v_res, v_cache, v_constant, v_coast, N_particles; ndrange=N_particles)
+  set_kernel!(v_res, v_cache, v_constant, v_coast, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
   track!(b0, bl, scalar_params=true)
-  sub_kernel!(v_res, v_cache, N_particles, Val{true}(); ndrange=N_particles)
+  sub_kernel!(v_res, v_cache, n_particles, Val{true}(); ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
   return v_res
 end
@@ -132,7 +132,7 @@ function find_closed_orbit(
     batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
     warn=true,
   ) where {_batch}
-  N_particles = size(v0, 1)
+  n_particles = size(v0, 1)
   device = KA.get_backend(v0)
   v0_cache = similar(v0)
   
@@ -145,13 +145,13 @@ function find_closed_orbit(
   newton_kwargs = filter(x->!isnothing(x), (; reltol, abstol, maxiter, autodiff, prep, batchdim))
 
   if coasting_beam
-    v = similar(v0, (N_particles, 4))
-    v_coast = similar(v0, (N_particles, 4))
+    v = similar(v0, (n_particles, 4))
+    v_coast = similar(v0, (n_particles, 4))
     v_coast .= view(v0, :, 1:4) 
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
     sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0); newton_kwargs...)
-    set_v_coast_final!(device)(v0, v_coast; ndrange=N_particles)
+    set_v_coast_final!(device)(v0, v_coast; ndrange=n_particles)
     KA.synchronize(device)
   else
     v = similar(v0)
