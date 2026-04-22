@@ -5,7 +5,7 @@
   ramp_particle_energy_without_rf::Bool = false
   verbose::Bool                         = false
   groupsize::Int                        = 0 # autoselect
-  use_cpu_multithreading::Bool          = (Threads.nthreads() > 1 ? true : false)
+  use_cpu_multithreading::Bool          = false
   use_KA::Bool                          = true
   use_explicit_SIMD::Bool               = !use_KA
 end
@@ -45,19 +45,25 @@ function Base.show(io::IO, res::TrackingResult)
     turnstr = "turn"
 
   else
-    turnstr = "Int(turn/$(res.config.save_every_n_turns))+1"
+    turnstr = "Int(turn/$(res.config.save_every_n_turns))"
   end
-  println(io, "state:\tStates indexable as state[particle, $(turnstr)]")
-  println(io, "v:\tPhase space coordinates indexable as v[particle, coordinate, $(turnstr)]")
+  n_particles = size(res.state, 1)
+  n_saved_turns = size(res.state, 2)
+  println(io, "state[1:$n_particles, 1:$n_saved_turns]:\tStates indexable as\t\t state[particle, $(turnstr)+1]")
+  println(io, "v[1:$n_particles, 1:6, 1:$n_saved_turns]:\tPhase space coords indexable as\t v[particle, coordinate, $(turnstr)+1]")
   if !isnothing(res.q)
-    println(io, "q:\tQuaternions indexable as q[particle, quat_coordinate, $(turnstr)]")
+    println(io, "q[1:$n_particles, 1:4, 1:$n_saved_turns]:\tQuaternions indexable as\t q[particle, quat_coordinate, $(turnstr)+1]")
   end
   println(io, "")
   println(io, "bunch:\tBunch at the end of tracking")
   return
 end
 
+"""
+    track(bl::Beamline; kwargs...)
 
+
+"""
 function track(
     bl::Beamline;
 
@@ -161,6 +167,8 @@ spins at each stored turn.
 If `s0` is a vector (of length 3), then all particles are assumed to have initial spin 
 `s0`. If `s0` is a matrix (of size `(n_particles, 3)`), then the i-th particle will have
 initial spin `s0[i,:]`.
+
+See `track_spin!` for the in-place version for a pre-allocated output tensor `s`.
 """
 function track_spin(q::AbstractArray{<:Any,3}, s0::AbstractVecOrMat)
   s = similar(q, (size(q, 1), 3, size(q,3)))
@@ -168,6 +176,11 @@ function track_spin(q::AbstractArray{<:Any,3}, s0::AbstractVecOrMat)
   return s
 end
 
+"""
+    track_spin!(s::AbstractArray{<:Any,3}, q::AbstractArray{<:Any,3},  s0::AbstractVecOrMat)
+
+In-place version of `track_spin`. See the documentation for `track_spin`.
+"""
 function track_spin!(s::AbstractArray{<:Any,3}, q::AbstractArray{<:Any,3},  s0::AbstractVecOrMat)
   @assert size(s, 1) == size(q, 1) "Number of rows (particles) in spin output array s and quaternion input array q not equal"
   @assert size(s, 2) == 3 "Number of columns of spin output array s not equal to 3"
@@ -187,6 +200,7 @@ end
 @kernel function _rotate_spins!(s, @Const(q), @Const(s0))
   i = @index(Global)
   @inbounds begin
+
     # Set initial condition:
     if s0 isa AbstractVector
       sx = s0[1]
@@ -198,14 +212,10 @@ end
       sz = s0[i,3]
     end
 
-    s[i,1,1] = sx
-    s[i,2,1] = sy
-    s[i,3,1] = sz
-
     # Now the loop:
-    for j in 2:size(q, 3)
+    for j in 1:size(q, 3)
       a  = q[i,1,j]; bx = q[i,2,j]; by = q[i,3,j]; bz = q[i,4,j]
-      
+
       tx = 2 * (by*sz - bz*sy)
       ty = 2 * (bz*sx - bx*sz)
       tz = 2 * (bx*sy - by*sx)
