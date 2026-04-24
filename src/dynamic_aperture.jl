@@ -13,7 +13,7 @@ function dynamic_aperture(
 
     # Optional kwargs:
     backend=KA.CPU(),
-    coordinates_number_type::Type=Float32, 
+    coordinates_number_type::Type=Float64, 
     sig_pz::Real=0,
     delta_dependent_orbits::Bool=true,
     output_file=nothing,
