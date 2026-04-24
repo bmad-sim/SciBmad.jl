@@ -1,3 +1,9 @@
+figure:has(img.caption-left) figcaption {
+    text-align: left;
+    width: 90%;
+    margin: 0 auto;
+}
+
 .sidebar-tree .caption,
 .sidebar-tree :not(.caption) > .caption-text,
 .toctree-wrapper.compound .caption,

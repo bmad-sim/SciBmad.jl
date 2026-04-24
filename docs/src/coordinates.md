@@ -14,6 +14,7 @@ In construction...
 ```{figure} figures/coordinates.svg
 :width: 70%
 :name: f:coords
+:class: caption-left
 
 The coordinate systems to describe a machine: The "floor" Cartesian coordinate system
 is independent of the accelerator.  The "branch" curvilinear coordinate system follows the bends
@@ -24,10 +25,10 @@ alignment shifts (not "misaligned"), is the same as the branch coordinates.
 
 %---------------------------------------------------------------------------------------------------
 
-The PALS uses three coordinate systems to describe a machine as illustrated in the figure above. 
-First, the `floor` coordinates are rectangular coordinates independent of the accelerator.
+SciBmad uses three coordinate systems to describe a machine as illustrated in the figure above. 
+First, the `floor` coordinates are Cartesian coordinate system independent of the accelerator.
 The position of the accelerator itself as well as external objects like the building the
-accelerator is in  may be described using `floor` coordinates.
+accelerator is in may be described using `floor` coordinates.
 
 It is inconvenient to describe the position lattice elements and the position of a 
 particle beam using the `floor` coordinate system so, for each lattice branch,
@@ -45,7 +46,7 @@ most machines are essentially horizontal, the {math}`x` coordinate is typically 
 coordinate.
  
 The "nominal" position of a lattice element is the position of the element without any
-[position and orientation shifts](#s:bodyshift.params)
+[position and orientation shifts](#alignment.params)
 (which are sometimes referred to as "misalignments"). 
 Each lattice element has "`element body`"
 coordinates which are attached to the physical element, and the electric and magnetic
@@ -63,6 +64,7 @@ The transformation between `branch` and `body` coordinates is given in
 ```{figure} figures/ele-coord-frame.svg
 :width: 70%
 :name: f:ele.coord.frame
+:class: caption-left
 
 Lattice elements can be imagined as "LEGO blocks" which
 fit together to form the branch coordinate system. How elements
@@ -110,6 +112,7 @@ will have a discontinuity.
 ```{figure} figures/patch-between.svg
 :width: 70%
 :name: f:patch.between
+:class: caption-left
 
 A) The branch coordinates are constructed by
 connecting the `downstream` reference frame of one element with the `upstream` reference frame
@@ -127,7 +130,7 @@ The {math}`y` coordinate is always out of the page for this example.
 Assuming for the moment that there are no [Fiducial](#s:fiducial) elements present,
 the construction of a branch coordinate system starts at the [BeginningEle](#s:beginningele) element 
 at the start of a branch. 
-If the branch is a [root](#s:lattice.construct) branch, the orientation of the beginning
+If the branch is a `root` branch, the orientation of the beginning
 element within the [floor coordinate system](#s:coords) can be fixed by setting 
 [FloorP](#s:floor.params) parameters in the `BeginningEle` element.
 If the branch is not a `root` branch, the position
@@ -171,7 +174,7 @@ with an normal (unreversed) orientation drift named `dft1` connected to a normal
 This gives an unphysical situation since a
 particle traveling through `dft1` will "fall off" when it gets to the drift's end.
 {numref}`f:patch.between`D shows the same line as in {numref}`f:patch.between`C with the addition
-of a [`reflection patch`](#s:patch.params) `P` between `dft1` and `bnd1` to give a plausible geometry. 
+of a [`reflection patch`](#patch.params) `P` between `dft1` and `bnd1` to give a plausible geometry. 
 In this case, the patch rotates the coordinate system around the {math}`y`-axis by 180{math}`^o` 
 (in this example leaving the {math}`y`-axis invariant). This illustrates why
 a reflection patch is always needed between normal and reversed elements.
@@ -226,6 +229,7 @@ to form an effective {math}`\bf S` which can then be used with Eq. {eq}`s330`.
 ```{figure} figures/floor-coords.svg
 :width: 80%
 :name: f:floor.coords
+:class: caption-left
 
 The branch coordinate system (purple), which is a function of {math}`s` along the branch reference
 curve, is described in the floor coordinate system (black) by a position {math}`(X(s), Y(s), Z(s))` and
@@ -381,6 +385,7 @@ Where {math}`L` is the length of the element.
 ```{figure} figures/tilt-bend.svg
 :width: 80%
 :name: f:tilt.bend
+:class: caption-left
 
 A) Rotation axes (bold arrows) for four different `tilt_ref` angles of {math}`\theta_{tr} = 0`, 
 {math}`\pm \pi/2`, and {math}`\pi`. 
@@ -392,7 +397,7 @@ for the same four `tilt_ref` angles. In this case the bend angle is taken to be 
 
 %---------------------------------------------------------------------------------------------------
 
-For a `bend`, the axis of rotation is dependent upon the bend's [`tilt_ref`](#s:bend.params) angle
+For a `bend`, the axis of rotation is dependent upon the bend's [`tilt_ref`](#bend.params) angle
 as shown in {numref}`f:tilt.bend`A. The axis of rotation points in the negative {math}`y_0`
 direction for `tilt_ref` = 0 and is offset by the bend radius `rho`. Here {math}`(x_0, y_0, z_0)`
 are the branch coordinates at the entrance end of the bend with the {math}`z_0` axis being directed into
@@ -540,7 +545,7 @@ non-bend misaligned element depends only on the offsets, and is independent of t
 ### Bend Element Misalignment Transformation
 
 For `Bend` element positioning, besides the standard `BodyShiftP` parameters, there is the
-`tilt_ref` ({math}`\theta_{tr}`) parameter (see [](#s:bend.params)). 
+`tilt_ref` ({math}`\theta_{tr}`) parameter (see [](#bend.params)). 
 The latter affects both the reference orbit and the bend position. 
 Furthermore, `ref_tilt` is calculated with respect to
 the coordinates at the beginning of the bend while, like straight elements, `roll`, offsets, and
