@@ -6,6 +6,8 @@ using StaticArrays
 using DelimitedFiles
 using BatchSolve
 
+
+
 function dynamic_aperture(
     bl::Beamline;
 
@@ -96,7 +98,6 @@ function dynamic_aperture(
         batchdim=1,
         autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
       )
-      @show sol
       if all(sol.retcode .!= BatchSolve.RETCODE_SUCCESS)
         error(
           """
@@ -224,15 +225,15 @@ function transverse_frequencies!(
   amplitudes = reshape(amplitudes, 3, n_particles, n_frequencies)
   Q3 = reshape(view(Q, :, 3), 1, n_particles, 1)
 
-  @show frequencies[3,1,:]
+  #@show frequencies[3,1,:]
   # Select dominant frequency (longitudinal mode)
   f3, idx3 = findmin(abs.(Q3 .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
   f3tru, idx3tru = findmin(f3, dims=1)
   good = f3tru ./ (1 .+ 1 ./ abs.(amplitudes[idx3][idx3tru])) .< reltol
   Q3 .= good .* frequencies[idx3][idx3tru] .+ .!good .* Q3
-  @show Q3
-  @show good
-  @show frequencies[idx3][idx3tru]
+  #@show Q3
+  #@show good
+  #@show frequencies[idx3][idx3tru]
   # amp3 = good .* amplitudes[idx3][idx3tru]
 
   # "Remove this" and all integer multiples from the result 
@@ -275,9 +276,9 @@ function transverse_frequencies!(
       Qnext = good .* frequencies[idx2][idx2tru] .+ .!good .* Q2
       amp2 = good .* amplitudes[idx2][idx2tru] # amp is zero if not good
       Q2 .= Qnext
-      @show Q2
-      @show good
-      @show frequencies[idx2][idx2tru]
+      #@show Q2
+      #@show good
+      #@show frequencies[idx2][idx2tru]
   else
       next = 1
       final = 2
@@ -285,9 +286,9 @@ function transverse_frequencies!(
       Qnext = good .* frequencies[idx1][idx1tru]  .+ .!good .* Q1
       amp1 = good .* amplitudes[idx1][idx1tru] # amp is zero if not good
       Q1 .= Qnext
-      @show Q1
-      @show good
-      @show frequencies[idx1][idx1tru]
+      #@show Q1
+      #@show good
+      #@show frequencies[idx1][idx1tru]
   end
   # Remove the next one
   j_vals = reshape(0:order, 1, 1, 1, order+1, 1)        # (1,1,1,n_j,1)
@@ -317,9 +318,9 @@ function transverse_frequencies!(
   else
       amp2 = good .* amplitudes[idxf][idxftru] # amp is zero if not good
   end
-  @show Qfinal
-  @show good
-  @show frequencies[idxf][idxftru]
+  #@show Qfinal
+  #@show good
+  #@show frequencies[idxf][idxftru]
 
   y .=  hcat(
     permutedims(reinterpret(Float64, reshape(amp1, 1, n_particles)), (2,1)),
