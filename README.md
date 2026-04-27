@@ -32,7 +32,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
 - Arbitrary time-dependent accelerator parameters (e.g. magnet strengths, misalignments)
 - CPU/GPU parallelized tracking and analysis over differing accelerator parameters (batch parameter evaluation)
-- Arbitrarily-interdependent accelerator parameters
+- Arbitrarily-interdependent accelerator parameters with lazily-evaluated deferred expressions
 - CPU/GPU parallelized dynamic aperture scans
 - Arbitrary placements and orientations of accelerator elements
 
@@ -42,11 +42,12 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - CPU/GPU parallelized Numerical Analysis of Fundamental Frequencies (NAFF)
 - Twiss functions at every integration step (inside elements)
 - Open lattice Twiss function propagation
-- CPU/GPU parallelized Newton-Raphson, differential evolution, and genetic algorithm solvers
-- Symplectic tracking through arbitrary electromagnetic fields (implicit integration)
+- CPU/GPU parallelized Newton-Raphson
+- CPU/GPU parallelized symplectic tracking through arbitrary electromagnetic fields (implicit integration)
 
 ### Future Releases
 - Generalized gradient field description
+- Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strogn-strong beam beam)
 - Weak-strong symplectic beam-beam interaction
 - PyTorch bindings
 - Exact multipoles in curved coordinate systems

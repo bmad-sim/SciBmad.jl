@@ -55,7 +55,7 @@ include("experimental/Experimental.jl")
     qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.5); # matrix kick, 2 multipoles
     sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
     kicker = Sextupole(Kn0=1e-5, L=0.01)
-    rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6, zero_phase=PhaseReference.AboveTransition);
+    rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6, zero_phase=PhaseRef.AboveTransition);
     thin = Multipole(Kn1L=1e-9); # Thin quad
     d3 = Drift(L=0.3);
     marker = Marker(); # nothing

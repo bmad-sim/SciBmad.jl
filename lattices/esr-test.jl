@@ -1003,7 +1003,7 @@ using Beamlines
   drift669 = Drift(L =  6.01312000000007174E+000)
   hqflss_10 = Quadrupole(L =  5.99999999999999978E-001, Kn1 =  1.36096888091329998E-001)
   drift670 = Drift(L =  2.99999999999954525E-001)
-  rf0 = RFCavity(L =  4.01667000000000041E+000, zero_phase = PhaseReference.AboveTransition,
+  rf0 = RFCavity(L =  4.01667000000000041E+000, zero_phase = PhaseRef.AboveTransition,
    rf_frequency =  5.91139416241453052E+008)
   drift671 = Drift(L =  3.00000000000181899E-001)
   drift672 = Drift(L =  2.99999999999954525E-001)
