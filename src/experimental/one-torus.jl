@@ -83,6 +83,9 @@ function dynamic_aperture(
     v = zeros(1, 4) # guess, will change for each delta 
     v_cache = zeros(1, 6) 
 
+    if verbose
+      println("Computing J₁=J₂=0 coordinate for each δ")
+    end
     for i in 1:n_deltas
       delta = deltas[i]
       sol = newton!(
@@ -97,6 +100,7 @@ function dynamic_aperture(
         reltol=1e-12,
         batchdim=1,
         autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
+        maxiter=20,
       )
       if all(sol.retcode .!= BatchSolve.RETCODE_SUCCESS)
         error(
@@ -109,9 +113,12 @@ function dynamic_aperture(
       co[i,1:4] .= sol.u'
       ai = symplectify(reshape(findnz(sol.jac)[end], 4, 4))
       as[:,:,i] = inv(ai) # transformation from Floquet variables to real space
+      if verbose
+        print("\rFinished $delta")
+        flush(stdout)
+      end
     end
   end
-
   @show co
 
   # Now we have the closed orbits and A at each point
@@ -195,7 +202,7 @@ function transverse_frequencies!(
     n_frequencies=20,
     n_turns=500,
     order=3,
-    verbose=true,
+    verbose=false,
     window_order=5,
     reltol=0.005,
     abstol=1e-5, 
@@ -207,9 +214,6 @@ function transverse_frequencies!(
   v_cache[:,1:4] .= v
   res = track(bl; v0=v_cache, n_turns, verbose, use_explicit_SIMD=false)
   coords = res.v
-  if any(res.state[:,end] .!= 0x1)
-    error("fuck")
-  end
   data = reshape(permutedims(coords, (2,1,3)), 6*n_particles, n_turns+1) 
 
   # Now this makes it x + im*px, etc:
