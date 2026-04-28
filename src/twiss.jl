@@ -45,7 +45,8 @@ function twiss(
   v0=zeros(1,6),
   co_sol=find_closed_orbit(bl; v0=v0, batch=Val{false}()),
   symplectic_tol=1e-8, # Tolerance below which to include damping
-  at::Union{Colon,AbstractArray}=:, # Colon means all elements, nothing means no elements
+  at::Union{Colon,AbstractArray}=:, # Colon means all elements, nothing means no elements,
+  normalizing_map::Bool=false,
   )
   if co_sol.sol.retcode != RETCODE_SUCCESS
     error("""
@@ -68,7 +69,6 @@ function twiss(
   if nn < 6
     error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")
   end
-
 
   # Track once through and construct a DAMap
   Δv = vars(GTPSA_descriptor)[1:6]
@@ -122,14 +122,14 @@ function twiss(
     damping = norm(NNF.checksymp(NNF.jacobian(m))) > symplectic_tol
 
     # Type of the LATTICE FUNCTIONS
-    if mo > 1 && (coasting_beam || nn > 6)
+    if mo > 1
       zero_LF = TI.init_tps(numtype, init)
     else
       zero_LF = zero(numtype)
     end
 
     # Type of the PHASES
-    if coasting_beam || mo > 1 && nn > 6
+    if mo > 1 || coasting_beam
       zero_phase = TI.init_tps(numtype, init)
     else
       tunes = TI.scalar.(tunes)
@@ -166,7 +166,7 @@ function twiss(
       names[end] = "END OF BEAMLINE"
     end
     s = typeof(scur).(stmp)
-    lf_table = _twiss(a, b0, bl, idxs, names, s, Val{de_moivre}(), damping, zero_LF, zero_phase, zero_orbit, at)
+    lf_table = _twiss(a, b0, bl, idxs, names, s, Val{de_moivre}(), damping, zero_LF, zero_phase, zero_orbit, at, Val{normalizing_map}())
   else
     lf_table = nothing
   end
@@ -194,7 +194,7 @@ function _tunes_and_a(m::DAMap, mo, coasting_beam)
     return SA[Q_x, Q_y, Q_s, Q_spin], a
   end
 end
-  
+
 function _twiss(
     a::DAMap{<:Any,<:Any,Q}, 
     b0::Bunch, 
@@ -208,7 +208,8 @@ function _twiss(
     zero_phase::V,
     zero_orbit::U, 
     at::C,
-  ) where {de_moivre, Q, T, V, U, C}
+    ::Val{normalizing_map},
+  ) where {de_moivre, Q, T, V, U, C, normalizing_map}
   # Ripken-Wolski-Forest de Moivre coupling formalism
   
   # These checks should all be static ================================
@@ -219,6 +220,8 @@ function _twiss(
   SCALAR_LF = TI.is_tps_type(T) isa TI.IsTPSType ? Val{false}() : Val{true}()
   SCALAR_PHASE = TI.is_tps_type(V) isa TI.IsTPSType ? Val{false}() : Val{true}()
   SCALAR_ORBIT = TI.is_tps_type(U) isa TI.IsTPSType ? Val{false}() : Val{true}()
+  INCLUDE_A = normalizing_map ? at -> at : at -> nothing
+
   if Q == Nothing
     PROCESS_SPIN = at -> nothing
   else
@@ -237,11 +240,6 @@ function _twiss(
   # lattice functions using SCALAR_LF. 
   # Finally we have the phases. The phases are done during 
   # canonization, and so should have the same type as the orbit.
-
-  # For some horrendous reason, processing the orbit is impacting the future lattice
-  # function calc
-  # no clue why
-  # need to investigate futher
   if SCALAR_ORBIT isa Val{false}
     PROCESS_ORBIT = v -> begin
       StaticArrays.sacollect(SVector{6,U}, begin 
@@ -261,14 +259,11 @@ function _twiss(
     N_ele = length(at)
   end
 
-  # a = normal(m)
-  # This should not be necessary anymore with fixing of normal:
-  # NNF.setray!(a.v, scalar=m.v)
   r = canonize(a, SCALAR_PHASE; damping=damping)
   a = a ∘ r
   fc = factorize(a)
   NNF_tuple = COMPUTE_TWISS(fc.a1, SCALAR_LF)
-  lf1 = LF(idxs[1], names[1], zero(first(s)), SA[zero(zero_phase),zero(zero_phase),zero(zero_phase)], NNF_tuple, PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a))
+  lf1 = LF(idxs[1], names[1], zero(first(s)), SA[zero(zero_phase),zero(zero_phase),zero(zero_phase)], NNF_tuple, PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a), INCLUDE_A(a))
   lf_table = LF_TABLE(lf1, N_ele)
 
   idx = 1
@@ -300,7 +295,7 @@ function _twiss(
     a = a ∘ r
     if C == Colon || (i != 1 && bl.line[i] in at)
       fc = factorize(a)
-      lfi = LF(idxs[idx], names[idx], s[idx], SA[copy(phase[1]), copy(phase[2]), copy(phase[3])], COMPUTE_TWISS(fc.a1, SCALAR_LF), PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a))
+      lfi = LF(idxs[idx], names[idx], s[idx], SA[copy(phase[1]), copy(phase[2]), copy(phase[3])], COMPUTE_TWISS(fc.a1, SCALAR_LF), PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a), INCLUDE_A(a))
       lf_table[idx] = lfi
       idx += 1
       if idx > N_ele
@@ -311,161 +306,97 @@ function _twiss(
   return lf_table
 end
 
-# a
-# b
-# c
+function twiss_tuple(beamline_index, name, s, phi, NNF_tuple::TT, orbit, n, a) where {TT}
+  outt = (;
+    beamline_index = beamline_index,
+    name = name,
+    s = s,
+    phi_1 = phi[1],
+    beta_1 = NNF_tuple.beta[1],
+    alpha_1 = NNF_tuple.alpha[1],
+    phi_2 = phi[2],
+    beta_2 = NNF_tuple.beta[2],
+    alpha_2 = NNF_tuple.alpha[2],
+    phi_3 = phi[3],
+    gamma_c = NNF_tuple.gamma_c,
+    c11 = NNF_tuple.C[1,1],
+    c12 = NNF_tuple.C[1,2],
+    c21 = NNF_tuple.C[2,1],
+    c22 = NNF_tuple.C[2,2],
+    orbit_x  = orbit[1],
+    orbit_px = orbit[2],
+    orbit_y  = orbit[3],
+    orbit_py = orbit[4],
+    orbit_z  = orbit[5],
+    orbit_pz = orbit[6],
+  )
 
-
-function twiss_tuple(beamline_index, name, s, phi, NNF_tuple::T, orbit, n::Nothing) where {T}
-  if haskey(NNF_tuple, :eta) # NOT coasting
+  # static check
+  if hasfield(TT, :eta) # NOT coasting
     # eta, zeta, and slip are APPROXIMATIONS
     # In coasting case all quantities are exact and in a0
-    return (;
-      beamline_index = beamline_index,
-      name = name,
-      s = s,
-      phi_1 = phi[1],
-      beta_1 = NNF_tuple.beta[1],
-      alpha_1 = NNF_tuple.alpha[1],
-      phi_2 = phi[2],
-      beta_2 = NNF_tuple.beta[2],
-      alpha_2 = NNF_tuple.alpha[2],
-      phi_3 = phi[3],
-      eta_1 = NNF_tuple.eta[1],
-      etap_1 = NNF_tuple.eta[2],
-      eta_2 = NNF_tuple.eta[3],
-      etap_2 = NNF_tuple.eta[4],
-      zeta_1 = NNF_tuple.zeta[1],
-      zetap_1 = NNF_tuple.zeta[2],
-      zeta_2 = NNF_tuple.zeta[3],
-      zetap_2 = NNF_tuple.zeta[4],
-      slip = NNF_tuple.approx_slip*sin(phi[3]*2*pi), # Approximation from EBB
-      gamma_c = NNF_tuple.gamma_c,
-      c11 = NNF_tuple.C[1,1],
-      c12 = NNF_tuple.C[1,2],
-      c21 = NNF_tuple.C[2,1],
-      c22 = NNF_tuple.C[2,2],
-      orbit_x  = orbit[1],
-      orbit_px = orbit[2],
-      orbit_y  = orbit[3],
-      orbit_py = orbit[4],
-      orbit_z  = orbit[5],
-      orbit_pz = orbit[6],
-    )
-  else
-    return (;
-      beamline_index = beamline_index,
-      name = name,
-      s = s,
-      phi_1 = phi[1],
-      beta_1 = NNF_tuple.beta[1],
-      alpha_1 = NNF_tuple.alpha[1],
-      phi_2 = phi[2],
-      beta_2 = NNF_tuple.beta[2],
-      alpha_2 = NNF_tuple.alpha[2],
-      phi_3 = phi[3],
-      gamma_c = NNF_tuple.gamma_c,
-      c11 = NNF_tuple.C[1,1],
-      c12 = NNF_tuple.C[1,2],
-      c21 = NNF_tuple.C[2,1],
-      c22 = NNF_tuple.C[2,2],
-      orbit_x  = orbit[1],
-      orbit_px = orbit[2],
-      orbit_y  = orbit[3],
-      orbit_py = orbit[4],
-      orbit_z  = orbit[5],
-      orbit_pz = orbit[6],
+    outt = merge(outt, 
+      (; 
+        eta_1 = NNF_tuple.eta[1],
+        etap_1 = NNF_tuple.eta[2],
+        eta_2 = NNF_tuple.eta[3],
+        etap_2 = NNF_tuple.eta[4],
+        zeta_1 = NNF_tuple.zeta[1],
+        zetap_1 = NNF_tuple.zeta[2],
+        zeta_2 = NNF_tuple.zeta[3],
+        zetap_2 = NNF_tuple.zeta[4],
+        slip = NNF_tuple.approx_slip*sin(phi[3]*2*pi), # Approximation from EBB)
+      )
     )
   end
-end
 
-function twiss_tuple(beamline_index, name, s, phi, NNF_tuple::T, orbit, n) where {T}
-  if haskey(NNF_tuple, :eta) # NOT coasting
-    # eta, zeta, and slip are APPROXIMATIONS
-    # In coasting case all quantities are exact and in a0
-    return (;
-      beamline_index = beamline_index,
-      name = name,
-      s = s,
-      phi_1 = phi[1],
-      beta_1 = NNF_tuple.beta[1],
-      alpha_1 = NNF_tuple.alpha[1],
-      phi_2 = phi[2],
-      beta_2 = NNF_tuple.beta[2],
-      alpha_2 = NNF_tuple.alpha[2],
-      phi_3 = phi[3],
-      eta_1 = NNF_tuple.eta[1],
-      etap_1 = NNF_tuple.eta[2],
-      eta_2 = NNF_tuple.eta[3],
-      etap_2 = NNF_tuple.eta[4],
-      zeta_1 = NNF_tuple.zeta[1],
-      zetap_1 = NNF_tuple.zeta[2],
-      zeta_2 = NNF_tuple.zeta[3],
-      zetap_2 = NNF_tuple.zeta[4],
-      slip = NNF_tuple.approx_slip*sin(phi[3]*2*pi), # Approximation from EBB
-      gamma_c = NNF_tuple.gamma_c,
-      c11 = NNF_tuple.C[1,1],
-      c12 = NNF_tuple.C[1,2],
-      c21 = NNF_tuple.C[2,1],
-      c22 = NNF_tuple.C[2,2],
-      orbit_x  = orbit[1],
-      orbit_px = orbit[2],
-      orbit_y  = orbit[3],
-      orbit_py = orbit[4],
-      orbit_z  = orbit[5],
-      orbit_pz = orbit[6],
-      n_x = n[1],
-      n_y = n[2],
-      n_z = n[3],
-    )
-  else
-    return (;
-      beamline_index = beamline_index,
-      name = name,
-      s = s,
-      phi_1 = phi[1],
-      beta_1 = NNF_tuple.beta[1],
-      alpha_1 = NNF_tuple.alpha[1],
-      phi_2 = phi[2],
-      beta_2 = NNF_tuple.beta[2],
-      alpha_2 = NNF_tuple.alpha[2],
-      phi_3 = phi[3],
-      gamma_c = NNF_tuple.gamma_c,
-      c11 = NNF_tuple.C[1,1],
-      c12 = NNF_tuple.C[1,2],
-      c21 = NNF_tuple.C[2,1],
-      c22 = NNF_tuple.C[2,2],
-      orbit_x  = orbit[1],
-      orbit_px = orbit[2],
-      orbit_y  = orbit[3],
-      orbit_py = orbit[4],
-      orbit_z  = orbit[5],
-      orbit_pz = orbit[6],
-      n_x = n[1],
-      n_y = n[2],
-      n_z = n[3],
-    )
+  # static check
+  if !isnothing(n)
+    outt = merge(outt, (; n_x = n[1], n_y = n[2], n_z = n[3],))
   end
+  
+  # static check
+  if !isnothing(a)
+    outt = merge(outt, (; a=a))
+  end
+
+  return outt
 end
 
-function twiss_table(tt, N_ele)
+function twiss_table(tt::TT, N_ele) where {TT}
   S = typeof(tt.s)
   V = typeof(tt.phi_1)
   T = typeof(tt.beta_1)
   U = typeof(tt.orbit_x)
-  if !haskey(tt, :n_x)
-    if haskey(tt, :eta_1)
-      t = Table(
-        beamline_index = Vector{Int}(undef, N_ele),
-        name = Vector{String}(undef, N_ele),
-        s = Vector{S}(undef, N_ele),
-        phi_1 = Vector{V}(undef, N_ele),
-        beta_1 = Vector{T}(undef, N_ele),
-        alpha_1 = Vector{T}(undef, N_ele),
-        phi_2 = Vector{V}(undef, N_ele),
-        beta_2 = Vector{T}(undef, N_ele),
-        alpha_2 = Vector{T}(undef, N_ele),
-        phi_3 = Vector{V}(undef, N_ele),
+
+  cols = (;
+    beamline_index = Vector{Int}(undef, N_ele),
+    name = Vector{String}(undef, N_ele),
+    s = Vector{S}(undef, N_ele),
+    phi_1 = Vector{V}(undef, N_ele),
+    beta_1 = Vector{T}(undef, N_ele),
+    alpha_1 = Vector{T}(undef, N_ele),
+    phi_2 = Vector{V}(undef, N_ele),
+    beta_2 = Vector{T}(undef, N_ele),
+    alpha_2 = Vector{T}(undef, N_ele),
+    phi_3 = Vector{V}(undef, N_ele),
+    gamma_c = Vector{T}(undef, N_ele),
+    c11 = Vector{T}(undef, N_ele),
+    c12 = Vector{T}(undef, N_ele),
+    c21 = Vector{T}(undef, N_ele),
+    c22 = Vector{T}(undef, N_ele),
+    orbit_x = Vector{U}(undef, N_ele),
+    orbit_px = Vector{U}(undef, N_ele),
+    orbit_y = Vector{U}(undef, N_ele),
+    orbit_py = Vector{U}(undef, N_ele),
+    orbit_z = Vector{U}(undef, N_ele),
+    orbit_pz = Vector{U}(undef, N_ele),
+  )
+
+  # static check
+  if hasfield(TT, :eta_1)
+    cols = merge(cols, 
+      (;
         eta_1   = Vector{T}(undef, N_ele),
         etap_1  = Vector{T}(undef, N_ele),
         eta_2   = Vector{T}(undef, N_ele),
@@ -475,118 +406,32 @@ function twiss_table(tt, N_ele)
         zeta_2  = Vector{T}(undef, N_ele),
         zetap_2 = Vector{T}(undef, N_ele),
         slip    = Vector{T}(undef, N_ele),
-        gamma_c = Vector{T}(undef, N_ele),
-        c11 = Vector{T}(undef, N_ele),
-        c12 = Vector{T}(undef, N_ele),
-        c21 = Vector{T}(undef, N_ele),
-        c22 = Vector{T}(undef, N_ele),
-        orbit_x = Vector{U}(undef, N_ele),
-        orbit_px = Vector{U}(undef, N_ele),
-        orbit_y = Vector{U}(undef, N_ele),
-        orbit_py = Vector{U}(undef, N_ele),
-        orbit_z = Vector{U}(undef, N_ele),
-        orbit_pz = Vector{U}(undef, N_ele),
       )
-      return t
-    else
-      t = Table(
-        beamline_index = Vector{Int}(undef, N_ele),
-        name = Vector{String}(undef, N_ele),
-        s = Vector{S}(undef, N_ele),
-        phi_1 = Vector{V}(undef, N_ele),
-        beta_1 = Vector{T}(undef, N_ele),
-        alpha_1 = Vector{T}(undef, N_ele),
-        phi_2 = Vector{V}(undef, N_ele),
-        beta_2 = Vector{T}(undef, N_ele),
-        alpha_2 = Vector{T}(undef, N_ele),
-        phi_3 = Vector{V}(undef, N_ele),
-        gamma_c = Vector{T}(undef, N_ele),
-        c11 = Vector{T}(undef, N_ele),
-        c12 = Vector{T}(undef, N_ele),
-        c21 = Vector{T}(undef, N_ele),
-        c22 = Vector{T}(undef, N_ele),
-        orbit_x = Vector{U}(undef, N_ele),
-        orbit_px = Vector{U}(undef, N_ele),
-        orbit_y = Vector{U}(undef, N_ele),
-        orbit_py = Vector{U}(undef, N_ele),
-        orbit_z = Vector{U}(undef, N_ele),
-        orbit_pz = Vector{U}(undef, N_ele),
-      )
-      return t
-    end
-  else
-    W = typeof(tt.n_x)
-    if haskey(tt, :eta_1)
-      t = Table(
-        beamline_index = Vector{Int}(undef, N_ele),
-        name = Vector{String}(undef, N_ele),
-        s = Vector{S}(undef, N_ele),
-        phi_1 = Vector{V}(undef, N_ele),
-        beta_1 = Vector{T}(undef, N_ele),
-        alpha_1 = Vector{T}(undef, N_ele),
-        phi_2 = Vector{V}(undef, N_ele),
-        beta_2 = Vector{T}(undef, N_ele),
-        alpha_2 = Vector{T}(undef, N_ele),
-        phi_3 = Vector{V}(undef, N_ele),
-        eta_1   = Vector{T}(undef, N_ele),
-        etap_1  = Vector{T}(undef, N_ele),
-        eta_2   = Vector{T}(undef, N_ele),
-        etap_2  = Vector{T}(undef, N_ele),
-        zeta_1  = Vector{T}(undef, N_ele),
-        zetap_1 = Vector{T}(undef, N_ele),
-        zeta_2  = Vector{T}(undef, N_ele),
-        zetap_2 = Vector{T}(undef, N_ele),
-        slip    = Vector{T}(undef, N_ele),
-        gamma_c = Vector{T}(undef, N_ele),
-        c11 = Vector{T}(undef, N_ele),
-        c12 = Vector{T}(undef, N_ele),
-        c21 = Vector{T}(undef, N_ele),
-        c22 = Vector{T}(undef, N_ele),
-        orbit_x = Vector{U}(undef, N_ele),
-        orbit_px = Vector{U}(undef, N_ele),
-        orbit_y = Vector{U}(undef, N_ele),
-        orbit_py = Vector{U}(undef, N_ele),
-        orbit_z = Vector{U}(undef, N_ele),
-        orbit_pz = Vector{U}(undef, N_ele),
-        n_x = Vector{W}(undef, N_ele),
-        n_y = Vector{W}(undef, N_ele),
-        n_z = Vector{W}(undef, N_ele),
-      )
-      return t
-    else
-      t = Table(
-        beamline_index = Vector{Int}(undef, N_ele),
-        name = Vector{String}(undef, N_ele),
-        s = Vector{S}(undef, N_ele),
-        phi_1 = Vector{V}(undef, N_ele),
-        beta_1 = Vector{T}(undef, N_ele),
-        alpha_1 = Vector{T}(undef, N_ele),
-        phi_2 = Vector{V}(undef, N_ele),
-        beta_2 = Vector{T}(undef, N_ele),
-        alpha_2 = Vector{T}(undef, N_ele),
-        phi_3 = Vector{V}(undef, N_ele),
-        gamma_c = Vector{T}(undef, N_ele),
-        c11 = Vector{T}(undef, N_ele),
-        c12 = Vector{T}(undef, N_ele),
-        c21 = Vector{T}(undef, N_ele),
-        c22 = Vector{T}(undef, N_ele),
-        orbit_x = Vector{U}(undef, N_ele),
-        orbit_px = Vector{U}(undef, N_ele),
-        orbit_y = Vector{U}(undef, N_ele),
-        orbit_py = Vector{U}(undef, N_ele),
-        orbit_z = Vector{U}(undef, N_ele),
-        orbit_pz = Vector{U}(undef, N_ele),
-        n_x = Vector{W}(undef, N_ele),
-        n_y = Vector{W}(undef, N_ele),
-        n_z = Vector{W}(undef, N_ele),
-      )
-      return t
-    end
+    )
   end
+
+  # static check
+  if hasfield(TT, :n_x)
+    W = typeof(tt.n_x)
+    cols = merge(cols, 
+      (;
+        n_x = Vector{W}(undef, N_ele),
+        n_y = Vector{W}(undef, N_ele),
+        n_z = Vector{W}(undef, N_ele),
+      )
+    )
+  end
+
+  if hasfield(TT, :a)
+    A = typeof(tt.a)
+    cols = merge(cols, (; a = Vector{A}(undef, N_ele)))
+  end
+
+  return Table(cols)
 end
 
-function de_moivre_tuple(beamline_index, name, s, phi, NNF_tuple, orbit, n::Nothing)
-  return (;
+function de_moivre_tuple(beamline_index, name, s, phi, NNF_tuple, orbit, n, a)
+  outt = (;
     beamline_index = beamline_index,
     name = name,
     s = s,
@@ -604,80 +449,57 @@ function de_moivre_tuple(beamline_index, name, s, phi, NNF_tuple, orbit, n::Noth
     orbit_z  = orbit[5],
     orbit_pz = orbit[6],
   )
+
+  if !isnothing(n)
+    outt = merge(outt, (; n_x = n[1], n_y = n[2], n_z = n[3],))
+  end
+
+  if !isnothing(a)
+    outt = merge(outt, (; a=a))
+  end
+
+  return outt
 end
 
-function de_moivre_tuple(beamline_index, name, s, phi, NNF_tuple, orbit, n)
-  return (;
-    beamline_index = beamline_index,
-    name = name,
-    s = s,
-    phi_1 = phi[1],
-    phi_2 = phi[2],
-    phi_3 = phi[3],
-    H = NNF_tuple.H,
-    B = NNF_tuple.B,
-    E = NNF_tuple.E,
-    K = NNF_tuple.K,
-    orbit_x  = orbit[1],
-    orbit_px = orbit[2],
-    orbit_y  = orbit[3],
-    orbit_py = orbit[4],
-    orbit_z  = orbit[5],
-    orbit_pz = orbit[6],
-    n_x = n[1],
-    n_y = n[2],
-    n_z = n[3],
-  )
-end
-
-function de_moivre_table(dt, N_ele)
+function de_moivre_table(dt::DT, N_ele) where {DT}
   S = typeof(dt.s)
   V = typeof(dt.phi_1)
   T = typeof(dt.H)
   U = typeof(dt.orbit_x)
-  if !haskey(dt, :n_x)
-    t = Table(
-      beamline_index = Vector{Int}(undef, N_ele),
-      name = Vector{String}(undef, N_ele),
-      s = Vector{S}(undef, N_ele),
-      phi_1 = Vector{V}(undef, N_ele),
-      phi_2 = Vector{V}(undef, N_ele),
-      phi_3 = Vector{V}(undef, N_ele),
-      H = Vector{T}(undef, N_ele),
-      B = Vector{T}(undef, N_ele),
-      E = Vector{T}(undef, N_ele),
-      K = Vector{T}(undef, N_ele),
-      orbit_x = Vector{U}(undef, N_ele),
-      orbit_px = Vector{U}(undef, N_ele),
-      orbit_y = Vector{U}(undef, N_ele),
-      orbit_py = Vector{U}(undef, N_ele),
-      orbit_z = Vector{U}(undef, N_ele),
-      orbit_pz = Vector{U}(undef, N_ele),
-    )
-    return t
-  else
+  cols = (;
+    beamline_index = Vector{Int}(undef, N_ele),
+    name = Vector{String}(undef, N_ele),
+    s = Vector{S}(undef, N_ele),
+    phi_1 = Vector{V}(undef, N_ele),
+    phi_2 = Vector{V}(undef, N_ele),
+    phi_3 = Vector{V}(undef, N_ele),
+    H = Vector{T}(undef, N_ele),
+    B = Vector{T}(undef, N_ele),
+    E = Vector{T}(undef, N_ele),
+    K = Vector{T}(undef, N_ele),
+    orbit_x = Vector{U}(undef, N_ele),
+    orbit_px = Vector{U}(undef, N_ele),
+    orbit_y = Vector{U}(undef, N_ele),
+    orbit_py = Vector{U}(undef, N_ele),
+    orbit_z = Vector{U}(undef, N_ele),
+    orbit_pz = Vector{U}(undef, N_ele)
+  )
+
+  if hasfield(DT, :n_x)
     W = typeof(dt.n_x)
-    t = Table(
-      beamline_index = Vector{Int}(undef, N_ele),
-      name = Vector{String}(undef, N_ele),
-      s = Vector{S}(undef, N_ele),
-      phi_1 = Vector{V}(undef, N_ele),
-      phi_2 = Vector{V}(undef, N_ele),
-      phi_3 = Vector{V}(undef, N_ele),
-      H = Vector{T}(undef, N_ele),
-      B = Vector{T}(undef, N_ele),
-      E = Vector{T}(undef, N_ele),
-      K = Vector{T}(undef, N_ele),
-      orbit_x = Vector{U}(undef, N_ele),
-      orbit_px = Vector{U}(undef, N_ele),
-      orbit_y = Vector{U}(undef, N_ele),
-      orbit_py = Vector{U}(undef, N_ele),
-      orbit_z = Vector{U}(undef, N_ele),
-      orbit_pz = Vector{U}(undef, N_ele),
-      n_x = Vector{W}(undef, N_ele),
-      n_y = Vector{W}(undef, N_ele),
-      n_z = Vector{W}(undef, N_ele),
+    cols = merge(cols, 
+      (;
+        n_x = Vector{W}(undef, N_ele),
+        n_y = Vector{W}(undef, N_ele),
+        n_z = Vector{W}(undef, N_ele),
+      )
     )
-    return t
   end
+
+  if hasfield(DT, :a)
+    A = typeof(dt.a)
+    cols = merge(cols, (; a = Vector{A}(undef, N_ele)))
+  end
+
+  return Table(cols)
 end

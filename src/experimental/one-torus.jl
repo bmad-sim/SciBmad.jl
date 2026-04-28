@@ -6,8 +6,6 @@ using StaticArrays
 using DelimitedFiles
 using BatchSolve
 
-
-
 function dynamic_aperture(
     bl::Beamline;
 
@@ -26,7 +24,7 @@ function dynamic_aperture(
     coordinates_number_type::Type=Float64, 
     delta_dependent_orbits::Bool=SciBmad.coast_check(bl), 
     verbose=true,
-    output_file="beam.txt",
+   # output_prefix="da_",
   )
   
   Base.require_one_based_indexing(deltas)
@@ -78,48 +76,10 @@ function dynamic_aperture(
     # We'll do this delta-by-delta in order to encourage continuous dynamic aperture
     # from minimum delta to maximum delta
     # this will be done on the CPU, because single particle tracking
-    Q_guess = [-(twiss(bl; at=[]).tunes)...]'
-    y = zeros(1, 4) # sol
-    v = zeros(1, 4) # guess, will change for each delta 
-    v_cache = zeros(1, 6) 
-
-    if verbose
-      println("Computing J₁=J₂=0 coordinate for each δ")
-    end
-    for i in 1:n_deltas
-      delta = deltas[i]
-      sol = newton!(
-        transverse_frequencies!, 
-        y,
-        v, 
-        Cache(v_cache),
-        Cache(Q_guess),
-        Constant(bl),
-        Constant(delta); 
-        abstol=1e-12, 
-        reltol=1e-12,
-        batchdim=1,
-        autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
-        maxiter=20,
-      )
-      if all(sol.retcode .!= BatchSolve.RETCODE_SUCCESS)
-        error(
-          """
-          Unable to compute 1-torus for delta = $(delta). Please remove this and all
-          larger deltas from the input.
-          """
-        ) 
-      end
-      co[i,1:4] .= sol.u'
-      ai = symplectify(reshape(findnz(sol.jac)[end], 4, 4))
-      as[:,:,i] = inv(ai) # transformation from Floquet variables to real space
-      if verbose
-        print("\rFinished $delta")
-        flush(stdout)
-      end
-    end
+    out = walk_J3(bl, deltas; verbose=verbose)
+    co .= out[1]
+    as .= out[2]
   end
-  @show co
 
   # Now we have the closed orbits and A at each point
   # Construct distribution
@@ -183,13 +143,63 @@ function dynamic_aperture(
 
   turns_survived = similar(v, Int, div(size(vt, 1), n_deltas), n_deltas)
   copyto!(reshape(turns_survived, :), turns_survivedt)
-
+#=
   if !isnothing(output_file)
-    writedlm(output_file, hcat(v, reshape(turns_survived, :)), ';')
+    writedlm(output_prefix*"", hcat(v, reshape(turns_survived, :)), ';')
   end
+  =#
   # Return X, Y, and Z for heatmap plotting
   # this will be sqrt(2J_1/<J_1>), sqrt(2J_2/<J_2>), and turns_survived
   return Jt1, Jt2, turns_survived
+end
+
+function walk_J3(bl::Beamline, deltas; verbose=true)
+  n_deltas = length(deltas)
+  tw = twiss(bl; at=[first(bl.line)], normalizing_map=true)
+  Q_guess = [-(tw.tunes)...]'
+  y = zeros(1, 4) # sol
+  v = zeros(1, 4) # guess, will change for each delta 
+  v_cache = zeros(1, 6) 
+  co = zeros(n_deltas, 6)
+  as = zeros(4, 4, n_deltas) # (row, col, delta)
+
+  if verbose
+    println("Computing J₁=J₂=0 coordinate for each δ")
+  end
+  for i in 1:n_deltas
+    delta = deltas[i]
+    sol = newton!(
+      transverse_frequencies!, 
+      y,
+      v, 
+      Cache(v_cache),
+      Cache(Q_guess),
+      Constant(bl),
+      Constant(delta); 
+      abstol=1e-12, 
+      reltol=1e-12,
+      batchdim=1,
+      autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
+      maxiter=20,
+      verbose=verbose,
+    )
+    if all(sol.retcode .!= BatchSolve.RETCODE_SUCCESS)
+      @warn "Unable to compute 1-torus for delta = $(delta). Stopping."
+      break
+    end
+    co[i,1:4] .= sol.u'
+    if delta == 0 # use twiss a
+      as[:,:,i] = view(NNF.jacobian(tw.table.a[1]), 1:4, 1:4)
+    else # compute from Fourier modes
+      ai = symplectify(reshape(findnz(sol.jac)[end], 4, 4))
+      as[:,:,i] = inv(ai) # transformation from Floquet variables to real space
+    end
+    if verbose
+      print("\rFinished $delta")
+      flush(stdout)
+    end
+  end
+  return co, as, Q_guess
 end
 
 function transverse_frequencies!(
@@ -204,7 +214,7 @@ function transverse_frequencies!(
     order=3,
     verbose=false,
     window_order=5,
-    reltol=0.005,
+    reltol=0.01,
     abstol=1e-5, 
   )
 
@@ -224,20 +234,19 @@ function transverse_frequencies!(
 
   # Batched NAFF
   frequencies, amplitudes = naff(data, n_frequencies; window_order, warnings=false)
-
   frequencies = reshape(frequencies, 3, n_particles, n_frequencies)
   amplitudes = reshape(amplitudes, 3, n_particles, n_frequencies)
   Q3 = reshape(view(Q, :, 3), 1, n_particles, 1)
-
+  @show frequencies[1:3,1,:]
   #@show frequencies[3,1,:]
   # Select dominant frequency (longitudinal mode)
   f3, idx3 = findmin(abs.(Q3 .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
   f3tru, idx3tru = findmin(f3, dims=1)
   good = f3tru ./ (1 .+ 1 ./ abs.(amplitudes[idx3][idx3tru])) .< reltol
   Q3 .= good .* frequencies[idx3][idx3tru] .+ .!good .* Q3
-  #@show Q3
-  #@show good
-  #@show frequencies[idx3][idx3tru]
+  @show Q3
+  @show good
+  @show frequencies[idx3][idx3tru]
   # amp3 = good .* amplitudes[idx3][idx3tru]
 
   # "Remove this" and all integer multiples from the result 
@@ -280,9 +289,9 @@ function transverse_frequencies!(
       Qnext = good .* frequencies[idx2][idx2tru] .+ .!good .* Q2
       amp2 = good .* amplitudes[idx2][idx2tru] # amp is zero if not good
       Q2 .= Qnext
-      #@show Q2
-      #@show good
-      #@show frequencies[idx2][idx2tru]
+      @show Q2
+      @show good
+      @show frequencies[idx2][idx2tru]
   else
       next = 1
       final = 2
@@ -290,9 +299,9 @@ function transverse_frequencies!(
       Qnext = good .* frequencies[idx1][idx1tru]  .+ .!good .* Q1
       amp1 = good .* amplitudes[idx1][idx1tru] # amp is zero if not good
       Q1 .= Qnext
-      #@show Q1
-      #@show good
-      #@show frequencies[idx1][idx1tru]
+      @show Q1
+      @show good
+      @show frequencies[idx1][idx1tru]
   end
   # Remove the next one
   j_vals = reshape(0:order, 1, 1, 1, order+1, 1)        # (1,1,1,n_j,1)
@@ -310,6 +319,7 @@ function transverse_frequencies!(
   )  # (3, n_particles, n_frequencies, 1, 1)
 
   frequencies .+= dropdims(ismul2, dims=(4,5)) .* 1e10
+
   # Finally get our guess for the last. Same idea as before. Here however, 
   # if the tune is too close to any other
   Qfinal = reshape(view(Q, :, final), 1, n_particles, 1)
@@ -322,9 +332,9 @@ function transverse_frequencies!(
   else
       amp2 = good .* amplitudes[idxf][idxftru] # amp is zero if not good
   end
-  #@show Qfinal
-  #@show good
-  #@show frequencies[idxf][idxftru]
+  @show Qfinal
+  @show good
+  @show frequencies[idxf][idxftru]
 
   y .=  hcat(
     permutedims(reinterpret(Float64, reshape(amp1, 1, n_particles)), (2,1)),
