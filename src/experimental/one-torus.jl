@@ -188,7 +188,7 @@ function walk_J3(bl::Beamline, deltas; verbose=true)
       break
     end
     co[i,1:4] .= sol.u'
-    col[i,6] = delta
+    co[i,6] = delta
     if delta == 0 # use twiss a
       as[:,:,i] = view(NNF.jacobian(tw.table.a[1]), 1:4, 1:4)
     else # compute from Fourier modes
