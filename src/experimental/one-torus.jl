@@ -214,7 +214,7 @@ function transverse_frequencies!(
     order=3,
     verbose=false,
     window_order=5,
-    reltol=0.01,
+    reltol=0.005,#,=0.01,
     abstol=1e-5, 
   )
 
