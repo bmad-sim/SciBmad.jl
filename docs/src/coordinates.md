@@ -8,6 +8,14 @@
 In construction...
 
 %---------------------------------------------------------------------------------------------------
+(s:nomen)=
+## Nomenclature
+
+A `bend` element is any element that has a non-zero reference bend strength `g_ref`. 
+A `patch` element is any element that has a non-zero `PatchParams` parameters.
+No element is not allowed to be both a bend and a patch element at the same time.
+
+%---------------------------------------------------------------------------------------------------
 (s:coords)=
 ## Coordinate Systems Used to Describe a Machine
 
@@ -30,7 +38,7 @@ First, the `floor` coordinates are Cartesian coordinate system independent of th
 The position of the accelerator itself as well as external objects like the building the
 accelerator is in may be described using `floor` coordinates.
 
-It is inconvenient to describe the position lattice elements and the position of a 
+It is inconvenient to describe the position of lattice elements and the position of a 
 particle beam using the `floor` coordinate system so, for each lattice branch,
 a `branch` coordinate system is used. This curvilinear coordinate
 system defines the nominal position of the lattice elements. The relationship between the
@@ -38,7 +46,8 @@ system defines the nominal position of the lattice elements. The relationship be
 
 The `branch reference curve` is the {math}`x = y = 0` curve of the curvilinear coordinate system. 
 The branch reference curve does not have to be continuous and, in particular, the coordinate
-system through a `Patch` element will generally be discontinuous. If there are no bends with a finite
+system through an element with `PatchParams` parameters will generally be discontinuous. 
+If there are no `BendParams` parameters with a finite
 `tilt_ref`, and if the beginning element in the branch does not have any orientation
 shifts, the branch reference curve will be in the {math}`(x,z)` plane with {math}`y = 0`. Since 
 most machines are essentially horizontal, the {math}`x` coordinate is typically thought of as the
@@ -46,8 +55,8 @@ most machines are essentially horizontal, the {math}`x` coordinate is typically 
 coordinate.
  
 The "nominal" position of a lattice element is the position of the element without any
-[position and orientation shifts](#alignment.params)
-(which are sometimes referred to as "misalignments"). 
+[alignment shifts](#alignment:params)
+(these position and orientation shifts which are sometimes referred to as "misalignments"). 
 Each lattice element has "`element body`"
 coordinates which are attached to the physical element, and the electric and magnetic
 fields of an element are described with respect to `body` coordinates.  
@@ -69,9 +78,10 @@ The transformation between `branch` and `body` coordinates is given in
 Lattice elements can be imagined as "LEGO blocks" which
 fit together to form the branch coordinate system. How elements
 join together is determined in part by their entrance and exit coordinate frames. A) For
-straight line elements the entrance and exit frames are colinear. B) For bend elements, the 
+straight line elements the entrance and exit frames are colinear. B) For elements with a
+`BendParams` parameter group, the 
 transformation from entrance to exit coordinates is a rotation about the bend center of curvature.
-C) For `Patch` and `floor_shift` elements the 
+C) For elements with `PatchParams` parameters or `FloorParams` parameters, the 
 exit frame may be arbitrarily positioned with respect to the entrance frame.
 ```
 
@@ -82,8 +92,8 @@ element in a branch and then building up the coordinate system element-by-elemen
 Most elements have an "`entrance`" and an "`exit`" coordinate frame as
 illustrated in the above figure.
 These coordinate frames are attached to the element and are part of the `element body coordinates`. 
-`Fiducial` elements ([xxx](#s:fiducial)) are an exception.
-`Fiducial` elements only have a single coordinate frame that is tied to floor coordinates 
+Elements with `FloorParams` parameters ([xxx](#s:fiducial)) are an exception.
+These elements only have a single coordinate frame that is tied to the floor coordinates 
 and construction of the branch coordinate system starts at this coordinate system. 
 See [xxx](#s:fiducial) for more details.
 Note that `Girder` elements ([xxx](#s:girder)) also only have a single coordinate frame but they
@@ -92,20 +102,21 @@ are not included in any branch.
 Most element kinds have a "straight" geometry as shown in
 {numref}`f:ele.coord.frame`A. That is, the reference curve through the element is a straight line
 segment with the {math}`x` and {math}`y` axes always pointing in the same direction.
-For a [Bend](#s:bend) element the reference curve is a segment of a circular arc as shown in
-{numref}`f:ele.coord.frame`B. With the `tilt_ref` parameter of a bend set to zero, the rotation axis
+For an element with [BendParams](#bend:params) parameters, 
+the reference curve is a segment of a circular arc as shown in
+{numref}`f:ele.coord.frame`B. With the `tilt_ref` parameter set to zero, the rotation axis
 between the entrance and exit frames is parallel to the {math}`y`-axis ([xxx](#s:floor)).
-For [Patch](#s:patch) and [floor_shift](#s:floorshift)
+For [Patch](#patch:params) and [floor_shift](#s:floorshift)
 elements ({numref}`f:ele.coord.frame`C), the exit face can be
 arbitrarily oriented with respect to the entrance end.
-For `FloorShift` elements the interior reference curve between the
-entrance and exit faces is not defined. For the `Patch` element, the interior reference curve 
-is dependent upon certain `Patch` element parameter settings ([xxx](#s:patch)) and, in general,
+For elements with a `FloorParams` group, the interior reference curve between the
+entrance and exit faces is not defined. For elements with a `PatchParams` group, the interior reference curve 
+is dependent upon the patch parameter settings ([xxx](#patch:params)) and, in general,
 will have a discontinuity.
 
 %---------------------------------------------------------------------------------------------------
 (s:ref.construct)=
-## Branch Coordinates Construction
+## Branch Coordinate Construction
 
 %---------------------------------------------------------------------------------------------------
 
@@ -127,15 +138,16 @@ The {math}`y` coordinate is always out of the page for this example.
 
 %---------------------------------------------------------------------------------------------------
 
-Assuming for the moment that there are no [Fiducial](#s:fiducial) elements present,
-the construction of a branch coordinate system starts at the [BeginningEle](#s:beginningele) element 
+Assuming for the moment that there are no elements, except for the beginning element, 
+with [`FloorParams`](#floor:params) parameters present,
+the construction of a branch coordinate system starts at the first element 
 at the start of a branch. 
 If the branch is a `root` branch, the orientation of the beginning
 element within the [floor coordinate system](#s:coords) can be fixed by setting 
-[FloorP](#s:floor.params) parameters in the `BeginningEle` element.
+[`FloorParams`](#s:floor:params) parameters in the beginning element.
 If the branch is not a `root` branch, the position
 of the beginning element is determined by the position of the `Fork` element
-from which the branch forks from. The default value of {math}`s` at the `BeginningEle` element is zero
+from which the branch forks from. The default value of $s$ at the beginning element is zero
 for both root and non-root branches.
 
 Once the beginning element in a branch is positioned, succeeding elements are concatenated together
@@ -146,10 +158,11 @@ from the beginning element than the `upstream` end of the element. Normally, par
 in the {math}`+s` direction, so particles will enter an element at the upstream end and exit at the
 downstream end.
 
-If there are `Fiducial` elements, the branch coordinates are constructed beginning at these
+If there are non-beginning elements with `FloorParams` parameters, 
+the branch coordinates are constructed beginning at these
 elements working both forwards and backwards along the branch. 
-If there are multiple `Fiducial` elements in a branch, there must be a flexible [Patch](#s:patch)
-element between them.
+If there are multiple elements with `FloorParams` parameters in a branch, 
+there must be an element between them with flexible patch parameters.
 
 If an element is not [reversed](#s:ref.construct),
 the element's `upstream` end is the same as the element's `entrance` end 
@@ -174,10 +187,10 @@ with an normal (unreversed) orientation drift named `dft1` connected to a normal
 This gives an unphysical situation since a
 particle traveling through `dft1` will "fall off" when it gets to the drift's end.
 {numref}`f:patch.between`D shows the same line as in {numref}`f:patch.between`C with the addition
-of a [`reflection patch`](#patch.params) `P` between `dft1` and `bnd1` to give a plausible geometry. 
-In this case, the patch rotates the coordinate system around the {math}`y`-axis by 180{math}`^o` 
-(in this example leaving the {math}`y`-axis invariant). This illustrates why
-a reflection patch is always needed between normal and reversed elements.
+of an element `P` containing a [`reflection patch`](#patch:params) between `dft1` and `bnd1` to give a plausible geometry. 
+In this case, `P` rotates the coordinate system around the {math}`y`-axis by 180{math}`^o` 
+(this leaves the {math}`y`-axis invariant). This illustrates why
+an element containing a reflection patch is always needed between normal and reversed elements.
 
 Notes:
 - Irrespective of whether elements are reversed or not, the branch {math}`(x,y,z)` coordinate system
@@ -194,16 +207,16 @@ That is, to get a particle going forward through the bend in {numref}`f:patch.be
 
 - A `reflection Patch` that rotated the coordinates, for example, 
 around the {math}`x`-axis by 180{math}`^o`  would also produce a plausible geometry.
-\end{itemize}
 
 %---------------------------------------------------------------------------------------------------
 (s:reflect.patch)=
 ## Reflection Patch
 
 When a lattice branch contains both normally oriented and reversed elements
-([](#s:ref.construct)), a `Patch`, or series of `patches`, which reflects the {math}`z` direction
-must be placed in between. Such a `Patch`, (or patches) is called a `reflection` `Patch`.
-Specifically, a `reflection` `patch` reflects the direction of the `z`-axis.
+([](#s:ref.construct)), a `patch` (that is, an element containing patch parameters), 
+or series of `patches`, which reflects the {math}`z` direction
+must be placed in between. Such a `patch`, (or patches) is called a `reflection patch`.
+Specifically, a `reflection patch` reflects the direction of the `z`-axis.
 By "reflected direction" it is meant that the dot product 
 {math}`{\bf z}_1 \cdot {\bf z}_2` is negative where {math}`{\bf z}_1` is the {math}`z`-axis 
 vector at the `entrance` face and {math}`{\bf z}_2` is the {math}`z`-axis vector at the `exit` face. 
@@ -239,10 +252,11 @@ orientation with positive {math}`\theta(s)` and {math}`\psi(s)` but with negativ
 
 The Cartesian `floor` coordinate system is the
 coordinate system "attached to the earth" that is used to describe the branch coordinate
-system. Following the \mad\ convention, the `floor` coordinate axis are labeled {math}`(X, Y,
-Z)`. Conventionally, {math}`Y` is the "vertical" coordinate and {math}`(X, Z)` are the "horizontal"
-coordinates. To describe how the branch coordinate system is oriented within the floor coordinate
-system, each point on the {math}`s`-axis of the branch coordinate system is characterized by its 
+system. Following the MAD convention, the `floor` coordinate axis are labeled {math}`(X, Y,
+Z)`. Conventionally, {math}`Y` is considered to be the "vertical" coordinate and {math}`(X, Z)` 
+are considered to be "horizontal" coordinates. 
+To describe how the branch curvilinear coordinate system is oriented within the floor coordinate
+system, each point on the {math}`s`-axis of the branch curvilinear system is characterized by its 
 {math}`(X, Y, Z)` position and by three angles {math}`\theta(s)`, {math}`\phi(s)`, and {math}`\psi(s)`
 that describe the orientation of the branch coordinate axes as shown in {numref}`f:floor.coords`.
 These three angles are defined as follows:
@@ -267,14 +281,14 @@ A positive {math}`\psi` forms a right--handed screw with the {math}`z`--axis.
 By default, at {math}`s = 0`, the branch reference curve's origin coincides with the {math}`(X, Y, Z)` 
 origin and the {math}`x`, {math}`y`, and {math}`z` axes correspond to the 
 {math}`X`, {math}`Y`, and {math}`Z` axes respectively. If the lattice has no
-vertical bends (the [tilt_ref](#s:bend) parameter of all bends are zero), the {math}`y`--axis
+vertical bends (the bend [tilt_ref](#bend:params) parameter is always zero), the {math}`y`--axis
 will always be in the vertical {math}`Y` direction and the {math}`x`--axis will lie in the 
 horizontal {math}`(X,Z)` plane.
 In this case, {math}`\theta` decreases as one follows the branch reference curve when going through a
 horizontal bend with a positive bending angle. This corresponds to {math}`x` pointing radially
 outward. Without any vertical bends, the {math}`Y` and {math}`y` axes will coincide, and {math}`\phi` 
 and {math}`\psi` will both be zero. 
-Parameters of the [BeginningEle](#s:beginningele) element can be used to override these defaults.
+`FloorParams` Parameters of the branch beginning element can be used to override these defaults.
 
 Following MAD, the floor position of an element is characterized by a vector {math}`\bf V`
 ```{math}
@@ -397,7 +411,7 @@ for the same four `tilt_ref` angles. In this case the bend angle is taken to be 
 
 %---------------------------------------------------------------------------------------------------
 
-For a `bend`, the axis of rotation is dependent upon the bend's [`tilt_ref`](#bend.params) angle
+For a `bend`, the axis of rotation is dependent upon the bend's [`tilt_ref`](#bend:params) angle
 as shown in {numref}`f:tilt.bend`A. The axis of rotation points in the negative {math}`y_0`
 direction for `tilt_ref` = 0 and is offset by the bend radius `rho`. Here {math}`(x_0, y_0, z_0)`
 are the branch coordinates at the entrance end of the bend with the {math}`z_0` axis being directed into
@@ -424,7 +438,7 @@ where {math}`\theta_{tr}` is the `tilt_ref` angle. The {math}`\bf L` vector for 
     \rho (\cos\alpha_b - 1) \\ 0 \\ \rho \, \sin\alpha_b
   \end{pmatrix}
 ```
-where {math}`\alpha_b` is the bend [angle](#s:bend) and {math}`\rho` being the bend radius
+where {math}`\alpha_b` is the bend [angle](#bend:params) and {math}`\rho` being the bend radius
 ({math}`\rho`). Notice that since {math}`\bf u` is perpendicular to {math}`z`, the curvilinear reference coordinate
 system has no "torsion". Note: The branch coordinate system can be related to a Frenet-Serret coordinate system, but 
 the two coordinate systems do not coincide.
@@ -545,7 +559,7 @@ non-bend misaligned element depends only on the offsets, and is independent of t
 ### Bend Element Misalignment Transformation
 
 For `Bend` element positioning, besides the standard `BodyShiftP` parameters, there is the
-`tilt_ref` ({math}`\theta_{tr}`) parameter (see [](#bend.params)). 
+`tilt_ref` ({math}`\theta_{tr}`) parameter (see [](#bend:params)). 
 The latter affects both the reference orbit and the bend position. 
 Furthermore, `ref_tilt` is calculated with respect to
 the coordinates at the beginning of the bend while, like straight elements, `roll`, offsets, and
