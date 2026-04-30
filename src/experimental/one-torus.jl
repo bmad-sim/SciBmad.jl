@@ -160,7 +160,7 @@ function walk_J3(bl::Beamline, deltas; verbose=true, as=nothing, maxiter=10)
   n_particles = size(deltas, 1) # Number of rows
   tw = twiss(bl; at=[first(bl.line)], normalizing_map=true)
   Q_guess = similar(deltas, n_particles, 3)
-  Q_guess .= -reshape(repeat(tw.tunes, inner=n_particles), n_particles, 3)
+  copyto!(Q_guess, -reshape(repeat(tw.tunes, inner=n_particles), n_particles, 3))
   y = similar(deltas, n_particles, 4) # sol
   v = similar(deltas, n_particles, 4) # guess, will change for each delta
   v_cache = similar(v, n_particles, 6)
