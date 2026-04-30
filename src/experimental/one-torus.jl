@@ -334,12 +334,13 @@ function transverse_frequencies!(
   Qnext_bc = reshape(Qnext, 1, n_particles, 1, 1, 1)
   fv = reshape(frequencies, 3, n_particles, n_frequencies, 1, 1)
 
-  ismul2_full = (
-    abs.(fv .- j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol .||
-    abs.(fv .- j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol .||
-    abs.(fv .+ j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol .||
-    abs.(fv .+ j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol
-  )  # (3, n_particles, n_frequencies, order+1, order+1)
+# Compute each combination separately, accumulate with |=
+# This keeps each broadcast result concretely Bool
+
+  ismul2 = abs.(fv .- j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol
+  ismul2 .|= abs.(fv .- j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol
+  ismul2 .|= abs.(fv .+ j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol
+  ismul2 .|= abs.(fv .+ j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol# (3, n_particles, n_frequencies, order+1, order+1)
   ismul2 = any(any(ismul2_full, dims=5), dims=4)
   #=
   ismul2 = any(
