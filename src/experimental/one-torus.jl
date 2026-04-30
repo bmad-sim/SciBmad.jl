@@ -341,7 +341,7 @@ function transverse_frequencies!(
   ismul2 .|= abs.(fv .- j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol
   ismul2 .|= abs.(fv .+ j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol
   ismul2 .|= abs.(fv .+ j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol# (3, n_particles, n_frequencies, order+1, order+1)
-  ismul2 = any(any(ismul2_full, dims=5), dims=4)
+  ismul2 = any(any(ismul2, dims=5), dims=4)
   #=
   ismul2 = any(
       abs.(fv .- j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol .||
