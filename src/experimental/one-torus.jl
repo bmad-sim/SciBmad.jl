@@ -245,7 +245,7 @@ function transverse_frequencies!(
     window_order=5,
     reltol=0.005,#,=0.01,
     abstol=1e-5, 
-    setter!=(p)->nothing,
+    setter=(p)->nothing,
   )
   n_particles = size(v, 1)
   v_cache .= 0
