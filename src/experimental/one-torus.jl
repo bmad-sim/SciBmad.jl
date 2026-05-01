@@ -236,7 +236,8 @@ function transverse_frequencies!(
     v_cache, # DI.Cache, n_particles x 6
     Q,       # DI.Cache, n_particles x 3
     bl,      # DI.Constant, Beamline
-    deltas;  # DI.Constant, n_particles x 1
+    deltas,  # DI.Constant, n_particles x 1
+    params=nothing;  # DI.Constant, Knobs to set
     n_frequencies=20,
     n_turns=500,
     order=3,
@@ -244,8 +245,8 @@ function transverse_frequencies!(
     window_order=5,
     reltol=0.005,#,=0.01,
     abstol=1e-5, 
+    setter!=(p)->nothing,
   )
-
   n_particles = size(v, 1)
   v_cache .= 0
   v_cache[:,6] .= deltas
@@ -255,7 +256,7 @@ function transverse_frequencies!(
   data = reshape(permutedims(coords, (2,1,3)), 6*n_particles, n_turns+1) 
 
   # Now this makes it x + im*px, etc:
-  data = reinterpret(ComplexF64, data)
+  data = reinterpret(complex(eltype(data)), data)
 
   # Remove the mean:
   data = data .- mean(data, dims=2) 
@@ -374,8 +375,8 @@ function transverse_frequencies!(
   @show good
 
   # Set output, n_particles x 4
-  y[:,1:2] .= ifelse.(reshape(final, n_particles, 1) .== 1, reinterpret(Float64, reshape(ampfinal, 1, n_particles))', view(y, :, 1:2))
-  y[:,3:4] .= ifelse.(reshape(final, n_particles, 1) .== 2, reinterpret(Float64, reshape(ampfinal, 1, n_particles))', view(y, :, 3:4))
+  y[:,1:2] .= ifelse.(reshape(final, n_particles, 1) .== 1, reinterpret(real(eltype(ampfinal)), reshape(ampfinal, 1, n_particles))', view(y, :, 1:2))
+  y[:,3:4] .= ifelse.(reshape(final, n_particles, 1) .== 2, reinterpret(real(eltype(ampfinal)), reshape(ampfinal, 1, n_particles))', view(y, :, 3:4))
 #=
   #@show Qfinal
   #@show good
