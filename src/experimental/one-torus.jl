@@ -306,27 +306,27 @@ function transverse_frequencies!(
   f2tru, idx2tru = findmin(f2, dims=1)
 
   # Whichever is smaller, do that first (closer match):
-  if first(f2tru) < first(f1tru)
-      next = 2
-      final = 1
-      good = f2tru ./ (1 .+ 1 ./ abs.(amplitudes[idx2][idx2tru])) .< reltol
-      Qnext = good .* frequencies[idx2][idx2tru] .+ .!good .* Q2
-      amp2 = good .* amplitudes[idx2][idx2tru] # amp is zero if not good
-      Q2 .= Qnext
-      #@show Q2
-      #@show good
-      #@show frequencies[idx2][idx2tru]
-  else
-      next = 1
-      final = 2
-      good = f1tru ./ (1 .+ 1 ./ abs.(amplitudes[idx1][idx1tru])) .< reltol
-      Qnext = good .* frequencies[idx1][idx1tru]  .+ .!good .* Q1
-      amp1 = good .* amplitudes[idx1][idx1tru] # amp is zero if not good
-      Q1 .= Qnext
-      #@show Q1
-      #@show good
-      #@show frequencies[idx1][idx1tru]
-  end
+  next = @. ifelse(f2tru < f1tru, 2, 1)
+  fnexttru = @. ifelse(next == 2, f2tru, f1tru)
+  final = @. ifelse(next == 2, 1, 2)
+  idxnext = @. ifelse(next == 2, idx2, idx1)
+  idxnexttru = @. ifelse(next == 2, idx2tru, idx1tru)
+  good = fnexttru ./ (1 .+ 1 ./ abs.(amplitudes[idxnext][idxnexttru])) .< reltol
+  Qnext = good .* frequencies[idxnext][idxnexttru] .+ .!good .* (ifelse.(next==2, Q2, Q1))
+  ampnext =  good .* amplitudes[idxnext][idxnexttru] # amp is zero if not good
+
+  # Update tunes
+  @. Q2 = ifelse(next == 2, Qnext, Q2)
+  @. Q1 = ifelse(next == 1, Qnext, Q1)
+
+  # Set output, n_particles x 4
+  #@show size(reinterpret(Float64, reshape(ampnext, 1, n_particles))')
+  #@show size(view(y, :, 1:2))
+  #@show size(next .== 1)
+  #@show size(ifelse.(next .== 1, reinterpret(Float64, reshape(ampnext, 1, n_particles))', view(y, :, 1:2)))
+  y[:,1:2] .= ifelse.(reshape(next, n_particles, 1) .== 1, reinterpret(Float64, reshape(ampnext, 1, n_particles))', view(y, :, 1:2))
+  y[:,3:4] .= ifelse.(reshape(next, n_particles, 1).== 2, reinterpret(Float64, reshape(ampnext, 1, n_particles))', view(y, :, 3:4))
+
   # Remove the next one
   j_vals = reshape(0:order, 1, 1, 1, order+1, 1)        # (1,1,1,n_j,1)
   k_vals = reshape(0:order, 1, 1, 1, 1, order+1)        # (1,1,1,1,n_k)
@@ -355,25 +355,35 @@ function transverse_frequencies!(
 
   # Finally get our guess for the last. Same idea as before. Here however, 
   # if the tune is too close to any other
-  Qfinal = reshape(view(Q, :, final), 1, n_particles, 1)
+  Qfinal = @. ifelse(final==1, Q1, Q2) #reshape(view(Q, :, final), 1, n_particles, 1)
   ff, idxf = findmin(abs.(Qfinal .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
   fftru, idxftru = findmin(ff, dims=1)
   good = fftru ./ (1 .+ 1 ./ abs.(amplitudes[idxf][idxftru])) .< reltol
   Qfinal .= good .* frequencies[idxf][idxftru] .+ .!good .* Qfinal
-  if final == 1
-      amp1 = good .* amplitudes[idxf][idxftru]
-  else
-      amp2 = good .* amplitudes[idxf][idxftru] # amp is zero if not good
-  end
+  ampfinal =  good .* amplitudes[idxf][idxftru] 
+  # Update tunes
+  @. Q2 = ifelse(final == 2, Qfinal, Q2)
+  @. Q1 = ifelse(final == 1, Qfinal, Q1)
+
+  # Set output, n_particles x 4
+  y[:,1:2] .= ifelse.(reshape(final, n_particles, 1) .== 1, reinterpret(Float64, reshape(ampfinal, 1, n_particles))', view(y, :, 1:2))
+  y[:,3:4] .= ifelse.(reshape(final, n_particles, 1) .== 2, reinterpret(Float64, reshape(ampfinal, 1, n_particles))', view(y, :, 3:4))
+#=
   #@show Qfinal
   #@show good
   #@show frequencies[idxf][idxftru]
 
+  # 1 x n_particles ComplexF64
+  # reshapes into 2 x n_particles Float64 (each column is a particle)
+  # permutedims transposes this into n_particles x 2 (each row is a particle - good)
+  # So output is n_particles x 4
+  # y is a ve
   y .=  hcat(
     permutedims(reinterpret(Float64, reshape(amp1, 1, n_particles)), (2,1)),
     permutedims(reinterpret(Float64, reshape(amp2, 1, n_particles)), (2,1)),
     #permutedims(reinterpret(Float64, reshape(amp3, 1, n_particles)), (2,1))
   )
+    =#
 
   return y
 end
