@@ -197,8 +197,12 @@ function walk_J3(bl::Beamline, deltas; verbose=true, as=nothing, maxiter=10)
       verbose=verbose,
     )
 
+    @show Q_guess
+    @show v
+    @show y
     # This will act on each row (batch)
     @. v = ifelse(sol.retcode != BatchSolve.RETCODE_SUCCESS, Inf, v) 
+    @show v
     # Jacobian will always be zero then
     # And Q_guess should always be bad
 
@@ -312,9 +316,12 @@ function transverse_frequencies!(
   idxnext = @. ifelse(next == 2, idx2, idx1)
   idxnexttru = @. ifelse(next == 2, idx2tru, idx1tru)
   good = fnexttru ./ (1 .+ 1 ./ abs.(amplitudes[idxnext][idxnexttru])) .< reltol
-  Qnext = good .* frequencies[idxnext][idxnexttru] .+ .!good .* (ifelse.(next==2, Q2, Q1))
+  Qnext = good .* frequencies[idxnext][idxnexttru] .+ .!good .* (ifelse.(next .== 2, Q2, Q1))
   ampnext =  good .* amplitudes[idxnext][idxnexttru] # amp is zero if not good
 
+  @show next
+  @show final
+  @show good
   # Update tunes
   @. Q2 = ifelse(next == 2, Qnext, Q2)
   @. Q1 = ifelse(next == 1, Qnext, Q1)
@@ -355,7 +362,7 @@ function transverse_frequencies!(
 
   # Finally get our guess for the last. Same idea as before. Here however, 
   # if the tune is too close to any other
-  Qfinal = @. ifelse(final==1, Q1, Q2) #reshape(view(Q, :, final), 1, n_particles, 1)
+  Qfinal = @. ifelse(final == 1, Q1, Q2) #reshape(view(Q, :, final), 1, n_particles, 1)
   ff, idxf = findmin(abs.(Qfinal .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
   fftru, idxftru = findmin(ff, dims=1)
   good = fftru ./ (1 .+ 1 ./ abs.(amplitudes[idxf][idxftru])) .< reltol
@@ -364,6 +371,7 @@ function transverse_frequencies!(
   # Update tunes
   @. Q2 = ifelse(final == 2, Qfinal, Q2)
   @. Q1 = ifelse(final == 1, Qfinal, Q1)
+  @show good
 
   # Set output, n_particles x 4
   y[:,1:2] .= ifelse.(reshape(final, n_particles, 1) .== 1, reinterpret(Float64, reshape(ampfinal, 1, n_particles))', view(y, :, 1:2))
@@ -384,7 +392,6 @@ function transverse_frequencies!(
     #permutedims(reinterpret(Float64, reshape(amp3, 1, n_particles)), (2,1))
   )
     =#
-
   return y
 end
 
