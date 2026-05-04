@@ -163,7 +163,9 @@ end
 function walk_one_torus(
   bl::Beamline, 
   mode,         # n_particles x 1
-  mode_coords;  # n_particles x 2 x n_coord_pts 
+  mode_coords,  # n_particles x 2 x n_coord_pts 
+  setter! = (p)->nothing, # Closure of beamline
+  params...; # args to pass to setter
   verbose=true, 
   as=nothing, 
   maxiter=10, 
@@ -219,7 +221,9 @@ function walk_one_torus(
       Cache(Q_guess),
       Constant(bl),
       Constant(mode),
-      Constant(coord); 
+      Constant(coord),
+      Constant(setter!),
+      (Constant.(params))...; 
       abstol=1e-12, 
       reltol=1e-12,
       batchdim=1,
@@ -293,7 +297,9 @@ function freq_res!(
     Q,       # DI.Cache, n_particles x 3
     bl,      # DI.Constant, Beamline
     mode,    # DI.Constant, n_particles x 1
-    coord;   # DI.Constant, n_particles x 2
+    coord,   # DI.Constant, n_particles x 2
+    setter! = (p)->nothing, # Closure of beamline, DI.Constant
+    params...; # DI.Contexts
     n_frequencies=20,
     n_turns=500,
     order=3,
@@ -301,9 +307,10 @@ function freq_res!(
     window_order=5,
     reltol=eltype(v) == Float64 ? 0.005 : 0.005,#,=0.01,
     abstol=eltype(v) == Float64 ? 1e-5 : 1e-3, 
-    setter=(p)->nothing,
-    params=nothing,
   )
+  # Set lattice parameters
+  setter!(params)
+
   n_particles = size(v, 1)
   v_cache .= 0
     
