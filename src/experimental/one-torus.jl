@@ -153,21 +153,51 @@ function dynamic_aperture(
   return Jt1, Jt2, turns_survived
 end
 
+# deltas was n_particles x n_deltas array
+
+# We want to generalize this to allow also z inputs
+# So it would be n_particles x 2 x n_coord_points (since deltas are slowest moving)
+
 # Last step is to just vectorize this function now
 # It should keep going up to the max delta 
-function walk_J3(bl::Beamline, deltas; verbose=true, as=nothing, maxiter=10)
-  n_deltas = size(deltas, 2)    # Number of cols
-  n_particles = size(deltas, 1) # Number of rows
-  tw = twiss(bl; at=[first(bl.line)], normalizing_map=true)
-  Q_guess = similar(deltas, n_particles, 3)
-  copyto!(Q_guess, -reshape(repeat(tw.tunes, inner=n_particles), n_particles, 3))
-  y = similar(deltas, n_particles, 4) # sol
-  v = similar(deltas, n_particles, 4) # guess, will change for each delta
+function walk_one_torus(
+  bl::Beamline, 
+  mode,         # n_particles x 1
+  mode_coords;  # n_particles x 2 x n_coord_pts 
+  verbose=true, 
+  as=nothing, 
+  maxiter=10, 
+  autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
+  Q_guess = begin
+    tunes = twiss(bl; at=[]).tunes;
+    n_particles = size(mode, 1);
+    q = similar(mode_coords, n_particles, 3);
+    copyto!(q, -reshape(repeat(tunes, inner=n_particles), n_particles, 3));
+    q
+  end
+  )
+  if ndims(mode_coords) != 3
+    error("mode_coords must be of size n_particles x 2 x n_coord_pts")
+  end
+  if size(mode, 1) != size(mode_coords, 1)
+    error("Invalid input sizes: size(mode, 1) must equal size(mode_coords, 1). 
+      Received $(size(mode, 1)) and $(size(mode_coords, 1)) respectively.")
+  end
+  if size(mode_coords, 2) != 2
+    error("size(mode_coords, 2) must equal 2")
+  end
+  if size(mode, 2) != 1
+    error("size(mode, 2) must equal 1")
+  end
+  n_coord_pts = size(mode_coords, 3)   
+  n_particles = size(mode, 1)
+  y = similar(mode_coords, n_particles, 4) # sol
+  v = similar(mode_coords, n_particles, 4) # guess, will change for each delta
   v_cache = similar(v, n_particles, 6)
-  co = similar(v, n_particles, 6, n_deltas)
+  co = similar(v, n_particles, 6, n_coord_pts)
   if !isnothing(as)
-    if size(as) != (n_particles, 4, 4, n_deltas)
-      error("Invalid size for `as` keyword argument. Received $(size(as)), requires $((n_particles, 4, 4, n_deltas))")
+    if size(as) != (n_particles, 4, 4, n_coord_pts)
+      error("Invalid size for `as` keyword argument. Received $(size(as)), requires $((n_particles, 4, 4, n_coord_points))")
     else
       as .= 0
     end
@@ -177,39 +207,67 @@ function walk_J3(bl::Beamline, deltas; verbose=true, as=nothing, maxiter=10)
   v .= 0 # Assume closed orbit is zero orbit for all, in general should solve for all
 
   if verbose
-    println("Computing J₁=J₂=0 coordinate for each J₃")
+    println("Computing one tori...")
   end
-  for i in 1:n_deltas
-    delta = view(deltas, :, i)
+  for i in 1:n_coord_pts
+    coord = view(mode_coords, :, :, i)
     sol = newton!(
-      transverse_frequencies!, 
+      freq_res!, 
       y,
       v, 
       Cache(v_cache),
       Cache(Q_guess),
       Constant(bl),
-      Constant(delta); 
+      Constant(mode),
+      Constant(coord); 
       abstol=1e-12, 
       reltol=1e-12,
       batchdim=1,
-      autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
+      autodiff=autodiff,
       maxiter=maxiter,
       verbose=verbose,
     )
 
-    @show Q_guess
-    @show v
-    @show y
+    #@show Q_guess
+    #@show v
+    #@show y
     # This will act on each row (batch)
-    @. v = ifelse(sol.retcode != BatchSolve.RETCODE_SUCCESS, Inf, v) 
-    @show v
+    @. v = ifelse(sol.retcode != BatchSolve.RETCODE_SUCCESS || isnan(sol.u), NaN, v) 
+    #@show v
     # Jacobian will always be zero then
     # And Q_guess should always be bad
 
-    co[:,1:4,i] .= sol.u
-    co[:,6,i] .= delta
+   
+    # Set solution
+    #=
+    Dominant mode: 1
+      a-mode = 2
+      b-mode = 3
+    Dominant mode: 2
+      a-mode = 3
+      b-mode = 1
+    Dominant mode: 3
+      a-mode = 1
+      b-mode = 2
+    =#
+    m1 = mode .== 1
+    m2 = mode .== 2
+    mc1 = @view coord[:,1]
+    mc2 = @view coord[:,2]
+    v1 = @view sol.u[:,1]
+    v2 = @view sol.u[:,2]
+    v3 = @view sol.u[:,3]
+    v4 = @view sol.u[:,4]
+    @. co[:,1,i] = ifelse(m1, mc1, ifelse(m2, v3, v1))
+    @. co[:,2,i] = ifelse(m1, mc2, ifelse(m2, v4, v2))
+    @. co[:,3,i] = ifelse(m1, v1,  ifelse(m2, mc1, v3))
+    @. co[:,4,i] = ifelse(m1, v2,  ifelse(m2, mc2, v4))
+    @. co[:,5,i] = ifelse(m1, v3,  ifelse(m2, v1,  mc1))
+    @. co[:,6,i] = ifelse(m1, v4,  ifelse(m2, v2,  mc2))
+
     if !isnothing(as)
       if delta == 0 # use twiss a for all inputs
+        tw = twiss(bl; at=[first(bl.line)], normalizing_map=true)
         as[:,:,:,i] .= reshape(view(NNF.jacobian(tw.table.a[1]), 1:4, 1:4), 1, 4, 4)
       else # compute from Fourier modes
         if n_particles > 1
@@ -222,35 +280,63 @@ function walk_J3(bl::Beamline, deltas; verbose=true, as=nothing, maxiter=10)
     if verbose
       print("\r", rpad("Finished iteration $i", 20))
       flush(stdout)
+      println()
     end
-  end
-  if verbose
-    println()
   end
   return co, Q_guess
 end
 
-function transverse_frequencies!(
+function freq_res!(
     y,       # Output, n_particles x 4
     v,       # Input, n_particles x 4
     v_cache, # DI.Cache, n_particles x 6
     Q,       # DI.Cache, n_particles x 3
     bl,      # DI.Constant, Beamline
-    deltas,  # DI.Constant, n_particles x 1
-    params=nothing;  # DI.Constant, Knobs to set
+    mode,    # DI.Constant, n_particles x 1
+    coord;   # DI.Constant, n_particles x 2
     n_frequencies=20,
     n_turns=500,
     order=3,
     verbose=true,
     window_order=5,
-    reltol=0.005,#,=0.01,
-    abstol=1e-5, 
+    reltol=eltype(v) == Float64 ? 0.005 : 0.005,#,=0.01,
+    abstol=eltype(v) == Float64 ? 1e-5 : 1e-3, 
     setter=(p)->nothing,
+    params=nothing,
   )
   n_particles = size(v, 1)
   v_cache .= 0
-  v_cache[:,6] .= deltas
-  v_cache[:,1:4] .= v
+    
+  #=
+  Dominant mode: 1
+    a-mode = 2
+    b-mode = 3
+  Dominant mode: 2
+    a-mode = 3
+    b-mode = 1
+  Dominant mode: 3
+    a-mode = 1
+    b-mode = 2
+  =#
+  #mode = reshape(mode, 1, n_particles, 1)
+  m1 = mode .== 1
+  m2 = mode .== 2
+
+  mc1 = @view coord[:,1]
+  mc2 = @view coord[:,2]
+
+  v1 = @view v[:,1]
+  v2 = @view v[:,2]
+  v3 = @view v[:,3]
+  v4 = @view v[:,4]
+
+  @. v_cache[:,1] = ifelse(m1, mc1, ifelse(m2, v3, v1))
+  @. v_cache[:,2] = ifelse(m1, mc2, ifelse(m2, v4, v2))
+  @. v_cache[:,3] = ifelse(m1, v1,  ifelse(m2, mc1, v3))
+  @. v_cache[:,4] = ifelse(m1, v2,  ifelse(m2, mc2, v4))
+  @. v_cache[:,5] = ifelse(m1, v3,  ifelse(m2, v1,  mc1))
+  @. v_cache[:,6] = ifelse(m1, v4,  ifelse(m2, v2,  mc2))
+
   res = track(bl; v0=v_cache, n_turns, verbose, use_explicit_SIMD=false)
   coords = res.v
   data = reshape(permutedims(coords, (2,1,3)), 6*n_particles, n_turns+1) 
@@ -265,14 +351,45 @@ function transverse_frequencies!(
   frequencies, amplitudes = naff(data, n_frequencies; window_order, warnings=false)
   frequencies = reshape(frequencies, 3, n_particles, n_frequencies)
   amplitudes = reshape(amplitudes, 3, n_particles, n_frequencies)
-  Q3 = reshape(view(Q, :, 3), 1, n_particles, 1)
   #@show frequencies[1:3,1,:]
   #@show frequencies[3,1,:]
-  # Select dominant frequency (longitudinal mode)
-  f3, idx3 = findmin(abs.(Q3 .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
-  f3tru, idx3tru = findmin(f3, dims=1)
-  good = f3tru ./ (1 .+ 1 ./ abs.(amplitudes[idx3][idx3tru])) .< reltol
-  Q3 .= good .* frequencies[idx3][idx3tru] .+ .!good .* Q3
+
+  # Frequency views
+  Q1 = reshape(view(Q, :, 1), 1, n_particles, 1)
+  Q2 = reshape(view(Q, :, 2), 1, n_particles, 1)
+  Q3 = reshape(view(Q, :, 3), 1, n_particles, 1)
+  
+  #=
+  Dominant mode: 1
+    a-mode = 2
+    b-mode = 3
+  Dominant mode: 2
+    a-mode = 3
+    b-mode = 1
+  Dominant mode: 3
+    a-mode = 1
+    b-mode = 2
+  =#
+  mode = reshape(mode, 1, n_particles, 1)
+  a = @. mod1(mode+1, 3) 
+  b = @. mod1(mode+2, 3)
+
+  Qdom = @. ifelse(mode == 1, Q1, ifelse(mode == 2, Q2, Q3)) 
+  Qa   = @. ifelse(a == 1, Q1, ifelse(a == 2, Q2, Q3)) 
+  Qb   = @. ifelse(b == 1, Q1, ifelse(b == 2, Q2, Q3)) 
+
+
+  # Select dominant frequency
+  fdom, idxdom = findmin(abs.(Qdom .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
+  fdomtru, idxdomtru = findmin(fdom, dims=1)
+  good = fdomtru ./ (1 .+ 1 ./ abs.(amplitudes[idxdom][idxdomtru])) .< reltol
+  Qdom .= good .* frequencies[idxdom][idxdomtru] .+ .!good .* Qdom
+
+  # Update tunes
+  @. Q1 = ifelse(mode == 1, Qdom, Q1)
+  @. Q2 = ifelse(mode == 2, Qdom, Q2)
+  @. Q3 = ifelse(mode == 3, Qdom, Q3)
+
   #@show Q3
   #@show good
   #@show frequencies[idx3][idx3tru]
@@ -287,8 +404,8 @@ function transverse_frequencies!(
   j_vals = reshape(0:order, 1, 1, 1, order+1)  # (1, 1, 1, n_orders)
 
   ismul = any(
-      abs.(frequencies .- j_vals .* Q3) .< abstol .||
-      abs.(frequencies .+ j_vals .* Q3) .< abstol,
+      abs.(frequencies .- j_vals .* Qdom) .< abstol .||
+      abs.(frequencies .+ j_vals .* Qdom) .< abstol,
       dims=4
   )  # (3, n_particles, n_frequencies, 1)
 
@@ -298,386 +415,97 @@ function transverse_frequencies!(
   # by checking which difference/amplitude is the largest of 1 and 2. Kill this and 
   # all integer multiples. In this case, we actually need to check if 
   # the result is "good" or not, because close to the end, we will 
-  # only have Q3 +- integer multiples. If no good guess, then 
+  # only have Qdom +- integer multiples. If no good guess, then 
   # we can just assume the amplitude is zero 
-  # CHECK:
-  Q1 = reshape(view(Q, :, 1), 1, n_particles, 1)
-  Q2 = reshape(view(Q, :, 2), 1, n_particles, 1)
+  fa, idxa = findmin(abs.(Qa .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
+  fatru, idxatru = findmin(fa, dims=1)
 
-  f1, idx1 = findmin(abs.(Q1 .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
-  f1tru, idx1tru = findmin(f1, dims=1)
+  fb, idxb = findmin(abs.(Qb .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
+  fbtru, idxbtru = findmin(fb, dims=1)
 
-  f2, idx2 = findmin(abs.(Q2 .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
-  f2tru, idx2tru = findmin(f2, dims=1)
-
-  # Whichever is smaller, do that first (closer match):
-  next = @. ifelse(f2tru < f1tru, 2, 1)
-  fnexttru = @. ifelse(next == 2, f2tru, f1tru)
-  final = @. ifelse(next == 2, 1, 2)
-  idxnext = @. ifelse(next == 2, idx2, idx1)
-  idxnexttru = @. ifelse(next == 2, idx2tru, idx1tru)
+  # Whichever is smaller (closer match), do that first:
+  next = @. ifelse(fbtru < fatru, b, a)
+  fnexttru = @. ifelse(next == b, fbtru, fatru)
+  final = @. ifelse(next == b, a, b)
+  idxnext = @. ifelse(next == b, idxb, idxa)
+  idxnexttru = @. ifelse(next == b, idxbtru, idxatru)
   good = fnexttru ./ (1 .+ 1 ./ abs.(amplitudes[idxnext][idxnexttru])) .< reltol
-  Qnext = good .* frequencies[idxnext][idxnexttru] .+ .!good .* (ifelse.(next .== 2, Q2, Q1))
+  Qnext = good .* frequencies[idxnext][idxnexttru] .+ .!good .* (ifelse.(next .== b, Qb, Qa))
   ampnext =  good .* amplitudes[idxnext][idxnexttru] # amp is zero if not good
 
-  @show next
-  @show final
-  @show good
-  # Update tunes
-  @. Q2 = ifelse(next == 2, Qnext, Q2)
-  @. Q1 = ifelse(next == 1, Qnext, Q1)
-
-  # Set output, n_particles x 4
-  #@show size(reinterpret(Float64, reshape(ampnext, 1, n_particles))')
-  #@show size(view(y, :, 1:2))
-  #@show size(next .== 1)
-  #@show size(ifelse.(next .== 1, reinterpret(Float64, reshape(ampnext, 1, n_particles))', view(y, :, 1:2)))
-  y[:,1:2] .= ifelse.(reshape(next, n_particles, 1) .== 1, reinterpret(Float64, reshape(ampnext, 1, n_particles))', view(y, :, 1:2))
-  y[:,3:4] .= ifelse.(reshape(next, n_particles, 1).== 2, reinterpret(Float64, reshape(ampnext, 1, n_particles))', view(y, :, 3:4))
-
-  # Remove the next one
-  j_vals = reshape(0:order, 1, 1, 1, order+1, 1)        # (1,1,1,n_j,1)
-  k_vals = reshape(0:order, 1, 1, 1, 1, order+1)        # (1,1,1,1,n_k)
-  Q3_bc   = reshape(Q3,   1, n_particles, 1, 1, 1)      # already (1,n_p,1) -> add 2 more
-  Qnext_bc = reshape(Qnext, 1, n_particles, 1, 1, 1)
-  fv = reshape(frequencies, 3, n_particles, n_frequencies, 1, 1)
-
-# Compute each combination separately, accumulate with |=
-# This keeps each broadcast result concretely Bool
-
-  ismul2 = abs.(fv .- j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol
-  ismul2 .|= abs.(fv .- j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol
-  ismul2 .|= abs.(fv .+ j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol
-  ismul2 .|= abs.(fv .+ j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol# (3, n_particles, n_frequencies, order+1, order+1)
-  ismul2 = any(any(ismul2, dims=5), dims=4)
-  #=
-  ismul2 = any(
-      abs.(fv .- j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol .||
-      abs.(fv .- j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol .||
-      abs.(fv .+ j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol .||
-      abs.(fv .+ j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol,
-      dims=(4,5)
-  )  # (3, n_particles, n_frequencies, 1, 1)
-=#
-  frequencies .+= dropdims(ismul2, dims=(4,5)) .* 1e10
-
-  # Finally get our guess for the last. Same idea as before. Here however, 
-  # if the tune is too close to any other
-  Qfinal = @. ifelse(final == 1, Q1, Q2) #reshape(view(Q, :, final), 1, n_particles, 1)
-  ff, idxf = findmin(abs.(Qfinal .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
-  fftru, idxftru = findmin(ff, dims=1)
-  good = fftru ./ (1 .+ 1 ./ abs.(amplitudes[idxf][idxftru])) .< reltol
-  Qfinal .= good .* frequencies[idxf][idxftru] .+ .!good .* Qfinal
-  ampfinal =  good .* amplitudes[idxf][idxftru] 
-  # Update tunes
-  @. Q2 = ifelse(final == 2, Qfinal, Q2)
-  @. Q1 = ifelse(final == 1, Qfinal, Q1)
-  @show good
-
-  # Set output, n_particles x 4
-  y[:,1:2] .= ifelse.(reshape(final, n_particles, 1) .== 1, reinterpret(real(eltype(ampfinal)), reshape(ampfinal, 1, n_particles))', view(y, :, 1:2))
-  y[:,3:4] .= ifelse.(reshape(final, n_particles, 1) .== 2, reinterpret(real(eltype(ampfinal)), reshape(ampfinal, 1, n_particles))', view(y, :, 3:4))
-#=
-  #@show Qfinal
+  #@show next
+  #@show final
   #@show good
-  #@show frequencies[idxf][idxftru]
 
-  # 1 x n_particles ComplexF64
-  # reshapes into 2 x n_particles Float64 (each column is a particle)
-  # permutedims transposes this into n_particles x 2 (each row is a particle - good)
-  # So output is n_particles x 4
-  # y is a ve
-  y .=  hcat(
-    permutedims(reinterpret(Float64, reshape(amp1, 1, n_particles)), (2,1)),
-    permutedims(reinterpret(Float64, reshape(amp2, 1, n_particles)), (2,1)),
-    #permutedims(reinterpret(Float64, reshape(amp3, 1, n_particles)), (2,1))
-  )
-    =#
-  return y
-end
+  # Update tunes
+  @. Q1 = ifelse(next == 1, Qnext, Q1)
+  @. Q2 = ifelse(next == 2, Qnext, Q2)
+  @. Q3 = ifelse(next == 3, Qnext, Q3)
 
-#=
-function transverse_frequencies!(
-    y,       # Output, n_particles x 4
-    v,       # Input, n_particles x 4
-    v_cache, # DI.Cache, n_particles x 6
-    Q,       # DI.Cache, n_particles x 3
-    bl,      # DI.Constant, Beamline
-    deltas;  # DI.Constant, n_particles x 1
-    multol=1e-4, 
-    n_frequencies=20,
-    n_turns=500,
-    order=3,
-    verbose=true,
-    window_order=5,
-  )
+  
+  #=
+  Set output, n_particles x 4
+  a-mode goes in cols 1:2, b-mode in cols 3:4
+  a and b modes for different dominant modes:
 
-  n_particles = size(v, 1)
-  v_cache .= 0
-  v_cache[:,6] .= deltas
-  v_cache[:,1:4] .= v
-  res = track(bl; v0=v_cache, n_turns, verbose, use_explicit_SIMD=false)
-  coords = res.v
-  data = reshape(permutedims(coords, (2,1,3)), 6*n_particles, n_turns+1) 
+  Dominant mode: 1
+    a-mode = 2
+    b-mode = 3
+  Dominant mode: 2
+    a-mode = 3
+    b-mode = 1
+  Dominant mode: 3
+    a-mode = 1
+    b-mode = 2
 
-  # Now this makes it x + im*px, etc:
-  data = reinterpret(ComplexF64, data)
+  As long as the selected dominant mode is the same each iteration (which it is), then 
+  the mode writing will always be consistent each iteration.
+  =#
 
-  # Remove the mean:
-  data = data .- mean(data, dims=2) 
 
-  # Batched NAFF
-  frequencies, amplitudes = naff(data, n_frequencies; window_order, warnings=false)
-
-  frequencies = reshape(frequencies, 3, n_particles, n_frequencies)
-  amplitudes = reshape(amplitudes, 3, n_particles, n_frequencies)
-  Q3 = reshape(view(Q, :, 3), 1, n_particles, 1)
-
-  # Select dominant frequency (longitudinal mode)
-  f3, idx3 = findmin(abs.((Q3 .- frequencies) ./ Q3) ./ abs.(amplitudes), dims=3)
-  f3tru, idx3tru = findmin(f3, dims=1)
-  good = f3tru .< 1/multol
-  Q3 .= good .* frequencies[idx3][idx3tru] .+ .!good .* Q3
-  @show good
-  # amp3 = good .* amplitudes[idx3][idx3tru]
-
-  # "Remove this" and all integer multiples from the result 
-  # by setting those frequencies to gigantic. This will make sure 
-  # we don't accidentally find them, however does not 
-  # handle the cross terms yet.
-  # Each column of Q3 corresponds to a chunk of 3-rows in frequencies 
-  # multol = 1e-1
-  j_vals = reshape(0:order, 1, 1, 1, order+1)  # (1, 1, 1, n_orders)
-
-  ismul = any(
-      abs.(frequencies .- j_vals .* Q3) .< multol .||
-      abs.(frequencies .+ j_vals .* Q3) .< multol,
-      dims=4
-  )  # (3, n_particles, n_frequencies, 1)
-
-  frequencies .+= dropdims(ismul, dims=4) .* 1e10
-
-  # Do the next dominant frequency. We have to determine this
-  # by checking which difference/amplitude is the largest of 1 and 2. Kill this and 
-  # all integer multiples. In this case, we actually need to check if 
-  # the result is "good" or not, because close to the end, we will 
-  # only have Q3 +- integer multiples. If no good guess, then 
-  # we can just assume the amplitude is zero 
-  # CHECK:
-  Q1 = reshape(view(Q, :, 1), 1, n_particles, 1)
-  Q2 = reshape(view(Q, :, 2), 1, n_particles, 1)
-
-  f1, idx1 = findmin(abs.((Q1 .- frequencies) ./ Q1) ./ abs.(amplitudes), dims=3)
-  f1tru, idx1tru = findmin(f1, dims=1)
-
-  f2, idx2 = findmin(abs.((Q2 .- frequencies) ./ Q2) ./ abs.(amplitudes), dims=3)
-  f2tru, idx2tru = findmin(f2, dims=1)
-
-  # Whichever is smaller, do that first (closer match):
-  if first(f2tru) < first(f1tru)
-      next = 2
-      final = 1
-      good = f2tru .< 1/multol
-      Qnext = good .* frequencies[idx2][idx2tru] .+ .!good .* Q2
-      amp2 = good .* amplitudes[idx2][idx2tru] # amp is zero if not good
-      Q2 .= Qnext
-      @show good
-  else
-      next = 1
-      final = 2
-      good = f1tru .< 1/multol # this may need fiddling
-      Qnext = good .* frequencies[idx1][idx1tru]  .+ .!good .* Q1
-      amp1 = good .* amplitudes[idx1][idx1tru] # amp is zero if not good
-      Q1 .= Qnext
-      @show good
-  end
+  y[:,1:2] .= ifelse.(reshape(next .== a, n_particles, 1), reinterpret(real(eltype(ampnext)), reshape(ampnext, 1, n_particles))', view(y, :, 1:2))
+  y[:,3:4] .= ifelse.(reshape(next .== b, n_particles, 1), reinterpret(real(eltype(ampnext)), reshape(ampnext, 1, n_particles))', view(y, :, 3:4))
 
   # Remove the next one
   j_vals = reshape(0:order, 1, 1, 1, order+1, 1)        # (1,1,1,n_j,1)
   k_vals = reshape(0:order, 1, 1, 1, 1, order+1)        # (1,1,1,1,n_k)
-  Q3_bc   = reshape(Q3,   1, n_particles, 1, 1, 1)      # already (1,n_p,1) -> add 2 more
+  Qdom_bc   = reshape(Qdom,   1, n_particles, 1, 1, 1)      # already (1,n_p,1) -> add 2 more
   Qnext_bc = reshape(Qnext, 1, n_particles, 1, 1, 1)
   fv = reshape(frequencies, 3, n_particles, n_frequencies, 1, 1)
 
-  ismul2 = any(
-      abs.(fv .- j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< multol .||
-      abs.(fv .- j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< multol .||
-      abs.(fv .+ j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< multol .||
-      abs.(fv .+ j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< multol,
-      dims=(4,5)
-  )  # (3, n_particles, n_frequencies, 1, 1)
+  # Compute each combination separately, accumulate with |=
+  # This keeps each broadcast result concretely Bool
+  ismul2 = abs.(fv .- j_vals .* Qdom_bc .- k_vals .* Qnext_bc) .< abstol
+  ismul2 .|= abs.(fv .- j_vals .* Qdom_bc .+ k_vals .* Qnext_bc) .< abstol
+  ismul2 .|= abs.(fv .+ j_vals .* Qdom_bc .- k_vals .* Qnext_bc) .< abstol
+  ismul2 .|= abs.(fv .+ j_vals .* Qdom_bc .+ k_vals .* Qnext_bc) .< abstol# (3, n_particles, n_frequencies, order+1, order+1)
+  ismul2 = any(any(ismul2, dims=5), dims=4)
 
+  # Remove:
   frequencies .+= dropdims(ismul2, dims=(4,5)) .* 1e10
 
   # Finally get our guess for the last. Same idea as before. Here however, 
   # if the tune is too close to any other
-  Qfinal = reshape(view(Q, :, final), 1, n_particles, 1)
-  ff, idxf = findmin(abs.((Qfinal .- frequencies) ./ Qfinal) ./ abs.(amplitudes), dims=3)
-  fftru, idxftru = findmin(ff, dims=1)
-  good = fftru .< 1/multol
-  Qfinal .= good .* frequencies[idxf][idxftru] .+ .!good .* Qfinal
-  if final == 1
-      amp1 = good .* amplitudes[idxf][idxftru]
-  else
-      amp2 = good .* amplitudes[idxf][idxftru] # amp is zero if not good
-  end
-  @show good
-  y .=  hcat(
-    permutedims(reinterpret(Float64, reshape(amp1, 1, n_particles)), (2,1)),
-    permutedims(reinterpret(Float64, reshape(amp2, 1, n_particles)), (2,1)),
-    #permutedims(reinterpret(Float64, reshape(amp3, 1, n_particles)), (2,1))
-  )
+  Qfinal = @. ifelse(final == 1, Q1, ifelse(final == 2, Q2, Q3)) #reshape(view(Q, :, final), 1, n_particles, 1)
+  ffinal, idxfinal = findmin(abs.(Qfinal .- frequencies) .* (1 .+ 1 ./ abs.(amplitudes)), dims=3)
+  ffinaltru, idxfinaltru = findmin(ffinal, dims=1)
+  good = ffinaltru ./ (1 .+ 1 ./ abs.(amplitudes[idxfinal][idxfinaltru])) .< reltol
+  Qfinal .= good .* frequencies[idxfinal][idxfinaltru] .+ .!good .* Qfinal
+  ampfinal =  good .* amplitudes[idxfinal][idxfinaltru] 
+  # Update tunes
+  @. Q1 = ifelse(final == 1, Qfinal, Q1)
+  @. Q2 = ifelse(final == 2, Qfinal, Q2)
+  @. Q3 = ifelse(final == 3, Qfinal, Q3)
+
+  #@show good
+
+  # Set output, n_particles x 4
+  y[:,1:2] .= ifelse.(reshape(final .== a, n_particles, 1), reinterpret(real(eltype(ampfinal)), reshape(ampfinal, 1, n_particles))', view(y, :, 1:2))
+  y[:,3:4] .= ifelse.(reshape(final .== b, n_particles, 1), reinterpret(real(eltype(ampfinal)), reshape(ampfinal, 1, n_particles))', view(y, :, 3:4))
 
   return y
 end
-=#
 
-#=
-function transverse_frequencies!(
-    y,       # Output, n_particles x 4
-    v,       # Input, n_particles x 4
-    v_cache, # DI.Cache, n_particles x 6
-    Q,       # DI.Cache, n_particles x 3
-    bl,      # DI.Constant, Beamline
-    deltas;  # DI.Constant, n_particles x 1
-    n_frequencies=20,
-    n_turns=500,
-    order=3,
-    verbose=true,
-    window_order=5,
-    reltol=0.02,
-    abstol=1e-5, 
-  )
-
-  n_particles = size(v, 1)
-  v_cache .= 0
-  v_cache[:,6] .= deltas
-  v_cache[:,1:4] .= v
-  res = track(bl; v0=v_cache, n_turns, verbose, use_explicit_SIMD=false)
-  coords = res.v
-  if any(res.state[:,end] .!= 0x1)
-    error("fuck")
-  end
-  data = reshape(permutedims(coords, (2,1,3)), 6*n_particles, n_turns+1) 
-
-  # Now this makes it x + im*px, etc:
-  data = reinterpret(ComplexF64, data)
-
-  # Remove the mean:
-  data = data .- mean(data, dims=2) 
-
-  # Batched NAFF
-  frequencies, amplitudes = naff(data, n_frequencies; window_order, warnings=false)
-
-  frequencies = reshape(frequencies, 3, n_particles, n_frequencies)
-  amplitudes = reshape(amplitudes, 3, n_particles, n_frequencies)
-  Q3 = reshape(view(Q, :, 3), 1, n_particles, 1)
-
-  # Select dominant frequency (longitudinal mode)
-  f3, idx3 = findmin(abs.(Q3 .- frequencies), dims=3)
-  f3tru, idx3tru = findmin(f3, dims=1)
-  good = f3tru .< reltol
-  Q3 .= good .* frequencies[idx3][idx3tru] .+ .!good .* Q3
-  @show Q3
-  @show good
-  @show frequencies[idx3][idx3tru]
-  # amp3 = good .* amplitudes[idx3][idx3tru]
-
-  # "Remove this" and all integer multiples from the result 
-  # by setting those frequencies to gigantic. This will make sure 
-  # we don't accidentally find them, however does not 
-  # handle the cross terms yet.
-  # Each column of Q3 corresponds to a chunk of 3-rows in frequencies 
-  # multol = 1e-1
-  j_vals = reshape(0:order, 1, 1, 1, order+1)  # (1, 1, 1, n_orders)
-
-  ismul = any(
-      abs.(frequencies .- j_vals .* Q3) .< abstol .||
-      abs.(frequencies .+ j_vals .* Q3) .< abstol,
-      dims=4
-  )  # (3, n_particles, n_frequencies, 1)
-
-  frequencies .+= dropdims(ismul, dims=4) .* 1e10
-
-  # Do the next dominant frequency. We have to determine this
-  # by checking which difference/amplitude is the largest of 1 and 2. Kill this and 
-  # all integer multiples. In this case, we actually need to check if 
-  # the result is "good" or not, because close to the end, we will 
-  # only have Q3 +- integer multiples. If no good guess, then 
-  # we can just assume the amplitude is zero 
-  # CHECK:
-  Q1 = reshape(view(Q, :, 1), 1, n_particles, 1)
-  Q2 = reshape(view(Q, :, 2), 1, n_particles, 1)
-
-  f1, idx1 = findmin(abs.(Q1 .- frequencies), dims=3)
-  f1tru, idx1tru = findmin(f1, dims=1)
-
-  f2, idx2 = findmin(abs.(Q2 .- frequencies), dims=3)
-  f2tru, idx2tru = findmin(f2, dims=1)
-
-  # Whichever is smaller, do that first (closer match):
-  if first(f2tru) < first(f1tru)
-      next = 2
-      final = 1
-      good = f2tru .< reltol
-      Qnext = good .* frequencies[idx2][idx2tru] .+ .!good .* Q2
-      amp2 = good .* amplitudes[idx2][idx2tru] # amp is zero if not good
-      Q2 .= Qnext
-      @show Q2
-      @show good
-      @show frequencies[idx2][idx2tru]
-  else
-      next = 1
-      final = 2
-      good = f1tru .< reltol # this may need fiddling
-      Qnext = good .* frequencies[idx1][idx1tru]  .+ .!good .* Q1
-      amp1 = good .* amplitudes[idx1][idx1tru] # amp is zero if not good
-      Q1 .= Qnext
-      @show Q1
-      @show good
-      @show frequencies[idx1][idx1tru]
-  end
-  # Remove the next one
-  j_vals = reshape(0:order, 1, 1, 1, order+1, 1)        # (1,1,1,n_j,1)
-  k_vals = reshape(0:order, 1, 1, 1, 1, order+1)        # (1,1,1,1,n_k)
-  Q3_bc   = reshape(Q3,   1, n_particles, 1, 1, 1)      # already (1,n_p,1) -> add 2 more
-  Qnext_bc = reshape(Qnext, 1, n_particles, 1, 1, 1)
-  fv = reshape(frequencies, 3, n_particles, n_frequencies, 1, 1)
-
-  ismul2 = any(
-      abs.(fv .- j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol .||
-      abs.(fv .- j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol .||
-      abs.(fv .+ j_vals .* Q3_bc .- k_vals .* Qnext_bc) .< abstol .||
-      abs.(fv .+ j_vals .* Q3_bc .+ k_vals .* Qnext_bc) .< abstol,
-      dims=(4,5)
-  )  # (3, n_particles, n_frequencies, 1, 1)
-
-  frequencies .+= dropdims(ismul2, dims=(4,5)) .* 1e10
-  # Finally get our guess for the last. Same idea as before. Here however, 
-  # if the tune is too close to any other
-  Qfinal = reshape(view(Q, :, final), 1, n_particles, 1)
-  ff, idxf = findmin(abs.(Qfinal .- frequencies), dims=3)
-  fftru, idxftru = findmin(ff, dims=1)
-  good = fftru .< reltol
-  Qfinal .= good .* frequencies[idxf][idxftru] .+ .!good .* Qfinal
-  if final == 1
-      amp1 = good .* amplitudes[idxf][idxftru]
-  else
-      amp2 = good .* amplitudes[idxf][idxftru] # amp is zero if not good
-  end
-  @show Qfinal
-  @show good
-  @show frequencies[idxf][idxftru]
-
-  y .=  hcat(
-    permutedims(reinterpret(Float64, reshape(amp1, 1, n_particles)), (2,1)),
-    permutedims(reinterpret(Float64, reshape(amp2, 1, n_particles)), (2,1)),
-    #permutedims(reinterpret(Float64, reshape(amp3, 1, n_particles)), (2,1))
-  )
-
-  return y
-end
-=#
 function symplectify(m)
   @assert size(m, 1) == size(m, 2) "Matrix must be square"
   @assert mod(size(m, 1), 2) == 0 "Matrix must have even number of rows"
