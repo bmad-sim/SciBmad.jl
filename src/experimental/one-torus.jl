@@ -204,7 +204,7 @@ function walk_one_torus(
       as .= 0
     end
   end
-  co .= 0
+  co .= NaN
   y .= 0
   v .= 0 # Assume closed orbit is zero orbit for all, in general should solve for all
 
@@ -237,6 +237,14 @@ function walk_one_torus(
     #@show y
     # This will act on each row (batch)
     @. v = ifelse(sol.retcode != BatchSolve.RETCODE_SUCCESS || isnan(sol.u), NaN, v) 
+    if all(sol.retcode .!= BatchSolve.RETCODE_SUCCESS) # Then break the loop
+      if verbose
+        print("\r", rpad("All fail at iter $i", 20))
+        flush(stdout)
+        println()
+      end
+      break
+    end
     #@show v
     # Jacobian will always be zero then
     # And Q_guess should always be bad
