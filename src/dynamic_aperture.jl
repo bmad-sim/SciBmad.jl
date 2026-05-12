@@ -55,7 +55,7 @@ function dynamic_aperture(
     for i in 1:length(deltas)
       co[i,6] = deltas[i]
       sol = find_closed_orbit(bl, v0=co[i,:]')
-      if sol.converged == false
+      if sol.retcode != BatchSolve.RETCODE_SUCCESS
         error("Unable for find delta-dependent closed orbit (with RF off) for delta = $delta.
               Please remove this delta from the input deltas.")
       end
@@ -73,7 +73,7 @@ function dynamic_aperture(
     sig_x = sqrt(sig_x)
     sig_y = sqrt(sig_y)
     sol = find_closed_orbit(bl)
-    if sol.converged == false
+    if sol.retcode != BatchSolve.RETCODE_SUCCESS
         error("Unable to find closed orbit")
     end
     for i in 1:length(deltas)
