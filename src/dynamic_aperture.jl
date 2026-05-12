@@ -55,11 +55,11 @@ function dynamic_aperture(
     for i in 1:length(deltas)
       co[i,6] = deltas[i]
       sol = find_closed_orbit(bl, v0=co[i,:]')
-      if sol.retcode != BatchSolve.RETCODE_SUCCESS
+      if sol.sol.retcode != BatchSolve.RETCODE_SUCCESS
         error("Unable for find delta-dependent closed orbit (with RF off) for delta = $delta.
               Please remove this delta from the input deltas.")
       end
-      co[i,:] = sol.u
+      co[i,:] = sol.v0
     end
     # OK now we can turn the cavities back on:
     foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
@@ -73,11 +73,11 @@ function dynamic_aperture(
     sig_x = sqrt(sig_x)
     sig_y = sqrt(sig_y)
     sol = find_closed_orbit(bl)
-    if sol.retcode != BatchSolve.RETCODE_SUCCESS
+    if sol.sol.retcode != BatchSolve.RETCODE_SUCCESS
         error("Unable to find closed orbit")
     end
     for i in 1:length(deltas)
-      co[i,:] = sol.u
+      co[i,:] = sol.v0
       co[i,6] += deltas[i]
     end
   end
