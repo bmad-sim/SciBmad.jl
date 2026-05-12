@@ -147,8 +147,6 @@ function dynamic_aperture(
           
         # Sanity check:
           x = v0[idx_particle:idx_particle+length(rs)-1,1]./(max_sig_x.*sig_x)
-          @show x
-          @show y
           y = v0[idx_particle:idx_particle+length(rs)-1,3]./(max_sig_y.*sig_y)
           for (xi, yi) in zip(x,y)
             
