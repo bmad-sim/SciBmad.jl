@@ -37,6 +37,7 @@ end
 
 # Returns a Table of the Twiss parameters
 # See Eq. 4.28 in EBB
+# TODO need to make at work with parent elements
 function twiss(
   bl::Beamline; 
   GTPSA_descriptor=nothing, 

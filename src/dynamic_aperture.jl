@@ -15,36 +15,42 @@ function dynamic_aperture(
     backend=KA.CPU(),
     coordinates_number_type::Type=Float64, 
     sig_pz::Real=0,
-    delta_dependent_orbits::Bool=true,
+    emit_3::Real=0,
+    delta_dependent_orbits::Bool=coast_check(bl),
     output_file=nothing,
     theta_lims=(0, pi),
     track_kwargs... # Get passed to track!
   )
   Base.require_one_based_indexing(deltas)
 
-  # First, turn off all the cavities and store their strengths in 
-  # an array
-  cavities = filter(x->!isnothing(x.RFParams), bl.line)
-  rfps = map(x->x.RFParams, cavities)
-  # Turn them all off (doing this way to ensure inheritance + DefExpr remains):
-  foreach(x->x.RFParams=nothing, cavities)
-
-  tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
-  t = tw.table
-
-  # Now compute sigmas at first element, just first order:
-  E = t.E[1]
-  sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 
-  sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 
-  eta_x = t.orbit_x[1][6]
-  eta_y = t.orbit_y[1][6]
-  sig_x += (eta_x*sig_pz)^2
-  sig_y += (eta_y*sig_pz)^2
-  sig_x = sqrt(sig_x)
-  sig_y = sqrt(sig_y)
+  if delta_dependent_orbits && emit_3 != 0
+    error("You specified delta_dependent_orbits = true but a nonzero emit_3. Instead specify sig_pz")
+  elseif !delta_dependent_orbits && sig_pz != 0
+    error("You specified delta_dependent_orbits = true but a nonzero emit_3. Instead specify sig_pz")
+  end
 
   co = zeros(length(deltas), 6)
   if delta_dependent_orbits
+    # First, turn off all the cavities and store their strengths in 
+    # an array
+    cavities = filter(x->!isnothing(x.RFParams), bl.line)
+    rfps = map(x->x.RFParams, cavities)
+    # Turn them all off (doing this way to ensure inheritance + DefExpr remains):
+    foreach(x->x.RFParams=nothing, cavities)
+
+    tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
+    t = tw.table
+
+    # Now compute sigmas at first element, just first order:
+    E = t.E[1]
+    sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 
+    sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 
+    eta_x = t.orbit_x[1][6]
+    eta_y = t.orbit_y[1][6]
+    sig_x += (eta_x*sig_pz)^2
+    sig_y += (eta_y*sig_pz)^2
+    sig_x = sqrt(sig_x)
+    sig_y = sqrt(sig_y)
     # Compute delta-dependent closed orbits (with RF off)
     for i in 1:length(deltas)
       co[i,6] = deltas[i]
@@ -58,8 +64,14 @@ function dynamic_aperture(
     # OK now we can turn the cavities back on:
     foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
   else
-    # Turn RF back on, get the only closed orbit
-    foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
+    tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
+    t = tw.table
+    # Now compute sigmas at first element, just first order:
+    E = t.E[1]
+    sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 + E[3][1,1]*emit_3
+    sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 + E[3][3,3]*emit_3
+    sig_x = sqrt(sig_x)
+    sig_y = sqrt(sig_y)
     sol = find_closed_orbit(bl)
     if sol.converged == false
         error("Unable to find closed orbit")
@@ -104,8 +116,6 @@ function dynamic_aperture(
   else
     vt = v
   end
- # @show vt
- # @show v0
 
   b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
   for i in 1:n_turns
