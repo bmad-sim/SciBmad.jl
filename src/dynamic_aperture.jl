@@ -38,8 +38,22 @@ function dynamic_aperture(
     # Turn them all off (doing this way to ensure inheritance + DefExpr remains):
     foreach(x->x.RFParams=nothing, cavities)
 
-    tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
-    t = tw.table
+    local t
+    try
+      tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
+      if !tw.coasting_beam
+        error("
+        To compute delta_dependent_orbits, the beam must be coasting. We tried turning off 
+        all cavities, but still did not detect coasting beam. Please turn off any elements 
+        that cause longitudinal motion.
+        ")
+      end
+      t = tw.table
+    catch e
+      # Put cavities back
+      foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
+      rethrow()
+    end
 
     # Now compute sigmas at first element, just first order:
     E = t.E[1]
