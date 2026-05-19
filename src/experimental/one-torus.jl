@@ -271,8 +271,8 @@ function max_one_torus(
   # Now set the solution:
   m1 = mode .== 1
   m2 = mode .== 2
-  mc1 = @. ifelse(mode_coord == 1, delta, 0)
-  mc2 = @. ifelse(mode_coord == 2, delta, 0)
+  mc1 = @. ifelse(mode_coord == 1, delta, zero(delta))
+  mc2 = @. ifelse(mode_coord == 2, delta, zero(delta))
   v1 = @view v[:,1]
   v2 = @view v[:,2]
   v3 = @view v[:,3]
