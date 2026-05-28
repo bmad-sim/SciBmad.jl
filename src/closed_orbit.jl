@@ -66,7 +66,7 @@ function _co_res!(
   n_particles = size(v, 1)
   @assert length(v_res) == n_particles*6 "Incorrect size for residual vector"
   b0 = Bunch(v_cache)
-  SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
+  SciBmad.BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
   set_kernel!(v_res, v_cache, v, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
   track!(b0, bl, scalar_params=true)
@@ -89,7 +89,7 @@ function _co_res_coast!(
   @assert n_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
   @assert n_particles == size(v_constant, 1) "Incorrect size for particle constant array given v_coast input"
   b0 = Bunch(v_cache)
-  SciBmad.BTBL.check_bl_bunch!(bl, b0, false) # Do not notify  
+  SciBmad.BTBL.check_bl_bunch!(b0, bl, false) # Do not notify  
   set_kernel!(v_res, v_cache, v_constant, v_coast, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
   track!(b0, bl, scalar_params=true)

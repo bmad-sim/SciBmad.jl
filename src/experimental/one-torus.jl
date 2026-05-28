@@ -153,6 +153,139 @@ function dynamic_aperture(
   return Jt1, Jt2, turns_survived
 end
 
+# This will return only the maximum one torus for a given delta/x/etc.
+# uses bisection once limit is hit. Does not return A (found that 
+# approximating next step with linear Ai doesn't help at all)
+function max_one_torus(
+  bl::Beamline, 
+  mode,         # n_particles x 1, which mode?
+  mode_coord,   # n_particles x 1, which coordinate of the mode? (1 or 2)
+  stp,         # n_particles x 1, what initial step size?
+  n_steps::Integer, # number of steps to do on ALL particles
+  setter! = (p)->nothing, # Closure of beamline
+  params...; # args to pass to setter
+  verbose=true, 
+  maxiter=10, 
+  autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
+  Q_guess = begin
+    tunes = twiss(bl; at=[]).tunes;
+    n_particles = size(mode, 1);
+    q = similar(stp, n_particles, 3);
+    copyto!(q, -reshape(repeat(tunes, inner=n_particles), n_particles, 3));
+    q
+  end,
+  v=(zero(similar(stp, size(mode, 1), 4))),    # Initial 4-coordinate guess, n_particles x 4
+  delta=zero(stp), # Initial delta/x/etc guess, n_particles x 1
+  )
+  if size(mode, 1) != size(mode_coord, 1)
+    error("Invalid input sizes: size(mode, 1) must equal size(mode_coord, 1). 
+      Received $(size(mode, 1)) and $(size(mode_coord, 1)) respectively.")
+  end
+  if size(stp, 1) != size(mode, 1)
+    error("Invalid input sizes: size(stp, 1) must equal size(mode, 1). 
+      Received $(size(stp, 1)) and $(size(mode, 1)) respectively.")
+  end
+  if size(mode_coord, 2) != 1
+    error("size(mode_coord, 2) must equal 2")
+  end
+  if size(mode, 2) != 1
+    error("size(mode, 2) must equal 1")
+  end
+  if size(stp, 2) != 1
+    error("size(stp, 2) must equal 1")
+  end
+
+  n_particles = size(mode, 1)
+  y = similar(v, n_particles, 4) # sol
+  # Here we also want to store the previous solution that worked.
+  # Then if the newton fails, we can go back to this.
+  v_prev = similar(v, n_particles, 4)
+  v_cache = similar(v, n_particles, 6)
+  y .= 0
+  v_prev .= v
+  coord = similar(v, n_particles, 2) # contains both canonical conjugates of mode
+  coord .= 0
+  Q_guess_prev = similar(Q_guess)
+  Q_guess_prev .= Q_guess
+
+  # Solution:
+  co = similar(v, n_particles, 6)
+  co .= NaN
+  if verbose
+    println("Computing one tori...")
+  end
+  for i in 1:n_steps
+    # Bump the coord and try to solve:
+    @. coord[:,1] = ifelse(mode_coord == 1, delta+stp, 0)
+    @. coord[:,2] = ifelse(mode_coord == 2, delta+stp, 0)
+    sol = newton!(
+      freq_res!, 
+      y,
+      v, 
+      Cache(v_cache),
+      Cache(Q_guess),
+      Constant(bl),
+      Constant(mode),
+      Constant(coord),
+      Constant(setter!),
+      (Constant.(params))...; 
+      abstol=1e-12, 
+      reltol=1e-12,
+      batchdim=1,
+      autodiff=autodiff,
+      maxiter=maxiter,
+      verbose=verbose,
+    )
+    # For those that failed, we need to take a step back to v_prev
+    fail = (@. sol.retcode != BatchSolve.RETCODE_SUCCESS) .| any(isnan, sol.u; dims=2)
+    # if success, update v_prev:
+    @. Q_guess_prev = ifelse(fail, Q_guess_prev, Q_guess)
+    @. v_prev = ifelse(fail, v_prev, v)
+    @. delta = ifelse(fail, delta, delta+stp)
+
+    # If fail, reset to prev:
+    @. v = ifelse(fail, v_prev, v)
+    @. Q_guess = ifelse(fail, Q_guess_prev, Q_guess)
+    @. stp = ifelse(fail, stp/2, stp) # If success, keep going forward
+    
+    # Set solution
+    #=
+    Dominant mode: 1
+      a-mode = 2
+      b-mode = 3
+    Dominant mode: 2
+      a-mode = 3
+      b-mode = 1
+    Dominant mode: 3
+      a-mode = 1
+      b-mode = 2
+    =#
+
+    if verbose
+      print("\r", rpad("Finished iteration $i", 20))
+      flush(stdout)
+      println()
+    end
+  end
+
+  # Now set the solution:
+  m1 = mode .== 1
+  m2 = mode .== 2
+  mc1 = @. ifelse(mode_coord == 1, delta, zero(delta))
+  mc2 = @. ifelse(mode_coord == 2, delta, zero(delta))
+  v1 = @view v[:,1]
+  v2 = @view v[:,2]
+  v3 = @view v[:,3]
+  v4 = @view v[:,4]
+  @. co[:,1] = ifelse(m1, mc1, ifelse(m2, v3, v1))
+  @. co[:,2] = ifelse(m1, mc2, ifelse(m2, v4, v2))
+  @. co[:,3] = ifelse(m1, v1,  ifelse(m2, mc1, v3))
+  @. co[:,4] = ifelse(m1, v2,  ifelse(m2, mc2, v4))
+  @. co[:,5] = ifelse(m1, v3,  ifelse(m2, v1,  mc1))
+  @. co[:,6] = ifelse(m1, v4,  ifelse(m2, v2,  mc2))
+  return co, Q_guess
+end
+
 # deltas was n_particles x n_deltas array
 
 # We want to generalize this to allow also z inputs
@@ -176,7 +309,8 @@ function walk_one_torus(
     q = similar(mode_coords, n_particles, 3);
     copyto!(q, -reshape(repeat(tunes, inner=n_particles), n_particles, 3));
     q
-  end
+  end,
+  v0=nothing, # Initial guess
   )
   if ndims(mode_coords) != 3
     error("mode_coords must be of size n_particles x 2 x n_coord_pts")
@@ -207,7 +341,9 @@ function walk_one_torus(
   co .= NaN
   y .= 0
   v .= 0 # Assume closed orbit is zero orbit for all, in general should solve for all
-
+  if !isnothing(v0)
+    v .= v0
+  end
   if verbose
     println("Computing one tori...")
   end

@@ -3,6 +3,7 @@
   save_every_n_turns::Int               = 1
   scalar_params::Bool                   = false
   ramp_particle_energy_without_rf::Bool = false
+  ramp_update_each_particle::Bool       = false
   verbose::Bool                         = false
   groupsize::Int                        = 0 # autoselect
   use_cpu_multithreading::Bool          = false
@@ -43,7 +44,6 @@ function Base.show(io::IO, res::TrackingResult)
   println(io)
   if res.config.save_every_n_turns == 1
     turnstr = "turn"
-
   else
     turnstr = "Int(turn/$(res.config.save_every_n_turns))"
   end
@@ -75,7 +75,7 @@ function track(
 
     # Or explicitly provide a Bunch:
     bunch::Bunch=Bunch(; 
-      v=v0, spin=spin, q=q0, weight=weight, p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref
+      v=v0, spin=spin, q=q0, weight=weight, species=bl.species_ref, p_over_q_ref=(_p_over_q_ref = bl.p_over_q_ref; _p_over_q_ref isa TimeDependentParam ? _p_over_q_ref(0) : _p_over_q_ref)
     ),
 
     config=TrackingConfig(use_KA=!(KA.get_backend(bunch.v) isa KA.CPU)),
@@ -85,6 +85,7 @@ function track(
     save_every_n_turns              = config.save_every_n_turns,
     scalar_params                   = config.scalar_params,
     ramp_particle_energy_without_rf = config.ramp_particle_energy_without_rf,
+    ramp_update_each_particle       = config.ramp_update_each_particle,
     verbose                         = config.verbose,
 
     # Low-level launch! kwargs (these are not considered stable API and may change):
@@ -99,6 +100,7 @@ function track(
     save_every_n_turns,
     scalar_params,
     ramp_particle_energy_without_rf,
+    ramp_update_each_particle,
     verbose,
     groupsize,
     use_cpu_multithreading,
@@ -117,6 +119,7 @@ function _track(bl, bunch, config, groupsize)
   save_every_n_turns              = config.save_every_n_turns
   scalar_params                   = config.scalar_params
   ramp_particle_energy_without_rf = config.ramp_particle_energy_without_rf
+  ramp_update_each_particle       = config.ramp_update_each_particle
   verbose                         = config.verbose
   use_cpu_multithreading          = config.use_cpu_multithreading
   use_KA                          = config.use_KA
@@ -137,7 +140,7 @@ function _track(bl, bunch, config, groupsize)
   end
 
   t = @elapsed for i in 1:n_turns
-    track!(bunch, bl; scalar_params, ramp_particle_energy_without_rf, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
+    track!(bunch, bl; scalar_params, ramp_particle_energy_without_rf, ramp_update_each_particle, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
     if mod(i, save_every_n_turns) == 0
       idx = div(i,save_every_n_turns)+1
       state_data[:,idx] .= state
