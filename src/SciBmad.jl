@@ -1,4 +1,3 @@
-__precompile__(false)
 module SciBmad
 using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
 using Reexport
@@ -22,6 +21,7 @@ using Reexport
   @reexport using NonlinearNormalForm
   @reexport using GTPSA
   @reexport using AtomicAndPhysicalConstants
+  @reexport using FundamentalFrequencies
 end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
@@ -64,10 +64,10 @@ include("experimental/Experimental.jl")
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
     # Track scalars
     b0s = Bunch(rand(4,6));
-    BTBL.check_bl_bunch!(fodo, b0s, false); # Do not notify
+    BTBL.check_bl_bunch!(b0s, fodo, false); # Do not notify
     track!(b0s, fodo);
     b0s = Bunch(rand(4,6), [1. 0. 0. 0.; 1. 0. 0. 0; 1. 0. 0. 0.; 1. 0. 0. 0.]);
-    BTBL.check_bl_bunch!(fodo, b0s, false); # Do not notify
+    BTBL.check_bl_bunch!(b0s, fodo, false); # Do not notify
     track!(b0s, fodo);
     # twiss
     # first order and second order
