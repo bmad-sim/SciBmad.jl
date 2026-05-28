@@ -213,7 +213,7 @@ function _twiss_3(_step_save, _maps)
   let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx)
     return (coords, ds_step, g) -> begin
       curstep[] += 1
-      if curstep[] == step_save[cur_step_save_idx[]] # Store the current map
+      if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]] # Store the current map
         map = maps[cur_step_save_idx[]]
         _twiss_setmap!(map, coords)
         cur_step_save_idx[] += 1
@@ -360,7 +360,7 @@ function _twiss_7(
   end
   # =================================================================
   damping = norm(NNF.checksymp(NNF.jacobian(m))) > symplectic_tol
-
+  a = maps[1] ∘ a
   r = canonize(a, SCALAR_PHASE; damping=damping)
   a = a ∘ r
   fc = factorize(a)
