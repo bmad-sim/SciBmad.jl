@@ -174,6 +174,12 @@ function _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, ::Val{spin}, ::Val{
 
   # Value type of the RDT dict
   if RDTs
+    if mo == 1
+      error("
+        RDTs cannot be computed using a GTPSA_descriptor with max order 1.
+        Please specify a higher order GTPSA_descriptor.
+      ")
+    end
     if np > 0
       zero_h = TI.init_tps(numtype, init)
     else
@@ -193,6 +199,7 @@ function _twiss_2_preallocate(step_save, map::T) where {T<:DAMap}
   for i in 1:length(step_save)
     if i == 1 && step_save[1] == 0
       maps[1] = one(map)
+      NNF.setscalar!(maps[1], map.v0)
     else
       maps[i] = zero(map) # Preallocate
     end
@@ -250,7 +257,11 @@ end
 # Track a bunch and fill the `maps` array
 
 function _twiss_4(eye, cb, bl)
-  v = [copy(eye.v[1]) copy(eye.v[2]) copy(eye.v[3]) copy(eye.v[4]) copy(eye.v[5]) copy(eye.v[6])]
+  if NNF.nvars(eye) == 5
+    v = reshape([(i < 5 ? eye.v0[i]+copy(eye.v[i]) : copy(eye.v[i])) for i in 1:6], 1, 6)
+  else
+    v = reshape([eye.v0[i]+copy(eye.v[i]) for i in 1:6], 1, 6)
+  end
   q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
   b0 = Bunch(v=v, q=q, callbacks=(cb,))
   BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
@@ -349,10 +360,12 @@ function _twiss_7(
   if SCALAR_ORBIT isa Val{false}
     PROCESS_ORBIT = v -> begin
       StaticArrays.sacollect(SVector{6,U}, begin 
+      vi = zero(v[i])
+      TI.copy_tps!(vi, v[i])
       if i < 6
-        TI.seti!(v[i], 0, i)
+        TI.seti!(vi, 0, i)
       end
-      v[i]
+      vi
       end for i in 1:6)
     end
   else
