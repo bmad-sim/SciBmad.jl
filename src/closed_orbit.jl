@@ -116,6 +116,68 @@ end
 # should be equal to number of batch parameters
 # or if coasting, set equal to number of coasting 
 # particles WITH delta set accordingly already
+"""
+    find_closed_orbit(bl::Beamline; v0=zeros(1, 6), kwargs...)
+
+Finds the closed orbit of the beamline `bl` using the initial guess `v0`. Supports batched-
+closed orbit finding including `BatchParam`s and/or different δ-dependent closed orbits in 
+rings with coasting beam, simply by including more particles in the guess `v0`. 
+
+A named tuple is returned containing the following fields:
+- `v0`: The initial matrix `v0`, mutated to contain the result
+- `coasting_beam`: `true` if coasting beam, `false` otherwise
+- `sol`: Another named tuple containing Newton solver convergence information (see 
+    `SciBmad.BatchSolve.newton`), including the Jacobian(s) for the particle(s) at the last 
+    iteration.
+
+This function is GPU-parallelizable by specifying `v0` as a `GPUArray` (e.g. `CuArray`), and 
+will use CUBLAS's batched linear system solvers for the Newton solve.
+
+## Keyword arguments
+- `v0`: Matrix of size `(n_particles, 6)` as the initial guess. If `n_particles > 1`, batched 
+    closed orbit finding will be used. **NOTE:** `v0` will be mutated in place with the result!
+    Default is `zeros(1, 6)`.
+- `reltol`: Relative convergence tolerance of the Newton solver, default is `1e-13`
+- `abstol`: Absolute convergence tolerance of the residual norm, default is `1e-13`
+- `maxiter`: Maximum iterations for the Newton root finder before failure, default is `100`
+- `autodiff`: Automatic-differentiation backend to use (e.g. `AutoForwardDiff()`, `AutoEnzyme()`, 
+    `AutoGTPSA()`, etc.). Default is `AutoForwardDiff`. See `ADTypes.jl` for all supported backends.
+- `warn`: If `true`, warnings about the result will be printed. Default is `true`
+- `coasting_beam`: Bool that can be optionally specified as `true` or `false` to bypass the coasting-
+    beam check and save some computation time.
+- `batch`: Optionally specify if batched-solution is used as `Val{true}()` or `Val{false}()` to improve 
+    type-stability of this function.
+- `prep`: A `DifferentiationInterface.JacobianPrep` object to use for the automatic-differentation backend.
+    Default is `nothing` meaning to construct one automatically using the `autodiff` backend
+
+## Examples
+```julia
+qf = Quadrupole(Kn1=0.36, L=0.5)
+d = Drift(L=1.2)
+qd = Quadrupole(Kn1=-0.36, L=0.5)
+kick = LineElement(Kn0L=1e-5)
+
+fodo = Beamline([qf, d, qd, d, kick], 
+        species_ref=Species("electron"), E_ref=18e9) # some Beamline
+co_sol = find_closed_orbit(fodo)
+
+# To get delta-dependent closed orbits:
+v0 = [0. 0. 0. 0. 0. 0.1e-2; # δ = 0.1e-2
+      0. 0. 0. 0. 0. 0.2e-2] # δ = 0.2e-2
+
+co_sol = find_closed_orbit(fodo, v0=v0)
+
+# With BatchParams
+kick.Kn0L = BatchParam([1e-5, 2e-5])
+v0 = zeros(2, 6)
+co_sol = find_closed_orbit(fodo, v0=v0)
+
+# BatchParams + delta-dependent closed orbits:
+v0 = [0. 0. 0. 0. 0. 0.1e-2; # δ = 0.1e-2
+      0. 0. 0. 0. 0. 0.2e-2] # δ = 0.2e-2
+co_sol = find_closed_orbit(fodo, v0=v0)
+```
+"""
 function find_closed_orbit(
     bl::Beamline;
 
