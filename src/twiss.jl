@@ -282,7 +282,9 @@ function _twiss_5!(eye, b0, maps)
   end
   # Have to do one more now
   _twiss_setmap!(eye, b0.coords)
-  m_turn = eye ∘ m_turn
+  if length(maps) > 0
+    m_turn = eye ∘ m_turn
+  end
   return m_turn
 end
 
@@ -442,13 +444,18 @@ function _twiss_type_stable(
   zero_h, 
   ::Val{de_moivre},
   ::Val{normalizing_map},
-  ) where{de_moivre, normalizing_map}
+  ::Val{table}
+  ) where{de_moivre, normalizing_map,table}
   cb = _twiss_3(step_save, maps)
   b0 = _twiss_4(eye, cb, bl)
   m = _twiss_5!(eye, b0, maps)
   tunes, a = _twiss_6(m)
-  lf_table = _twiss_7(a, m, maps, s, names, idxs, symplectic_tol,  zero_LF, zero_phase, zero_orbit, zero_h, Val{de_moivre}(),Val{normalizing_map}())
-  return Twiss(NNF.nvars(m) == 5, tunes, lf_table)
+  if table
+    lf_table = _twiss_7(a, m, maps, s, names, idxs, symplectic_tol,  zero_LF, zero_phase, zero_orbit, zero_h, Val{de_moivre}(),Val{normalizing_map}())
+    return Twiss(NNF.nvars(m) == 5, tunes, lf_table)
+  else
+    return Twiss(NNF.nvars(m) == 5, tunes, nothing)
+  end
 end
 
 function twiss(
@@ -473,9 +480,9 @@ function twiss(
   # Type unstable steps:
   s, names, idxs, step_save = _twiss_1(bl, at)
   eye, maps, zero_LF, zero_phase, zero_orbit, zero_h = _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, Val{spin}(), Val{RDTs}())
-
+  table = length(step_save) == 0 ? false : true
   # Type stable steps:
-  return _twiss_type_stable(bl, eye, maps, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, Val{de_moivre}(), Val{normalizing_map}())
+  return _twiss_type_stable(bl, eye, maps, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, Val{de_moivre}(), Val{normalizing_map}(), Val{table}())
 end
 
 struct Twiss{S,T}
