@@ -78,15 +78,15 @@ function _twiss_1(bl::Beamline, at::Vector)
     # If not in an s-range, check if explicitly provided (BUT ONLY AT BEGINNING!)
     # therefore need to be done at the PREVIOUS element LAST step!
     # First element must be handled specially.
-    if !found && (any(x -> x == idx, at_idxs) || any(at_eles) do x
-          x == ele || (haskey(getfield(ele, :pdict), InheritParams) ? ele == (getfield(ele, :pdict)[InheritParams].parent) : false)
+    if !found && ((any(x -> x == idx, at_idxs) || any(at_eles) do x
+          x == ele || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(ele, :pdict)[InheritParams].parent) : false)
         end
-        )
+        ))
         push!(stmp, scur - ds_step*n_steps)
         push!(names, name)
         push!(idxs, idx)
-        push!(step_save, step_cur)
-        step_cur += 1
+        push!(step_save, step_cur-n_steps)
+        #step_cur += 1
     end
   end
 
@@ -696,7 +696,7 @@ function de_moivre_table(dt::DT, N_ele) where {DT}
   V = typeof(dt.phi_1)
   T = typeof(dt.H)
   U = typeof(dt.orbit_x)
-  
+
   cols = (;
     s = Vector{S}(undef, N_ele),
     beamline_index = Vector{Int}(undef, N_ele),
