@@ -78,7 +78,10 @@ function _twiss_1(bl::Beamline, at::Vector)
     # If not in an s-range, check if explicitly provided (BUT ONLY AT BEGINNING!)
     # therefore need to be done at the PREVIOUS element LAST step!
     # First element must be handled specially.
-    if !found && (any(x -> x == idx, at_idxs) || any(x -> x == ele, at_eles))
+    if !found && (any(x -> x == idx, at_idxs) || any(at_eles) do x
+          x == ele || (haskey(getfield(ele, :pdict), InheritParams) ? ele == (getfield(ele, :pdict)[InheritParams].parent) : false)
+        end
+        )
         push!(stmp, scur - ds_step*n_steps)
         push!(names, name)
         push!(idxs, idx)
@@ -399,7 +402,7 @@ function _twiss_7(
   phase = MVector{3}(zero(zero_phase),zero(zero_phase),zero(zero_phase))
   len = length(maps)
   for i in 2:len
-    m = H == Nothing ? m : (maps[i] ∘ m)
+    m = H == Nothing ? m : (maps[i] ∘ m ∘ inv(maps[i]))
     a = maps[i] ∘ a
     r = canonize(a, SCALAR_PHASE; phase=phase, damping=damping)
     a = a ∘ r
@@ -462,7 +465,7 @@ function twiss(
   # Initial input:
   v0::Matrix                        = zeros(1,6),
   v0_and_coast::Tuple{Matrix, Bool} = co_and_coast(bl, v0),
-  a_initial::Union{Nothing,DAMap}   = nothing, 
+  #a_initial::Union{Nothing,DAMap}   = nothing, # TODO
 
   symplectic_tol=1e-8, # Tolerance below which to include damping
   )
@@ -519,313 +522,6 @@ function co_and_coast(bl, v0)
   end
   return (co_sol.v0, co_sol.coasting_beam)
 end
-#=
-# Returns a Table of the Twiss parameters
-# See Eq. 4.28 in EBB
-# TODO need to make at work with parent elements
-function twiss(
-  bl::Beamline; 
-
-  # High level customizer kwargs
-  GTPSA_descriptor::Descriptor      = nothing, 
-  spin::Bool                        = false,
-  de_moivre::Bool                   = false,
-  normalizing_map::Bool             = false,
-  RDTs::Bool                        = false,
-  at::Union{Colon, Vector}          = :,
-
-  # Initial input:
-  v0::Matrix                        = zeros(1,6),
-  v0_and_coast::Tuple{Matrix, Bool} = co_and_coast(bl, v0),
-  a_initial::Union{Nothing,DAMap}   = nothing, 
-
-  symplectic_tol=1e-8, # Tolerance below which to include damping
-  )
-
-  s_ranges = at_to_s_ranges(at, bl)
-  s, names, idxs = base_twiss_cols(bl, s_ranges)
-
-  # Get map at each `at` and cache into preallocated array 
-  if isnothing(GTPSA_descriptor)
-    storedesc = GTPSA.desc_current
-    GTPSA_descriptor = Descriptor(6,1)
-    GTPSA.desc_current = storedesc # Don't reset the global
-  end
-
-  nn = GTPSA.numnn(GTPSA_descriptor)
-  if nn < 6
-    error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")
-  end
-
-  # Construct the main map:
-  Δv = Matrix{TPS64{GTPSA.Dynamic}}(undef, 1, 6)
-  for i in 1:6
-    Δv[1,i] = TPS64(use=GTPSA_descriptor)
-    Δv[1,i][i] = 1
-    Δv[1,i][0] = v0[1,i] # expand around closed orbit
-  end
-
-  if spin
-    q = [one(first(Δv)) zero(first(Δv)) zero(first(Δv)) zero(first(Δv))]
-    b0 = Bunch(Δv, q)
-  else
-    b0 = Bunch(Δv)
-  end
-
-  b0 = 
-  BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
-
-  # linear_LF = true -> floats, linear_LF = false -> TPSs
-  numtype = TI.numtype(b0.coords.v[1])
-  init = TI.getinit(b0.coords.v[1])
-  mo = TI.maxord(init)
-  nn = TI.ndiffs(init)
-  nv = 6
-  np = nn-nv
-  if coasting_beam
-    nv -= 1
-    np += 1
-  end
-  N_ele = at isa Colon ? length(bl.line)+1 : length(at)
-
-  # Type of the BENGTSSON POLYNOMIAL DICT
-  if RDTs
-    cache = Vector{}
-    if np > 0
-      zero_h = TI.init_tps(numtype, init)
-    else
-      zero_h = zero(numtype)
-    end
-  else
-    zero_h = nothing # Don't compute it
-  end
-
-  # If RDTs=true, then we should cache the map at each `at`
-  track!(b0, bl)
-
-  m = DAMap(nv=nv, np=np, v=view(dropdims(b0.coords.v; dims=1), 1:nv), q=b0.coords.q)
-
-  # twiss will ALWAYS compute the (amplitude-dependent) tunes, even when `at` is empty
-  # function barrier:
-  tunes, a = _tunes_and_a(m, mo, coasting_beam)
-
-  if !coasting_beam && mo == 1
-    tunes = TI.scalar.(tunes)
-  end
-
-  if at isa Colon || (at isa AbstractArray && length(at) > 0)
-    if !(at isa Colon)
-      if eltype(at) != LineElement
-        error("Keyword argument `at` must be either a Colon (:) to specify all elements, 
-                an empty array (which can have Any type) to specify no elements, or an 
-                array with element type LineElement.")
-      else
-        at = sort(at, by=x->x.beamline_index)
-      end
-    end
-
-    # Check if symplectic or not
-    damping = norm(NNF.checksymp(NNF.jacobian(m))) > symplectic_tol
-
-    # Type of the LATTICE FUNCTIONS
-    if mo > 1
-      zero_LF = TI.init_tps(numtype, init)
-    else
-      zero_LF = zero(numtype)
-    end
-
-    # Type of the PHASES
-    if mo > 1 || coasting_beam
-      zero_phase = TI.init_tps(numtype, init)
-    else
-      tunes = TI.scalar.(tunes)
-      zero_phase = zero(numtype)
-    end
-    
-    # Type of the ORBIT
-    if coasting_beam || nn > 6
-      zero_orbit = TI.init_tps(numtype, init)
-    else
-      zero_orbit = zero(numtype)
-    end
-
-    # Fill the s array now for each at
-    # as well as names and beamline_idxs
-    stmp = Vector{Any}(undef, N_ele)
-    names = Vector{String}(undef, N_ele)
-    idxs = Vector{Int}(undef, N_ele)
-    scur = 0f0
-    idx = 1
-    for ele in bl.line
-      if at isa Colon || ele in at
-        stmp[idx] = scur
-        idxs[idx] = ((ele.BeamlineParams)::BeamlineParams).beamline_index
-        names[idx] = ((ele.UniversalParams)::UniversalParams).name
-        idx += 1
-      end
-      scur += ele.L
-    end
-    if at isa Colon
-      stmp[end] = scur
-      idxs[end] = -1
-      names[end] = "END OF BEAMLINE"
-    end
-    s = typeof(scur).(stmp)
-    lf_table = _twiss(a, b0, bl, idxs, names, s, Val{de_moivre}(), damping, zero_LF, zero_phase, zero_orbit, zero_h, at, Val{normalizing_map}())
-  else
-    lf_table = nothing
-  end
-
-  return Twiss(coasting_beam, tunes, lf_table)
-end
-
-function _tunes_and_a(m::DAMap, mo, coasting_beam)
-  a = normal(m)
-  c = c_map(m) # Transform to phasor basis
-  r = inv(c) ∘ inv(a) ∘ m ∘ a ∘ c
-  # Need to cut highest order
-  Q_x = cutord(real(-log(SciBmad.NNF.factor_out(r.v[1], 1))/(2*pi*im)), mo)
-  Q_y = cutord(real(-log(SciBmad.NNF.factor_out(r.v[3], 3))/(2*pi*im)), mo)
-  if coasting_beam
-    Q_s = real(r.v[5])
-    TI.seti!(Q_s, 0, 5) # subtract time identity
-  else
-    Q_s = cutord(real(-log(SciBmad.NNF.factor_out(r.v[5], 5))/(2*pi*im)), mo)
-  end
-  if isnothing(m.q)
-    return SA[Q_x, Q_y, Q_s], a
-  else
-    Q_spin = -atan(real(r.q.q2), real(r.q.q0))/pi # not two pi bc quaternion
-    return SA[Q_x, Q_y, Q_s, Q_spin], a
-  end
-end
-
-function _twiss(
-    a::DAMap{<:Any,<:Any,Q}, 
-    b0::Bunch, 
-    bl::Beamline, 
-    idxs, 
-    names,
-    s,
-    ::Val{de_moivre}, 
-    damping,
-    zero_LF::T, 
-    zero_phase::V,
-    zero_orbit::U, 
-    zero_h::H,
-    at::C,
-    ::Val{normalizing_map},
-  ) where {de_moivre, Q, T, V, U, H, C, normalizing_map}
-  # Ripken-Wolski-Forest de Moivre coupling formalism
-  
-  # These checks should all be static ================================
-  # if compiler isn't a dumb dumb, which it definitely can be
-  COMPUTE_TWISS = de_moivre ? compute_de_moivre : compute_sagan_rubin
-  LF = !de_moivre ? twiss_tuple : de_moivre_tuple 
-  LF_TABLE = !de_moivre ? twiss_table : de_moivre_table
-  SCALAR_LF = TI.is_tps_type(T) isa TI.IsTPSType ? Val{false}() : Val{true}()
-  SCALAR_PHASE = TI.is_tps_type(V) isa TI.IsTPSType ? Val{false}() : Val{true}()
-  SCALAR_ORBIT = TI.is_tps_type(U) isa TI.IsTPSType ? Val{false}() : Val{true}()
-  INCLUDE_A = normalizing_map ? at -> at : at -> nothing
-  BENGTSSON = H == Nothing ? (a0, a1, m)->nothing : compute_bengtsson
-
-  if Q == Nothing
-    PROCESS_SPIN = at -> nothing
-  else
-    # THIS COULD BE OPTIMIZED WITH CLOSURE...
-    PROCESS_SPIN = at -> begin
-      i2 = zero(at)
-      NNF.setray!(i2.v; v_matrix=I)
-      TI.seti!(i2.q.q2, 1, 0)
-      n = at ∘ i2 ∘ inv(at)
-      SA[n.q.q1, n.q.q2, n.q.q3]
-    end
-  end
-  # Note:
-  # Descriptor(6,1) with coasting beam gives SCALAR_LF = true 
-  # but SCALAR_ORBIT = false
-  # In general we will canonize using SCALAR_ORBIT, and compute 
-  # lattice functions using SCALAR_LF. 
-  # Finally we have the phases. The phases are done during 
-  # canonization, and so should have the same type as the orbit.
-  if SCALAR_ORBIT isa Val{false}
-    PROCESS_ORBIT = v -> begin
-      StaticArrays.sacollect(SVector{6,U}, begin 
-      if i < 6
-        TI.seti!(v[i], 0, i)
-      end
-      v[i]
-      end for i in 1:6)
-    end
-  else
-    PROCESS_ORBIT = v -> StaticArrays.sacollect(SVector{6,U}, TI.scalar(v[i]) for i in 1:6)
-  end
-  # =================================================================
-  if C == Colon
-    N_ele = length(bl.line)+1
-  else
-    N_ele = length(at)
-  end
-
-  r = canonize(a, SCALAR_PHASE; damping=damping)
-  a = a ∘ r
-  fc = factorize(a)
-  NNF_tuple = COMPUTE_TWISS(fc.a1, SCALAR_LF)
-  lf1 = LF(
-    idxs[1], 
-    names[1], 
-    zero(first(s)), 
-    SA[zero(zero_phase),
-      zero(zero_phase),
-      zero(zero_phase)], 
-    NNF_tuple, 
-    PROCESS_ORBIT(fc.a0.v), 
-    PROCESS_SPIN(a), 
-    INCLUDE_A(a),
-    BENGTSSON(fc.a0, fc.a1, )
-  )
-  lf_table = LF_TABLE(lf1, N_ele)
-
-  idx = 1
-  if C == Colon || bl.line[1] in at
-    lf_table[1] = lf1
-    idx += 1
-    if idx > N_ele
-      return lf_table
-    end
-  end
-
-  phase = MVector{3}(zero(zero_phase),zero(zero_phase),zero(zero_phase))
-  len = length(bl.line)
-  for i in 1:len
-    b0.coords.v .= view(a.v, 1:6)'
-    if Q != Nothing
-      b0.coords.q[1] = a.q.q0
-      b0.coords.q[2] = a.q.q1
-      b0.coords.q[3] = a.q.q2
-      b0.coords.q[4] = a.q.q3
-    end
-    track!(b0, bl.line[i])
-    NNF.setray!(a.v; v=view(b0.coords.v, 1:6))
-    if Q != Nothing
-      NNF.setquat!(a.q; q=Quaternion(b0.coords.q[1], b0.coords.q[2], b0.coords.q[3], b0.coords.q[4]))
-    end
-    #s = lf_table.s[i] + S(bl.line[i].L)::S
-    r = canonize(a, SCALAR_PHASE; phase=phase, damping=damping)
-    a = a ∘ r
-    if C == Colon || (i != 1 && bl.line[i] in at)
-      fc = factorize(a)
-      lfi = LF(idxs[idx], names[idx], s[idx], SA[copy(phase[1]), copy(phase[2]), copy(phase[3])], COMPUTE_TWISS(fc.a1, SCALAR_LF), PROCESS_ORBIT(fc.a0.v), PROCESS_SPIN(a), INCLUDE_A(a))
-      lf_table[idx] = lfi
-      idx += 1
-      if idx > N_ele
-        break
-      end
-    end
-  end
-  return lf_table
-end
-=#
 
 function twiss_tuple(s, beamline_index, name, phi, NNF_tuple::TT, orbit, n, a, h) where {TT}
   outt = (;
@@ -850,8 +546,11 @@ function twiss_tuple(s, beamline_index, name, phi, NNF_tuple::TT, orbit, n, a, h
     orbit_py = orbit[4],
     orbit_z  = orbit[5],
     orbit_pz = orbit[6],
-    h = h, # Bengtsson polynomial dict
   )
+
+  if !isnothing(h)
+    outt = merge(outt, (; h = h)) # Bengtsson polynomial dict
+  end
 
   # static check
   if hasfield(TT, :eta) # NOT coasting
@@ -890,7 +589,6 @@ function twiss_table(tt::TT, N_ele) where {TT}
   V = typeof(tt.phi_1)
   T = typeof(tt.beta_1)
   U = typeof(tt.orbit_x)
-  H = typeof(tt.h)
 
   cols = (;
     s = Vector{S}(undef, N_ele),
@@ -914,8 +612,12 @@ function twiss_table(tt::TT, N_ele) where {TT}
     orbit_py = Vector{U}(undef, N_ele),
     orbit_z = Vector{U}(undef, N_ele),
     orbit_pz = Vector{U}(undef, N_ele),
-    h = Vector{H}(undef, N_ele),
   )
+
+  if hasfield(TT, :h)
+    H = typeof(tt.h)
+    cols = merge(cols, (; h = Vector{H}(undef, N_ele)))
+  end
 
   # static check
   if hasfield(TT, :eta_1)
@@ -972,8 +674,11 @@ function de_moivre_tuple(s, beamline_index, name, phi, NNF_tuple, orbit, n, a, h
     orbit_py = orbit[4],
     orbit_z  = orbit[5],
     orbit_pz = orbit[6],
-    h = h,
   )
+
+  if !isnothing(h)
+    outt = merge(outt, (; h = h)) # Bengtsson polynomial dict
+  end
 
   if !isnothing(n)
     outt = merge(outt, (; n_x = n[1], n_y = n[2], n_z = n[3],))
@@ -991,7 +696,7 @@ function de_moivre_table(dt::DT, N_ele) where {DT}
   V = typeof(dt.phi_1)
   T = typeof(dt.H)
   U = typeof(dt.orbit_x)
-  H = typeof(dt.h)
+  
   cols = (;
     s = Vector{S}(undef, N_ele),
     beamline_index = Vector{Int}(undef, N_ele),
@@ -1009,8 +714,12 @@ function de_moivre_table(dt::DT, N_ele) where {DT}
     orbit_py = Vector{U}(undef, N_ele),
     orbit_z = Vector{U}(undef, N_ele),
     orbit_pz = Vector{U}(undef, N_ele),
-    h = Vector{H}(undef, N_ele),
   )
+
+  if hasfield(DT, :h)
+    H = typeof(dt.h)
+    cols = merge(cols, (; h = Vector{H}(undef, N_ele)))
+  end
 
   if hasfield(DT, :n_x)
     W = typeof(dt.n_x)

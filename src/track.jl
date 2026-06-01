@@ -68,7 +68,7 @@ function track(
     bl::Beamline;
 
     # User can either specify kwargs to construct a bunch:
-    v0::AbstractMatrix,
+    v0::AbstractMatrix=zeros(6, 1),
     spin::Bool=false,
     q0::Union{AbstractMatrix,Nothing}=spin ? (q = similar(v0, (size(v0, 1), 4)); q .= 0; q[:,1] .= 1; q) : nothing,
     weight::Union{AbstractMatrix,Nothing}=nothing,
