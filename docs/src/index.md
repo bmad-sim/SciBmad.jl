@@ -8,7 +8,7 @@ This documentation is a work in progress. Please see the [examples](https://gith
 :caption: SciBmad
 
 overview
-element-parameters
+# element-parameters
 tracking-methods
 miscellaneous
 ```
