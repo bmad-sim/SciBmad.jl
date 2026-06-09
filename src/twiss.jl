@@ -59,7 +59,7 @@ function _twiss_1(bl::Beamline, at::Vector)
     name = up.name
     tm = up.tracking_method
     L = up.L
-    n_steps, ds_step = find_steps(tm, L)
+    n_steps, ds_step = BeamTracking.find_steps(tm, L)
 
     # Check which steps are inside any of the ranges
     found = false
@@ -108,23 +108,6 @@ end
 # Colon means save everywhere:
 _twiss_1(bl::Beamline, ::Colon) = _twiss_1(bl, [(0., Inf)])
 
-# ========== UTILITIES: STEP 1 =======================
-function find_steps(tm::BeamTracking.AbstractYoshida, L) 
-  if L == 0
-    return (1, L)
-  end
-  ds_step = tm.ds_step
-  n_steps = tm.n_steps
-  if ds_step < 0
-    ds_step = L / n_steps
-    return (n_steps, ds_step)
-  else
-    return (ceil(Int, L / ds_step), ds_step)
-  end
-end
-find_steps(::SciBmadStandard, L) = (1, L)
-find_steps(::Any, L) = (1, L)
-
 # ========== STEP 2 ==================================
 # Preallocate maps array and resolve types of everything
 
@@ -166,7 +149,7 @@ function _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, ::Val{spin}, ::Val{
     zero_phase = TI.init_tps(numtype, init)
   else
     zero_phase = zero(numtype)
-  end
+  end 
   
   # Type of the ORBIT
   if coasting_beam || nn > 6
@@ -221,11 +204,13 @@ function _twiss_3(_step_save, _maps)
     _cur_step_save_idx = 1
   end
   let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx)
-    return (coords, ds_step, g) -> begin
+    return (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
       curstep[] += 1
       if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]] # Store the current map
         map = maps[cur_step_save_idx[]]
+        transforms_out!(i, coords, cur_s, cur_t_ref)
         _twiss_setmap!(map, coords)
+        transforms_in!(i, coords, cur_s, cur_t_ref)
         cur_step_save_idx[] += 1
       end
     end
@@ -277,8 +262,15 @@ end
 function _twiss_5!(eye, b0, maps)
   # Now we just concatenate the maps
   m_turn = eye
+  i=1
   for map in maps
+    #=
+    if i == 4 || i == 5 || i == 6
+      @show GTPSA.jacobian(map.v)
+    end
+    =#
     m_turn = map ∘ m_turn
+    i += 1
   end
   # Have to do one more now
   _twiss_setmap!(eye, b0.coords)
