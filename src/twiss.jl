@@ -196,21 +196,25 @@ end
 # ========== STEP 3 ==================================
 # Construct the closure
 
-function _twiss_3(_step_save, _maps)
+function _twiss_3(_step_save, _maps, _in_body_coordinates)
   # Note: need to handle the first element differently
   if length(_step_save) > 0 && first(_step_save) == 0
     _cur_step_save_idx = 2
   else
     _cur_step_save_idx = 1
   end
-  let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx)
+  let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx), in_body_coordinates=_in_body_coordinates
     return (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
       curstep[] += 1
       if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]] # Store the current map
         map = maps[cur_step_save_idx[]]
-        transforms_out!(i, coords, cur_s, cur_t_ref)
+        if !in_body_coordinates
+          transforms_out!(i, coords, cur_s, cur_t_ref)
+        end
         _twiss_setmap!(map, coords)
-        transforms_in!(i, coords, cur_s, cur_t_ref)
+        if !in_body_coordinates
+          transforms_in!(i, coords, cur_s, cur_t_ref)
+        end
         cur_step_save_idx[] += 1
       end
     end
@@ -264,11 +268,6 @@ function _twiss_5!(eye, b0, maps)
   m_turn = eye
   i=1
   for map in maps
-    #=
-    if i == 4 || i == 5 || i == 6
-      @show GTPSA.jacobian(map.v)
-    end
-    =#
     m_turn = map ∘ m_turn
     i += 1
   end
@@ -434,11 +433,12 @@ function _twiss_type_stable(
   zero_phase, 
   zero_orbit, 
   zero_h, 
+  in_body_coordinates,
   ::Val{de_moivre},
   ::Val{normalizing_map},
   ::Val{table}
   ) where{de_moivre, normalizing_map,table}
-  cb = _twiss_3(step_save, maps)
+  cb = _twiss_3(step_save, maps, in_body_coordinates)
   b0 = _twiss_4(eye, cb, bl)
   m = _twiss_5!(eye, b0, maps)
   tunes, a = _twiss_6(m)
@@ -460,6 +460,7 @@ function twiss(
   normalizing_map::Bool                       = false,
   RDTs::Bool                                  = false,
   at::Union{Colon, Vector}                    = :,
+  in_body_coordinates::Bool                   = false, 
 
   # Initial input:
   v0::Matrix                        = zeros(1,6),
@@ -474,7 +475,7 @@ function twiss(
   eye, maps, zero_LF, zero_phase, zero_orbit, zero_h = _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, Val{spin}(), Val{RDTs}())
   table = length(step_save) == 0 ? false : true
   # Type stable steps:
-  return _twiss_type_stable(bl, eye, maps, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, Val{de_moivre}(), Val{normalizing_map}(), Val{table}())
+  return _twiss_type_stable(bl, eye, maps, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, in_body_coordinates, Val{de_moivre}(), Val{normalizing_map}(), Val{table}())
 end
 
 struct Twiss{S,T}
