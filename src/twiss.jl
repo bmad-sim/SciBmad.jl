@@ -336,7 +336,7 @@ function _twiss_7(
   if Q == Nothing
     PROCESS_SPIN = at -> nothing
   else
-    i2 = zero(at)
+    i2 = zero(a)
     NNF.setray!(i2.v; v_matrix=I)
     TI.seti!(i2.q.q2, 1, 0)
     let i2=i2
