@@ -39,12 +39,10 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - CPU/GPU parallelized Numerical Analysis of Fundamental Frequencies (NAFF)
 - CPU/GPU parallelized Newton root finder
 - CPU/GPU parallelized and differentiable symplectic tracking through arbitrary electromagnetic fields (implicit integration)
-
-### Next Release 0.4.1
 - Twiss functions at every integration step (inside elements)
 - Resonance driving terms (including parameter dependence) included in Twiss
 
-### Release 0.4.2
+### Release 0.4.1
 - Open lattice Twiss function propagation
 
 ### Future Releases
