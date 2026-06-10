@@ -1,3 +1,4 @@
+__precompile__(false)
 module SciBmad
 using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
 using Reexport

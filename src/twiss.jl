@@ -137,6 +137,19 @@ function _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, ::Val{spin}, ::Val{
     np += 1
   end
 
+  # If uniform truncation order, then we can concatenate maps around the ring 
+  # instead of tracking twice (one to get `m`, another to propagate `a`
+  desc = unsafe_load(GTPSA_descriptor.desc)
+  po = desc.po
+  if all(x->x == mo && (po == 0 || x == po), unsafe_wrap(Vector{UInt8}, desc.no, nn))
+    concat = true
+  else
+    if RDTs
+      error("twiss with RDTs=true requires a GTPSA Descriptor with uniform truncation order for all variables and parameters")
+    end
+    concat = false
+  end
+
   # Type of the LATTICE FUNCTIONS
   if mo > 1
     zero_LF = TI.init_tps(numtype, init)
@@ -176,11 +189,10 @@ function _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, ::Val{spin}, ::Val{
   end
 
   eye = DAMap(init=init, nv=nv, np=np, v0=view(v0, :, 1:nv), v_matrix=I, q=(spin ? I : nothing))
-  maps = @noinline _twiss_2_preallocate(step_save, eye)
-  return eye, maps, zero_LF, zero_phase, zero_orbit, zero_h
+  return concat, eye, zero_LF, zero_phase, zero_orbit, zero_h
 end
 
-function _twiss_2_preallocate(step_save, map::T) where {T<:DAMap}
+function _twiss_concat_preallocate(step_save, map::T) where {T<:DAMap}
   maps = Vector{T}(undef, length(step_save))
   for i in 1:length(step_save)
     if i == 1 && step_save[1] == 0
@@ -420,10 +432,9 @@ function _twiss_7(
   return lf_table
 end
 
-function _twiss_type_stable(
+function _twiss_concat_type_stable(
   bl,
   eye, 
-  maps, 
   s, 
   names, 
   idxs, 
@@ -438,12 +449,186 @@ function _twiss_type_stable(
   ::Val{normalizing_map},
   ::Val{table}
   ) where{de_moivre, normalizing_map,table}
+  maps = _twiss_concat_preallocate(step_save, eye)
   cb = _twiss_3(step_save, maps, in_body_coordinates)
   b0 = _twiss_4(eye, cb, bl)
   m = _twiss_5!(eye, b0, maps)
   tunes, a = _twiss_6(m)
   if table
     lf_table = _twiss_7(a, m, maps, s, names, idxs, symplectic_tol,  zero_LF, zero_phase, zero_orbit, zero_h, Val{de_moivre}(),Val{normalizing_map}())
+    return Twiss(NNF.nvars(m) == 5, tunes, lf_table)
+  else
+    return Twiss(NNF.nvars(m) == 5, tunes, nothing)
+  end
+end
+
+function _twiss_noconcat_type_stable(
+  bl,
+  eye::DAMap{<:Any,<:Any,Q}, 
+  s, 
+  names, 
+  idxs, 
+  step_save, 
+  symplectic_tol,
+  zero_LF::T, 
+  zero_phase::V, 
+  zero_orbit::U, 
+  zero_h::H, 
+  in_body_coordinates,
+  ::Val{de_moivre},
+  ::Val{normalizing_map},
+  ::Val{table}
+  ) where {Q, T, V, U, H, de_moivre, normalizing_map, table}
+  # For noconcat, we need to first just track around the ring to get the 1-turn map
+  if NNF.nvars(eye) == 5
+    v = reshape([(i < 5 ? eye.v0[i]+copy(eye.v[i]) : copy(eye.v[i])) for i in 1:6], 1, 6)
+  else
+    v = reshape([eye.v0[i]+copy(eye.v[i]) for i in 1:6], 1, 6)
+  end
+  q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
+  b0 = Bunch(v=v, q=q)
+  BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
+  track!(b0, bl)
+  m = zero(eye)
+  _twiss_setmap!(m, b0.coords)
+
+  tunes, a = _twiss_6(m)
+
+  if table
+    if H != Nothing
+      error("twiss with RDTs=true is incompatible with _twiss_noconcat_type_stable")
+    end
+    COMPUTE_TWISS = de_moivre ? compute_de_moivre : compute_sagan_rubin
+    LF = !de_moivre ? twiss_tuple : de_moivre_tuple 
+    LF_TABLE = !de_moivre ? twiss_table : de_moivre_table
+    SCALAR_LF = TI.is_tps_type(T) isa TI.IsTPSType ? Val{false}() : Val{true}()
+    SCALAR_PHASE = TI.is_tps_type(V) isa TI.IsTPSType ? Val{false}() : Val{true}()
+    SCALAR_ORBIT = TI.is_tps_type(U) isa TI.IsTPSType ? Val{false}() : Val{true}()
+    INCLUDE_A = normalizing_map ? at -> at : at -> nothing
+    BENGTSSON = H == Nothing ? (a0, a1, m)->nothing : compute_bengtsson
+
+    if Q == Nothing
+      PROCESS_SPIN = at -> nothing
+    else
+      i2 = zero(a)
+      NNF.setray!(i2.v; v_matrix=I)
+      TI.seti!(i2.q.q2, 1, 0)
+      let i2=i2
+        PROCESS_SPIN = at -> begin
+          n = at ∘ i2 ∘ inv(at)
+          SA[n.q.q1, n.q.q2, n.q.q3]
+        end
+      end
+    end
+    # Note:
+    # Descriptor(6,1) with coasting beam gives SCALAR_LF = true 
+    # but SCALAR_ORBIT = false
+    # In general we will canonize using SCALAR_ORBIT, and compute 
+    # lattice functions using SCALAR_LF. 
+    # Finally we have the phases. The phases are done during 
+    # canonization, and so should have the same type as the orbit.
+    if SCALAR_ORBIT isa Val{false}
+      PROCESS_ORBIT = v -> begin
+        StaticArrays.sacollect(SVector{6,U}, begin 
+        vi = zero(v[i])
+        TI.copy_tps!(vi, v[i])
+        if i < 6
+          TI.seti!(vi, 0, i)
+        end
+        vi
+        end for i in 1:6)
+      end
+    else
+      PROCESS_ORBIT = v -> StaticArrays.sacollect(SVector{6,U}, TI.scalar(v[i]) for i in 1:6)
+    end
+    # =================================================================
+    damping = norm(NNF.checksymp(NNF.jacobian(m))) > symplectic_tol
+    r = canonize(a, SCALAR_PHASE; damping=damping)
+    a = a ∘ r
+    # Compute Twiss at beginning:
+    fc = factorize(a)
+    NNF_tuple = COMPUTE_TWISS(fc.a1, SCALAR_LF)
+    lf1 = LF(
+      s[1],
+      idxs[1], 
+      names[1], 
+      SA[
+        zero(zero_phase),
+        zero(zero_phase),
+        zero(zero_phase)
+      ], 
+      NNF_tuple, 
+      PROCESS_ORBIT(fc.a0.v), 
+      PROCESS_SPIN(a), 
+      INCLUDE_A(a),
+      BENGTSSON(fc.a0, fc.a1, m)
+    )
+    lf_table = LF_TABLE(lf1, length(s))
+    if length(step_save) > 0 && first(step_save) == 0
+      lf_table[1] = lf1
+      _cur_step_save_idx = 2
+    else
+      _cur_step_save_idx = 1
+    end
+    phase = MVector{3}(zero(zero_phase),zero(zero_phase),zero(zero_phase))
+    # stupid let block for the stupid compiler for the closure:
+    let COMPUTE_TWISS=COMPUTE_TWISS, LF=LF, SCALAR_LF=SCALAR_LF, SCALAR_PHASE=SCALAR_PHASE, 
+      INCLUDE_A=INCLUDE_A, BENGTSSON=BENGTSSON, PROCESS_ORBIT=PROCESS_ORBIT, PROCESS_SPIN=PROCESS_SPIN,
+      step_save=step_save, lf_table=lf_table, curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx), 
+      in_body_coordinates=in_body_coordinates, damping=damping, phase=phase, a=a
+      cb = (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+        curstep[] += 1
+        if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]]
+          if !in_body_coordinates
+            transforms_out!(i, coords, cur_s, cur_t_ref)
+          end
+          j = cur_step_save_idx[] 
+          _twiss_setmap!(a, coords)
+          rj = canonize(a, SCALAR_PHASE; phase=phase, damping=damping)
+          aj = a ∘ rj
+          fcj = factorize(aj)
+          lfj = LF(
+            s[j],
+            idxs[j], 
+            names[j], 
+            SA[
+              copy(phase[1]),
+              copy(phase[2]),
+              copy(phase[3])
+            ], 
+            COMPUTE_TWISS(fcj.a1, SCALAR_LF), 
+            PROCESS_ORBIT(fcj.a0.v), 
+            PROCESS_SPIN(aj), 
+            INCLUDE_A(aj),
+            BENGTSSON(fcj.a0, fcj.a1, m)
+          )
+          for k in 1:6
+            TI.copy!(coords.v[k], aj.v[k])
+          end
+          if Q != Nothing
+            for k in 1:4
+              TI.copy!(coords.q[k], aj.q[k])
+            end
+          end
+          lf_table[j] = lfj
+          if !in_body_coordinates
+            transforms_in!(i, coords, cur_s, cur_t_ref)
+          end
+          cur_step_save_idx[] += 1
+        end
+      end
+      for i in 1:6
+        TI.copy!(b0.coords.v[i], a.v[i])
+      end
+      if Q != Nothing
+        for i in 1:4
+          TI.copy!(b0.coords.q[i], a.q[i])
+        end
+      end
+      bt = Bunch(v=b0.coords.v, q=b0.coords.q, callbacks=(cb,))
+      BTBL.check_bl_bunch!(bt, bl, false) # Do not notify
+      track!(bt, bl)
+    end
     return Twiss(NNF.nvars(m) == 5, tunes, lf_table)
   else
     return Twiss(NNF.nvars(m) == 5, tunes, nothing)
@@ -472,10 +657,15 @@ function twiss(
   
   # Type unstable steps:
   s, names, idxs, step_save = _twiss_1(bl, at)
-  eye, maps, zero_LF, zero_phase, zero_orbit, zero_h = _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, Val{spin}(), Val{RDTs}())
+  concat, eye, zero_LF, zero_phase, zero_orbit, zero_h = _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, Val{spin}(), Val{RDTs}())
   table = length(step_save) == 0 ? false : true
+  
   # Type stable steps:
-  return _twiss_type_stable(bl, eye, maps, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, in_body_coordinates, Val{de_moivre}(), Val{normalizing_map}(), Val{table}())
+  if concat
+    return _twiss_concat_type_stable(bl, eye, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, in_body_coordinates, Val{de_moivre}(), Val{normalizing_map}(), Val{table}())
+  else
+    return _twiss_noconcat_type_stable(bl, eye, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, in_body_coordinates, Val{de_moivre}(), Val{normalizing_map}(), Val{table}())
+  end
 end
 
 struct Twiss{S,T}
