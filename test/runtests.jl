@@ -80,7 +80,7 @@ using Test
         # TODO: Tao's dbeta_dpz_a shows a non-physical jump between elements 1 and 2
         # (both at s=0) and a ~3x discrepancy vs SciBmad at most elements.
         # SciBmad gives smooth, continuous values. Run test/investigate_chromatic.jl
-        # to compare side-by-side and determine which code is correct.
+        # to compare side-by-side.
         ref = readdlm(
             joinpath(@__DIR__, "reference", "esr-chromatic-tao.csv"),
             ',', Float64; skipstart=1

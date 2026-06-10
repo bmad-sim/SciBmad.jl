@@ -60,22 +60,37 @@ function Base.show(io::IO, res::TrackingResult)
 end
 
 """
-    track(bl::Beamline; kwargs...)
+    track(bl::Beamline; kwargs...) -> TrackingResult
 
+All-encompassing function to track particles through the beamline `bl` using the configured 
+settings specified by the keyword arguments `kwargs`.
+
+# Keyword Arguments
+- `v0`: A matrix of size `(n_particles, 6)` storing the initial particle phase space coordinates
+- `spin`: If `true`, spin tracking will be enabled with identity quaternions as initial quaternions
+- `q0`: A matrix of size `(n_particles, 4)` storing the initial particle spin quaternions if spin tracking
+- `weight`: Optional vector of length `(n_particles)` specifying macroparticle weights per particle, default 
+    is `nothing` corresponding to uniform weights for all particles
+
+  
 
 """
 function track(
     bl::Beamline;
 
     # User can either specify kwargs to construct a bunch:
-    v0::AbstractMatrix,
+    v0::AbstractMatrix=zeros(1, 6),
     spin::Bool=false,
     q0::Union{AbstractMatrix,Nothing}=spin ? (q = similar(v0, (size(v0, 1), 4)); q .= 0; q[:,1] .= 1; q) : nothing,
     weight::Union{AbstractMatrix,Nothing}=nothing,
 
     # Or explicitly provide a Bunch:
     bunch::Bunch=Bunch(; 
-      v=v0, spin=spin, q=q0, weight=weight, species=bl.species_ref, p_over_q_ref=(_p_over_q_ref = bl.p_over_q_ref; _p_over_q_ref isa TimeDependentParam ? _p_over_q_ref(0) : _p_over_q_ref)
+      v=copy.(v0), spin=spin, 
+      q=(!isnothing(q0) ? copy.(q0) : nothing), 
+      weight=(!isnothing(weight) ? copy.(weight) : nothing), 
+      species=bl.species_ref, 
+      p_over_q_ref=(_p_over_q_ref = bl.p_over_q_ref; _p_over_q_ref isa TimeDependentParam ? _p_over_q_ref(0) : _p_over_q_ref)
     ),
 
     config=TrackingConfig(use_KA=!(KA.get_backend(bunch.v) isa KA.CPU)),
