@@ -1,7 +1,7 @@
 name = "SciBmad"
 uuid = "7bf6e793-a2ec-421f-8700-d1465381ee80"
-authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
 version = "0.4.0"
+authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -29,7 +29,7 @@ TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 ADTypes = "1"
 AtomicAndPhysicalConstants = "0.9"
 BatchSolve = "0.1.2"
-BeamTracking = "0.6.0"
+BeamTracking = "0.6.0, 0.7"
 Beamlines = "0.9.2"
 DelimitedFiles = "1"
 DifferentiationInterface = "0.7.4"
