@@ -1,0 +1,265 @@
+% !TeX spellcheck = en_GB
+% !TeX program = lualatex
+%
+% v 2.3  Feb 2019   Volker RW Schaa
+%		# changes in the collaboration therefore updated file ''jacow-collaboration.tex''
+%		# all References with DOIs have their period/full stop before the DOI (after pp. or year)
+%		# in the author/affiliation block all ZIP codes in square brackets removed as it was not %         understood as optional parameter and ZIP codes had bin put in brackets
+%       # References to the current IPAC are changed to ''IPAC'19, Melbourne, Australia''
+%       # font for ‘url’ style changed to ‘newtxtt’ as it is easier to distinguish ''O'' and ''0''
+%
+\documentclass[a4paper,
+               %boxit,        % check whether paper is inside correct margins
+               %titlepage,    % separate title page
+               %refpage       % separate references
+               biblatex,     % biblatex is used
+               %keeplastbox,   % flushend option: not to un-indent last line in References
+               %nospread,     % flushend option: do not fill with whitespace to balance columns
+               %hyphens,      % allow \url to hyphenate at ''-'' (hyphens)
+               %xetex,        % use XeLaTeX to process the file
+               %luatex,       % use LuaLaTeX to process the file
+               ]{jacow}
+%
+% ONLY FOR \footnote in table/tabular
+%
+\usepackage{pdfpages,multirow,ragged2e} %
+\usepackage{minted}
+\usepackage{enumitem}
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=\text{\ding{111}}}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+\newcommand{\gtpsa}{\texttt{GTPSA.\lowercase{jl}}
+}
+\newcommand{\gtpsap}{\texttt{GTPSA.\lowercase{jl}}.
+}
+\newcommand{\tps}{\texttt{TPS}
+}
+\newcommand{\tpss}{\texttt{TPS}s
+}
+\newcommand{\tpsp}{\texttt{TPS}.
+}
+\newcommand{\tpssp}{\texttt{TPS}s.
+}
+\newcommand{\tpssc}{\texttt{TPS}s,
+}
+\newcommand{\descriptor}{\texttt{Descriptor}
+}
+\newcommand{\descriptors}{\texttt{Descriptor}s
+}
+\newcommand{\descriptorp}{\texttt{Descriptor}.
+}
+\newcommand{\fastgtpsa}{\texttt{@F\lowercase{ast}GTPSA}
+}
+\newcommand{\fastgtpsab}{\texttt{@F\lowercase{ast}GTPSA!}
+}
+
+% CHANGE SEQUENCE OF GRAPHICS EXTENSION TO BE EMBEDDED
+% ----------------------------------------------------
+% test for XeTeX where the sequence is by default eps-> pdf, jpg, png, pdf, ...
+%    and the JACoW template provides JACpic2v3.eps and JACpic2v3.jpg which
+%    might generates errors, therefore PNG and JPG first
+%
+\makeatletter%
+	\ifboolexpr{bool{xetex}}
+	 {\renewcommand{\Gin@extensions}{.pdf,%
+	                    .png,.jpg,.bmp,.pict,.tif,.psd,.mac,.sga,.tga,.gif,%
+	                    .eps,.ps,%
+	                    }}{}
+\makeatother
+
+% CHECK FOR XeTeX/LuaTeX BEFORE DEFINING AN INPUT ENCODING
+% --------------------------------------------------------
+%   utf8  is default for XeTeX/LuaTeX
+%   utf8  in LaTeX only realises a small portion of codes
+%
+\ifboolexpr{bool{xetex} or bool{luatex}} % test for XeTeX/LuaTeX
+ {}                                      % input encoding is utf8 by default
+ {\usepackage[utf8]{inputenc}}           % switch to utf8
+
+\usepackage[USenglish]{babel}
+\usepackage[utf8]{inputenc}
+%\DeclareUnicodeCharacter{0394}{$\Delta$}
+%\DeclareUnicodeCharacter{003C0}{$\pi$}
+%\DeclareUnicodeCharacter{2218}{$\circ$}
+%\DeclareUnicodeCharacter{2081}{$_1$}
+%\DeclareUnicodeCharacter{2082}{$_2$}
+%\DeclareUnicodeCharacter{00B2}{$^2$}
+%\DeclareUnicodeCharacter{00B3}{$^3$}
+\addbibresource{THP5325.bib}
+\listfiles
+
+%%
+%%   Lengths for the spaces in the title
+%%   \setlength\titleblockstartskip{..}  %before title, default 3pt
+%%   \setlength\titleblockmiddleskip{..} %between title + author, default 1em
+%%   \setlength\titleblockendskip{..}    %afterauthor, default 1em
+
+\begin{document}
+
+\title{
+SciBmad: A differentiable, GPU-parallelized software library for particle accelerator design, nonlinear analysis, and machine learning\thanks{Work supported by the U.S. Department of Energy under Contracts No. DE-SC0012704 (Brookhaven Science Associates, LLC) and No. 89233218CNA000001 (Office of Science, ARDAP), and by resources of the National Energy Research Scientific Computing Center, a DOE Office of Science User Facility, under award HEP-ERCAP0034811.}}
+
+\author{M. G. Signorelli\thanks{msignorel@bnl.gov}\textsuperscript{1}, J. P. Devlin\textsuperscript{2}, G. H. Hoffstaetter\textsuperscript{1,2}, D. Sagan\textsuperscript{2}\\
+\textsuperscript{1}Brookhaven National Laboratory, Upton, NY, USA\\
+\textsuperscript{2}CLASSE, Cornell University, Ithaca, NY, USA\\}
+\maketitle
+
+%
+\begin{abstract}
+We present SciBmad, a new accelerator physics software library developed to meet the needs of all accelerator design, analysis, and virtual modeling. SciBmad consists of a set of modular packages featuring fully differentiable and CPU/GPU-parallelized symplectic integrators, spin tracking and radiation, flexible and differentiable lattice definitions, nonlinear normal form analysis tools with Lie algebraic methods, batch parameter parallelization, and more. It is fully usable in Julia and easily callable from Python, making it easy to integrate it with external optimizers and machine learning frameworks. All releases of SciBmad undergo rigorous, automated testing with maximal code coverage, and all integrators are validated against PTC. With a growing list of features and contributors, SciBmad aims to be a powerful tool for any accelerator physics application.
+\end{abstract}
+
+\section{Introduction}
+Since the dawn of the computer, the world has had no shortage of accelerator physics codes: from way back to SYNCH and RACETRACK \cite{racetrack}, to the early differentiable codes COSY-INFINITY and the Polymorphic Tracking Code (PTC) \cite{berz1999modern,Forest:573082,Forest_2006}, up to more recent frameworks such as MAD-NG, Xsuite, and Cheetah \cite{deniau2025madngstandalonemultiplatformtool,Iadarola:2023fuk,PhysRevAccelBeams.27.054601}. Many of them, at least implicitly, put some claim to being the ``best''. In this paper, we will follow this time-honored tradition, and provide the world with yet another accelerator physics code, which we also feel, in our clearly unbiased opinion, is the ``best''. We leave it up to you, dear reader, to decide.
+
+It goes without saying that all of these softwares have pioneered new and useful features. Many machines have been designed and commissioned using all combinations of them. With 50+ years of codes, accumulated experience, and theory, the needed features of an accelerator physics code are, to a degree, understood now; standing on the shoulders of giants, a wishlist for a ``dream'' code might be:
+
+% All accelerator physics softwares have brought new, exciting, and useful features to the wider community. Many machines have been successfully designed, constructed, and commissioned using all combinations of these programs After 50+ years of codes, accumulated experience, and theory to build upon, the needed features and requirements of a modern accelerator physics framework are now reasonably well understood. A wishlist that we put together for such a framework is:
+
+% It goes without saying that all of these softwares have brought new, exciting, and useful features to the wider community. Many machines have been successfully designed, constructed, and commissioned using all combinations of these programs. That said, with 50+ years of codes, experience, and theory to build upon, the needed features and requirements of an accelerator physics software are, to a certain degree, well understood now. With such knowledge, if one were to conjure up a wishlist for a ``dream'' modern accelerator physics code, it might look something like:
+
+\begin{todolist}
+\item Natural syntax and easy to use in high-level programming languages (e.g. Python or Julia)
+\item Flexible accelerator lattice definitions including arbitrary parameter interdependencies
+\item Super fast (CPU/GPU parallelized) 6D symplectic, non-paraxial particle tracking including spin and radiation
+\item CPU/GPU parallelization over different lattices
+\item Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything for optimization/analysis
+\item Nonlinear parametric normal form analysis tools
+%\item Support for asynchronous read/writes with the control system for digital twin modeling
+\item Modular and easy to integrate with other programs, optimizers, machine learning frameworks, etc
+\end{todolist}
+While many existing accelerator physics codes excel at various subsets of these, to our knowledge none simultaneously satisfy all. With the Electron-Ion Collider (EIC) design at Brookhaven National Laboratory progressing rapidly, the need to do so has only grown. To that end, inspired by all codes past and present, we introduce SciBmad.
+
+\section{SciBmad}
+SciBmad is a new accelerator physics software library that, in the spirit of classical Bmad \cite{SAGAN2006356}, consists of a set of modular packages currently including:
+
+\begin{enumerate}
+	\item \textbf{BeamTracking.jl:} Universally polymorphic/differentiable, parallelized integrators for simulating charged particles on the CPU and various GPUs (NVIDIA CUDA, Apple Metal, Intel oneAPI, and AMD ROCm)
+	\item \textbf{Beamlines.jl:} Fast, differentiable, and fully-featured accelerator lattice definitions and deferred expressions
+	\item \textbf{NonlinearNormalForm.jl:} Perturbation theory of differential-algebraic maps, including spin and damping, using Lie algebraic methods \cite{forest1998beam,forest2016from}
+	\item \textbf{GTPSA.jl} Fast high-order automatic differentiation using the Generalised Truncated Power Series Algebra (GTPSA) library in MAD-NG \cite{signorelli:napac2025-mop044,Deniau:2015yyo,deniau2025madngstandalonemultiplatformtool}
+	\item \textbf{FundamentalFrequencies.jl:} GPU-batchable numerical analysis of fundamental frequencies \cite{LASKAR1990266}
+	\item \textbf{AtomicAndPhysicalConstants.jl:} Physical constants and properties for any atomic or subatomic particle
+\end{enumerate}
+
+SciBmad is written in Julia, which is a just-in-time (JIT) compiled, high-level, high performance computing language leveraging multiple dispatch and a powerful type system; these features enable SciBmad to be differentiable without sacrificing performance in other areas, and allow its integrators to be compiled, as-is, to a wide variety of hardwares, without separate CPU and GPU implementations \cite{Churavy_KernelAbstractions_jl}. Julia's plotting packages \cite{DanischKrumbiegel2021}, optimizers, automatic-differentiation packages \cite{schäfer2022abstractdifferentiationjlbackendagnosticdifferentiableprogramming,dalle2025commoninterfaceautomaticdifferentiation}, and machine learning tools \cite{rackauckas2020universal} are immediately usable with SciBmad. Julia is easily callable from Python \cite{PythonCall.jl}, and a dedicated SciBmad Python frontend with PyTorch bindings is also in development \cite{chanpisey}.
+
+%As the first point on the wishlist - "easy to use" - is quite subjective, we will 
+
+\subsection{Flexible Lattice Definitions}
+\texttt{Beamlines.jl} aims to provide the fully-featured, expressive accelerator lattice definitions of both the Particle Accelerator Language Standard (PALS) \cite{huebl:napac2025-tup004} and classical Bmad. At the time of this paper writing, it supports arbitrary element placements/orientations (misalignments, patches), arbitrary-order magnetic multipoles, arbitrary bend geometries, standing/traveling wave RF cavities, reference energy/species changes, mechanical apertures, arbitrary $s$- and $t$-dependent electromagnetic fields as functions, and custom transport maps (e.g. a neural network surrogate).
+
+SciBmad does not have any "bookkeeper". Instead, all dependent variables are computed \textit{lazily} - on the fly, only when you need them. This, inspired by MAD-NG, minimizes overhead from storing/computing quantities you don't need, and removes the need for a bookkeeper to update all dependent variables, easing long-term maintainence. One can use lazily-evaluated deferred expressions via SciBmad's \texttt{DefExpr} type, which acts like a lazily-evaluated number, to define arbitrarily complex and infinitely-nested parameter dependencies. This is best shown with an example:
+\begin{minted}[escapeinside=||,mathescape=true, linenos, numbersep=3pt, frame=single, fontsize=\small, framesep=2mm]{julia}
+using SciBmad
+
+kquad = 0.36
+kqf = DefExpr(() -> kquad) # lambda function
+kqd = -kqf # kqf acts like a number
+
+qf = Quadrupole(Kn1 = kqf, L = 0.5)
+d = Drift(L = 1.2)
+qd = Quadrupole(Kn1 = kqd, L = 0.5)
+
+fodo = Beamline([qf, d, qd, d], E_ref = 18e9, 
+	species_ref = Species("electron"))
+	
+# Updating kquad will "update" qf and qd:
+kquad = 0.25
+qf.Kn1 == -qd.Kn1 == 0.25 # true
+\end{minted}
+Under the hood, all element "kinds" (drift, quadrupole, etc.) are actually \textit{one single type}, to provide maximal flexibility. That means that there is nothing stopping you from doing:
+\begin{minted}[escapeinside=||,mathescape=true, linenos, numbersep=3pt, frame=single, fontsize=\small, framesep=2mm]{julia}
+d = Drift(L = 1.2)
+d.Ks21 = -200 # Set 21st order skew multipole 
+\end{minted}
+This flexibility makes it easy to adjust the design on the fly. For example, in the EIC Electron Storage Ring (ESR), we need to add multipoles to the drifts in the interaction region to simulate field crosstalk from the Hadron Storage Ring. With SciBmad, one does \textit{not} need to edit the lattice and change these ``drifts'' to ``multipoles''; just set the multipole!
+\subsection{CPU/GPU Parallelized Tracking}
+\texttt{BeamTracking.jl} was designed from the ground up with CPU/GPU parallelization and differentiability as fundamental requirements. The resulting framework is structured so that contributors who follow a small set of conventions automatically get tracking kernels that satisfy both. To guarantee performance, every tracking kernel must pass rigorous testing under explicit CPU single instruction multiple data (SIMD), which directly manipulates the CPU's vector registers \cite{simd}. Because explicit SIMD does not permit branching - a performance killer on GPUs - we can guarantee that all of SciBmad's tracking is branch-free.
+
+Symplecticity, spin tracking, and full coverage and correctness tests against PTC are also required for all tracking in SciBmad. Currently, SciBmad implements Yoshida's 2nd, 4th, 6th, and 8th order explicit and implicit integrators for various splits \cite{yoshida1990construction}. By default, each element's parameters are unpacked, a most appropriate split is decided, and then a lower-level compiled kernel is called. Benchmarks are included in the Examples section, and for more see \cite{joe}.
+
+\subsection{Batch/Time-Dependent Parameters}
+In the same way that SciBmad parallelizes particle tracking via SIMD, it can also SIMD-parallelize over the accelerator parameters, such as magnet strengths. E.g., one can set a sextupole strength to a vector of 100,000 random values:
+\begin{minted}[escapeinside=||,mathescape=true, linenos, numbersep=3pt, frame=single, fontsize=\small, framesep=2mm]{julia}
+using CUDA
+s=Sextupole(Kn2L=BatchParam(CUDA.rand(100000)))
+\end{minted}
+For a bunch of 100,000 particles, each sees a different sextupole strength, all on a single CPU or GPU. Any number of elements and parameters can be set as \texttt{BatchParam}s, enabling, for example, parallel dynamic aperture optimizations over sextupole settings, or parallel simulations of different magnet errors. Batch parameters were inspired by Cheetah.
+
+SciBmad also allows one to set any accelerator parameter to be any function of time, using \texttt{Time}. E.g., an AC kicker:
+\begin{minted}[escapeinside=||,mathescape=true, linenos, numbersep=3pt, frame=single, fontsize=\small, framesep=2mm]{julia}
+v = VKicker(L=0.5, Ks0=1e-4*sin(1e6*Time()) )
+\end{minted}
+The reference energy can also be set as time-dependent (for ramping). This is GPU compatible and SIMD-parallelizable. %Presently \texttt{Time} refers to the absolute time, and support for relative time is planned.
+
+\subsection{Nonlinear Parametric Normal Forms}
+\begin{figure}[!thb]
+   \centering
+   \includegraphics*[width=0.96\columnwidth]{THP5325_f1.png}
+\caption{Poincaré section of a map near a 1/4 resonance, before (left) and after (right) a single resonance normal form transformation computed with SciBmad.}
+   \label{fig:one-resonance}
+\end{figure}
+While \texttt{GTPSA.jl} provides the ability to compute high order parametric Taylor maps, \texttt{NonlinearNormalForm.jl} provides the Lie algebraic methods for analyzing these maps. Maps including radiation can be handled, and spin is handled naturally by an extension of the Lie algebra \cite{forest_private_ext,signorelli2025thesis}. This is how SciBmad computes the fully-coupled lattice functions (Twiss parameters) and their nonlinear generalizations, amplitude dependent (spin) tunes, %nonlinear dispersions, the "resonance driving terms" of Bengsston, 
+the invariant spin field (ISF), etc., as well as the gradients these quantities w.r.t. parameters (e.g. $\frac{\partial Q_x}{\partial \textrm{(quad strength)}}$). The package was developed in close collaboration with E. Forest, the developer of PTC and the Fully Polymorphic Package \cite{10.1145/570822.570824}. One of the primary goals of SciBmad was to make such powerful methods more accessible; as such, these quantities are all available via SciBmad's \texttt{twiss} by just specifying a truncation order. 
+\section{Examples}
+\subsection{Dynamic Aperture in the EIC-ESR}
+Here we present SciBmad's \texttt{dynamic\_aperture} program with an 18 GeV EIC-ESR lattice, which has 6271 elements. All elements are integrated through using a 4th order Yoshida scheme with 1 step, including radiation damping. A bunch of 20,746 particles were initialized, and tracked for 2,000 turns (approximately 4 damping times); Fig.~\ref{fig:da} took \textbf{8.2 min} to produce on a single NVIDIA A100 40GB GPU.
+\begin{figure}[!htb]
+   \centering
+   \includegraphics*[width=\columnwidth]{THP5325_f2.png}
+   \caption{Acceptance of an 18 GeV EIC-ESR lattice, computed in 8.2 min on the GPU using SciBmad.}
+   \label{fig:da}
+\end{figure}
+\subsection{Radiative Spin Depolarization in the EIC-ESR}
+\begin{figure}[!thb]
+   \centering
+   \includegraphics*[width=0.94\columnwidth]{THP5325_f3.png}
+   \caption{Spin-orbit coupling function in an 18 GeV EIC-ESR lattice computed using SciBmad's normal form.}
+   \label{fig:d}
+\end{figure}
+The spin-orbit coupling function $\frac{\partial\hat{n}}{\partial\delta}$, which quantifies radiative depolarization, is just one coefficient of the ISF Taylor series returned by \texttt{twiss}, and is shown in Fig.~\ref{fig:d} for the same EIC-ESR lattice in the previous section. While this roughly approximates the depolarization time $\tau_{dep}$, a better estimate is obtained from spin tracking with radiation; a polarized bunch at radiative equilibrium is initialized, tracked, and the slope of $P$ vs. $t$ approximates $\tau_{dep}$ \cite{barberhandbook2,bmad}. We spin-tracked 25,000 particles for 5,000 turns on the GPU through this EIC-ESR lattice, with radiation damping and fluctuations, and a 4th order 1-step Yoshida for all elements. SciBmad tracks quaternions for each particle instead of spin 3-vectors; this allows one to evaluate the polarization for any initial spin distribution with only one tracking. Figure \ref{fig:pvt} shows the polarization with all initial spins vertical and all along the 1st order ISF returned from \texttt{twiss}, and took \textbf{36.8 min} on a single NVIDIA A100 40GB GPU to produce.
+\begin{figure}[!htb]
+   \centering
+   \includegraphics*[width=\columnwidth]{THP5325_f4.png}
+   \caption{Polarization vs. $t$ in an 18 GeV EIC-ESR, 25,000 particles $\times$ 5,000 turns, computed in 36.8 min on the GPU.}
+   \label{fig:pvt}
+\end{figure}
+\section{Conclusions and Outlook}
+SciBmad is a fully differentiable, CPU/GPU-parallelized accelerator physics library already being used for the EIC design. Its modular packages provide expressive lattice definitions, high-performance symplectic tracking (including batch and time-dependent parameters), and powerful  nonlinear normal form analysis tools, making it suitable for a broad range of accelerator applications. Future work includes adding more collective effects modeling (currently only Gaussian intrabeam scattering is supported \cite{devlin-ibs}), a high level optimization interface, and digital twin integration.
+\section{Acknowledgements}
+We thank all of the contributors to SciBmad. Especially, we thank Etienne Forest for his significant help with the normal form library, Laurent Deniau for his GTPSA library and for suggesting lazily-evaluated deferred expressions, and Ryan Roussel for suggesting batch parameters.
+
+
+% only for ''biblatex''
+%
+\ifboolexpr{bool{jacowbiblatex}}%
+	{\printbibliography}%
+	{%
+	% ''biblatex'' is not used, go the ''manual'' way
+	
+	%\begin{thebibliography}{99}   % Use for  10-99  references
+	\begin{thebibliography}{9} % Use for 1-9 references
+	
+	\bibitem{jacow-help}
+		JACoW,
+		\url{http://www.jacow.org}
+	
+	\bibitem{IEEE}
+		\textit{IEEE Editorial Style Manual},
+		IEEE Periodicals, Piscataway,
+		NJ, USA, Oct. 2014, pp. 34--52.
+
+	\bibitem{journal-abbreviations}
+	\url{https://woodward.library.ubc.ca/researchhelp/journal-abbreviations/}
+
+	\end{thebibliography}
+} % end \ifboolexpr
+
+
+\end{document}

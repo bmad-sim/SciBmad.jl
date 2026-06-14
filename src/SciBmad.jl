@@ -1,115 +1,46 @@
 module SciBmad
-
 using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
 using Reexport
 
 @recompile_invalidations begin
+  using BatchSolve
+  using BatchSolve: RETCODE_SUCCESS, RETCODE_FAILURE, RETCODE_MAXITER
+  using KernelAbstractions: KernelAbstractions as KA
+  using KernelAbstractions: @index, @kernel, @Const
   using NonlinearNormalForm: NonlinearNormalForm as NNF
   using TPSAInterface: TPSAInterface as TI
   using DifferentiationInterface: DifferentiationInterface as DI
   using LinearAlgebra,
-      TypedTables,
-      StaticArrays,
-      ForwardDiff,
-      RecursiveArrayTools
-  using BeamTracking
+        TypedTables,
+        StaticArrays,
+        ForwardDiff,
+        DelimitedFiles
+  @reexport using ADTypes      
+  @reexport using BeamTracking
   @reexport using Beamlines
   @reexport using NonlinearNormalForm
   @reexport using GTPSA
   @reexport using AtomicAndPhysicalConstants
-  using DelimitedFiles
+  @reexport using FundamentalFrequencies
 end
 
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
-const KA = BeamTracking.KernelAbstractions
 
-export twiss, find_closed_orbit, track!, Time, Yoshida, MatrixKick, BendKick, 
-        SolenoidKick, DriftKick, Exact, Bunch, dynamic_aperture, track, rotate_spins, rotate_spins!
-
-function track_a_particle!(coords, coords0, bl; use_KA=false, use_explicit_SIMD=false, scalar_params=true)
-  coords .= coords0
-  b0 = Bunch(reshape(coords, (1,6)))
-  BTBL.check_bl_bunch!(bl, b0, false) # Do not notify
-  track!(b0, bl; use_KA=use_KA, use_explicit_SIMD=use_explicit_SIMD, scalar_params=scalar_params)
-  if b0.coords.state[1] != 0x1
-    @warn "Particle lost in tracking"
-  end
-  return coords
-end
-
-function coast_check(bl, backend=DI.AutoForwardDiff())
-  x0 = zeros(6)
-  y = zeros(6)
-  jac = zeros(6, 6)
-  DI.value_and_jacobian!(track_a_particle!, y, jac, backend, x0, DI.Constant(bl))
-  return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 1]
-end
-
-function _co_res!(y, x, bl)
-  track_a_particle!(y, x, bl)
-  return y .= y .- x
-end
-
-function _co_res_coast!(y, x, bl)
-  track_a_particle!(
-    ArrayPartition(y, eltype(y)[0,0]), 
-    SA[x[1], x[2], x[3], x[4], 0, 0],
-    bl
-  )
-  return y .= y .- x
-end
-
-const CLOSED_ORBIT_FORWARDDIFF_PREP = (
-  x = zeros(6);
-  y = zeros(6);
-  bl = Beamline([LineElement()]);
-  DI.prepare_jacobian(_co_res!, y, DI.AutoForwardDiff(), x, DI.Constant(bl))
-)
-
-const CLOSED_ORBIT_FORWARDDIFF_PREP_COAST = (
-  x = view(zeros(6), 1:4);
-  y = view(zeros(6), 1:4);
-  bl = Beamline([LineElement()]);
-  DI.prepare_jacobian(_co_res_coast!, y, DI.AutoForwardDiff(), x, DI.Constant(bl))
-)
-
-function find_closed_orbit(
-  bl::Beamline; 
-  v0=zeros(6), 
-  reltol=1e-13,
-  abstol=1e-13, 
-  max_iter=100, 
-  backend=DI.AutoForwardDiff(),
-  prep=CLOSED_ORBIT_FORWARDDIFF_PREP,
-  prep_coast=CLOSED_ORBIT_FORWARDDIFF_PREP_COAST,
-  lambda=1,
-  coast::Val{C}=Val{Nothing}(),
-) where {C}
-  # First check if coasting, for this push a particle starting at 0 and see if
-  # delta is a parameter
-  v = zero(v0)
-  if C == Nothing
-    _coast = coast_check(bl, backend)
-  else
-    _coast = C
-  end
-  if _coast
-    if !newton!(_co_res_coast!, view(v, 1:4), view(v0, 1:4), bl; reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep_coast, lambda=lambda).converged
-      error("Closed orbit finder not converging")
-    end
-  else
-    if !newton!(_co_res!, v, v0, bl; reltol=reltol, abstol=abstol, max_iter=max_iter, backend=backend, prep=prep, lambda=lambda).converged
-      error("Closed orbit finder not converging")
-    end
-  end
-  return v0, _coast
-end
-
-include("utils.jl")
+export  twiss, 
+        find_closed_orbit, 
+        track!,
+        dynamic_aperture,
+        track,
+        track_spin,
+        track_spin!,
+        TrackingResult,
+        TrackingConfig
+        
+include("closed_orbit.jl") 
 include("track.jl")
-include("newton.jl")
 include("twiss.jl")
 include("dynamic_aperture.jl")
+include("experimental/Experimental.jl")
 
 @setup_workload begin
   
@@ -125,7 +56,7 @@ include("dynamic_aperture.jl")
     qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.5); # matrix kick, 2 multipoles
     sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
     kicker = Sextupole(Kn0=1e-5, L=0.01)
-    rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6);
+    rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6, zero_phase=PhaseRef.AboveTransition);
     thin = Multipole(Kn1L=1e-9); # Thin quad
     d3 = Drift(L=0.3);
     marker = Marker(); # nothing
@@ -133,10 +64,10 @@ include("dynamic_aperture.jl")
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
     # Track scalars
     b0s = Bunch(rand(4,6));
-    BTBL.check_bl_bunch!(fodo, b0s, false); # Do not notify
+    BTBL.check_bl_bunch!(b0s, fodo, false); # Do not notify
     track!(b0s, fodo);
     b0s = Bunch(rand(4,6), [1. 0. 0. 0.; 1. 0. 0. 0; 1. 0. 0. 0.; 1. 0. 0. 0.]);
-    BTBL.check_bl_bunch!(fodo, b0s, false); # Do not notify
+    BTBL.check_bl_bunch!(b0s, fodo, false); # Do not notify
     track!(b0s, fodo);
     # twiss
     # first order and second order
