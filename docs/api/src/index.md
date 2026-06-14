@@ -19,6 +19,8 @@ Modules = [SciBmad]
 
 ## Beamlines.jl
 
+Full Beamlines.jl documentation: <https://bmad-sim.github.io/Beamlines.jl/stable/>
+
 ```@autodocs
 Modules = [Beamlines]
 ```
