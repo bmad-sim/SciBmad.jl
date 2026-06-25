@@ -17,3 +17,11 @@ Orbit response <examples/julia/orbit-response.ipynb>
 Errors and fitting <examples/julia/errors-fitting.ipynb>
 AGS spin ramp <examples/julia/ags-spin-ramp.ipynb>
 ```
+
+```{toctree}
+:maxdepth: 1
+:caption: Python examples
+
+Nonlinear Twiss <examples/python/nonlinear-twiss.ipynb>
+AGS spin ramp <examples/python/ags-spin-ramp.ipynb>
+```

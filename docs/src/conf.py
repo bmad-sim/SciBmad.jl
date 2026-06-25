@@ -24,7 +24,10 @@ nb_execution_mode = "off"
 
 numfig = True
 bibtex_bibfiles = ['bibliography.bib']
-suppress_warnings = ["myst.header"]   # So a file does not cause a "Document headings start at H2, not H1" warning
+suppress_warnings = [
+    "myst.header",               # files whose first heading is H1, not H2
+    "mystnb.unknown_mime_type",  # notebook outputs that also carry text/csv or text/tsv (text/plain is rendered)
+]
 
 # -- Intersphinx configuration -----------------------------------------------
 _docs_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -102,9 +105,8 @@ myst_enable_extensions = [
 
 templates_path = ['_templates']
 exclude_patterns = [
-    'parameters',                          # included via other pages, not as standalone docs
-    '**/.ipynb_checkpoints',               # Jupyter scratch copies under examples/
-    'examples/python',                     # Python example notebooks not yet wired into the docs
+    'parameters',              # included via other pages, not as standalone docs
+    '**/.ipynb_checkpoints',   # Jupyter scratch copies under examples/
 ]
 
 # -- Options for HTML output -------------------------------------------------
