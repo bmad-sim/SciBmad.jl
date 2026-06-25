@@ -19,8 +19,11 @@ Modules = [SciBmad]
 
 ## Beamlines.jl
 
-Full Beamlines.jl documentation: <https://bmad-sim.github.io/Beamlines.jl/stable/>
+SciBmad is built on [Beamlines.jl](https://github.com/bmad-sim/Beamlines.jl), which
+defines the lattice element types (`LineElement`, `Quadrupole`, `Beamline`, …). Its
+API is documented on its own site and is **not** duplicated here:
 
-```@autodocs
-Modules = [Beamlines]
-```
+<https://bmad-sim.github.io/Beamlines.jl/stable/>
+
+References to Beamlines types from the SciBmad docstrings above link directly to that
+site.

@@ -9,11 +9,13 @@ links = InterLinks(
     "Beamlines" => "https://bmad-sim.github.io/Beamlines.jl/stable/",
 )
 
-DocMeta.setdocmeta!(Beamlines, :DocTestSetup, :(using Beamlines); recursive=true)
 DocMeta.setdocmeta!(SciBmad, :DocTestSetup, :(using SciBmad); recursive=true)
 
+# Note: Beamlines is intentionally NOT in `modules`. Its docstrings are documented
+# on the Beamlines.jl site; we only cross-reference into it via `links` below so we
+# don't duplicate that content here.
 makedocs(;
-    modules=[Beamlines, SciBmad],
+    modules=[SciBmad],
     authors="mattsignorelli <mgs255@cornell.edu> and contributors",
     sitename="SciBmad.jl API Reference",
     format=Documenter.HTML(;

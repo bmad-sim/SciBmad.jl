@@ -1,5 +1,5 @@
 sphinx>=7.0
-myst-parser>=3.0
+myst-nb>=1.1          # MyST Markdown + executed-notebook rendering (includes myst-parser)
 furo
 linkify-it-py
 sphinxcontrib-bibtex
