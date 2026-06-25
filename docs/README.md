@@ -136,6 +136,34 @@ This is a warning box.
 - [MyST Markdown Guide](https://myst-parser.readthedocs.io/)
 - [Sphinx Documentation](https://www.sphinx-doc.org/)
 
+### Embedding Jupyter notebooks
+
+Jupyter notebooks are rendered with [MyST-NB](https://myst-nb.readthedocs.io/).
+The `examples/` directory at the repo root is symlinked into `src/examples`, and
+notebooks are added to a `{toctree}` like any other page (see `src/examples-index.md`):
+
+```markdown
+    ```{toctree}
+    Nonlinear Twiss <examples/julia/nonlinear-twiss.ipynb>
+    ```
+```
+
+Notes:
+- Notebooks are committed **already executed** and rendered with their stored outputs
+  (`nb_execution_mode = "off"` in `conf.py`) — the build never starts a kernel, so no
+  Julia/IJulia is needed in CI.
+- A notebook must have its own title (a leading `# Heading` markdown cell) or Sphinx
+  won't create a navigation link to it.
+- Notebooks that embed images as cell *attachments* (pasted images) don't render in a
+  web build; save those as files first or exclude the notebook in `conf.py`.
+
+### Beamlines.jl docstrings
+
+SciBmad is built on [Beamlines.jl](https://github.com/bmad-sim/Beamlines.jl). Its
+docstrings live on the Beamlines.jl site and are **not** re-rendered here — we only
+cross-reference into them (via `DocumenterInterLinks` in `api/make.jl` and intersphinx
+in `conf.py`). Don't add `@autodocs Modules = [Beamlines]` back to `api/src/index.md`.
+
 ### Writing API Documentation
 
 API docs are auto-generated from Julia docstrings. Add docstrings to functions in `src/*.jl`:

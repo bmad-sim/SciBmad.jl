@@ -10,11 +10,21 @@ author = 'SciBmad.jl Contributors'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
-    'myst_parser',
+    'myst_nb',          # superset of myst_parser that also renders Jupyter notebooks
     'sphinx.ext.githubpages',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
+    'sphinxcontrib.bibtex',
 ]
+
+# -- Jupyter notebook handling (myst-nb) -------------------------------------
+# Notebooks are committed already-executed (they need a Julia/IJulia kernel that
+# isn't available in CI), so render their stored outputs instead of re-executing.
+nb_execution_mode = "off"
+
+numfig = True
+bibtex_bibfiles = ['bibliography.bib']
+suppress_warnings = ["myst.header"]   # So a file does not cause a "Document headings start at H2, not H1" warning
 
 # -- Intersphinx configuration -----------------------------------------------
 _docs_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -91,7 +101,11 @@ myst_enable_extensions = [
 ]
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = [
+    'parameters',                          # included via other pages, not as standalone docs
+    '**/.ipynb_checkpoints',               # Jupyter scratch copies under examples/
+    'examples/python',                     # Python example notebooks not yet wired into the docs
+]
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'furo'
@@ -106,6 +120,7 @@ html_theme_options = {
 
 html_title = 'SciBmad.jl Documentation'
 html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 # Sidebar settings with custom external links
 html_sidebars = {
