@@ -1,0 +1,889 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="prev" title="SaganCavity Physics" href="sagancavity-physics.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Coordinates - SciBmad.jl Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=dfe9dd02" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">SciBmad.jl Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">SciBmad.jl Documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture.html">Dynamic aperture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/errors-fitting.html">Errors and fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">SciBmad</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Coordinates</a></li>
+</ul>
+
+</div><div class="sidebar-tree">
+  <ul>
+    <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference →</a></li>
+    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
+  </ul>
+</div></div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/coordinates.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/coordinates.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="coordinates">
+<span id="c-coords"></span><h1>Coordinates<a class="headerlink" href="#coordinates" title="Link to this heading">¶</a></h1>
+<section id="phase-space-coordinate-system">
+<span id="s-phase-space"></span><h2>Phase Space Coordinate System<a class="headerlink" href="#phase-space-coordinate-system" title="Link to this heading">¶</a></h2>
+<p>In construction…</p>
+</section>
+<section id="nomenclature">
+<span id="s-nomen"></span><h2>Nomenclature<a class="headerlink" href="#nomenclature" title="Link to this heading">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">bend</span></code> element is any element that has a non-zero reference bend strength <code class="docutils literal notranslate"><span class="pre">g_ref</span></code>.
+A <code class="docutils literal notranslate"><span class="pre">patch</span></code> element is any element that has a non-zero <code class="docutils literal notranslate"><span class="pre">PatchParams</span></code> parameters.
+No element is not allowed to be both a bend and a patch element at the same time.</p>
+</section>
+<section id="coordinate-systems-used-to-describe-a-machine">
+<span id="s-coords"></span><h2>Coordinate Systems Used to Describe a Machine<a class="headerlink" href="#coordinate-systems-used-to-describe-a-machine" title="Link to this heading">¶</a></h2>
+<figure class="align-default" id="f-coords">
+<a class="caption-left reference internal image-reference" href="_images/coordinates.svg"><img alt="_images/coordinates.svg" class="caption-left" src="_images/coordinates.svg" style="width: 70%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 1 </span><span class="caption-text">The coordinate systems to describe a machine: The “floor” Cartesian coordinate system
+is independent of the accelerator.  The “branch” curvilinear coordinate system follows the bends
+of the accelerator. The “branch reference curve” is the <span class="math notranslate nohighlight">\(x = y = 0\)</span> curve of the curvilinear coordinate
+system. Each lattice element has “element body” coordinates which, if the element has no
+alignment shifts (not “misaligned”), is the same as the branch coordinates.</span><a class="headerlink" href="#f-coords" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>SciBmad uses three coordinate systems to describe a machine as illustrated in the figure above.
+First, the <code class="docutils literal notranslate"><span class="pre">floor</span></code> coordinates are Cartesian coordinate system independent of the accelerator.
+The position of the accelerator itself as well as external objects like the building the
+accelerator is in may be described using <code class="docutils literal notranslate"><span class="pre">floor</span></code> coordinates.</p>
+<p>It is inconvenient to describe the position of lattice elements and the position of a
+particle beam using the <code class="docutils literal notranslate"><span class="pre">floor</span></code> coordinate system so, for each lattice branch,
+a <code class="docutils literal notranslate"><span class="pre">branch</span></code> coordinate system is used. This curvilinear coordinate
+system defines the nominal position of the lattice elements. The relationship between the
+<code class="docutils literal notranslate"><span class="pre">branch</span></code> and <code class="docutils literal notranslate"><span class="pre">floor</span></code> coordinate systems is described in section <a class="reference internal" href="#s-floor"><span class="std std-ref">Floor Coordinates</span></a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">branch</span> <span class="pre">reference</span> <span class="pre">curve</span></code> is the <span class="math notranslate nohighlight">\(x = y = 0\)</span> curve of the curvilinear coordinate system.
+The branch reference curve does not have to be continuous and, in particular, the coordinate
+system through an element with <code class="docutils literal notranslate"><span class="pre">PatchParams</span></code> parameters will generally be discontinuous.
+If there are no <code class="docutils literal notranslate"><span class="pre">BendParams</span></code> parameters with a finite
+<code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code>, and if the beginning element in the branch does not have any orientation
+shifts, the branch reference curve will be in the <span class="math notranslate nohighlight">\((x,z)\)</span> plane with <span class="math notranslate nohighlight">\(y = 0\)</span>. Since
+most machines are essentially horizontal, the <span class="math notranslate nohighlight">\(x\)</span> coordinate is typically thought of as the
+“horizontal” coordinate and the <span class="math notranslate nohighlight">\(y\)</span> coordinate is typically thought of as the “vertical”
+coordinate.</p>
+<p>The “nominal” position of a lattice element is the position of the element without any
+<a class="reference internal" href="element-parameters.html#id1"><span class="std std-ref">alignment shifts</span></a>
+(these position and orientation shifts which are sometimes referred to as “misalignments”).
+Each lattice element has “<code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code>”
+coordinates which are attached to the physical element, and the electric and magnetic
+fields of an element are described with respect to <code class="docutils literal notranslate"><span class="pre">body</span></code> coordinates.<br />
+If an element has no
+alignment shifts, the <code class="docutils literal notranslate"><span class="pre">body</span></code> coordinates of the element are aligned with the
+<code class="docutils literal notranslate"><span class="pre">branch</span></code> coordinates.
+The transformation between <code class="docutils literal notranslate"><span class="pre">branch</span></code> and <code class="docutils literal notranslate"><span class="pre">body</span></code> coordinates is given in
+<a class="reference internal" href="#s-lab-body-transform">xxx</a>.</p>
+</section>
+<section id="element-entrance-and-exit-coordinates">
+<span id="s-ent-exi"></span><h2>Element Entrance and Exit Coordinates<a class="headerlink" href="#element-entrance-and-exit-coordinates" title="Link to this heading">¶</a></h2>
+<figure class="align-default" id="f-ele-coord-frame">
+<a class="caption-left reference internal image-reference" href="_images/ele-coord-frame.svg"><img alt="_images/ele-coord-frame.svg" class="caption-left" src="_images/ele-coord-frame.svg" style="width: 70%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 2 </span><span class="caption-text">Lattice elements can be imagined as “LEGO blocks” which
+fit together to form the branch coordinate system. How elements
+join together is determined in part by their entrance and exit coordinate frames. A) For
+straight line elements the entrance and exit frames are colinear. B) For elements with a
+<code class="docutils literal notranslate"><span class="pre">BendParams</span></code> parameter group, the
+transformation from entrance to exit coordinates is a rotation about the bend center of curvature.
+C) For elements with <code class="docutils literal notranslate"><span class="pre">PatchParams</span></code> parameters or <code class="docutils literal notranslate"><span class="pre">FloorParams</span></code> parameters, the
+exit frame may be arbitrarily positioned with respect to the entrance frame.</span><a class="headerlink" href="#f-ele-coord-frame" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>As discussed in the next section, the branch coordinate system is constructed starting with the first
+element in a branch and then building up the coordinate system element-by-element.
+Most elements have an “<code class="docutils literal notranslate"><span class="pre">entrance</span></code>” and an “<code class="docutils literal notranslate"><span class="pre">exit</span></code>” coordinate frame as
+illustrated in the above figure.
+These coordinate frames are attached to the element and are part of the <code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span> <span class="pre">coordinates</span></code>.
+Elements with <code class="docutils literal notranslate"><span class="pre">FloorParams</span></code> parameters (<a class="reference internal" href="#s:fiducial"><span class="xref myst">xxx</span></a>) are an exception.
+These elements only have a single coordinate frame that is tied to the floor coordinates
+and construction of the branch coordinate system starts at this coordinate system.
+See <a class="reference internal" href="#s:fiducial"><span class="xref myst">xxx</span></a> for more details.
+Note that <code class="docutils literal notranslate"><span class="pre">Girder</span></code> elements (<a class="reference internal" href="#s:girder"><span class="xref myst">xxx</span></a>) also only have a single coordinate frame but they
+are not included in any branch.</p>
+<p>Most element kinds have a “straight” geometry as shown in
+<a class="reference internal" href="#f-ele-coord-frame"><span class="std std-numref">Fig. 2</span></a>A. That is, the reference curve through the element is a straight line
+segment with the <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> axes always pointing in the same direction.
+For an element with <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref">BendParams</span></a> parameters,
+the reference curve is a segment of a circular arc as shown in
+<a class="reference internal" href="#f-ele-coord-frame"><span class="std std-numref">Fig. 2</span></a>B. With the <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> parameter set to zero, the rotation axis
+between the entrance and exit frames is parallel to the <span class="math notranslate nohighlight">\(y\)</span>-axis (<a class="reference internal" href="#s-floor">xxx</a>).
+For <a class="reference internal" href="element-parameters.html#id4"><span class="std std-ref">Patch</span></a> and <a class="reference internal" href="#s:floorshift"><span class="xref myst">floor_shift</span></a>
+elements (<a class="reference internal" href="#f-ele-coord-frame"><span class="std std-numref">Fig. 2</span></a>C), the exit face can be
+arbitrarily oriented with respect to the entrance end.
+For elements with a <code class="docutils literal notranslate"><span class="pre">FloorParams</span></code> group, the interior reference curve between the
+entrance and exit faces is not defined. For elements with a <code class="docutils literal notranslate"><span class="pre">PatchParams</span></code> group, the interior reference curve
+is dependent upon the patch parameter settings (<a class="reference internal" href="element-parameters.html#id4"><span class="std std-ref">xxx</span></a>) and, in general,
+will have a discontinuity.</p>
+</section>
+<section id="branch-coordinate-construction">
+<span id="s-ref-construct"></span><h2>Branch Coordinate Construction<a class="headerlink" href="#branch-coordinate-construction" title="Link to this heading">¶</a></h2>
+<figure class="align-default" id="f-patch-between">
+<a class="caption-left reference internal image-reference" href="_images/patch-between.svg"><img alt="_images/patch-between.svg" class="caption-left" src="_images/patch-between.svg" style="width: 70%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 3 </span><span class="caption-text">A) The branch coordinates are constructed by
+connecting the <code class="docutils literal notranslate"><span class="pre">downstream</span></code> reference frame of one element with the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> reference frame
+of the next element in the branch. Coordinates shown are for the mating of element <code class="docutils literal notranslate"><span class="pre">A</span></code> to element
+<code class="docutils literal notranslate"><span class="pre">B</span></code>.  B) Example with drift element <code class="docutils literal notranslate"><span class="pre">dft1</span></code> followed by a bend <code class="docutils literal notranslate"><span class="pre">bnd1</span></code>. Both elements have normal
+(unreversed) orientation.
+C) Similar to (B) but in this case element <code class="docutils literal notranslate"><span class="pre">bnd1</span></code> is reversed.  D) Similar to (C) but
+in this case a reflection patch <code class="docutils literal notranslate"><span class="pre">P</span></code> has been added in between <code class="docutils literal notranslate"><span class="pre">dft1</span></code> and <code class="docutils literal notranslate"><span class="pre">bnd1</span></code>.
+In (B), (C), and (D) the <span class="math notranslate nohighlight">\((x,z)\)</span> coordinates are drawn at the <code class="docutils literal notranslate"><span class="pre">entrance</span></code> end of the elements.
+The <span class="math notranslate nohighlight">\(y\)</span> coordinate is always out of the page for this example.</span><a class="headerlink" href="#f-patch-between" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Assuming for the moment that there are no elements, except for the beginning element,
+with <a class="reference internal" href="#floor:params"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">FloorParams</span></code></span></a> parameters present,
+the construction of a branch coordinate system starts at the first element
+at the start of a branch.
+If the branch is a <code class="docutils literal notranslate"><span class="pre">root</span></code> branch, the orientation of the beginning
+element within the <a class="reference internal" href="#s-coords">floor coordinate system</a> can be fixed by setting
+<a class="reference internal" href="#s:floor:params"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">FloorParams</span></code></span></a> parameters in the beginning element.
+If the branch is not a <code class="docutils literal notranslate"><span class="pre">root</span></code> branch, the position
+of the beginning element is determined by the position of the <code class="docutils literal notranslate"><span class="pre">Fork</span></code> element
+from which the branch forks from. The default value of <span class="math notranslate nohighlight">\(s\)</span> at the beginning element is zero
+for both root and non-root branches.</p>
+<p>Once the beginning element in a branch is positioned, succeeding elements are concatenated together
+to form the branch coordinate system. All elements have an “<code class="docutils literal notranslate"><span class="pre">upstream</span></code>” and a “<code class="docutils literal notranslate"><span class="pre">downstream</span></code>”
+end as shown in <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>A.
+The <code class="docutils literal notranslate"><span class="pre">downstream</span></code> end of an element is always farther (at greater <span class="math notranslate nohighlight">\(s\)</span>-position)
+from the beginning element than the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> end of the element. Normally, particles will travel
+in the <span class="math notranslate nohighlight">\(+s\)</span> direction, so particles will enter an element at the upstream end and exit at the
+downstream end.</p>
+<p>If there are non-beginning elements with <code class="docutils literal notranslate"><span class="pre">FloorParams</span></code> parameters,
+the branch coordinates are constructed beginning at these
+elements working both forwards and backwards along the branch.
+If there are multiple elements with <code class="docutils literal notranslate"><span class="pre">FloorParams</span></code> parameters in a branch,
+there must be an element between them with flexible patch parameters.</p>
+<p>If an element is not <a class="reference internal" href="#s-ref-construct">reversed</a>,
+the element’s <code class="docutils literal notranslate"><span class="pre">upstream</span></code> end is the same as the element’s <code class="docutils literal notranslate"><span class="pre">entrance</span></code> end
+(<a class="reference internal" href="#f-ele-coord-frame"><span class="std std-numref">Fig. 2</span></a>) and the <code class="docutils literal notranslate"><span class="pre">downstream</span></code> end is the same
+as the element’s <code class="docutils literal notranslate"><span class="pre">exit</span></code>. If the element is reversed, the <code class="docutils literal notranslate"><span class="pre">entrance</span></code> and <code class="docutils literal notranslate"><span class="pre">exit</span></code> ends are switched.
+That is, for a <code class="docutils literal notranslate"><span class="pre">reversed</span></code> element, particles traveling downstream will
+enter at the element’s <code class="docutils literal notranslate"><span class="pre">exit</span></code> end and will exit at the <code class="docutils literal notranslate"><span class="pre">entrance</span></code> end.</p>
+<p>The procedure to connect elements together to form the branch coordinates is to ignore
+<code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code> alignment shifts and mate the <code class="docutils literal notranslate"><span class="pre">downstream</span></code> reference frame of
+the element with the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> reference frame of the next element in
+the branch so that the <span class="math notranslate nohighlight">\((x,y,z)\)</span> coordinate axes coincide.
+If there are body alignment shifts, the <code class="docutils literal notranslate"><span class="pre">entrance</span></code> and <code class="docutils literal notranslate"><span class="pre">exit</span></code> frames will move with the element.
+However, this does not affect the branch coordinate system.
+This is illustrated in <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>. <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>A shows the general situation
+with the downstream frame of element <code class="docutils literal notranslate"><span class="pre">A</span></code> mated to the upstream frame of element <code class="docutils literal notranslate"><span class="pre">B</span></code>.
+The <span class="math notranslate nohighlight">\((x,z)\)</span> coordinates are drawn at the entrance end of the elements and <span class="math notranslate nohighlight">\(z\)</span> will
+always point towards the element’s exit end.
+<a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>B shows a line
+with an normal (unreversed) orientation drift named <code class="docutils literal notranslate"><span class="pre">dft1</span></code> connected to a normal (unreversed) bend named
+<code class="docutils literal notranslate"><span class="pre">bnd1</span></code>. <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>C shows the same line but with <code class="docutils literal notranslate"><span class="pre">bnd1</span></code> reversed.
+This gives an unphysical situation since a
+particle traveling through <code class="docutils literal notranslate"><span class="pre">dft1</span></code> will “fall off” when it gets to the drift’s end.
+<a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>D shows the same line as in <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>C with the addition
+of an element <code class="docutils literal notranslate"><span class="pre">P</span></code> containing a <a class="reference internal" href="element-parameters.html#id4"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">reflection</span> <span class="pre">patch</span></code></span></a> between <code class="docutils literal notranslate"><span class="pre">dft1</span></code> and <code class="docutils literal notranslate"><span class="pre">bnd1</span></code> to give a plausible geometry.
+In this case, <code class="docutils literal notranslate"><span class="pre">P</span></code> rotates the coordinate system around the <span class="math notranslate nohighlight">\(y\)</span>-axis by 180<span class="math notranslate nohighlight">\(^o\)</span>
+(this leaves the <span class="math notranslate nohighlight">\(y\)</span>-axis invariant). This illustrates why
+an element containing a reflection patch is always needed between normal and reversed elements.</p>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>Irrespective of whether elements are reversed or not, the branch <span class="math notranslate nohighlight">\((x,y,z)\)</span> coordinate system
+at all <span class="math notranslate nohighlight">\(s\)</span>-positions will always be a right-handed coordinate system.</p></li>
+<li><p>Care must be take when using reversed elements. For example, if the field of the <code class="docutils literal notranslate"><span class="pre">bnd1</span></code> element in
+the above example is appropriate for, say, electrons, that is, electrons will be bent in a clockwise
+fashion going through <code class="docutils literal notranslate"><span class="pre">bnd1</span></code>, an electron going in a forward direction through the
+line in <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>D will be lost in the bend
+(the <span class="math notranslate nohighlight">\(y\)</span>-axis and hence the field is in the same direction for both cases so electrons
+will still be bent in a clockwise fashion but with <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>D a particle needs to be
+bent counterclockwise to get through the bend).
+That is, to get a particle going forward through the bend in <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>D, positrons must be used.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">reflection</span> <span class="pre">Patch</span></code> that rotated the coordinates, for example,
+around the <span class="math notranslate nohighlight">\(x\)</span>-axis by 180<span class="math notranslate nohighlight">\(^o\)</span>  would also produce a plausible geometry.</p></li>
+</ul>
+</section>
+<section id="reflection-patch">
+<span id="s-reflect-patch"></span><h2>Reflection Patch<a class="headerlink" href="#reflection-patch" title="Link to this heading">¶</a></h2>
+<p>When a lattice branch contains both normally oriented and reversed elements
+(<a class="reference internal" href="#s-ref-construct"><span class="std std-ref">Branch Coordinate Construction</span></a>), a <code class="docutils literal notranslate"><span class="pre">patch</span></code> (that is, an element containing patch parameters),
+or series of <code class="docutils literal notranslate"><span class="pre">patches</span></code>, which reflects the <span class="math notranslate nohighlight">\(z\)</span> direction
+must be placed in between. Such a <code class="docutils literal notranslate"><span class="pre">patch</span></code>, (or patches) is called a <code class="docutils literal notranslate"><span class="pre">reflection</span> <span class="pre">patch</span></code>.
+Specifically, a <code class="docutils literal notranslate"><span class="pre">reflection</span> <span class="pre">patch</span></code> reflects the direction of the <code class="docutils literal notranslate"><span class="pre">z</span></code>-axis.
+By “reflected direction” it is meant that the dot product
+<span class="math notranslate nohighlight">\({\bf z}_1 \cdot {\bf z}_2\)</span> is negative where <span class="math notranslate nohighlight">\({\bf z}_1\)</span> is the <span class="math notranslate nohighlight">\(z\)</span>-axis
+vector at the <code class="docutils literal notranslate"><span class="pre">entrance</span></code> face and <span class="math notranslate nohighlight">\({\bf z}_2\)</span> is the <span class="math notranslate nohighlight">\(z\)</span>-axis vector at the <code class="docutils literal notranslate"><span class="pre">exit</span></code> face.
+This condition is equivalent to the condition
+that the associated <span class="math notranslate nohighlight">\(\bf S\)</span> matrix (Eq. <a class="reference internal" href="#equation-wws">(10)</a>) satisfy:</p>
+<div class="math-wrapper docutils container" id="equation-s330">
+<div class="math notranslate nohighlight" id="equation-s330">
+<span class="eqno">(6)<a class="headerlink" href="#equation-s330" title="Link to this equation">¶</a></span>\[  S(3,3) &lt; 0\]</div>
+</div>
+<p>Using Eq. <a class="reference internal" href="#equation-wws">(10)</a> gives, after some simple algebra, this condition is equivalent to</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[  \cos(\text{x_rot}) \, \cos(\text{y_rot}) &lt; 0\]</div>
+</div>
+<p>When there are a series of patches, The transformations of all the patches are concatenated together
+to form an effective <span class="math notranslate nohighlight">\(\bf S\)</span> which can then be used with Eq. <a class="reference internal" href="#equation-s330">(6)</a>.</p>
+</section>
+<section id="floor-coordinates">
+<span id="s-floor"></span><h2>Floor Coordinates<a class="headerlink" href="#floor-coordinates" title="Link to this heading">¶</a></h2>
+<figure class="align-default" id="f-floor-coords">
+<a class="caption-left reference internal image-reference" href="_images/floor-coords.svg"><img alt="_images/floor-coords.svg" class="caption-left" src="_images/floor-coords.svg" style="width: 80%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 4 </span><span class="caption-text">The branch coordinate system (purple), which is a function of <span class="math notranslate nohighlight">\(s\)</span> along the branch reference
+curve, is described in the floor coordinate system (black) by a position <span class="math notranslate nohighlight">\((X(s), Y(s), Z(s))\)</span> and
+and by angles <span class="math notranslate nohighlight">\(\theta(s)\)</span>, <span class="math notranslate nohighlight">\(\phi(s)\)</span>, and <span class="math notranslate nohighlight">\(\psi(s)\)</span>. The figure shows an
+orientation with positive <span class="math notranslate nohighlight">\(\theta(s)\)</span> and <span class="math notranslate nohighlight">\(\psi(s)\)</span> but with negative <span class="math notranslate nohighlight">\(\phi(s)\)</span>.</span><a class="headerlink" href="#f-floor-coords" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The Cartesian <code class="docutils literal notranslate"><span class="pre">floor</span></code> coordinate system is the
+coordinate system “attached to the earth” that is used to describe the branch coordinate
+system. Following the MAD convention, the <code class="docutils literal notranslate"><span class="pre">floor</span></code> coordinate axis are labeled <span class="math notranslate nohighlight">\((X, Y, Z)\)</span>. Conventionally, <span class="math notranslate nohighlight">\(Y\)</span> is considered to be the “vertical” coordinate and <span class="math notranslate nohighlight">\((X, Z)\)</span>
+are considered to be “horizontal” coordinates.
+To describe how the branch curvilinear coordinate system is oriented within the floor coordinate
+system, each point on the <span class="math notranslate nohighlight">\(s\)</span>-axis of the branch curvilinear system is characterized by its
+<span class="math notranslate nohighlight">\((X, Y, Z)\)</span> position and by three angles <span class="math notranslate nohighlight">\(\theta(s)\)</span>, <span class="math notranslate nohighlight">\(\phi(s)\)</span>, and <span class="math notranslate nohighlight">\(\psi(s)\)</span>
+that describe the orientation of the branch coordinate axes as shown in <a class="reference internal" href="#f-floor-coords"><span class="std std-numref">Fig. 4</span></a>.
+These three angles are defined as follows:</p>
+<ul class="simple">
+<li><p><strong><span class="math notranslate nohighlight">\(\theta(s)\)</span> Azimuth (yaw) angle:</strong>
+Angle in the <span class="math notranslate nohighlight">\((X, Z)\)</span> plane between the <span class="math notranslate nohighlight">\(Z\)</span>–axis and the projection of the
+<span class="math notranslate nohighlight">\(z\)</span>–axis onto the <span class="math notranslate nohighlight">\((X, Z)\)</span> plane.
+A positive angle of
+<span class="math notranslate nohighlight">\(\theta = \pi/2\)</span> corresponds to the projected <span class="math notranslate nohighlight">\(z\)</span>–axis pointing in the negative
+<span class="math notranslate nohighlight">\(X\)</span>-direction.</p></li>
+<li><p><strong><span class="math notranslate nohighlight">\(\phi(s)\)</span> Pitch (elevation) angle:</strong>
+Angle between the <span class="math notranslate nohighlight">\(z\)</span>-axis and the <span class="math notranslate nohighlight">\((X,Z)\)</span> plane.
+A positive angle of <span class="math notranslate nohighlight">\(\phi = \pi/2\)</span> corresponds to the <span class="math notranslate nohighlight">\(z\)</span>–axis pointing in the
+negative <span class="math notranslate nohighlight">\(Y\)</span> direction.</p></li>
+</ul>
+<ul class="simple">
+<li><p><strong><span class="math notranslate nohighlight">\(\psi(s)\)</span> Roll angle:</strong>
+Angle of the <span class="math notranslate nohighlight">\(x\)</span>–axis with respect to the line formed by the intersection of the
+<span class="math notranslate nohighlight">\((X, Z)\)</span> plane with the <span class="math notranslate nohighlight">\((x, y)\)</span> plane.
+A positive <span class="math notranslate nohighlight">\(\psi\)</span> forms a right–handed screw with the <span class="math notranslate nohighlight">\(z\)</span>–axis.</p></li>
+</ul>
+<p>By default, at <span class="math notranslate nohighlight">\(s = 0\)</span>, the branch reference curve’s origin coincides with the <span class="math notranslate nohighlight">\((X, Y, Z)\)</span>
+origin and the <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span>, and <span class="math notranslate nohighlight">\(z\)</span> axes correspond to the
+<span class="math notranslate nohighlight">\(X\)</span>, <span class="math notranslate nohighlight">\(Y\)</span>, and <span class="math notranslate nohighlight">\(Z\)</span> axes respectively. If the lattice has no
+vertical bends (the bend <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref">tilt_ref</span></a> parameter is always zero), the <span class="math notranslate nohighlight">\(y\)</span>–axis
+will always be in the vertical <span class="math notranslate nohighlight">\(Y\)</span> direction and the <span class="math notranslate nohighlight">\(x\)</span>–axis will lie in the
+horizontal <span class="math notranslate nohighlight">\((X,Z)\)</span> plane.
+In this case, <span class="math notranslate nohighlight">\(\theta\)</span> decreases as one follows the branch reference curve when going through a
+horizontal bend with a positive bending angle. This corresponds to <span class="math notranslate nohighlight">\(x\)</span> pointing radially
+outward. Without any vertical bends, the <span class="math notranslate nohighlight">\(Y\)</span> and <span class="math notranslate nohighlight">\(y\)</span> axes will coincide, and <span class="math notranslate nohighlight">\(\phi\)</span>
+and <span class="math notranslate nohighlight">\(\psi\)</span> will both be zero.
+<code class="docutils literal notranslate"><span class="pre">FloorParams</span></code> Parameters of the branch beginning element can be used to override these defaults.</p>
+<p>Following MAD, the floor position of an element is characterized by a vector <span class="math notranslate nohighlight">\(\bf V\)</span></p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}  {\bf V} = 
+  \begin{pmatrix}
+    X \\ Y \\ Z 
+  \end{pmatrix}\end{split}\]</div>
+</div>
+<p>The orientation of an element is described by a unitary rotation matrix <span class="math notranslate nohighlight">\(\bf W\)</span>.
+The column vectors of <span class="math notranslate nohighlight">\(\bf W\)</span> are the unit vectors spanning the branch coordinate axes in
+the order <span class="math notranslate nohighlight">\((x, y, z)\)</span>. <span class="math notranslate nohighlight">\(\bf W\)</span> can be expressed in terms of the
+orientation angles <span class="math notranslate nohighlight">\(\theta\)</span>, <span class="math notranslate nohighlight">\(\phi\)</span>, and <span class="math notranslate nohighlight">\(\psi\)</span> via the formula</p>
+<div class="math-wrapper docutils container" id="equation-www">
+<div class="math notranslate nohighlight" id="equation-www">
+<span class="eqno">(7)<a class="headerlink" href="#equation-www" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf W} &amp;= {\bf R}_{y}(\theta) \; {\bf R}_{x}(\phi) \; {\bf R}_{z}(\psi) \\
+  &amp;= \begin{pmatrix}
+    \cos\theta \cos\psi + \sin\theta \sin\phi \sin\psi &amp; 
+        -\cos\theta \sin\psi + \sin\theta \sin\phi \cos\psi &amp; 
+         \sin\theta \cos\phi \\
+    \cos\phi \sin\psi &amp; \cos\phi \cos\psi &amp; -\sin\phi \\
+    \cos\theta \sin\phi \sin\psi - \sin\theta \cos\psi &amp; 
+         \sin\theta \sin\psi + \cos\theta \sin\phi \cos\psi &amp; 
+         \cos\theta \cos\phi 
+  \end{pmatrix}\end{split}\]</div>
+</div>
+<p>where</p>
+<div class="math-wrapper docutils container" id="equation-wtt0t">
+<div class="math notranslate nohighlight" id="equation-wtt0t">
+<span class="eqno">(8)<a class="headerlink" href="#equation-wtt0t" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf R}_{y}(\theta) &amp;= 
+  \begin{pmatrix}
+    \cos\theta  &amp; 0 &amp; \sin\theta \\
+    0           &amp; 1 &amp; 0          \\
+    -\sin\theta &amp; 0 &amp; \cos\theta 
+  \end{pmatrix}, \\
+  {\bf R}_{x}(\phi) &amp;= 
+  \begin{pmatrix}
+    1 &amp; 0 &amp; 0                \\
+    0 &amp; \cos\phi &amp; -\sin\phi \\
+    0 &amp; \sin\phi &amp;  \cos\phi 
+  \end{pmatrix}, \\
+  {\bf R}_{z}(\psi) &amp;= 
+  \begin{pmatrix}
+    \cos\psi &amp; -\sin\psi &amp; 0 \\
+    \sin\psi &amp;  \cos\psi &amp; 0 \\
+    0        &amp;  0        &amp; 1                
+  \end{pmatrix}\end{split}\]</div>
+</div>
+<p>Notice that these are Tait-Bryan angles and not Euler angles.</p>
+<p>An alternative representation of the <span class="math notranslate nohighlight">\(\bf W\)</span> matrix (or any other rotation matrix) is to specify the
+axis <span class="math notranslate nohighlight">\(\bf u\)</span> (normalized to 1) and angle of rotation <span class="math notranslate nohighlight">\(\beta\)</span></p>
+<div class="math-wrapper docutils container" id="equation-wctux2">
+<div class="math notranslate nohighlight" id="equation-wctux2">
+<span class="eqno">(9)<a class="headerlink" href="#equation-wctux2" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf W} = \begin{pmatrix}
+    \cos \beta + u_x^2 \left(1 - \cos \beta \right) &amp; 
+    u_x \, u_y \left(1 - \cos \beta \right) - u_z \sin \beta &amp; 
+    u_x \, u_z \left(1 - \cos \beta \right) + u_y \sin \beta \\ 
+    u_y \, u_x \left(1 - \cos \beta \right) + u_z \sin \beta &amp; 
+    \cos \beta + u_y^2\left(1 - \cos \beta \right) &amp; 
+    u_y \, u_z \left(1 - \cos \beta \right) - u_x \sin \beta \\ 
+    u_z \, u_x \left(1 - \cos \beta \right) - u_y \sin \beta &amp; 
+    u_z \, u_y \left(1 - \cos \beta \right) + u_x \sin \beta &amp; 
+    \cos \beta + u_z^2\left(1 - \cos \beta \right)
+  \end{pmatrix}\end{split}\]</div>
+</div>
+</section>
+<section id="lattice-element-positioning">
+<span id="s-ele-pos"></span><h2>Lattice Element Positioning<a class="headerlink" href="#lattice-element-positioning" title="Link to this heading">¶</a></h2>
+<p>The lattice standard, again following MAD, computes <span class="math notranslate nohighlight">\(\bf V\)</span> and <span class="math notranslate nohighlight">\(\bf W\)</span>
+by starting at the first element of the lattice and iteratively using the equations</p>
+<div class="math-wrapper docutils container" id="equation-wws">
+<div class="math notranslate nohighlight" id="equation-wws">
+<span class="eqno">(10)<a class="headerlink" href="#equation-wws" title="Link to this equation">¶</a></span>\[\begin{split}\begin{align}
+  {\bf V}_1 &amp;= {\bf W}_0 \; {\bf L} + {\bf V}_0, 
+    \\
+  {\bf W}_1 &amp;= {\bf W}_0 \; {\bf S}
+\end{align}\end{split}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(({\bf V}_0, {\bf W}_0)\)</span> and <span class="math notranslate nohighlight">\(({\bf V}_1, {\bf W}_1)\)</span> are respectively
+the position and orientation of the branch coordinates
+at the entrance and exit ends of an element,
+<span class="math notranslate nohighlight">\({\bf L}\)</span> is the displacement vector through the element,
+and matrix <span class="math notranslate nohighlight">\({\bf S}\)</span> is the rotation of
+the branch coordinate system through the element.
+For all elements whose reference curve
+through them is a straight line, the corresponding <span class="math notranslate nohighlight">\(\bf L\)</span> and <span class="math notranslate nohighlight">\(\bf S\)</span> are</p>
+<div class="math-wrapper docutils container" id="equation-l00l">
+<div class="math notranslate nohighlight" id="equation-l00l">
+<span class="eqno">(11)<a class="headerlink" href="#equation-l00l" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf L} = 
+  \begin{pmatrix}
+      0 \\ 0 \\ L
+  \end{pmatrix},
+  \quad
+  {\bf S} = 
+  \begin{pmatrix}
+      1 &amp; 0 &amp; 0 \\ 
+      0 &amp; 1 &amp; 0 \\
+      0 &amp; 0 &amp; 1
+  \end{pmatrix},\end{split}\]</div>
+</div>
+<p>Where <span class="math notranslate nohighlight">\(L\)</span> is the length of the element.</p>
+<figure class="align-default" id="f-tilt-bend">
+<a class="caption-left reference internal image-reference" href="_images/tilt-bend.svg"><img alt="_images/tilt-bend.svg" class="caption-left" src="_images/tilt-bend.svg" style="width: 80%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 5 </span><span class="caption-text">A) Rotation axes (bold arrows) for four different <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> angles of <span class="math notranslate nohighlight">\(\theta_{tr} = 0\)</span>,
+<span class="math notranslate nohighlight">\(\pm \pi/2\)</span>, and <span class="math notranslate nohighlight">\(\pi\)</span>.
+<span class="math notranslate nohighlight">\((x_0, y_0, z_0)\)</span> are the branch coordinates at the entrance end of the bend with
+the <span class="math notranslate nohighlight">\(z_0\)</span> axis being directed into the page. Any rotation axis will be displaced by a distance of
+the bend radius <code class="docutils literal notranslate"><span class="pre">rho</span></code> from the origin. B) The <span class="math notranslate nohighlight">\((x, y, z)\)</span> coordinates at the exit end of the bend
+for the same four <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> angles. In this case the bend angle is taken to be <span class="math notranslate nohighlight">\(\pi/2\)</span>.</span><a class="headerlink" href="#f-tilt-bend" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>For a <code class="docutils literal notranslate"><span class="pre">bend</span></code>, the axis of rotation is dependent upon the bend’s <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code></span></a> angle
+as shown in <a class="reference internal" href="#f-tilt-bend"><span class="std std-numref">Fig. 5</span></a>A. The axis of rotation points in the negative <span class="math notranslate nohighlight">\(y_0\)</span>
+direction for <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> = 0 and is offset by the bend radius <code class="docutils literal notranslate"><span class="pre">rho</span></code>. Here <span class="math notranslate nohighlight">\((x_0, y_0, z_0)\)</span>
+are the branch coordinates at the entrance end of the bend with the <span class="math notranslate nohighlight">\(z_0\)</span> axis being directed into
+the page in the figure.  For a non-zero <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code>, the rotation axis is itself rotated about the
+<code class="docutils literal notranslate"><span class="pre">z_0</span></code> axis by the value of <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code>. <a class="reference internal" href="#f-tilt-bend"><span class="std std-numref">Fig. 5</span></a>B shows the exit coordinates for four
+different values of <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> and for a bend angle <code class="docutils literal notranslate"><span class="pre">angle</span></code> of <span class="math notranslate nohighlight">\(\pi/2\)</span>.  Notice that for a
+bend in the horizontal <span class="math notranslate nohighlight">\(X-Z\)</span> plane, a positive bend <code class="docutils literal notranslate"><span class="pre">angle</span></code> will result in a decreasing azimuth
+angle <span class="math notranslate nohighlight">\(\theta\)</span>.</p>
+<p>For a bend, <span class="math notranslate nohighlight">\(\bf S\)</span> is given using Eq. <a class="reference internal" href="#equation-wctux2">(9)</a> with</p>
+<div class="math-wrapper docutils container" id="equation-ustt">
+<div class="math notranslate nohighlight" id="equation-ustt">
+<span class="eqno">(12)<a class="headerlink" href="#equation-ustt" title="Link to this equation">¶</a></span>\[\begin{split}\begin{align}
+  {\bf u} &amp;= (-\sin\theta_{tr}, -\cos\theta_{tr}, 0) \\
+  \beta &amp;= \alpha_b
+\end{align}\end{split}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\theta_{tr}\)</span> is the <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> angle. The <span class="math notranslate nohighlight">\(\bf L\)</span> vector for a <code class="docutils literal notranslate"><span class="pre">bend</span></code> is given by</p>
+<div class="math-wrapper docutils container" id="equation-lrztt">
+<div class="math notranslate nohighlight" id="equation-lrztt">
+<span class="eqno">(13)<a class="headerlink" href="#equation-lrztt" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf L} = {\bf R}_{z}(\theta_{tr}) \; {\bf \tilde L}, \quad
+  {\bf \tilde L} = 
+  \begin{pmatrix}
+    \rho (\cos\alpha_b - 1) \\ 0 \\ \rho \, \sin\alpha_b
+  \end{pmatrix}\end{split}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\alpha_b\)</span> is the bend <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref">angle</span></a> and <span class="math notranslate nohighlight">\(\rho\)</span> being the bend radius
+(<span class="math notranslate nohighlight">\(\rho\)</span>). Notice that since <span class="math notranslate nohighlight">\(\bf u\)</span> is perpendicular to <span class="math notranslate nohighlight">\(z\)</span>, the curvilinear reference coordinate
+system has no “torsion”. Note: The branch coordinate system can be related to a Frenet-Serret coordinate system, but
+the two coordinate systems do not coincide.
+Frenet-Serret coordinates use the radial direction in a bend as a coordinate axis while
+with branch coordinates the radial direction can point anywhere in the <span class="math notranslate nohighlight">\((x,y)\)</span> plane.</p>
+<p>Note: An alternative equation for <span class="math notranslate nohighlight">\(\bf S\)</span> for a bend is</p>
+<div class="math-wrapper docutils container" id="equation-srrr">
+<div class="math notranslate nohighlight" id="equation-srrr">
+<span class="eqno">(14)<a class="headerlink" href="#equation-srrr" title="Link to this equation">¶</a></span>\[  {\bf S} = {\bf R}_{z}(\theta_{tr}) \; {\bf R}_{y}(-\alpha_b) \; {\bf R}_{z}(-\theta_{tr})\]</div>
+</div>
+<p>The bend transformation above is so constructed that the transformation is equivalent to rotating
+the branch coordinate system around an axis that is perpendicular to the plane of the bend. This
+rotation axis is invariant under the bend transformation.
+For example, for <span class="math notranslate nohighlight">\(\theta_{tr} = 0\)</span> (or <span class="math notranslate nohighlight">\(\pi\)</span>) the <span class="math notranslate nohighlight">\(y\)</span>-axis is
+the rotation axis and the <span class="math notranslate nohighlight">\(y\)</span>-axis of the branch coordinates before the bend will be
+parallel to the <span class="math notranslate nohighlight">\(y\)</span>-axis of the branch coordinates after the bend as shown in <a class="reference internal" href="#f-tilt-bend"><span class="std std-numref">Fig. 5</span></a>.
+That is, a lattice with only bends with <span class="math notranslate nohighlight">\(\theta_{tr} = 0\)</span> or <span class="math notranslate nohighlight">\(\pi\)</span> will lie in the
+horizontal plane (this assuming that the <span class="math notranslate nohighlight">\(y\)</span>-axis starts out pointing along
+the <span class="math notranslate nohighlight">\(Y\)</span>-axis as it does by default).
+For <span class="math notranslate nohighlight">\(\theta_{tr} = \pm\pi/2\)</span>, the bend axis is the <span class="math notranslate nohighlight">\(x\)</span>-axis.
+A value of <span class="math notranslate nohighlight">\(\theta_{tr} = +\pi/2\)</span> represents a downward pointing bend.</p>
+</section>
+<section id="particle-position-transformation">
+<span id="s-position-transform"></span><h2>Particle Position Transformation<a class="headerlink" href="#particle-position-transformation" title="Link to this heading">¶</a></h2>
+<p>A point <span class="math notranslate nohighlight">\({\bf Q}_g = (X, Y, Z)\)</span> defined in the global coordinate system, when expressed in the
+coordinate system defined by <span class="math notranslate nohighlight">\(({\bf V}, {\bf W})\)</span> is</p>
+<div class="math-wrapper docutils container" id="equation-rwrv">
+<div class="math notranslate nohighlight" id="equation-rwrv">
+<span class="eqno">(15)<a class="headerlink" href="#equation-rwrv" title="Link to this equation">¶</a></span>\[  {\bf Q}_{VW} = {\bf W}^{-1} \left( {\bf Q}_g - {\bf V} \right)\]</div>
+</div>
+<p>This is essentially the inverse of Eq. <a class="reference internal" href="#equation-wws">(10)</a>. That is, position vectors transform inversely to the
+transformation of the coordinate system.</p>
+<p>Using Eq. <a class="reference internal" href="#equation-rwrv">(15)</a> with Eqs. <a class="reference internal" href="#equation-wws">(10)</a>, the transformation of a
+particle’s position <span class="math notranslate nohighlight">\({\bf q} = (x,y,z)\)</span> and momentum <span class="math notranslate nohighlight">\({\bf P} = (P_x, P_y, P_z)\)</span>
+when the coordinate frame is transformed from frame
+<span class="math notranslate nohighlight">\(({\bf V}_{i-1}, {\bf W}_{i-1})\)</span> to frame <span class="math notranslate nohighlight">\(({\bf V}_i, {\bf W}_i)\)</span> is</p>
+<div class="math-wrapper amsmath docutils container" id="equation-2669c409-b4d2-4f1f-ab00-7af420080f6f">
+<div class="amsmath math notranslate nohighlight" id="equation-2669c409-b4d2-4f1f-ab00-7af420080f6f">
+<span class="eqno">(16)<a class="headerlink" href="#equation-2669c409-b4d2-4f1f-ab00-7af420080f6f" title="Permalink to this equation">¶</a></span>\[\begin{align}
+{\bf q}_i &amp;= {\bf S}_i^{-1} \, \left( {\bf q}_{i-1} - {\bf L}_i \right),
+\label{rwlr} \\
+{\bf P}_i &amp;= {\bf S}_i^{-1} \, {\bf P}_{i-1}
+\label{pps}
+\end{align}\]</div>
+</div>
+<p>Notice that since <span class="math notranslate nohighlight">\({\bf S}\)</span> (and <span class="math notranslate nohighlight">\({\bf W}\)</span>) is the product of orthogonal
+rotation matrices, <span class="math notranslate nohighlight">\({\bf S}\)</span> is itself orthogonal and its inverse is just the transpose</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[  {\bf S}^{-1} = {\bf S}^T\]</div>
+</div>
+</section>
+<section id="transformation-between-branch-and-element-body-coordinates">
+<span id="s-lab-body-transform"></span><h2>Transformation Between Branch and Element Body Coordinates<a class="headerlink" href="#transformation-between-branch-and-element-body-coordinates" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code> coordinate system is the coordinate system attached to an element. Without any
+alignment shifts, the <a class="reference internal" href="#s-ref-construct"><code class="docutils literal notranslate"><span class="pre">branch</span></code> coordinates</a> and <code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code> coordinates
+are the same. With alignment shifts, the transformation between <code class="docutils literal notranslate"><span class="pre">branch</span></code> and <code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code>
+coordinates depends upon whether the branch coordinate system is <a class="reference internal" href="#s-straight-mis">straight</a> or
+<a class="reference internal" href="#s-bend-mis">bent</a>.</p>
+<p>When tracking a particle through an element, the particle starts at the <a class="reference internal" href="#s-coords"><code class="docutils literal notranslate"><span class="pre">nominal</span></code></a>
+upstream end of the element with the particle’s position expressed in branch
+coordinates. Tracking from the nominal upstream end to the actual upstream face of the element
+involves first transforming to element body coordinates (with <span class="math notranslate nohighlight">\(s = 0\)</span> in the equations below) and
+then propagating the particle as in a field free drift space from the particle’s starting position
+to the actual element face. Depending upon the element’s orientation, this tracking may involve
+tracking backwards. Similarly, after a particle has been tracked through the physical element to the
+actual downstream face, the tracking to the nominal downstream end involves transforming to
+branch coordinates (using <span class="math notranslate nohighlight">\(s = L\)</span> in the equations below) and then propagating the particle as
+in a field free drift space to the nominal downstream edge.</p>
+<section id="straight-element-misalignment-transformation">
+<span id="s-straight-mis"></span><h3>Straight Element Misalignment Transformation<a class="headerlink" href="#straight-element-misalignment-transformation" title="Link to this heading">¶</a></h3>
+<p>For straight line elements, given a branch coordinate frame <span class="math notranslate nohighlight">\(\Lambda_s\)</span> with an origin a distance
+<span class="math notranslate nohighlight">\(s\)</span> from the beginning of the element, misalignments will shift the coordinates to a new reference
+frame denoted <span class="math notranslate nohighlight">\(E_s\)</span>. Since misalignments are defined with respect to the middle of the element, the
+transformation from <span class="math notranslate nohighlight">\(\Lambda_s\)</span> and <span class="math notranslate nohighlight">\(E_s\)</span> can be accomplished using a three step process:</p>
+<div class="math-wrapper docutils container" id="equation-llee">
+<div class="math notranslate nohighlight" id="equation-llee">
+<span class="eqno">(17)<a class="headerlink" href="#equation-llee" title="Link to this equation">¶</a></span>\[  \Lambda_s \longrightarrow \Lambda_\text{mid} 
+  \longrightarrow E_\text{mid} \longrightarrow E_s\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\Lambda_\text{mid}\)</span> and <span class="math notranslate nohighlight">\(E_\text{mid}\)</span> are the branch and element reference frames at the
+center of the element. All transformations use Eqs. <a class="reference internal" href="#equation-wws">(10)</a>.</p>
+<p>The transformations are:</p>
+<ol class="arabic simple">
+<li><p><span class="math notranslate nohighlight">\(\Lambda_s \longrightarrow \Lambda_\text{mid} \)</span>: Translation to the element midpoint.
+For this transformation, <span class="math notranslate nohighlight">\(\bf S\)</span> is the unit matrix and <span class="math notranslate nohighlight">\({\bf L} = (0, 0, L/2 - s)\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Lambda_\text{mid} \longrightarrow E_\text{mid}\)</span>: Misalignment transformation with</p></li>
+</ol>
+<div class="math-wrapper docutils container" id="equation-swww2">
+<div class="math notranslate nohighlight" id="equation-swww2">
+<span class="eqno">(18)<a class="headerlink" href="#equation-swww2" title="Link to this equation">¶</a></span>\[\begin{split}
+\bf L =
+\begin{pmatrix}
+\text{x_offset} \\ \text{y_offset} \\ \text{z_offset}
+\end{pmatrix},
+\qquad
+\bf S = {\bf R}_y (\text{y_rot}) \; {\bf R}_x (\text{x_rot}) \; {\bf R}_z (\text{tilt})\end{split}\]</div>
+</div>
+<ol class="arabic simple">
+<li><p><span class="math notranslate nohighlight">\(E_\text{mid} \longrightarrow E_s\)</span>: Translation to body coordinates <span class="math notranslate nohighlight">\(E_s\)</span>.
+For this transformation, <span class="math notranslate nohighlight">\(\bf S\)</span> is the unit matrix and <span class="math notranslate nohighlight">\({\bf L} = (0, 0, s - L/2)\)</span>.</p></li>
+</ol>
+<p>Notice that with this definition of how elements are misaligned, the position of the center of a
+non-bend misaligned element depends only on the offsets, and is independent of the pitches and tilt.</p>
+</section>
+<section id="bend-element-misalignment-transformation">
+<span id="s-bend-mis"></span><h3>Bend Element Misalignment Transformation<a class="headerlink" href="#bend-element-misalignment-transformation" title="Link to this heading">¶</a></h3>
+<p>For <code class="docutils literal notranslate"><span class="pre">Bend</span></code> element positioning, besides the standard <code class="docutils literal notranslate"><span class="pre">BodyShiftP</span></code> parameters, there is the
+<code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> (<span class="math notranslate nohighlight">\(\theta_{tr}\)</span>) parameter (see <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref">Bend Parameters</span></a>).
+The latter affects both the reference orbit and the bend position.
+Furthermore, <code class="docutils literal notranslate"><span class="pre">ref_tilt</span></code> is calculated with respect to
+the coordinates at the beginning of the bend while, like straight elements, <code class="docutils literal notranslate"><span class="pre">roll</span></code>, offsets, and
+pitches are calculated with respect to the center of the bend. The different reference frame used
+for <code class="docutils literal notranslate"><span class="pre">ref_tilt</span></code> versus everything else means that five transformations are needed to get from the
+branch frame to the element body frame (see Eq. Eq. <a class="reference internal" href="#equation-llee">(17)</a>). Symbolically:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[  \Lambda_s \longrightarrow \Lambda_\text{mid-arc} \longrightarrow
+  \Omega_\text{mid-chord} \longrightarrow \Omega_\text{offset} \longrightarrow \Omega_\text{tilt_ref}
+  \longrightarrow E_\text{mid-arc} \longrightarrow E_s\]</div>
+</div>
+<p>All transformations use Eqs. <a class="reference internal" href="#equation-wws">(10)</a>.</p>
+<p>The transformations are:</p>
+<ol class="arabic simple">
+<li><p><span class="math notranslate nohighlight">\(\Lambda_s \longrightarrow \Lambda_\text{mid-arc}\)</span>: Transformation from the starting
+branch coordinate system at a longitudinal position along the bend arc of <span class="math notranslate nohighlight">\(s\)</span> from the upstream
+end of the bend to the branch coordinates at the center point of the arc.
+This is a rotation around the center of curvature of the bend and is given by
+Eq. <a class="reference internal" href="#equation-ustt">(12)</a> and Eq. <a class="reference internal" href="#equation-lrztt">(13)</a> with the substitution <span class="math notranslate nohighlight">\(\alpha_b \rightarrow (L/2 - s)/\rho\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Lambda_\text{mid-arc} \longrightarrow \Omega_\text{mid-chord}\)</span>:
+This translates (no rotation) the origin of <span class="math notranslate nohighlight">\(\Lambda_\text{mid-arc}\)</span>
+to the center of the bend chord.
+For this transformation, <span class="math notranslate nohighlight">\(\bf S\)</span> is the unit matrix and
+<span class="math notranslate nohighlight">\({\bf L} = \rho(\cos(\alpha_b/2) - 1) \, (\cos\theta_{tr}, \sin\theta_{tr}, 0)\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\Omega_\text{mid-chord} \longrightarrow \Omega_\text{offset}\)</span>: Element misalignment.
+This transformation uses Eqs. <a class="reference internal" href="#equation-swww2">(18)</a>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Omega_\text{offset} \longrightarrow \Omega_\text{tilt_ref}\)</span>: Rotation by <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code>
+to get the coordinate system aligned with body coordinates. This transformation uses
+<span class="math notranslate nohighlight">\({\bf L} = 0\)</span> and <span class="math notranslate nohighlight">\({\bf S} = {\bf R}_z(\theta_{tr})\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Omega_\text{tilt_ref} \longrightarrow E_\text{mid-arc}\)</span>: Translation to the mid point
+on the arc. For this transformation, <span class="math notranslate nohighlight">\(\bf S\)</span> is the unit matrix and
+<span class="math notranslate nohighlight">\({\bf L} = \rho(\cos(\alpha_b/2) - 1) \, (1, 0, 0)\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\( E_\text{mid-arc} \longrightarrow E_s\)</span>: Transformation along the bend arc to <span class="math notranslate nohighlight">\(E_s\)</span>.
+This is a rotation around the center of curvature of the bend and is given by
+Eq. <a class="reference internal" href="#equation-ustt">(12)</a> and Eq. <a class="reference internal" href="#equation-lrztt">(13)</a> with the substitution <span class="math notranslate nohighlight">\(\alpha_b = (s - L/2)/\rho\)</span>
+and <span class="math notranslate nohighlight">\(\theta_{tr} = 0\)</span>.</p></li>
+</ol>
+<p>Notice that with this definition of how elements are misaligned, the position of the center of a
+misaligned element depends only on the offsets and is independent of the rotations.</p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          <a class="prev-page" href="sagancavity-physics.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">SaganCavity Physics</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad.jl Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Coordinates</a><ul>
+<li><a class="reference internal" href="#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
+<li><a class="reference internal" href="#nomenclature">Nomenclature</a></li>
+<li><a class="reference internal" href="#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
+<li><a class="reference internal" href="#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
+<li><a class="reference internal" href="#branch-coordinate-construction">Branch Coordinate Construction</a></li>
+<li><a class="reference internal" href="#reflection-patch">Reflection Patch</a></li>
+<li><a class="reference internal" href="#floor-coordinates">Floor Coordinates</a></li>
+<li><a class="reference internal" href="#lattice-element-positioning">Lattice Element Positioning</a></li>
+<li><a class="reference internal" href="#particle-position-transformation">Particle Position Transformation</a></li>
+<li><a class="reference internal" href="#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a><ul>
+<li><a class="reference internal" href="#straight-element-misalignment-transformation">Straight Element Misalignment Transformation</a></li>
+<li><a class="reference internal" href="#bend-element-misalignment-transformation">Bend Element Misalignment Transformation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=8a448e45"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>
