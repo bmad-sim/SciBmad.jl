@@ -1,0 +1,544 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Coordinates" href="coordinates.html"><link rel="prev" title="Miscellaneous" href="miscellaneous.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>SaganCavity Physics - SciBmad.jl Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=dfe9dd02" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">SciBmad.jl Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">SciBmad.jl Documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture.html">Dynamic aperture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/errors-fitting.html">Errors and fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">SciBmad</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">SaganCavity Physics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coordinates.html">Coordinates</a></li>
+</ul>
+
+</div><div class="sidebar-tree">
+  <ul>
+    <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference →</a></li>
+    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
+  </ul>
+</div></div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/sagancavity-physics.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/sagancavity-physics.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="sagancavity-physics">
+<span id="id1"></span><h1>SaganCavity Physics<a class="headerlink" href="#sagancavity-physics" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">SagaņCavity</span></code> RF cavity tracking method, implemented in <code class="docutils literal notranslate"><span class="pre">BeamTracking</span></code>,
+uses a symplectic kick-drift-kick model and
+has both longitudinal energy gain and transverse focusing effects.
+DC solenoid and multipole fields can be superimposed on the RF fields.
+For a listing of parameters used in the tracking, see the
+<a class="reference internal" href="tracking-methods.html#sagancavity-tracking"><span class="std std-ref">SaganCavity Tracking Method</span></a> and
+<a class="reference internal" href="element-parameters.html#id5"><span class="std std-ref">RF parameter group</span></a> documentation .</p>
+</section>
+<section id="justification">
+<h2>Justification<a class="headerlink" href="#justification" title="Link to this heading">¶</a></h2>
+<p>The SaganCavity tracking method occupies a practical middle ground
+between trying to integrate through a cavity’s field which can be slow
+and the simple zero-length thin-lens cavity model that provides rapid computation
+but generally ignores transverse focusing entirely and which can
+lead to unphysical emittance growth for simulations in low-energy
+linacs.</p>
+<p>The model used for SaganCavity tracking is kick-drift-kick.
+Rosenzweig–Serafini (R&amp;S) <span class="bibtex-citation" id="id2">[<a class="reference internal" href="#id5" title="J. Rosenzweig and L. Serafini. Transverse particle motion in radio-frequency linear accelerators. Phys. Rev. E, 49:1599–1602, Feb 1994. URL: https://link.aps.org/doi/10.1103/PhysRevE.49.1599, doi:10.1103/PhysRevE.49.1599.">RS94</a>]</span> edge focusing is
+included via a symplectic fringe Hamiltonian along with a
+pondermotive focusing term that is applied for standing-wave cavities.</p>
+</section>
+<section id="kick-drift-kick-model">
+<span id="sc-kdk"></span><h2>Kick-Drift-Kick Model<a class="headerlink" href="#kick-drift-kick-model" title="Link to this heading">¶</a></h2>
+<p>The cavity of total length <code class="docutils literal notranslate"><span class="pre">L</span></code> has an “active” length specified by <code class="docutils literal notranslate"><span class="pre">L_active</span></code>
+which is the length over which there is a finite RF field. The active length
+is centered longitudinally in the element. If there are (DC) multipole or solenoid
+fields, these fields exist along the entire element and not just in the active region.</p>
+<p><code class="docutils literal notranslate"><span class="pre">L_active</span></code> is divided into <code class="docutils literal notranslate"><span class="pre">num_cells</span></code> equal-width cells.
+Inside each cell, particles are tracked (“drifted”) ignoring the RF field but
+including any DC solenoid field.
+Longitudinal energy kicks are applied at the cell boundaries, with half-kicks at
+the entrance and exit ends of the active region and full kicks at interior boundaries.
+Additionally, entrance and exit fringe kicks are applied at the ends of the active region.
+Note: Due to the fact that in an actual cavity the fields are not uniform longitudinally,
+increasing the number of kick points does not necessarily increase the simulation accuracy.</p>
+<p>To simplify the algorithm,
+both the energy kicks at the cell ends and the edge kicks at the ends of the active region are
+applied by first converting from the standard <span class="math notranslate nohighlight">\((z, p_z)\)</span> <strong>momentum</strong> particle coordinates
+to <span class="math notranslate nohighlight">\((t, p_E)\)</span> <strong>energy</strong> coordinates where <span class="math notranslate nohighlight">\(t\)</span> is the time and <span class="math notranslate nohighlight">\(p_E = E/P_0 c\)</span> with E being
+the energy, and <span class="math notranslate nohighlight">\(P_0\)</span> beging the reference momentum.
+After any kicks have been applied, a conversion back to momentum coordinates is done.</p>
+</section>
+<section id="edge-kick">
+<span id="sc-edge"></span><h2>Edge Kick<a class="headerlink" href="#edge-kick" title="Link to this heading">¶</a></h2>
+<p>At the entrance and exit ends of the active region, the radial electric fringe
+field produces a transverse kick. Following R&amp;S <span class="bibtex-citation" id="id3">[<a class="reference internal" href="#id5" title="J. Rosenzweig and L. Serafini. Transverse particle motion in radio-frequency linear accelerators. Phys. Rev. E, 49:1599–1602, Feb 1994. URL: https://link.aps.org/doi/10.1103/PhysRevE.49.1599, doi:10.1103/PhysRevE.49.1599.">RS94</a>]</span>
+(their Eq. (12)), the appropriate fringe Hamiltonian to reproduce this, in energy coordinates, is:</p>
+<div class="math-wrapper docutils container" id="equation-eq-hf">
+<div class="math notranslate nohighlight" id="equation-eq-hf">
+<span class="eqno">(1)<a class="headerlink" href="#equation-eq-hf" title="Link to this equation">¶</a></span>\[H_f = \mp \frac{q}{2 P_0 c} \, G \, \cos(\phi_{RF})\,(x^2 + y^2),\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(q\)</span> is the particle charge, and <span class="math notranslate nohighlight">\(G\)</span> is the gradient which is equal to <span class="math notranslate nohighlight">\(V/L_\text{active}\)</span>
+with <span class="math notranslate nohighlight">\(V\)</span> being the voltage.
+In the above equation, <a class="reference internal" href="#sc-phase"><span class="math notranslate nohighlight">\(\phi_{RF}\)</span></a>
+is the RF phase and the minus sign applies at the entrance end of the active region
+and the plus sign at the exit end.
+If <code class="docutils literal notranslate"><span class="pre">L_active</span></code> is zero (giving infinite gradient), the edge focusting is not applied.</p>
+<p>Applying Hamilton’s equations in energy-time phase space coordinates
+yields the fringe kicks</p>
+<div class="math-wrapper docutils container" id="equation-eq-edgekick">
+<div class="math notranslate nohighlight" id="equation-eq-edgekick">
+<span class="eqno">(2)<a class="headerlink" href="#equation-eq-edgekick" title="Link to this equation">¶</a></span>\[\begin{split}\begin{aligned}
+  \Delta p_x &amp;= \mp \frac{q}{P_0 c} \, G \cos(\phi_{RF})\, x, \\
+  \Delta p_y &amp;= \mp \frac{q}{P_0 c} \, G \cos(\phi_{RF})\, y, \\
+  \Delta p_E &amp;= \mp \frac{\pi f_\text{rf} q}{P_0 c^2} \, G
+                \sin(\phi_{RF})\,(x^2 + y^2).
+\end{aligned}\end{split}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(f_\text{rf}\)</span> is the RF frequency given by the <code class="docutils literal notranslate"><span class="pre">rf_frequency</span></code> parameter.
+The entrance kick will be defocusing and
+the exit kick will be focusing for accelerated particles.</p>
+<p>The spin fringe kick is calculated using the Thomas-BMT equation with the integrated radial electric field being</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\int_\text{kick} {\bf E} = \pm G \, \cos(\phi_{RF}) \, (x, y, 0)\]</div>
+</div>
+</section>
+<section id="energy-kick">
+<span id="sc-energy"></span><h2>Energy Kick<a class="headerlink" href="#energy-kick" title="Link to this heading">¶</a></h2>
+<p>Kick points at the cell boundaries are indexed from zero to <span class="math notranslate nohighlight">\(N_c\)</span> (set with the <code class="docutils literal notranslate"><span class="pre">num_cells</span></code> parameter).
+The energy kick at the <span class="math notranslate nohighlight">\(n^{th}\)</span> kick point is</p>
+<div class="math-wrapper docutils container" id="equation-eq-vk">
+<div class="math notranslate nohighlight" id="equation-eq-vk">
+<span class="eqno">(3)<a class="headerlink" href="#equation-eq-vk" title="Link to this equation">¶</a></span>\[dE(n) = \frac{q \, \kappa_n \, V }{N_c} \cos( \phi_{RF}(n) ),\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(V\)</span> is the voltage set by the <code class="docutils literal notranslate"><span class="pre">voltage</span></code> parameter, and <span class="math notranslate nohighlight">\(\kappa_n = 0.5\)</span> at the
+two end kick points and <span class="math notranslate nohighlight">\(\kappa_n = 1\)</span> at interior kick points.</p>
+<p>The spin kick is calculated using the Thomas-BMT equation with the integrated electric field being</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\int_\text{kick} {\bf E} = (0, 0, c \cdot dE / q)\]</div>
+</div>
+</section>
+<section id="rf-phase">
+<span id="sc-phase"></span><h2>RF Phase<a class="headerlink" href="#rf-phase" title="Link to this heading">¶</a></h2>
+<p>At the <span class="math notranslate nohighlight">\(n^{th}\)</span> kick point, the RF phase <span class="math notranslate nohighlight">\(\phi_{RF}(n)\)</span> in the above equations is taken to be</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\phi_{RF}(n) = 2 \pi f_\text{rf} \left( t - t_0 - t_\text{trans}(n) \right) + \phi_0\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(t\)</span> is the particle time, and <span class="math notranslate nohighlight">\(\phi_0\)</span> is set by the <code class="docutils literal notranslate"><span class="pre">phi0</span></code> parameter.
+In the above equation, <span class="math notranslate nohighlight">\(t_0\)</span> is element reference time which depends upon the setting
+of the <code class="docutils literal notranslate"><span class="pre">zero_phase</span></code> parameter and whether relative or absolute time is being used.
+The transit time <span class="math notranslate nohighlight">\(t_\text{trans}(n)\)</span> accounts for the finite transit time of the reference particle
+to go from the beginning of the active region to kick point <span class="math notranslate nohighlight">\(n\)</span>.</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[t_\text{trans}(n) = t_{out} + \sum_{j=1}^{n} t_c(j)\]</div>
+</div>
+<p>where</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[t_{out} = \frac{L_{out}}{c \,\beta_\text{ref}(out)}, \qquad
+t_c(j) = \frac{L}{c \, \beta_\text{ref}(j) N_s}\]</div>
+</div>
+<p>with <span class="math notranslate nohighlight">\(t_{out}\)</span> being the reference transit time in the region just before the active
+region from the element entrance end to active region entrance end, and
+<span class="math notranslate nohighlight">\(t_c(j)\)</span> is the reference transit time across the <span class="math notranslate nohighlight">\(j^{\text{th}}\)</span> cell (indexed from 1 to <span class="math notranslate nohighlight">\(N_c\)</span>).
+In the above equations, <span class="math notranslate nohighlight">\(L_{out} = (L - L_\text{active}) / 2\)</span> and
+<span class="math notranslate nohighlight">\(\beta_\text{ref}\)</span> is the reference velocity which is
+computed assuming that the reference energy increases by
+<span class="math notranslate nohighlight">\(\kappa_n dE_\text{ref} /N_c\)</span> at the <span class="math notranslate nohighlight">\(n^{th}\)</span> kick point with <span class="math notranslate nohighlight">\(dE_\text{ref}\)</span> being
+set by the <code class="docutils literal notranslate"><span class="pre">dE_ref</span></code> paramter.
+This construction ensures that with the voltage set commensurate with <code class="docutils literal notranslate"><span class="pre">dE_ref</span></code> and <code class="docutils literal notranslate"><span class="pre">phi_0</span></code>,
+a particle on the zero orbit will see a constant RF phase at each kick
+point. This is important for correctly modeling sub-relativistic
+beams where the phase velocity of the reference particle can differ
+significantly from the speed of light.</p>
+</section>
+<section id="standing-wave-pondermotive-focusing">
+<span id="sc-ponder"></span><h2>Standing-Wave Pondermotive Focusing<a class="headerlink" href="#standing-wave-pondermotive-focusing" title="Link to this heading">¶</a></h2>
+<p>For a <em>traveling-wave</em> cavity, there is a forward-propagating wave
+and this wave provides both acceleration and the edge kick of Section <a class="reference internal" href="#sc-edge"><span class="std std-ref">Edge Kick</span></a>.
+A <em>standing-wave</em> cavity is modeled as the superposition of a
+forward-propagating and a backward-propagating wave of equal amplitude.
+The backward wave does not contribute to the net acceleration (its kick averages to zero
+for a particle traversing many cells), but the backwards wave
+produces a transverse focusing force called the pondermotive force.</p>
+<p>Because the phase of the backward wave as seen by a forward-traveling
+particle varies rapidly, the pondermotive kick is treated using a first-order approximation
+which give a time-averaged force.
+The appropriate Hamiltonian corresponding to R&amp;S Eq. (4) with <span class="math notranslate nohighlight">\(\eta(\phi) = 1\)</span> (no harmonics) is:</p>
+<div class="math-wrapper docutils container" id="equation-eq-hp">
+<div class="math notranslate nohighlight" id="equation-eq-hp">
+<span class="eqno">(4)<a class="headerlink" href="#equation-eq-hp" title="Link to this equation">¶</a></span>\[H_p = -\frac{\kappa_n \, L \, q^2 G^2}{16 N_s P_0^2 c^2 (1 + p_z)}
+      (x^2 + y^2),\]</div>
+</div>
+<p>The pondermotive kick is applied at each kick point.
+Like the edge focusing, if <code class="docutils literal notranslate"><span class="pre">L_active</span></code> is zero which would
+give an infinite <span class="math notranslate nohighlight">\(G\)</span>, the pondermotive kick is not applied.</p>
+<p>The resulting phase-space kicks are</p>
+<div class="math-wrapper docutils container" id="equation-eq-pond">
+<div class="math notranslate nohighlight" id="equation-eq-pond">
+<span class="eqno">(5)<a class="headerlink" href="#equation-eq-pond" title="Link to this equation">¶</a></span>\[\begin{split}\begin{aligned}
+  \Delta p_x &amp;= -\frac{\kappa_n \, L \, q^2 G^2}
+                      {8 N_s P_0^2 c^2 (1 + p_z)} \, x, \\
+  \Delta p_y &amp;= -\frac{\kappa_n \, L \, q^2 G^2}
+                      {8 N_s P_0^2 c^2 (1 + p_z)} \, y, \\
+  \Delta z   &amp;= -\frac{\kappa_n \, L \, q^2 G^2}
+                      {16 N_s P_0^2 c^2 (1 + p_z)^2}
+                (x^2 + y^2).
+\end{aligned}\end{split}\]</div>
+</div>
+<p>Several features are noteworthy. The kick is always focusing and
+independent of RF phase (since the backward-wave phase is being
+averaged over).  It is quadratic in <span class="math notranslate nohighlight">\(G\)</span>, analogous to the net
+focusing produced by alternating-gradient structures.  The
+longitudinal shift <span class="math notranslate nohighlight">\(\Delta z\)</span> arises from the transverse oscillation
+that the backward wave induces: the sinusoidal transverse motion
+slightly delays the particle, reducing <span class="math notranslate nohighlight">\(z\)</span>.</p>
+</section>
+<section id="solenoid-and-multipole-components">
+<h2>Solenoid and Multipole Components<a class="headerlink" href="#solenoid-and-multipole-components" title="Link to this heading">¶</a></h2>
+<p>A solenoid field component can be superimposed on the cavity.
+In this case, the free drifts within each cell are replaced by symplectic tracking through a
+uniform solenoid field.</p>
+<p>If there are multipoles, multipole kicks are applied at the ends of the element
+and at the kick points at the cell ends alongside the RF kicks.</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">¶</a></h2>
+<div class="docutils container" id="id4">
+<div role="list" class="citation-list">
+<div class="citation" id="id5" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>RS94<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id2">1</a>,<a role="doc-backlink" href="#id3">2</a>)</span>
+<p>J. Rosenzweig and L. Serafini. Transverse particle motion in radio-frequency linear accelerators. <em>Phys. Rev. E</em>, 49:1599–1602, Feb 1994. URL: <a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevE.49.1599">https://link.aps.org/doi/10.1103/PhysRevE.49.1599</a>, <a class="reference external" href="https://doi.org/10.1103/PhysRevE.49.1599">doi:10.1103/PhysRevE.49.1599</a>.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="coordinates.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Coordinates</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="miscellaneous.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Miscellaneous</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad.jl Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">SaganCavity Physics</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#justification">Justification</a></li>
+<li><a class="reference internal" href="#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
+<li><a class="reference internal" href="#edge-kick">Edge Kick</a></li>
+<li><a class="reference internal" href="#energy-kick">Energy Kick</a></li>
+<li><a class="reference internal" href="#rf-phase">RF Phase</a></li>
+<li><a class="reference internal" href="#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li><a class="reference internal" href="#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=8a448e45"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>
