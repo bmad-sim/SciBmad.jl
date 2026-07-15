@@ -38,9 +38,9 @@ The people most involved in the programming of SciBmad are trusted to act in the
 
 ### Current Roster
 
-Joe Devlin
-David Sagan
-Matt Signorelli
+- Joe Devlin
+- David Sagan
+- Matt Signorelli
 
 ### Role
 
