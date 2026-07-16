@@ -1,0 +1,658 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Ramping through a spin-orbit resonance with SciBmad" href="ags-spin-ramp.html"><link rel="prev" title="Ramping through a spin-orbit resonance with SciBmad" href="../julia/ags-spin-ramp.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Nonlinear Twiss - SciBmad.jl Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=dfe9dd02" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">SciBmad.jl Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <span class="sidebar-brand-text">SciBmad.jl Documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia/dynamic-aperture.html">Dynamic aperture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia/ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia/orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia/errors-fitting.html">Errors and fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../julia/ags-spin-ramp.html">AGS spin ramp</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">SciBmad</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tracking-methods.html">Tracking Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../miscellaneous.html">Miscellaneous</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../sagancavity-physics.html">SaganCavity Physics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coordinates.html">Coordinates</a></li>
+</ul>
+
+</div><div class="sidebar-tree">
+  <ul>
+    <li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference →</a></li>
+    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
+  </ul>
+</div></div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/examples/python/nonlinear-twiss.ipynb?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/examples/python/nonlinear-twiss.ipynb" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="nonlinear-twiss">
+<h1>Nonlinear Twiss<a class="headerlink" href="#nonlinear-twiss" title="Link to this heading">¶</a></h1>
+<p>This Jupyter notebook introduces SciBmad’s parametric nonlinear normal form routines, with the goal of familiarizing users with Truncated Power Series Algebra (TPSA) methods in accelerator physics. Various “nonlinear Twiss” calculations are made using the Electron Storage Ring of the Electron-Ion Collider. E.g., we will compute the beta function as a Taylor series in the momentum deviation <span class="math notranslate nohighlight">\(\delta\)</span>, and can also do so as a Taylor series in variations of some parameters, e.g. sextupole strengths.</p>
+<p>Map-based perturbation theory is an approach to perturbation theory introduced by Dragt and Finn, and developed in great detail for accelerator physics applications by Forest back in the early 90s. It is the only fully general and self consistent way to compute all such important quantities of the map, without any approximations up to the truncation order of the Taylor series. <em>All</em> quantities computed by SciBmad use this most powerful and general formalism.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">juliacall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Main</span> <span class="k">as</span> <span class="n">jl</span>
+<span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="s1">&#39;using SciBmad&#39;</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Detected IPython. Loading juliacall extension. See https://juliapy.github.io/PythonCall.jl/stable/compat/#IPython
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">jl</span><span class="o">.</span><span class="n">include</span><span class="p">(</span><span class="s2">&quot;../../lattices/esr-v6.3.1.jl&quot;</span><span class="p">);</span> <span class="c1"># ESR lattice in lattices directory of SciBmad repo</span>
+<span class="n">ring</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">ring</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s start by just calling <code class="docutils literal notranslate"><span class="pre">twiss</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
+<span class="n">tw</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+ coasting_beam = true
+ tunes[1:3]    = [Qx, Qy, slip]
+ table         has columns: beamline_index, name, s, phi_1, beta_1, alpha_1, phi_2, beta_2, alpha_2, phi_3, gamma_c, c11, c12, c21, c22, orbit_x, orbit_px, orbit_y, orbit_py, orbit_z, orbit_pz
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can plot the betas:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">table</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;beta_1&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;beta_2&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Beta Function [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/7ac5c3b9a929125f653e38698d2bec6279c6ece8f90ad8169416fd272cbc81b5.png" src="../../_images/7ac5c3b9a929125f653e38698d2bec6279c6ece8f90ad8169416fd272cbc81b5.png" />
+</div>
+</div>
+<p>Note that the plot shows <span class="math notranslate nohighlight">\(\beta_a\)</span> and <span class="math notranslate nohighlight">\(\beta_b\)</span> using a Teng-Edwards coupling formalism.</p>
+<p>Now let’s look at the closed orbit at the beginning:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">orbit_x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TPS64{GTPSA.Dynamic}:
+Descriptor(NV=6, MO=1)
+ COEFFICIENT             ORDER   EXPONENTS
+ 4.7436551156208019E-08    1     0 0  0 0  0 1
+</pre></div>
+</div>
+</div>
+</div>
+<p>Woah, what is this? This is actually a Taylor series in the <em>last</em> phase space coordinate, <span class="math notranslate nohighlight">\(\delta\)</span>  (note that there are NO RF cavities in the ring!). In particular, this basically says that at the beginning of the ring (which is the IP here), the closed orbit is,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+x_{co}=0 + 4.7436547838232309\times10^{-8}\delta \ .
+\]</div>
+</div>
+<p>Therefore, we have explicitly that <span class="math notranslate nohighlight">\(\frac{\partial x_{co}}{\partial\delta} =  4.7436547838232309\times10^{-8}\)</span> . This is exactly the <strong>periodic dispersion!</strong></p>
+<p>We can extract the periodic dispersion from the orbit using the tools provided by SciBmad’s GTPSA.jl package. To extract this particular monomial coefficient in the Taylor series, we can use the syntax:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eta_x_0</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">orbit_x</span><span class="p">[</span><span class="mi">0</span><span class="p">][[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># eta_x at the beginning</span>
+<span class="n">eta_x_0</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>4.743655115620802e-08
+</pre></div>
+</div>
+</div>
+</div>
+<p>To apply this at every element in the <code class="docutils literal notranslate"><span class="pre">orbit_x</span></code> array,</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eta_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">orbit_x</span><span class="p">])</span>
+<span class="n">eta_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">orbit_y</span><span class="p">])</span>
+
+<span class="c1"># Now can plot the dispersions:</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">eta_x</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;eta_x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">eta_y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;eta_y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Dispersion [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/06da5fd2f5a791cc597e36f161ed0c099c870fa4bb049f4dfedf7381f1d1e7bc.png" src="../../_images/06da5fd2f5a791cc597e36f161ed0c099c870fa4bb049f4dfedf7381f1d1e7bc.png" />
+</div>
+</div>
+<p>So that’s pretty cool. But we said earlier that we want to do things like <span class="math notranslate nohighlight">\(\frac{\partial\beta}{\partial\delta}\)</span>, or even <span class="math notranslate nohighlight">\(\frac{\partial^2x_{co}}{\partial\delta^2}=\frac{\partial\eta_x}{\partial\delta}\)</span> (“second-order” dispersion). Well, when <code class="docutils literal notranslate"><span class="pre">twiss</span></code> is called in the manner we did above, our TPSA defaults to 6 variables to 1st order. Lattice functions, such as <span class="math notranslate nohighlight">\(\beta\)</span>, are first order quantities, as well as the dispersion. To get these higher order quantities, we must specify a TPSA of higher order. We can do that easily:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">D2</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">Descriptor</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> <span class="c1"># 6 variables to 2nd order</span>
+<span class="n">tw</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">GTPSA_descriptor</span><span class="o">=</span><span class="n">D2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now if we look at the closed orbit:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">table</span>
+<span class="n">t</span><span class="o">.</span><span class="n">orbit_x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TPS64{GTPSA.Dynamic}:
+Descriptor(NV=6, MO=2)
+ COEFFICIENT             ORDER   EXPONENTS
+ 4.7436551156208019E-08    1     0 0  0 0  0 1
+-6.9849628570685152E+00    2     0 0  0 0  0 2
+</pre></div>
+</div>
+</div>
+</div>
+<p>Our closed orbit Taylor series is one order higher! The monomial coefficient specified by
+<code class="docutils literal notranslate"><span class="pre">0</span>&#160;&#160; <span class="pre">0</span>&#160;&#160; <span class="pre">0</span>&#160;&#160; <span class="pre">0</span>&#160;&#160; <span class="pre">0</span>&#160;&#160; <span class="pre">2</span></code>
+corresponds to <span class="math notranslate nohighlight">\(\frac{1}{2!}\frac{\partial^2x_{co}}{\partial\delta^2}=\frac{1}{2!}\frac{\partial\eta_x}{\partial\delta}\)</span>, the second-order dispersion!</p>
+<p>Let’s now plot both second-order dispersions around the ring:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">deta_ddelta_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">orbit_x</span><span class="p">])</span> <span class="c1"># Multiply by 2! to get only derivative</span>
+<span class="n">deta_ddelta_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">orbit_y</span><span class="p">])</span> <span class="c1"># Multiply by 2! to get only derivative</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">deta_ddelta_x</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;deta_ddelta_x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">deta_ddelta_y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;deta_ddelta_y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Second-Order Dispersion [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/b8bd6d768cf9a63085535e17c6f3a9241cf98a141c01d5f0a83e582a7e0c2d31.png" src="../../_images/b8bd6d768cf9a63085535e17c6f3a9241cf98a141c01d5f0a83e582a7e0c2d31.png" />
+</div>
+</div>
+<p>The beta functions now will also be TPSAs in <span class="math notranslate nohighlight">\(\delta\)</span>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">beta_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TPS64{GTPSA.Dynamic}:
+Descriptor(NV=6, MO=2)
+ COEFFICIENT             ORDER   EXPONENTS
+ 5.8999920399337424E-01    0     0 0  0 0  0 0
+-4.1353894277617194E+00    1     0 0  0 0  0 1
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s plot <span class="math notranslate nohighlight">\(\frac{\partial\beta/\partial\delta}{\beta}\)</span> around the ring:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">beta_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_1</span><span class="p">])</span>
+<span class="n">beta_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_2</span><span class="p">])</span>
+<span class="n">dbeta_ddelta_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_1</span><span class="p">])</span>
+<span class="n">dbeta_ddelta_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_2</span><span class="p">])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">dbeta_ddelta_1</span><span class="o">/</span><span class="n">beta_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;dbeta_ddelta_1/beta_1&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">dbeta_ddelta_2</span><span class="o">/</span><span class="n">beta_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;dbeta_ddelta_2/beta_2&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Chromatic Beta-Beat [1]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/e0ce5cb6e95fb12bb9048f313797cab53fd10cb14460d38cf930ad3d9e511e33.png" src="../../_images/e0ce5cb6e95fb12bb9048f313797cab53fd10cb14460d38cf930ad3d9e511e33.png" />
+</div>
+</div>
+<p>We can also write the Montague functions, which are phase invariants in achromatic regions, as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+W = \sqrt{A^2+B^2} \ , \ A=\frac{\partial\alpha}{\partial\delta}-\frac{\alpha}{\beta}\frac{\partial\beta}{\partial\delta} \ , \ B=\frac{1}{\beta}\frac{\partial\beta}{\partial\delta} \ .
+\]</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">alpha_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">alpha_1</span><span class="p">])</span>
+<span class="n">alpha_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">alpha_2</span><span class="p">])</span>
+<span class="n">dalpha_ddelta_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">alpha_1</span><span class="p">])</span>
+<span class="n">dalpha_ddelta_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">alpha_2</span><span class="p">])</span>
+
+<span class="n">W_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">dalpha_ddelta_1</span><span class="o">-</span><span class="n">alpha_1</span><span class="o">/</span><span class="n">beta_1</span><span class="o">*</span><span class="n">dbeta_ddelta_1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">dbeta_ddelta_1</span><span class="o">/</span><span class="n">beta_1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">W_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">dalpha_ddelta_2</span><span class="o">-</span><span class="n">alpha_2</span><span class="o">/</span><span class="n">beta_2</span><span class="o">*</span><span class="n">dbeta_ddelta_2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">dbeta_ddelta_2</span><span class="o">/</span><span class="n">beta_2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;W_1&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;W_2&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Montague Functions&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/31bc80f932695ea4ace64900e37f4daac46b8c34f381447e90e728083922e43d.png" src="../../_images/31bc80f932695ea4ace64900e37f4daac46b8c34f381447e90e728083922e43d.png" />
+</div>
+</div>
+<p>In SciBmad, we don’t have to stop at second order. We can go to <em>whatever</em> order we want. We could literally compute the 20th order dispersion if we’d like, simply specify a GTPSA descriptor with truncation order 20. Same for the Montague functions.</p>
+<p>Let’s compute the “second order Montague functions” defined as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+W_2=\sqrt{A_2^2+B_2^2}\ , \ A_2=\frac{1}{2!}\left(\frac{\partial^2\alpha}{\partial\delta^2}-\frac{\alpha}{\beta}\frac{\partial^2\beta}{\partial\delta^2}\right)\ , \ B=\frac{1}{2!}\frac{1}{\beta}\frac{\partial^2\beta}{\partial\delta^2} \ .
+\]</div>
+</div>
+<p>Note that this terminology may be confusing, because we need third order truncation to compute the “second order Montague functions”.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">D3</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">Descriptor</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="c1"># 6 variables to 3rd order</span>
+<span class="n">tw</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">GTPSA_descriptor</span><span class="o">=</span><span class="n">D3</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">table</span>
+<span class="n">d2alpha_ddelta2_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">alpha_1</span><span class="p">])</span>
+<span class="n">d2alpha_ddelta2_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">alpha_2</span><span class="p">])</span>
+<span class="n">d2beta_ddelta2_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_1</span><span class="p">])</span>
+<span class="n">d2beta_ddelta2_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_2</span><span class="p">])</span>
+
+<span class="n">W2_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">d2alpha_ddelta2_1</span><span class="o">-</span><span class="n">alpha_1</span><span class="o">/</span><span class="n">beta_1</span><span class="o">*</span><span class="n">d2beta_ddelta2_1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">d2beta_ddelta2_1</span><span class="o">/</span><span class="n">beta_1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">W2_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">d2alpha_ddelta2_2</span><span class="o">-</span><span class="n">alpha_2</span><span class="o">/</span><span class="n">beta_2</span><span class="o">*</span><span class="n">d2beta_ddelta2_2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">d2beta_ddelta2_2</span><span class="o">/</span><span class="n">beta_2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W2_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;W^2_1&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W2_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;W^2_2&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Second-Order Montague Functions&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/ddbdd19ba59baa2aa16f5aac7ea2d47d9ec72b4369989a183fa41f266b8cb519.png" src="../../_images/ddbdd19ba59baa2aa16f5aac7ea2d47d9ec72b4369989a183fa41f266b8cb519.png" />
+</div>
+</div>
+<p>Finally, let’s look at the amplitude-dependent tunes to 4th order. We can do this easily by getting the <code class="docutils literal notranslate"><span class="pre">tunes</span></code> field in the original <code class="docutils literal notranslate"><span class="pre">Twiss</span></code> structure:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">jl</span><span class="o">.</span><span class="n">GTPSA</span><span class="o">.</span><span class="n">show_eps</span><span class="o">=</span><span class="mf">1e-10</span> <span class="c1"># Hide tiny monomials</span>
+<span class="n">tw</span><span class="o">.</span><span class="n">tunes</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3-element StaticArraysCore.SVector{3, TPS64{GTPSA.Dynamic}}:
+Descriptor(NV=6, MO=3)
+INDEX  COEFFICIENT             ORDER   EXPONENTS
+----------------------------------------------------
+  1:   7.9999998080130461E-02    0     0 0  0 0  0 0
+  1:   1.0002255976895222E+00    1     0 0  0 0  0 1
+  1:   3.7403883448614374E+02    2     1 1  0 0  0 0
+  1:  -1.5651507184369349E+04    2     0 0  1 1  0 0
+  1:  -1.1047251314958793E+02    2     0 0  0 0  0 2
+----------------------------------------------------
+  2:   1.4000000380501454E-01    0     0 0  0 0  0 0
+  2:   9.9981459749079094E-01    1     0 0  0 0  0 1
+  2:  -1.5651507184369515E+04    2     1 1  0 0  0 0
+  2:   2.4815299800462444E+03    2     0 0  1 1  0 0
+  2:   1.2018396765130665E+02    2     0 0  0 0  0 2
+----------------------------------------------------
+  3:  -2.3344227124645047E+00    1     0 0  0 0  0 1
+  3:   6.2846027792671553E+00    2     1 1  0 0  0 0
+  3:   6.2820203888584834E+00    2     0 0  1 1  0 0
+  3:  -2.1711023285782844E+00    2     0 0  0 0  0 2
+       ... (Output truncated)
+</pre></div>
+</div>
+</div>
+</div>
+<p>The amplitude dependent tunes in <code class="docutils literal notranslate"><span class="pre">tunes</span></code> are <em>always</em> in the phasor’s basis, e.g. <span class="math notranslate nohighlight">\(\sqrt{J}e^{\pm \textrm{i}\phi}\)</span>. This is why you see the same orders for canonically-conjugate variables in each oscillation mode, because e.g. <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">1</span></code> corresponds to <span class="math notranslate nohighlight">\((\sqrt{J}e^{-\textrm{i}\phi})^1(\sqrt{J}e^{+ \textrm{i}\phi})^1=J\)</span>. Therefore, here <span class="math notranslate nohighlight">\(\frac{\partial Q_x}{\partial J_y}=-1.5651507184369349\times 10^4\)</span>. Because there is coasting beam (no pseudo-harmonic oscillations in the longitudinal), the quantity <span class="math notranslate nohighlight">\(\delta\)</span> is the invariant for that plane.</p>
+<p>Now let’s see how the tunes vary with <span class="math notranslate nohighlight">\(\delta\)</span>. For this we will go to order 6, and use the <code class="docutils literal notranslate"><span class="pre">at</span></code> kwarg to specify computing the Twiss table at no elements to save time (will just compute the tunes):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">GTPSA_descriptor</span><span class="o">=</span><span class="n">jl</span><span class="o">.</span><span class="n">Descriptor</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">at</span><span class="o">=</span><span class="p">[])</span>
+<span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="o">**-</span><span class="mi">2</span>
+
+<span class="c1"># We can evaluate these Taylor series like any other function:</span>
+<span class="n">Qx</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">tunes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">Qy</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">tunes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">Qxeval</span> <span class="o">=</span> <span class="p">[</span><span class="n">Qx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">delta</span><span class="p">]</span>
+<span class="n">Qyeval</span> <span class="o">=</span> <span class="p">[</span><span class="n">Qy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">delta</span><span class="p">]</span>
+
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">Qxeval</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Q_x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">Qyeval</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Q_y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;delta&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Fractional Tunes&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/c578cc485189705df242bc5a4722362064c9d45b5bf21aea75df6ad9825e244f.png" src="../../_images/c578cc485189705df242bc5a4722362064c9d45b5bf21aea75df6ad9825e244f.png" />
+</div>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ags-spin-ramp.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Ramping through a spin-orbit resonance with SciBmad</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../julia/ags-spin-ramp.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Ramping through a spin-orbit resonance with SciBmad</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad.jl Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>
