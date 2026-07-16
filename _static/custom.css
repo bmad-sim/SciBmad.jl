@@ -4,6 +4,19 @@ figure:has(img.caption-left) figcaption {
     margin: 0 auto;
 }
 
+/* GitHub repository link in the top bar (Furo content-icon-container) */
+.topbar-github {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-content-foreground);
+    margin-right: 0.25rem;
+}
+
+.topbar-github:hover {
+    color: var(--color-brand-primary);
+}
+
 .sidebar-tree .caption,
 .sidebar-tree :not(.caption) > .caption-text,
 .toctree-wrapper.compound .caption,
