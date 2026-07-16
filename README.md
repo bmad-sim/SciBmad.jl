@@ -26,7 +26,7 @@ Users are pointed to example Jupyter notebooks in both Julia and Python in the [
 
 SciBmad development is progressing rapidly. Features included in the current state of the project (0.4.0), the next release (0.4.1), and currently being planned for later releases are:
 
-### Current Release 0.4.1
+### Current Release 0.4.2
 - CPU/GPU parallelized 6D symplectic particle tracking including spin and radiation
 - Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything
 - Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
@@ -41,11 +41,9 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - CPU/GPU parallelized and differentiable symplectic tracking through arbitrary electromagnetic fields (implicit integration)
 - Twiss functions at every integration step (inside elements)
 - Resonance driving terms (including parameter dependence) included in Twiss
+- Context-switching for evalution of deferred expressions for accelerator parameters
 
-### Next Release 0.4.2
-- 
-
-### Future Release 0.5.0
+### Release 0.4.3
 - Open lattice Twiss function propagation
 
 ### Future Releases
