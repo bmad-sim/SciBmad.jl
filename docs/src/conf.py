@@ -118,6 +118,9 @@ html_theme_options = {
     'source_directory': 'docs/src/',
     'navigation_with_keys': True,
     'sidebar_hide_name': False,
+    # Logo shown at the top left of the sidebar (paths relative to html_static_path).
+    'light_logo': 'SciBmad-Logo.png',
+    'dark_logo': 'SciBmad-Logo-dark.png',
 }
 
 html_title = 'SciBmad.jl Documentation'
@@ -128,6 +131,7 @@ html_css_files = ['custom.css']
 html_sidebars = {
     "**": [
         "sidebar/brand.html",
+        "sidebar/github.html",
         "sidebar/search.html",
         "sidebar/scroll-start.html",
         "sidebar/navigation.html",
