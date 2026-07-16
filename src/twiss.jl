@@ -650,11 +650,17 @@ function twiss(
   # Initial input:
   v0::Matrix                        = zeros(1,6),
   v0_and_coast::Tuple{Matrix, Bool} = co_and_coast(bl, v0),
-  #a_initial::Union{Nothing,DAMap}   = nothing, # TODO
+  a_initial::Union{Nothing,DAMap}   = nothing, # TODO
 
   symplectic_tol=1e-8, # Tolerance below which to include damping
   )
   
+  if !isnothing(GTPSA_descriptor) && !isnothing(a_initial) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
+    error("Cannot specify both `GTPSA_descriptor` and `a_initial` with different `Descriptor`s!")
+  elseif !isnothing(a_initial)
+    GTPSA_descriptor = GTPSA.getdesc(first(a_initial.v))
+  end
+
   # Type unstable steps:
   s, names, idxs, step_save = _twiss_1(bl, at)
   concat, eye, zero_LF, zero_phase, zero_orbit, zero_h = _twiss_2(step_save, v0_and_coast, GTPSA_descriptor, Val{spin}(), Val{RDTs}())
