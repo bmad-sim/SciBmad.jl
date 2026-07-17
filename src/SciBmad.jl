@@ -3,8 +3,9 @@ using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidati
 using Reexport
 
 @recompile_invalidations begin
-  using BatchSolve
-  using BatchSolve: RETCODE_SUCCESS, RETCODE_FAILURE, RETCODE_MAXITER
+  using BatchSolve: Constant, Cache, ConstantOrCache, AutoBatch, 
+    newton, newton!, brent, brent!, RETCODE_SUCCESS, RETCODE_FAILURE, 
+    RETCODE_MAXITER, newton, newton!
   using KernelAbstractions: KernelAbstractions as KA
   using KernelAbstractions: @index, @kernel, @Const
   using NonlinearNormalForm: NonlinearNormalForm as NNF
@@ -38,7 +39,11 @@ export  twiss,
         
 include("closed_orbit.jl") 
 include("track.jl")
-include("twiss.jl")
+include("twiss/twiss.jl")
+include("twiss/twiss_table.jl")
+include("twiss/twiss_concat.jl")
+include("twiss/twiss_noconcat.jl")
+include("show.jl")
 include("dynamic_aperture.jl")
 include("experimental/Experimental.jl")
 
