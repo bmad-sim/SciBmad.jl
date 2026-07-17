@@ -44,7 +44,7 @@ function _twiss_noconcat(
     =#
 
     lf1, a = _twiss_compute_row(twfn, damping, phase, s[1], idxs[1], names[1], a, m_turn) 
-    lf_table = LF_TABLE(lf1, length(s))
+    lf_table = twfn.LF_TABLE(lf1, length(s))
     if first(step_save) == 0
       lf_table[1] = lf1
       initial_step_save_idx = 2
@@ -64,7 +64,7 @@ function _twiss_noconcat(
         TI.copy!(b0.coords.q[i], a.q[i])
       end
     end
-    
+
     # Add callback into new bunch and track. This will now fill the table
     bt = Bunch(v=b0.coords.v, q=b0.coords.q, callbacks=(cb,))
     BTBL.check_bl_bunch!(bt, bl, false) # Do not notify
