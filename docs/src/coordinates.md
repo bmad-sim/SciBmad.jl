@@ -425,7 +425,7 @@ For a bend, {math}`\bf S` is given using Eq. [](#wctux2) with
 ```{math}
 :label: ustt
 \begin{align}
-  {\bf u} &= (-\sin\theta_{tr}, -\cos\theta_{tr}, 0) \\
+  {\bf u} &= (\sin\theta_{tr}, -\cos\theta_{tr}, 0) \\
   \beta &= \alpha_b
 \end{align}
 ```
