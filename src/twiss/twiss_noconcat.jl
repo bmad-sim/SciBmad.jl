@@ -53,7 +53,7 @@ function _twiss_noconcat(
     end
 
     # Make the callback
-    cb = _twiss_noconcat_make_callback(twfn, step_save, lf_table, initial_step_save_idx, in_body_coordinates, damping, phase, a, m_turn)
+    cb = _twiss_noconcat_make_callback(twfn, step_save, lf_table, initial_step_save_idx, in_body_coordinates, damping, phase, a, m_turn, s, idxs, names)
 
     # Put `a` in the arrays in bunch `b0`
     for i in 1:6
@@ -86,10 +86,13 @@ function _twiss_noconcat_make_callback(
   _phase,
   _a,
   _m_turn, 
+  _s,
+  _idxs,
+  _names,
   )
   # stupid let block for the stupid compiler for the closure:
   let twfn=_twfn, step_save=_step_save, lf_table=_lf_table, curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(initial_step_save_idx), 
-    in_body_coordinates=_in_body_coordinates, damping=_damping, phase=_phase, a=_a, m_turn=_m_turn
+    in_body_coordinates=_in_body_coordinates, damping=_damping, phase=_phase, a=_a, m_turn=_m_turn, s=_s, idxs=_idxs, names=_names
     return (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
       curstep[] += 1
       if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]]
