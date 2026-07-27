@@ -182,7 +182,7 @@ function _twiss_gather_types(step_save, v0_and_coast, GTPSA_descriptor, ::Val{sp
     zero_phase = TI.init_tps(numtype, init)
   else
     zero_phase = zero(numtype)
-  end 
+  end
   
   # Type of the ORBIT
   if coasting_beam || nn > 6
@@ -277,7 +277,8 @@ function _twiss_compute_row(
   name,
   a,
   m_turn,
-  ) where {T}
+  ::Val{first}=Val{false}(),
+  ) where {T,first}
   COMPUTE_TWISS = twfn.COMPUTE_TWISS 
   LF = twfn.LF 
   SCALAR_LF = twfn.SCALAR_LF 
@@ -287,7 +288,12 @@ function _twiss_compute_row(
   PROCESS_SPIN = twfn.PROCESS_SPIN 
   PROCESS_ORBIT = twfn.PROCESS_ORBIT
 
-  r = canonize(a, SCALAR_PHASE; damping=damping)
+  if first
+    r = canonize(a, SCALAR_PHASE; damping=damping)
+  else
+    r = canonize(a, SCALAR_PHASE; damping=damping, phase=phase)
+  end
+
   a = a ∘ r
   fc = factorize(a)
   lf = LF(
@@ -331,14 +337,14 @@ function _twiss_setmap!(map, coords)
   return map
 end
 
-function _twiss_track(eye, cb, bl)
+function _twiss_track(eye, cbs, bl)
   if NNF.nvars(eye) == 5
     v = reshape([(i < 5 ? eye.v0[i]+copy(eye.v[i]) : copy(eye.v[i])) for i in 1:6], 1, 6)
   else
     v = reshape([eye.v0[i]+copy(eye.v[i]) for i in 1:6], 1, 6)
   end
   q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
-  b0 = Bunch(v=v, q=q, callbacks=(cb,))
+  b0 = Bunch(v=v, q=q, callbacks=cbs)
   BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
   track!(b0, bl)
   return b0
@@ -350,14 +356,14 @@ function _twiss_tunes_and_a(m::DAMap)
   c = c_map(m) # Transform to phasor basis
   r = inv(c) ∘ inv(a) ∘ m ∘ a ∘ c
   # Need to cut highest order
-  Q_x = -cutord(rad2deg(angle(SciBmad.NNF.factor_out(r.v[1], 1))), mo)
+  Q_x = -cutord(angle(SciBmad.NNF.factor_out(r.v[1], 1))/(2*pi), mo)
    # cutord(real(-log(SciBmad.NNF.factor_out(r.v[1], 1))/(2*pi*im)), mo)
-  Q_y = -cutord(rad2deg(angle(SciBmad.NNF.factor_out(r.v[3], 3))), mo)
+  Q_y = -cutord(angle(SciBmad.NNF.factor_out(r.v[3], 3))/(2*pi), mo)
   if NNF.nvars(m) == 5
     Q_s = real(r.v[5])
     TI.seti!(Q_s, 0, 5) # subtract time identity
   else
-    Q_s = -cutord(rad2deg(angle(SciBmad.NNF.factor_out(r.v[5], 5))), mo)
+    Q_s = -cutord(angle(SciBmad.NNF.factor_out(r.v[5], 5))/(2*pi), mo)
   end
   if isnothing(m.q)
     return SA[Q_x, Q_y, Q_s], a

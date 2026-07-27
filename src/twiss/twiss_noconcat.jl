@@ -43,7 +43,7 @@ function _twiss_noconcat(
     if the 0th position is included in step_save.
     =#
 
-    lf1, a = _twiss_compute_row(twfn, damping, phase, s[1], idxs[1], names[1], a, m_turn) 
+    lf1, a = _twiss_compute_row(twfn, damping, phase, s[1], idxs[1], names[1], a, m_turn, Val{true}()) 
     lf_table = twfn.LF_TABLE(lf1, length(s))
     if first(step_save) == 0
       lf_table[1] = lf1
@@ -70,9 +70,9 @@ function _twiss_noconcat(
     BTBL.check_bl_bunch!(bt, bl, false) # Do not notify
     track!(bt, bl)
 
-    return Twiss(NNF.nvars(m) == 5, tunes, lf_table)
+    return Twiss(NNF.nvars(m_turn) == 5, tunes, lf_table)
   else
-    return Twiss(NNF.nvars(m) == 5, tunes, nothing)
+    return Twiss(NNF.nvars(m_turn) == 5, tunes, nothing)
   end
 end
 

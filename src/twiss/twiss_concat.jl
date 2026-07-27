@@ -18,7 +18,7 @@ function _twiss_concat(
   ) where{de_moivre, normalizing_map, table}
   maps   = _twiss_concat_preallocate(step_save, eye)
   cb     = _twiss_concat_make_callback(step_save, maps, in_body_coordinates)
-  b0     = _twiss_track(eye, cb, bl)
+  b0     = _twiss_track(eye, (cb,), bl)
   m_turn = _twiss_concat_concatenate!(eye, b0, maps)
 
   tunes, a = _twiss_tunes_and_a(m_turn)
@@ -26,7 +26,7 @@ function _twiss_concat(
   if table
     # Check if damping:
     damping = norm(NNF.checksymp(NNF.jacobian(m_turn))) > symplectic_tol
-    
+
     # Construct array for phase advance:
     phase = MVector{3}(zero(zero_phase),zero(zero_phase),zero(zero_phase))
 
@@ -48,7 +48,7 @@ function _twiss_concat(
     =#
     m_turn = isnothing(zero_h) ? m_turn : (maps[1] ∘ m_turn ∘ inv(maps[1]))
 
-    lf1, a = _twiss_compute_row(twfn, damping, phase, s[1], idxs[1], names[1], a, m_turn) 
+    lf1, a = _twiss_compute_row(twfn, damping, phase, s[1], idxs[1], names[1], a, m_turn, Val{true}()) 
 
     # Construct the table and add this first row:
     len = length(maps)
