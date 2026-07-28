@@ -6,7 +6,7 @@ using Reexport
 @recompile_invalidations begin
   using BatchSolve: Constant, Cache, ConstantOrCache, AutoBatch, 
     newton, newton!, brent, brent!, RETCODE_SUCCESS, RETCODE_FAILURE, 
-    RETCODE_MAXITER, newton, newton!
+    RETCODE_MAXITER, newton, newton!, BatchSolve
   using KernelAbstractions: KernelAbstractions as KA
   using KernelAbstractions: @index, @kernel, @Const
   using NonlinearNormalForm: NonlinearNormalForm as NNF
