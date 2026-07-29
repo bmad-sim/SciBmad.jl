@@ -8,22 +8,31 @@ function twiss(
   bl::Beamline; 
 
   # High level customizer kwargs
-  GTPSA_descriptor::Union{Descriptor,Nothing} = nothing, 
+  GTPSA_descriptor::Union{Descriptor,Nothing} = nothing, # opt in to nonlinear analysis
   spin::Bool                                  = false,
   de_moivre::Bool                             = false,
   normalizing_map::Bool                       = false,
   RDTs::Bool                                  = false,
   at::Union{Colon, Vector}                    = :,
-  in_body_coordinates::Bool                   = false, 
+  in_body_coordinates::Bool                   = false,   
 
-  # Initial input:
-  v0_guess::Matrix                  = zeros(1,6),
-  v0_and_coast::Tuple{Matrix, Bool} = co_and_coast(bl, v0_guess),
-  a_initial::Union{Nothing,DAMap}   = nothing, # TODO
+  # Initial input, CO guess if periodic, initial orbit if not periodic
+  delta0::Number = 0.,
+  v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
+
+  start::Union{Integer,LineElement,Nothing} = nothing, # Nothing means compute periodic  
+
+  a_initial::Union{Nothing,DAMap}   = nothing, # TODO, always 6D for open
 
   symplectic_tol=1e-8, # Tolerance below which to include damping
   )
-  
+
+  if isnothing(start)
+    v0_and_coast = co_and_coast(bl, v0)
+  else
+    error("Open twiss not implemented yet")
+  end
+
   if !isnothing(GTPSA_descriptor) && !isnothing(a_initial) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
     error("Cannot specify both `GTPSA_descriptor` and `a_initial` with different `Descriptor`s!")
   elseif !isnothing(a_initial)
