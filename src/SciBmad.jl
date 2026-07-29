@@ -39,6 +39,7 @@ export  twiss,
         
 include("closed_orbit.jl") 
 include("track.jl")
+include("twiss/twiss_columns.jl")
 include("twiss/twiss.jl")
 include("twiss/twiss_table.jl")
 include("twiss/twiss_concat.jl")

@@ -1,18 +1,12 @@
-struct Twiss{S,T}
-  coasting_beam::Bool
-  tunes::S
-  table::T
-end
+const DEFAULT_DE_MOIVRE = []
+const DEFAULT_SAGAN_RUBIN = [beta_1, beta]
 
 function twiss(
   bl::Beamline; 
 
   # High level customizer kwargs
-  GTPSA_descriptor::Union{Descriptor,Nothing} = nothing, # opt in to nonlinear analysis
   spin::Bool                                  = false,
   de_moivre::Bool                             = false,
-  normalizing_map::Bool                       = false,
-  RDTs::Bool                                  = false,
   at::Union{Colon, Vector}                    = :,
   in_body_coordinates::Bool                   = false,   
 
@@ -20,7 +14,15 @@ function twiss(
   delta0::Number = 0.,
   v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
 
-  start::Union{Integer,LineElement,Nothing} = nothing, # Nothing means compute periodic  
+  # What to compute?
+  columns = de_moivre ? : ,
+
+  # Specifying any these will suppress Twiss table output, bc TPSAs now
+  GTPSA_descriptor::Union{Descriptor,Nothing} = nothing, # opt in to nonlinear analysis
+  normalizing_map::Bool                       = false,
+  RDTs::Bool                                  = false,
+
+  start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
 
   a_initial::Union{Nothing,DAMap}   = nothing, # TODO, always 6D for open
 
@@ -42,6 +44,22 @@ function twiss(
       a_initial = DAMap(v0=a_initial.v0, v=a_initial.v, nv=NNF.nvars(a_initial), np=NNF.nparams(a_initial), s=a_initial.s)
     end
     GTPSA_descriptor = GTPSA.getdesc(first(a_initial.v))
+  end
+
+  # Specifying ANY GTPSA descriptor will make all entries TPSA
+  if isnothing(GTPSA_descriptor)
+    tpsa_entries = Val{false}()
+    if RDTs
+      error("To compute nonlinear RDTs, a `GTPSA_descriptor` with max order >= 2 must be specified")
+    end
+  else
+    tpsa_entries = Val{true}()
+  end
+
+  if isnothing(GTPSA_descriptor)
+    storedesc = GTPSA.desc_current
+    GTPSA_descriptor = Descriptor(6,1)
+    GTPSA.desc_current = storedesc # Don't reset the global
   end
 
   # Type unstable steps:
@@ -238,7 +256,7 @@ function TWISS_STATIC_CONSTS(
   SCALAR_PHASE = TI.is_tps_type(V) isa TI.IsTPSType ? Val{false}() : Val{true}()
   SCALAR_ORBIT = TI.is_tps_type(U) isa TI.IsTPSType ? Val{false}() : Val{true}()
   INCLUDE_A = normalizing_map ? at -> at : at -> nothing
-  BENGTSSON = isnothing(zero_h) ? (a0, a1, m)->nothing : compute_bengtsson
+  BENGTSSON = H == Nothing ? (a0, a1, m)->nothing : compute_bengtsson
 
   if Q == Nothing
     PROCESS_SPIN = at -> nothing
