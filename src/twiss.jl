@@ -33,7 +33,7 @@ Callbacks are applied AFTER the step. Therefore,
 # ========== STEP 1 ==================================
 # Resolve number of steps, step indicies, type of s, base columns, etc.
 
-function _twiss_1(bl::Beamline, at::Vector)
+function _twiss_1(bl::Beamline, at::AbstractVector)
   at_idxs = filter(x->x isa Integer, at)
   at_eles = filter(x->x isa LineElement, at)
   at_ranges = filter(x->x isa Tuple, at)
@@ -644,7 +644,7 @@ function twiss(
   de_moivre::Bool                             = false,
   normalizing_map::Bool                       = false,
   RDTs::Bool                                  = false,
-  at::Union{Colon, Vector}                    = :,
+  at::Union{Colon, AbstractVector}            = :,
   in_body_coordinates::Bool                   = false, 
 
   # Initial input:
