@@ -5,10 +5,12 @@ function twiss(
   bl::Beamline; 
 
   # High level customizer kwargs
-  spin::Bool                                  = false,
-  de_moivre::Bool                             = false,
-  at::Union{Colon, Vector}                    = :,
-  in_body_coordinates::Bool                   = false,   
+  spin::Bool                = false,
+  de_moivre::Bool           = false,
+  at::Union{Colon, Vector}  = :,
+  in_body_coordinates::Bool = false,   
+  chrom::Integer 
+  order::Integer = 1,
 
   # Initial input, CO guess if periodic, initial orbit if not periodic
   delta0::Number = 0.,
@@ -18,7 +20,7 @@ function twiss(
   columns = de_moivre ? : ,
 
   # Specifying any these will suppress Twiss table output, bc TPSAs now
-  GTPSA_descriptor::Union{Descriptor,Nothing} = nothing, # opt in to nonlinear analysis
+  GTPSA_descriptor::Union{Descriptor,Nothing} = Descriptor(6, order), 
   normalizing_map::Bool                       = false,
   RDTs::Bool                                  = false,
 

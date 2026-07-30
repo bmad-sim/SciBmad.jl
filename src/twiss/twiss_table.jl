@@ -15,13 +15,17 @@ function twiss_tuple(s, beamline_index, name, phi, NNF_tuple::TT, orbit, n, a, h
     c12 = NNF_tuple.C[1,2],
     c21 = NNF_tuple.C[2,1],
     c22 = NNF_tuple.C[2,2],
-    orbit_x  = scalar(orbit[1]),
-    orbit_px = scalar(orbit[2]),
-    orbit_y  = scalar(orbit[3]),
-    orbit_py = scalar(orbit[4]),
-    orbit_z  = scalar(orbit[5]),
-    orbit_pz = scalar(orbit[6]),
+    orbit_x  = orbit[1],
+    orbit_px = orbit[2],
+    orbit_y  = orbit[3],
+    orbit_py = orbit[4],
+    orbit_z  = orbit[5],
+    orbit_pz = orbit[6],
   )
+
+  if !isnothing(h)
+    outt = merge(outt, (; h = h)) # Bengtsson polynomial dict
+  end
 
   # static check
   if hasfield(TT, :eta) # NOT coasting
@@ -40,27 +44,7 @@ function twiss_tuple(s, beamline_index, name, phi, NNF_tuple::TT, orbit, n, a, h
         slip = NNF_tuple.approx_slip*sin(phi[3]*2*pi), # Approximation from EBB)
       )
     )
-  else
-    outt = merge(outt, 
-      (; 
-        eta_1  = orbit[1][6],
-        etap_1 = orbit[2][6],
-        eta_2  = orbit[3][6],
-        etap_2 = orbit[4][6],
-        zeta_1  = zero(orbit[1][6]),
-        zetap_1 = zero(orbit[1][6]),
-        zeta_2  = zero(orbit[1][6]),
-        zetap_2 = zero(orbit[1][6]),
-        slip = NNF_tuple.approx_slip*sin(phi[3]*2*pi), # Approximation from EBB)
-      )
-    )
   end
-
-  if !isnothing(h)
-    outt = merge(outt, (; h = h)) # Bengtsson polynomial dict
-  end
-
-  
 
   # static check
   if !isnothing(n)
