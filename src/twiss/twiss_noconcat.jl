@@ -70,9 +70,9 @@ function _twiss_noconcat(
     BTBL.check_bl_bunch!(bt, bl, false) # Do not notify
     track!(bt, bl)
 
-    return Twiss(NNF.nvars(m_turn) == 5, tunes, lf_table)
+    return make_twiss(eye, tunes, lf_table)
   else
-    return Twiss(NNF.nvars(m_turn) == 5, tunes, nothing)
+    return make_twiss(eye, tunes, nothing)
   end
 end
 

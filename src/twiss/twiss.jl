@@ -8,27 +8,28 @@ function twiss(
   spin::Bool                = false,
   de_moivre::Bool           = false,
   at::Union{Colon, Vector}  = :,
-  in_body_coordinates::Bool = false,   
-  chrom::Integer 
+  in_body_coordinates::Bool = false, 
+
+  chrom::Integer = 0,
   order::Integer = 1,
+  GTPSA_descriptor::Union{Descriptor,Nothing} = nothing,
 
   # Initial input, CO guess if periodic, initial orbit if not periodic
   delta0::Number = 0.,
   v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
-
-  # What to compute?
-  columns = de_moivre ? : ,
-
-  # Specifying any these will suppress Twiss table output, bc TPSAs now
-  GTPSA_descriptor::Union{Descriptor,Nothing} = Descriptor(6, order), 
-  normalizing_map::Bool                       = false,
-  RDTs::Bool                                  = false,
+  
+  # These guys can eventually be moved into columns/what   
+  normalizing_map::Bool = false,
+  RDTs::Bool            = false,
 
   start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
 
   a_initial::Union{Nothing,DAMap}   = nothing, # TODO, always 6D for open
 
   symplectic_tol=1e-8, # Tolerance below which to include damping
+
+  # Internal, almost definitely should not be used
+  _override_chrom::Bool=false,
   )
 
   if isnothing(start)
@@ -37,8 +38,23 @@ function twiss(
     error("Open twiss not implemented yet")
   end
 
-  if !isnothing(GTPSA_descriptor) && !isnothing(a_initial) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
-    error("Cannot specify both `GTPSA_descriptor` and `a_initial` with different `Descriptor`s!")
+  if isnothing(GTPSA_descriptor)
+    storedesc = GTPSA.desc_current
+    GTPSA_descriptor = Descriptor([order, order, order, order, order, order+chrom], order+chrom),
+    GTPSA.desc_current = storedesc # Don't reset the global
+  elseif chrom != 0 || order != 1
+    @info "`GTPSA_descriptor` has been explicitly provided: ignoring `order`/`chrom` inputs"
+  end
+
+  if !v0_and_coast[2] && chrom != 0 && !_override_chrom
+    error("""
+    You specified `chrom`, but this beamline has synchrotron motion. Please turn off RF 
+    cavities to get delta-dependent Twiss functions.
+    """)
+  end
+
+  if !isnothing(a_initial) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
+    error("Specified `GTPSA_descriptor` disagrees with that of `a_initial`")
   elseif !isnothing(a_initial)
     if spin && isnothing(a_initial.q)
       error("Unable to propagate spin: `a_initial` does not include spin")
@@ -48,20 +64,11 @@ function twiss(
     GTPSA_descriptor = GTPSA.getdesc(first(a_initial.v))
   end
 
-  # Specifying ANY GTPSA descriptor will make all entries TPSA
-  if isnothing(GTPSA_descriptor)
-    tpsa_entries = Val{false}()
-    if RDTs
-      error("To compute nonlinear RDTs, a `GTPSA_descriptor` with max order >= 2 must be specified")
-    end
+  # Check if output are TPSA in parameters (delta excluded)
+  if GTPSA.numnn(GTPSA_descriptor) > 6
+    parametric = Val{true}()
   else
-    tpsa_entries = Val{true}()
-  end
-
-  if isnothing(GTPSA_descriptor)
-    storedesc = GTPSA.desc_current
-    GTPSA_descriptor = Descriptor(6,1)
-    GTPSA.desc_current = storedesc # Don't reset the global
+    parametric = Val{false}()
   end
 
   # Type unstable steps:
@@ -385,14 +392,14 @@ function _twiss_tunes_and_a(m::DAMap)
   c = c_map(m) # Transform to phasor basis
   r = inv(c) ∘ inv(a) ∘ m ∘ a ∘ c
   # Need to cut highest order
-  Q_x = -cutord(angle(SciBmad.NNF.factor_out(r.v[1], 1))/(2*pi), mo)
-   # cutord(real(-log(SciBmad.NNF.factor_out(r.v[1], 1))/(2*pi*im)), mo)
-  Q_y = -cutord(angle(SciBmad.NNF.factor_out(r.v[3], 3))/(2*pi), mo)
+  Q_x = -cutord(angle(NNF.factor_out(r.v[1], 1))/(2*pi), mo)
+   # cutord(real(-log(NNF.factor_out(r.v[1], 1))/(2*pi*im)), mo)
+  Q_y = -cutord(angle(NNF.factor_out(r.v[3], 3))/(2*pi), mo)
   if NNF.nvars(m) == 5
     Q_s = real(r.v[5])
     TI.seti!(Q_s, 0, 5) # subtract time identity
   else
-    Q_s = -cutord(angle(SciBmad.NNF.factor_out(r.v[5], 5))/(2*pi), mo)
+    Q_s = -cutord(angle(NNF.factor_out(r.v[5], 5))/(2*pi), mo)
   end
   if isnothing(m.q)
     return SA[Q_x, Q_y, Q_s], a
