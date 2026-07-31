@@ -207,14 +207,16 @@ function _twiss_gather_types(step_save, v0_and_coast, GTPSA_descriptor, ::Val{sp
   end
 
   # Type of the LATTICE FUNCTIONS
-  if mo > 1
+  if mo > 1 && (coasting_beam || nn > 6)
     zero_LF = TI.init_tps(numtype, init)
   else
     zero_LF = zero(numtype)
   end
 
   # Type of the PHASES
-  if mo > 1 || coasting_beam
+  # right now coasting beam makes phi_3 be delta-dependent 
+  # even if linear. should revisit this.
+  if (mo > 1 && nn > 6) || coasting_beam
     zero_phase = TI.init_tps(numtype, init)
   else
     zero_phase = zero(numtype)
