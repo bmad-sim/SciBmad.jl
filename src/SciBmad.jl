@@ -3,8 +3,9 @@ using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidati
 using Reexport
 
 @recompile_invalidations begin
-  using BatchSolve
-  using BatchSolve: RETCODE_SUCCESS, RETCODE_FAILURE, RETCODE_MAXITER
+  using BatchSolve: Constant, Cache, ConstantOrCache, AutoBatch, 
+    newton, newton!, brent, brent!, RETCODE_SUCCESS, RETCODE_FAILURE, 
+    RETCODE_MAXITER, newton, newton!, BatchSolve
   using KernelAbstractions: KernelAbstractions as KA
   using KernelAbstractions: @index, @kernel, @Const
   using NonlinearNormalForm: NonlinearNormalForm as NNF
@@ -38,7 +39,12 @@ export  twiss,
         
 include("closed_orbit.jl") 
 include("track.jl")
-include("twiss.jl")
+include("twiss/twiss_columns.jl")
+include("twiss/twiss.jl")
+include("twiss/twiss_table.jl")
+include("twiss/twiss_concat.jl")
+include("twiss/twiss_noconcat.jl")
+include("show.jl")
 include("dynamic_aperture.jl")
 include("experimental/Experimental.jl")
 
@@ -52,15 +58,17 @@ include("experimental/Experimental.jl")
     sf = Sextupole(Kn2=0.1, L=0.2);   # Drift kick, 1 multipole
     d1 = Drift(L=0.3, Kn3=1e-4, Kn4=1e-5); # Drift kick, 2 multipoles
     d2 = Drift(L=0.3, Ksol=1e-6); # Solenoid kick, 1 multipole
-    b  = SBend(L=6.0, angle=pi/132); # Bend
-    qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.5); # matrix kick, 2 multipoles
+    b1  = SBend(L=6.0/2, angle=pi/132/2); # Bend
+    b2  = SBend(L=6.0/2, angle=pi/132/2, e1=1e-5, e2=1e-4); # Bend
+    qd1 = Quadrupole(Kn1=-0.36, L=0.25); # matrix kick, 2 multipoles
+    qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.25); # matrix kick, 2 multipoles
     sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
     kicker = Sextupole(Kn0=1e-5, L=0.01)
     rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6, zero_phase=PhaseRef.AboveTransition);
     thin = Multipole(Kn1L=1e-9); # Thin quad
     d3 = Drift(L=0.3);
     marker = Marker(); # nothing
-    fodo_line = [qf, sf, d1, b, d2, qd, sd, d1, b, d2, rf, thin, marker, d3, kicker];
+    fodo_line = [qf, sf, d1, b1, b2, d2, qd1, qd, sd, d1, b1, b2, d2, rf, thin, marker, d3, kicker];
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
     # Track scalars
     b0s = Bunch(rand(4,6));
@@ -84,6 +92,7 @@ include("experimental/Experimental.jl")
     t = twiss(fodo; GTPSA_descriptor=desc2);
     t = twiss(fodo; GTPSA_descriptor=desc1, spin=true);
     t = twiss(fodo; GTPSA_descriptor=desc2, spin=true);
+    #=
     # Parameters, coast and no coast:
     descp = Descriptor(7, 1);
     qf.Kn1 = qf.Kn1 + vars(descp)[7];
@@ -92,6 +101,7 @@ include("experimental/Experimental.jl")
     rf.voltage = 1e6;
     t = twiss(fodo; GTPSA_descriptor=descp);
     t = twiss(fodo; GTPSA_descriptor=descp, spin=true);
+    =#
   end
 end
 
