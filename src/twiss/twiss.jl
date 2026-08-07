@@ -143,30 +143,16 @@ function twiss(
   # else, a is tracked again. Note that the first pass will tell you 
   # if there is damping or not for the rest of the Twiss.
 
-  # In open case, a is known already, so all we need to do is 
-  # track a. If a is damped, then we can assume there is damping. 
-  # If not, then we can't really be sure, so every single step will 
-  # need to check if there is damping.
-
-  # closed: compute r and store - invariant around ring
-  # open: need to always have r12 - returned by canonization
-
-  # Total of four cases:
-  # 1) closed, cache_and_concat=true, damping KNOWN
-  # 2) closed, cache_and_concat=false, damping KNOWN
-  # 3) open, cache_and_concat=false, damping KNOWN TO BE TRUE
-  # 4) open, cache_and_concat=false, damping UNKNOWN (TRUE OR FALSE)
-
   # So each element will have the output of factorise with canonise level
   # set accordingly. 
-  tunes = nothing
   maps = nothing
+  r_and_tunes = nothing
   if isnothing(a_initial)
     # Determine:
     if _check_cachable(GTPSA_descriptor)
-      a_initial, tunes, maps = _compute_periodic_a_and_cache(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}(), step_save, in_body_coordinates)
+      a_initial, r_and_tunes , maps = _compute_periodic_a_and_cache(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}(), step_save, in_body_coordinates)
     else
-      a_initial, tunes = _compute_periodic_a(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}())
+      a_initial, r_and_tunes = _compute_periodic_a(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}())
     end
   end
 
@@ -185,7 +171,7 @@ function twiss(
   end
 
   # And post-process with the provided columns
-  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
+  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes
 end
 
 function co_and_coast(bl, v0)
@@ -325,7 +311,7 @@ function _twiss_track!(eye, cbs, bl)
   return b0
 end
 
-function _a_and_tunes(m::DAMap)
+function _a_r_tunes(m::DAMap)
   mo = NNF.maxord(m)
   a = normal(m)
   c = c_map(m) # Transform to phasor basis
@@ -340,19 +326,19 @@ function _a_and_tunes(m::DAMap)
     Q_s = -cutord(angle(NNF.factor_out(r.v[5], 5))/(2*pi), mo)
   end
   if isnothing(m.q)
-    return a, SA[Q_x, Q_y, Q_s]
+    return a, r, SA[Q_x, Q_y, Q_s]
   else
     Q_spin = -atan(real(r.q.q2), real(r.q.q0))/pi # not two pi bc quaternion
-    return a, SA[Q_x, Q_y, Q_s, Q_spin]
+    return a, r, SA[Q_x, Q_y, Q_s, Q_spin]
   end
 end
 
 function _compute_periodic_a(bl::Beamline, v0, init, ::Val{coast}, ::Val{spin}, cbs=()) where {coast, spin}
   eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
-  b0 = _twiss_track(eye, (), bl)
+  b0 = _twiss_track!(eye, (), bl)
   _twiss_setmap!(eye, b0.coords)
-  a, tunes = _a_and_tunes(eye)
-  return a, tunes
+  a, r, tunes = _a_r_tunes(eye)
+  return a, (r, tunes)
 end
 
 function _twiss_cache_preallocate(step_save, map::T) where {T<:DAMap}
@@ -370,7 +356,7 @@ end
 
 function _twiss_cache_make_callback(_step_save, _in_body_coordinates, _maps)
   # Note: need to handle the first element differently
-  if length(_step_save) > 0 && first(_step_save) == 0
+  if first(_step_save) == 0
     _cur_step_save_idx = 2
   else
     _cur_step_save_idx = 1
@@ -402,8 +388,8 @@ function _compute_periodic_a_and_cache(bl::Beamline, v0, init, ::Val{coast}, ::V
   for map in maps
     m_turn = map ∘ m_turn
   end
-  a, tunes = _a_and_tunes(m_turn)
-  return a, tunes, maps
+  a, r, tunes = _a_r_tunes(m_turn)
+  return a, (r, tunes), maps
 end
 
 function canonise_phase_damp(GTPSA_descriptor, coast, damping)
@@ -420,19 +406,33 @@ function canonise_phase_damp(GTPSA_descriptor, coast, damping)
     else
       canonise = 2
     end
-    zer = TI.init_tps(numtype, init)
+    zer = TPS64(use=GTPSA_descriptor)
     phase = MVector{3,typeof(zer)}(zer, zero(zer), zero(zer))
     damp = damping ? MVector{3,typeof(zer)}(zero(zer), zero(zer), zero(zer)) : nothing
   end
   return canonise, phase, damp
 end
 
+function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j)
+  damping = !isnothing(damp)
+  facj = factorise(a; canonise=canonise, phase=phase, damp=damp, damping=damping)
+  fac[j] = facj
+  phi1[j] = phase[1]
+  phi2[j] = phase[2]
+  phi3_or_slip[j] = phase[3]
+  if damping
+    damp1[j] = damp[1]
+    damp2[j] = damp[2]
+    damp3[j] = damp[3]
+  end
+  return
+end
 
-function _twiss_make_callback(_step_save, _in_body_coordinates, _map, _fac, _canonise, _phase, _phi1, _phi2, _phi3_or_slip, _damp, _damp1, _damp2, _damp3)
+function _twiss_make_callback(_step_save, initial_step_save_idx, _in_body_coordinates, _map, _fac, _canonise, _phase, _phi1, _phi2, _phi3_or_slip, _damp, _damp1, _damp2, _damp3)
   # stupid let block bc the compiler is very stupid:
   let step_save=_step_save, in_body_coordinates=_in_body_coordinates, fac=_fac, canonise=_canonise, phase=_phase, 
     phi1=_phi1, phi2=_phi2, phi3_or_slip=_phi3_or_slip, damp=_damp, damp1=_damp1, damp2=_damp2, damp3=_damp3,
-    curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(1), map=_map
+    curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(initial_step_save_idx), map=_map
     
     return (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
       curstep[] += 1
@@ -440,21 +440,11 @@ function _twiss_make_callback(_step_save, _in_body_coordinates, _map, _fac, _can
         if !in_body_coordinates
           transforms_out!(i, coords, cur_s, cur_t_ref)
         end
-        damping = !isnothing(_damp1)
         j = cur_step_save_idx[] 
         _twiss_setmap!(map, coords)
-        facj = factorise(map; canonise=canonise, phase=phase, damp=damp, damping=damping)
-        fac[j] = facj
-        phi1[j] = phase[1]
-        phi2[j] = phase[2]
-        phi3_or_slip[j] = phase[3]
-        if damping
-          damp1[j] = damp[1]
-          damp2[j] = damp[2]
-          damp3[j] = damp[3]
-        end
+        _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, map, canonise, phase, damp, j)
         # Reset coords with canonised a:
-        aj = facj.a
+        aj = fac[j].a
         for k in 1:6
           TI.copy!(coords.v[k], aj.v[k])
         end
@@ -491,7 +481,15 @@ end
 
 function _twiss_push_a(bl, step_save, a_initial, canonise, phase, damp, in_body_coordinates)
   fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
-  cb = _twiss_make_callback(step_save, in_body_coordinates, a_initial, fac, canonise, phase, phi1, phi2, phi3_or_slip, damp, damp1, damp2, damp3)
+  # Have to treat 0 specially:
+  if first(step_save) == 0
+    _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a_initial, canonise, phase, damp, 1) 
+    a_initial = fac[1].a
+    initial_step_save_idx = 2
+  else
+    initial_step_save_idx = 1
+  end
+  cb = _twiss_make_callback(step_save, initial_step_save_idx, in_body_coordinates, a_initial, fac, canonise, phase, phi1, phi2, phi3_or_slip, damp, damp1, damp2, damp3)
   _twiss_track!(a_initial, (cb,), bl)
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
@@ -500,26 +498,18 @@ end
 function _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
   fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
   a = a_initial
-  damping = !isnothing(damp)
+  # Have to treat 0 specially:
+  if first(step_save) == 0
+    _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, 1) 
+    a = fac[1].a
+  end
+  # Now push around, note end is always included
   for j in 1:length(maps)
     map = maps[j]
     a = map ∘ a
-    facj = factorise(map; canonise=canonise, phase=phase, damp=damp, damping=damping)
-    fac[j] = facj
-    phi1[j] = phase[1]
-    phi2[j] = phase[2]
-    phi3_or_slip[j] = phase[3]
-    if damping
-      damp1[j] = damp[1]
-      damp2[j] = damp[2]
-      damp3[j] = damp[3]
-    end
-    a = facj.a
+    _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j) 
+    a = fac[j].a
   end
-  #error("here")
- #@show canonise
- #@show phase
- #@show damp
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 
