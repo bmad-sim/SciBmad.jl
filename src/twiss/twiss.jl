@@ -82,7 +82,7 @@ function twiss(
   v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
 
   # The lattice functions to compute
-  cols = [(de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
+  cols = [], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
 
   start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
   a_initial::Union{Nothing,DAMap}   = nothing, # TODO
@@ -99,7 +99,7 @@ function twiss(
 
   if isnothing(GTPSA_descriptor)
     storedesc = GTPSA.desc_current
-    GTPSA_descriptor = Descriptor([order, order, order, order, order, order+chrom], order+chrom),
+    GTPSA_descriptor = Descriptor([order, order, order, order, order, order+chrom], order+chrom)
     GTPSA.desc_current = storedesc # Don't reset the global
   elseif chrom != 0 || order != 1
     @info "`GTPSA_descriptor` has been explicitly provided: ignoring `order`/`chrom` inputs"
@@ -163,7 +163,7 @@ function twiss(
   maps = nothing
   if isnothing(a_initial)
     # Determine:
-    if _check_cachable(init)
+    if _check_cachable(GTPSA_descriptor)
       a_initial, tunes, maps = _compute_periodic_a_and_cache(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}(), step_save, in_body_coordinates)
     else
       a_initial, tunes = _compute_periodic_a(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}())
@@ -185,6 +185,7 @@ function twiss(
   end
 
   # And post-process with the provided columns
+  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 
 function co_and_coast(bl, v0)
@@ -194,6 +195,8 @@ function co_and_coast(bl, v0)
   end
   return (co_sol.v0, co_sol.coasting_beam)
 end
+
+_twiss_assemble_locations(bl::Beamline, ::Colon) = _twiss_assemble_locations(bl, [(0., Inf)])
 
 function _twiss_assemble_locations(bl::Beamline, at::Vector)
   at_idxs = filter(x->x isa Integer, at)
@@ -266,6 +269,8 @@ end
 function _check_cachable(GTPSA_descriptor)
   # check if we can cache_and_concat:
   desc = unsafe_load(GTPSA_descriptor.desc)
+  nn = desc.nn
+  mo = desc.mo
   po = desc.po
   if all(x->x == mo && (po == 0 || x == po), unsafe_wrap(Vector{UInt8}, desc.no, nn))
     return true
@@ -335,10 +340,10 @@ function _a_and_tunes(m::DAMap)
     Q_s = -cutord(angle(NNF.factor_out(r.v[5], 5))/(2*pi), mo)
   end
   if isnothing(m.q)
-    return SA[Q_x, Q_y, Q_s], a
+    return a, SA[Q_x, Q_y, Q_s]
   else
     Q_spin = -atan(real(r.q.q2), real(r.q.q0))/pi # not two pi bc quaternion
-    return SA[Q_x, Q_y, Q_s, Q_spin], a
+    return a, SA[Q_x, Q_y, Q_s, Q_spin]
   end
 end
 
@@ -402,7 +407,7 @@ function _compute_periodic_a_and_cache(bl::Beamline, v0, init, ::Val{coast}, ::V
 end
 
 function canonise_phase_damp(GTPSA_descriptor, coast, damping)
-  desc = unsafe_load(GTPSA_descriptor)
+  desc = unsafe_load(GTPSA_descriptor.desc)
   mo = desc.mo
   no4 = unsafe_wrap(Vector{UInt8}, desc.no, 4)
   if mo == 1
@@ -511,6 +516,10 @@ function _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, d
     end
     a = facj.a
   end
+  #error("here")
+ #@show canonise
+ #@show phase
+ #@show damp
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 

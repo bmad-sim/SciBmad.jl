@@ -1,3 +1,4 @@
+__precompile__(false)
 module SciBmad
 using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
 using Reexport
@@ -39,12 +40,12 @@ export  twiss,
         
 include("closed_orbit.jl") 
 include("track.jl")
-include("twiss/twiss_columns.jl")
+#include("twiss/twiss_columns.jl")
 include("twiss/twiss.jl")
-include("twiss/twiss_table.jl")
-include("twiss/twiss_concat.jl")
-include("twiss/twiss_noconcat.jl")
-include("show.jl")
+#include("twiss/twiss_table.jl")
+#include("twiss/twiss_concat.jl")
+#include("twiss/twiss_noconcat.jl")
+#include("show.jl")
 include("dynamic_aperture.jl")
 include("experimental/Experimental.jl")
 
