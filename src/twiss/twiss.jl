@@ -63,6 +63,10 @@ const SPIN = [
   n     , # ISF as a Taylor series
 ]
 =#
+
+# Amplitude dependent terms:
+# dq_2 , dq_111
+
 function twiss(
   bl::Beamline; 
 
@@ -82,7 +86,7 @@ function twiss(
   v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
 
   # The lattice functions to compute
-  cols = [], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
+  cols = [_beta_1], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
 
   start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
   a_initial::Union{Nothing,DAMap}   = nothing, # TODO
@@ -150,7 +154,7 @@ function twiss(
   if isnothing(a_initial)
     # Determine:
     if _check_cachable(GTPSA_descriptor)
-      a_initial, r_and_tunes , maps = _compute_periodic_a_and_cache(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}(), step_save, in_body_coordinates)
+      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}(), step_save, in_body_coordinates)
     else
       a_initial, r_and_tunes = _compute_periodic_a(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}())
     end
@@ -170,8 +174,14 @@ function twiss(
     fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
   end
 
+  twi = TwissInternal(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes)
+
+  # Finally, construct the summary and the table (with provided columns)
   # And post-process with the provided columns
-  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes
+  # Need to do one row first then can construct the DataFrame
+  table = _twiss_table(cols, s, names, idxs, twi)
+
+  return table
 end
 
 function co_and_coast(bl, v0)
@@ -512,4 +522,3 @@ function _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, d
   end
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
-

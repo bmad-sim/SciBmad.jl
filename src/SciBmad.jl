@@ -13,7 +13,8 @@ using Reexport
   using TPSAInterface: TPSAInterface as TI
   using DifferentiationInterface: DifferentiationInterface as DI
   using LinearAlgebra,
-        TypedTables,
+        DataFrames,
+        OrderedCollections,
         StaticArrays,
         ForwardDiff,
         DelimitedFiles
@@ -40,7 +41,9 @@ export  twiss,
         
 include("closed_orbit.jl") 
 include("track.jl")
-#include("twiss/twiss_columns.jl")
+include("twiss/twiss_types.jl")
+include("twiss/twiss_operators.jl")
+include("twiss/twiss_table.jl")
 include("twiss/twiss.jl")
 #include("twiss/twiss_table.jl")
 #include("twiss/twiss_concat.jl")
