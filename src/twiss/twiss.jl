@@ -1,15 +1,78 @@
-const DEFAULT_DE_MOIVRE = []
-const DEFAULT_SAGAN_RUBIN = [beta_1, beta]
+#=
+const TENG_EDWARDS = [      
+  phi1    ,
+  beta1   ,
+  alpha1  ,
+  phi2    ,
+  beta2   ,
+  alpha2  ,
+  phi3    , # Will be slip if coasting
+  gammac  ,
+  c11     ,
+  c12     ,
+  c21     ,
+  c22     ,
+  x       ,
+  px      ,
+  y       ,
+  py      ,
+  z       ,
+  pz      ,
+  dx_1    ,
+  dpx_1   ,
+  dy_1    ,
+  dpy_1   ,
+  dz_1    ,
+  dpz_1   ,
+]
 
+const DE_MOIVRE = [      
+  phi1    ,
+  beta1   ,
+  alpha1  ,
+  phi2    ,
+  beta2   ,
+  alpha2  ,
+  phi3    , # Will be slip if coasting
+  gammac  ,
+  c11     ,
+  c12     ,
+  c21     ,
+  c22     ,
+  x       ,
+  px      ,
+  y       ,
+  py      ,
+  z       ,
+  pz      ,
+  dx_1    ,
+  dpx_1   ,
+  dy_1    ,
+  dpy_1   ,
+  dz_1    ,
+  dpz_1   ,
+]
+
+const SPIN = [
+  nx    ,
+  ny    ,
+  nz    ,
+  dnx_1 , # dnx/ddelta
+  dny_1 , # dny/ddelta
+  dnz_1 , # dnz/ddelta
+  n     , # ISF as a Taylor series
+]
+=#
 function twiss(
   bl::Beamline; 
 
   # High level customizer kwargs
-  spin::Bool                = false,
-  de_moivre::Bool           = false,
   at::Union{Colon, Vector}  = :,
+  de_moivre::Bool           = false,
+  spin::Bool                = false,
   in_body_coordinates::Bool = false, 
 
+  # GTPSA truncation order sets:
   chrom::Integer = 0,
   order::Integer = 1,
   GTPSA_descriptor::Union{Descriptor,Nothing} = nothing,
@@ -17,25 +80,21 @@ function twiss(
   # Initial input, CO guess if periodic, initial orbit if not periodic
   delta0::Number = 0.,
   v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
-  
-  # These guys can eventually be moved into columns/what   
-  normalizing_map::Bool = false,
-  RDTs::Bool            = false,
+
+  # The lattice functions to compute
+  cols = [(de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
 
   start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
-
-  a_initial::Union{Nothing,DAMap}   = nothing, # TODO, always 6D for open
+  a_initial::Union{Nothing,DAMap}   = nothing, # TODO
+  damping::Union{Nothing,Bool} = nothing, # nothing = auto-detect from a_initial
 
   symplectic_tol=1e-8, # Tolerance below which to include damping
-
-  # Internal, almost definitely should not be used
-  _override_chrom::Bool=false,
   )
 
   if isnothing(start)
     v0_and_coast = co_and_coast(bl, v0)
   else
-    error("Open twiss not implemented yet")
+    v0_and_coast = (v0, false) # Always do 6D if open
   end
 
   if isnothing(GTPSA_descriptor)
@@ -46,7 +105,7 @@ function twiss(
     @info "`GTPSA_descriptor` has been explicitly provided: ignoring `order`/`chrom` inputs"
   end
 
-  if !v0_and_coast[2] && chrom != 0 && !_override_chrom
+  if !v0_and_coast[2] && chrom != 0
     error("""
     You specified `chrom`, but this beamline has synchrotron motion. Please turn off RF 
     cavities to get delta-dependent Twiss functions.
@@ -64,24 +123,68 @@ function twiss(
     GTPSA_descriptor = GTPSA.getdesc(first(a_initial.v))
   end
 
+
+  init = TI.InitGTPSA{GTPSA.Dynamic,Descriptor}(; dynamic_descriptor=GTPSA_descriptor)
+
   # Check if output are TPSA in parameters (delta excluded)
-  if GTPSA.numnn(GTPSA_descriptor) > 6
+  if TI.ndiffs(init) > 6
     parametric = Val{true}()
   else
     parametric = Val{false}()
   end
 
-  # Type unstable steps:
+  # Assemble locations. Note that start and end of the Beamline are ALWAYS included
   s, names, idxs, step_save = _twiss_assemble_locations(bl, at)
-  concat, eye, zero_LF, zero_phase, zero_orbit, zero_h = _twiss_gather_types(step_save, v0_and_coast, GTPSA_descriptor, Val{spin}(), Val{RDTs}())
-  table = length(step_save) == 0 ? false : true
-  
-  # Type stable steps:
-  if concat
-    return _twiss_concat(bl, eye, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, in_body_coordinates, Val{de_moivre}(), Val{normalizing_map}(), Val{table}())
-  else
-    return _twiss_noconcat(bl, eye, s, names, idxs, step_save, symplectic_tol, zero_LF, zero_phase, zero_orbit, zero_h, in_body_coordinates, Val{de_moivre}(), Val{normalizing_map}(), Val{table}())
+
+  # If the GTPSA truncation order is uniform, then we can 
+  # cache the maps between saved points and concatenate them
+  # In the closed case, we need to do one pass to compute a, 
+  # and another pass to push a. If uniform, a can be pushed with cached maps
+  # else, a is tracked again. Note that the first pass will tell you 
+  # if there is damping or not for the rest of the Twiss.
+
+  # In open case, a is known already, so all we need to do is 
+  # track a. If a is damped, then we can assume there is damping. 
+  # If not, then we can't really be sure, so every single step will 
+  # need to check if there is damping.
+
+  # closed: compute r and store - invariant around ring
+  # open: need to always have r12 - returned by canonization
+
+  # Total of four cases:
+  # 1) closed, cache_and_concat=true, damping KNOWN
+  # 2) closed, cache_and_concat=false, damping KNOWN
+  # 3) open, cache_and_concat=false, damping KNOWN TO BE TRUE
+  # 4) open, cache_and_concat=false, damping UNKNOWN (TRUE OR FALSE)
+
+  # So each element will have the output of factorise with canonise level
+  # set accordingly. 
+  tunes = nothing
+  maps = nothing
+  if isnothing(a_initial)
+    # Determine:
+    if _check_cachable(init)
+      a_initial, tunes, maps = _compute_periodic_a_and_cache(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}(), step_save, in_body_coordinates)
+    else
+      a_initial, tunes = _compute_periodic_a(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}())
+    end
   end
+
+  if isnothing(damping)
+    damping = norm(NNF.checksymp(NNF.jacobian(a_initial))) > symplectic_tol
+  end
+
+  # Determine canonization level
+  canonise, phase, damp = canonise_phase_damp(GTPSA_descriptor, v0_and_coast[2], damping)
+
+  # Now we push 
+  if isnothing(maps)
+    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(bl, step_save, a_initial, canonise, phase, damp, in_body_coordinates)
+  else
+    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
+  end
+
+  # And post-process with the provided columns
 end
 
 function co_and_coast(bl, v0)
@@ -134,10 +237,9 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
       scur += ds_step
     end
     
-    # If not in an s-range, check if explicitly provided (BUT ONLY AT BEGINNING!)
-    # therefore need to be done at the PREVIOUS element LAST step!
-    # First element must be handled specially.
-    if !found && ((any(x -> x == idx, at_idxs) || any(at_eles) do x
+    # If not in an s-range, check if explicitly provided
+    # Always include first element
+    if !found && (idx == 1 || (any(x -> x == idx, at_idxs) || any(at_eles) do x
           x == ele || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(ele, :pdict)[InheritParams].parent) : false)
         end
         ))
@@ -149,14 +251,11 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
     end
   end
 
-  # Now check if any went beyond the length of the line, in which 
-  # case also save at the end of the last element.
-  if any(x -> x[1] <= scur < x[2], at_ranges)
-    push!(stmp, scur)
-    push!(names, "END OF BEAMLINE")
-    push!(idxs, -1)
-    push!(step_save, step_cur)
-  end
+  # Always store the last step
+  push!(stmp, scur)
+  push!(names, "END OF BEAMLINE")
+  push!(idxs, -1)
+  push!(step_save, step_cur)
 
   # Now resolve type of s:
   s = typeof(scur).(stmp)
@@ -164,194 +263,27 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   return s, names, idxs, step_save
 end
 
-# Colon means save everywhere:
-_twiss_assemble_locations(bl::Beamline, ::Colon) = _twiss_assemble_locations(bl, [(0., Inf)])
-
-function _twiss_gather_types(step_save, v0_and_coast, GTPSA_descriptor, ::Val{spin}, ::Val{RDTs}) where {spin, RDTs}
-  v0 = v0_and_coast[1]
-  coasting_beam = v0_and_coast[2]
-
-  if isnothing(GTPSA_descriptor)
-    storedesc = GTPSA.desc_current
-    GTPSA_descriptor = Descriptor(6,1)
-    GTPSA.desc_current = storedesc # Don't reset the global
-  end
-
-  nn = GTPSA.numnn(GTPSA_descriptor)
-  if nn < 6
-    error("GTPSA Descriptor must have at least 6 variables for the 6D phase space coordinates")
-  end
-
-  numtype = eltype(v0)
-  init = TI.InitGTPSA{GTPSA.Dynamic,Descriptor}(; dynamic_descriptor=GTPSA_descriptor)
-  mo = TI.maxord(init)
-  nn = TI.ndiffs(init)
-  nv = 6
-  np = nn-nv
-  if coasting_beam
-    nv -= 1
-    np += 1
-  end
-
-  # If uniform truncation order, then we can concatenate maps around the ring 
-  # instead of tracking twice (one to get `m`, another to propagate `a`
+function _check_cachable(GTPSA_descriptor)
+  # check if we can cache_and_concat:
   desc = unsafe_load(GTPSA_descriptor.desc)
   po = desc.po
   if all(x->x == mo && (po == 0 || x == po), unsafe_wrap(Vector{UInt8}, desc.no, nn))
-    concat = true
+    return true
   else
-    if RDTs
-      error("twiss with RDTs=true requires a GTPSA Descriptor with uniform truncation order for all variables and parameters")
-    end
-    concat = false
+    return false
   end
-
-  # Type of the LATTICE FUNCTIONS
-  if mo > 1 && (coasting_beam || nn > 6)
-    zero_LF = TI.init_tps(numtype, init)
-  else
-    zero_LF = zero(numtype)
-  end
-
-  # Type of the PHASES
-  # right now coasting beam makes phi_3 be delta-dependent 
-  # even if linear. should revisit this.
-  if (mo > 1 && nn > 6) || coasting_beam
-    zero_phase = TI.init_tps(numtype, init)
-  else
-    zero_phase = zero(numtype)
-  end
-  
-  # Type of the ORBIT
-  if coasting_beam || nn > 6
-    zero_orbit = TI.init_tps(numtype, init)
-  else
-    zero_orbit = zero(numtype)
-  end
-
-  # Value type of the RDT dict
-  if RDTs
-    if mo == 1
-      error("
-        RDTs cannot be computed using a GTPSA_descriptor with max order 1.
-        Please specify a higher order GTPSA_descriptor.
-      ")
-    end
-    if np > 0
-      zero_h = TI.init_tps(numtype, init)
-    else
-      zero_h = zero(numtype)
-    end
-  else
-    zero_h = nothing # Don't compute it
-  end
-
-  eye = DAMap(init=init, nv=nv, np=np, v0=view(v0, :, 1:nv), v_matrix=I, q=(spin ? I : nothing))
-  return concat, eye, zero_LF, zero_phase, zero_orbit, zero_h
 end
 
-function TWISS_STATIC_CONSTS(
-  a::DAMap{<:Any,<:Any,Q},
-  zero_LF::T, 
-  zero_phase::V, 
-  zero_orbit::U, 
-  zero_h::H,  
-  ::Val{de_moivre}, 
-  ::Val{normalizing_map}, 
-  ) where {Q, T, V, U, H, de_moivre, normalizing_map}
-  
-  COMPUTE_TWISS = de_moivre ? compute_de_moivre : compute_sagan_rubin
-  LF = !de_moivre ? twiss_tuple : de_moivre_tuple 
-  LF_TABLE = !de_moivre ? twiss_table : de_moivre_table
-  SCALAR_LF = TI.is_tps_type(T) isa TI.IsTPSType ? Val{false}() : Val{true}()
-  SCALAR_PHASE = TI.is_tps_type(V) isa TI.IsTPSType ? Val{false}() : Val{true}()
-  SCALAR_ORBIT = TI.is_tps_type(U) isa TI.IsTPSType ? Val{false}() : Val{true}()
-  INCLUDE_A = normalizing_map ? at -> at : at -> nothing
-  BENGTSSON = H == Nothing ? (a0, a1, m)->nothing : compute_bengtsson
-
-  if Q == Nothing
-    PROCESS_SPIN = at -> nothing
-  else
-    i2 = zero(a)
-    NNF.setray!(i2.v; v_matrix=I)
-    TI.seti!(i2.q.q2, 1, 0)
-    let i2=i2
-      PROCESS_SPIN = at -> begin
-        n = at ∘ i2 ∘ inv(at)
-        SA[n.q.q1, n.q.q2, n.q.q3]
-      end
-    end
+function _twiss_make_identity(v0, init, ::Val{coast}, ::Val{spin}) where {coast,spin}
+  nn = TI.ndiffs(init)
+  nv = 6
+  np = nn-nv
+  if coast
+    nv -= 1
+    np += 1
   end
-  # Note:
-  # Descriptor(6,1) with coasting beam gives SCALAR_LF = true 
-  # but SCALAR_ORBIT = false
-  # In general we will canonize using SCALAR_ORBIT, and compute 
-  # lattice functions using SCALAR_LF. 
-  # Finally we have the phases. The phases are done during 
-  # canonization, and so should have the same type as the orbit.
-  if SCALAR_ORBIT isa Val{false}
-    PROCESS_ORBIT = v -> begin
-      StaticArrays.sacollect(SVector{6,U}, begin 
-      vi = zero(v[i])
-      TI.copy_tps!(vi, v[i])
-      if i < 6
-        TI.seti!(vi, 0, i)
-      end
-      vi
-      end for i in 1:6)
-    end
-  else
-    PROCESS_ORBIT = v -> StaticArrays.sacollect(SVector{6,U}, TI.scalar(v[i]) for i in 1:6)
-  end
-  return (; COMPUTE_TWISS, LF, LF_TABLE, SCALAR_LF, SCALAR_PHASE, INCLUDE_A, BENGTSSON, PROCESS_SPIN, PROCESS_ORBIT)
+  return DAMap(init=init, nv=nv, np=np, v0=view(v0, :, 1:nv), v_matrix=I, q=(spin ? I : nothing))
 end
-
-function _twiss_compute_row(
-  twfn::T,
-  damping,
-  phase,
-  s,
-  idx,
-  name,
-  a,
-  m_turn,
-  ::Val{first}=Val{false}(),
-  ) where {T,first}
-  COMPUTE_TWISS = twfn.COMPUTE_TWISS 
-  LF = twfn.LF 
-  SCALAR_LF = twfn.SCALAR_LF 
-  SCALAR_PHASE = twfn.SCALAR_PHASE 
-  INCLUDE_A = twfn.INCLUDE_A 
-  BENGTSSON = twfn.BENGTSSON 
-  PROCESS_SPIN = twfn.PROCESS_SPIN 
-  PROCESS_ORBIT = twfn.PROCESS_ORBIT
-
-  if first
-    r = canonize(a, SCALAR_PHASE; damping=damping)
-  else
-    r = canonize(a, SCALAR_PHASE; damping=damping, phase=phase)
-  end
-
-  a = a ∘ r
-  fc = factorize(a)
-  lf = LF(
-    s,
-    idx, 
-    name, 
-    SA[
-      copy(phase[1]),
-      copy(phase[2]),
-      copy(phase[3])
-    ], 
-    COMPUTE_TWISS(fc.a1, SCALAR_LF), 
-    PROCESS_ORBIT(fc.a0.v), 
-    PROCESS_SPIN(a), 
-    INCLUDE_A(a),
-    BENGTSSON(fc.a0, fc.a1, m_turn)
-  )
-  return lf, a
-end
-
 
 function _twiss_setmap!(map, coords)
   nv = NNF.nvars(map)
@@ -375,7 +307,7 @@ function _twiss_setmap!(map, coords)
   return map
 end
 
-function _twiss_track(eye, cbs, bl)
+function _twiss_track!(eye, cbs, bl)
   if NNF.nvars(eye) == 5
     v = reshape([(i < 5 ? eye.v0[i]+copy(eye.v[i]) : copy(eye.v[i])) for i in 1:6], 1, 6)
   else
@@ -388,14 +320,13 @@ function _twiss_track(eye, cbs, bl)
   return b0
 end
 
-function _twiss_tunes_and_a(m::DAMap)
+function _a_and_tunes(m::DAMap)
   mo = NNF.maxord(m)
   a = normal(m)
   c = c_map(m) # Transform to phasor basis
   r = inv(c) ∘ inv(a) ∘ m ∘ a ∘ c
   # Need to cut highest order
   Q_x = -cutord(angle(NNF.factor_out(r.v[1], 1))/(2*pi), mo)
-   # cutord(real(-log(NNF.factor_out(r.v[1], 1))/(2*pi*im)), mo)
   Q_y = -cutord(angle(NNF.factor_out(r.v[3], 3))/(2*pi), mo)
   if NNF.nvars(m) == 5
     Q_s = real(r.v[5])
@@ -410,3 +341,176 @@ function _twiss_tunes_and_a(m::DAMap)
     return SA[Q_x, Q_y, Q_s, Q_spin], a
   end
 end
+
+function _compute_periodic_a(bl::Beamline, v0, init, ::Val{coast}, ::Val{spin}, cbs=()) where {coast, spin}
+  eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
+  b0 = _twiss_track(eye, (), bl)
+  _twiss_setmap!(eye, b0.coords)
+  a, tunes = _a_and_tunes(eye)
+  return a, tunes
+end
+
+function _twiss_cache_preallocate(step_save, map::T) where {T<:DAMap}
+  maps = Vector{T}(undef, length(step_save))
+  for i in 1:length(step_save)
+    if i == 1 && step_save[1] == 0
+      maps[1] = one(map)
+      NNF.setscalar!(maps[1], map.v0)
+    else
+      maps[i] = zero(map) # Preallocate
+    end
+  end
+  return maps
+end
+
+function _twiss_cache_make_callback(_step_save, _in_body_coordinates, _maps)
+  # Note: need to handle the first element differently
+  if length(_step_save) > 0 && first(_step_save) == 0
+    _cur_step_save_idx = 2
+  else
+    _cur_step_save_idx = 1
+  end
+  let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx), in_body_coordinates=_in_body_coordinates
+    return (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+      curstep[] += 1
+      if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]] # Store the current map
+        map = maps[cur_step_save_idx[]]
+        if !in_body_coordinates
+          transforms_out!(i, coords, cur_s, cur_t_ref)
+        end
+        _twiss_setmap!(map, coords)
+        if !in_body_coordinates
+          transforms_in!(i, coords, cur_s, cur_t_ref)
+        end
+        cur_step_save_idx[] += 1
+      end
+    end
+  end
+end
+
+function _compute_periodic_a_and_cache(bl::Beamline, v0, init, ::Val{coast}, ::Val{spin}, step_save, in_body_coordinates) where {coast, spin}
+  eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
+  maps = _twiss_cache_preallocate(step_save, eye)
+  cb = _twiss_cache_make_callback(step_save, in_body_coordinates, maps)
+  _twiss_track!(eye, (cb,), bl)
+  m_turn = eye
+  for map in maps
+    m_turn = map ∘ m_turn
+  end
+  a, tunes = _a_and_tunes(m_turn)
+  return a, tunes, maps
+end
+
+function canonise_phase_damp(GTPSA_descriptor, coast, damping)
+  desc = unsafe_load(GTPSA_descriptor)
+  mo = desc.mo
+  no4 = unsafe_wrap(Vector{UInt8}, desc.no, 4)
+  if mo == 1
+    canonise = 0
+    phase = MVector{3,Float64}(0,0,0)
+    damp = damping ? MVector{3,Float64}(0,0,0) : nothing
+  else
+    if coast && no4 == SA[1,1,1,1]
+      canonise = 1
+    else
+      canonise = 2
+    end
+    zer = TI.init_tps(numtype, init)
+    phase = MVector{3,typeof(zer)}(zer, zero(zer), zero(zer))
+    damp = damping ? MVector{3,typeof(zer)}(zero(zer), zero(zer), zero(zer)) : nothing
+  end
+  return canonise, phase, damp
+end
+
+
+function _twiss_make_callback(_step_save, _in_body_coordinates, _map, _fac, _canonise, _phase, _phi1, _phi2, _phi3_or_slip, _damp, _damp1, _damp2, _damp3)
+  # stupid let block bc the compiler is very stupid:
+  let step_save=_step_save, in_body_coordinates=_in_body_coordinates, fac=_fac, canonise=_canonise, phase=_phase, 
+    phi1=_phi1, phi2=_phi2, phi3_or_slip=_phi3_or_slip, damp=_damp, damp1=_damp1, damp2=_damp2, damp3=_damp3,
+    curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(1), map=_map
+    
+    return (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+      curstep[] += 1
+      if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]]
+        if !in_body_coordinates
+          transforms_out!(i, coords, cur_s, cur_t_ref)
+        end
+        damping = !isnothing(_damp1)
+        j = cur_step_save_idx[] 
+        _twiss_setmap!(map, coords)
+        facj = factorise(map; canonise=canonise, phase=phase, damp=damp, damping=damping)
+        fac[j] = facj
+        phi1[j] = phase[1]
+        phi2[j] = phase[2]
+        phi3_or_slip[j] = phase[3]
+        if damping
+          damp1[j] = damp[1]
+          damp2[j] = damp[2]
+          damp3[j] = damp[3]
+        end
+        # Reset coords with canonised a:
+        aj = facj.a
+        for k in 1:6
+          TI.copy!(coords.v[k], aj.v[k])
+        end
+        if !isnothing(map.q)
+          for k in 1:4
+            TI.copy!(coords.q[k], aj.q[k])
+          end
+        end
+        if !in_body_coordinates
+          transforms_in!(i, coords, cur_s, cur_t_ref)
+        end
+        cur_step_save_idx[] += 1
+      end
+    end
+  end
+end
+
+function _twiss_make_base_columns(n, ::T, phase, damp) where {T}
+  fac = Vector{@NamedTuple{a0::T, a1::T, a2::T, a::T, r::T}}(undef, n)
+  phi1 = Vector{eltype(phase)}(undef, n)
+  phi2 = Vector{eltype(phase)}(undef, n)
+  phi3_or_slip = Vector{eltype(phase)}(undef, n) 
+  if !isnothing(damp)
+    damp1 = Vector{eltype(damp)}(undef, n) 
+    damp2 = Vector{eltype(damp)}(undef, n) 
+    damp3 = Vector{eltype(damp)}(undef, n) 
+  else
+    damp1 = nothing
+    damp2 = nothing
+    damp3 = nothing
+  end
+  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
+end
+
+function _twiss_push_a(bl, step_save, a_initial, canonise, phase, damp, in_body_coordinates)
+  fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
+  cb = _twiss_make_callback(step_save, in_body_coordinates, a_initial, fac, canonise, phase, phi1, phi2, phi3_or_slip, damp, damp1, damp2, damp3)
+  _twiss_track!(a_initial, (cb,), bl)
+  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
+end
+
+
+function _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
+  fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
+  a = a_initial
+  damping = !isnothing(damp)
+  for j in 1:length(maps)
+    map = maps[j]
+    a = map ∘ a
+    facj = factorise(map; canonise=canonise, phase=phase, damp=damp, damping=damping)
+    fac[j] = facj
+    phi1[j] = phase[1]
+    phi2[j] = phase[2]
+    phi3_or_slip[j] = phase[3]
+    if damping
+      damp1[j] = damp[1]
+      damp2[j] = damp[2]
+      damp3[j] = damp[3]
+    end
+    a = facj.a
+  end
+  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
+end
+
