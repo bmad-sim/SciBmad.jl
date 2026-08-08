@@ -8,7 +8,7 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
   elseif haskey(cache.map, :H1)
     return NNF.jacobian(cache.map[:H1], NNF.HVARS)
   end
-
+  
   mo = maxord(twi)
   nn = ndiffs(twi)
   coast = iscoasting(twi)
@@ -20,14 +20,14 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
         cache.smatrix4[:a1_mat] = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
         cache.smatrix4[:a1i_mat] = inv(NNF.jacobian(twi.fac[j].a1, NNF.HVARS))
       end
-      a1_mat = cache.smatrix4[:a1i_mat]
+      a1_mat = cache.smatrix4[:a1_mat]
       a1i_mat = cache.smatrix4[:a1i_mat]
     else
       if !haskey(cache.smatrix6, :a1_mat)
         cache.smatrix6[:a1_mat] = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
         cache.smatrix6[:a1i_mat] = inv(NNF.jacobian(twi.fac[j].a1, NNF.HVARS))
       end
-      a1_mat = cache.smatrix6[:a1i_mat]
+      a1_mat = cache.smatrix6[:a1_mat]
       a1i_mat = cache.smatrix6[:a1i_mat]
     end
     a1_mat1 = StaticArrays.sacollect(SMatrix{nhv,2,Float64}, a1_mat[row,col] for col in 1:2 for row in 1:nhv)

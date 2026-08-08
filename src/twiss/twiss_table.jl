@@ -11,7 +11,7 @@ function _twiss_table(cols, s, names, idxs, twi)
   smatrix6_cache = build_cache(SMatrix{6,6,Float64})
 
   cache = TwissCache(map_cache, tps_cache, float_cache, smatrix4_cache, smatrix6_cache)
-
+  
   for i in 1:ncols
     col = cols[i]
     row1[i] = @noinline col(1, twi, cache)

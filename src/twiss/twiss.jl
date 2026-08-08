@@ -86,7 +86,14 @@ function twiss(
   v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
 
   # The lattice functions to compute
-  cols = [_beta_1], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
+  cols = [_beta_1,
+_gammac,
+_c11,
+_c12, 
+_c21, 
+_c22, 
+_Vi,
+_N], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
 
   start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
   a_initial::Union{Nothing,DAMap}   = nothing, # TODO
