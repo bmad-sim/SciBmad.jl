@@ -512,7 +512,7 @@ end
   phi3 = _phi(j, twi, cache, Val{as_tps}(), 3)
 
   if iscoasting(twi)
-    return phi3 #/ beta
+    return phi3 / beta
   end 
 
   # Else use the approximation of Etienne

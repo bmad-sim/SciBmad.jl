@@ -414,6 +414,12 @@ function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, ::Val{coast}, ::
     m_turn = map ∘ m_turn
   end
   a, r, tunes = _a_r_tunes(m_turn)
+  if first(step_save) == 0
+    b0 = Bunch(v=zeros(0,6)) # empty bunch just to compute initial reference energy
+    BTBL.check_bl_bunch!(b0, bl, false)
+    beta_gamma_ref[1] = BeamTracking.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
+    t_ref[1] = 0
+  end
   return a, (r, tunes), maps
 end
 
@@ -442,13 +448,13 @@ function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, ca
   damping = !isnothing(damp)
   facj = factorise(a; canonise=canonise, phase=phase, damp=damp, damping=damping)
   fac[j] = facj
-  phi1[j] = phase[1]
-  phi2[j] = phase[2]
-  phi3_or_slip[j] = phase[3]
+  phi1[j] = copy(phase[1])
+  phi2[j] = copy(phase[2])
+  phi3_or_slip[j] = copy(phase[3])
   if damping
-    damp1[j] = damp[1]
-    damp2[j] = damp[2]
-    damp3[j] = damp[3]
+    damp1[j] = copy(damp[1])
+    damp2[j] = copy(damp[2])
+    damp3[j] = copy(damp[3])
   end
   return
 end
