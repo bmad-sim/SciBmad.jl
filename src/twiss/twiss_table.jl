@@ -1,6 +1,6 @@
-function _twiss_table(cols, s, names, idxs, twi)
+function _twiss_table(cols, twi)
   ncols = length(cols)
-  nrows = length(s)
+  nrows = length(twi.s)
   row1 = Vector{Any}(undef, ncols)
   colnames = nameof.(cols)
   
@@ -16,7 +16,7 @@ function _twiss_table(cols, s, names, idxs, twi)
 
   for i in 1:ncols
     col = cols[i]
-    row1[i] = @noinline col(1, twi, cache)
+    row1[i] = @noinline col(1, twi, cache, Val{false}())
   end
   
   # Now construct DataFrame
@@ -31,7 +31,7 @@ function _twiss_table_loop(table, cols, twi, cache)
   nrows, ncols = size(table)
   for row in 2:nrows
     for col in 1:ncols
-      table[row,col] = @noinline (cols[col])(row, twi, cache)
+      table[row,col] = @noinline (cols[col])(row, twi, cache, Val{false}())
       empty!(cache.map)
       empty!(cache.tps)
       empty!(cache.float)

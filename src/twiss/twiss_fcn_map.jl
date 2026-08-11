@@ -39,6 +39,9 @@ const _TWISS_BARE_FCN_MAP = Dict{String,Function}(
   "H1"     => _H1     ,
   "H2"     => _H2     ,
   "H3"     => _H3     ,
+  "B1"     => _B1     ,
+  "B2"     => _B2     ,
+  "B3"     => _B3     ,
 )
 
 # things like RDTs and arbitrary-order derivatives must be handled specially

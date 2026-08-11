@@ -18,6 +18,11 @@ function Base.getproperty(tw::Twiss, s::Symbol)
 end
 
 struct TwissInternal{F,P,D,R}
+  s::Vector{Float64}
+  names::Vector{String}
+  idxs::Vector{Int}
+  beta_gamma_ref::Vector{Float64}
+  t_ref::Vector{Float64}
   fac::F
   phi1::P
   phi2::P

@@ -1,6 +1,6 @@
 throwunreachable() = error("Unreachable error hit, please submit a minimal working example")
 
-#NOTE: the H's essentially define the structure of the lattice functions (LFs)
+#NOTE: the H's and B's essentially define the structure of the lattice functions (LFs)
 # i.e. if cache.smatrix6 has the H matrix, then all downstream LFs can safely 
 # assume that there is no coasting AND no parameter dependence.
 # if smatrix4 has H matrix, now coasting and no parameter dependence
@@ -68,11 +68,11 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
       cache.map[:a1i] = inv(twi.fac[j].a1)
     end
     tmp1 = cache.persistent_map[:tmp1]
-    TI.clear!(tmp1)
+    NNF.clear!(tmp1)
+    a1 = twi.fac[j].a1
     a1i = cache.map[:a1i]
-
-    setray!(tmp.v, v_matrix=NNF.ip_mat(a1, k))
-    Hk = a1∘tmp∘a1i
+    NNF.setray!(tmp1.v, v_matrix=NNF.ip_mat(a1, k))
+    Hk = a1∘tmp1∘a1i
     cache.map[sym] = Hk
     return as_tps ? Hk : NNF.jacobian(Hk, NNF.HVARS)
   end
@@ -82,13 +82,91 @@ end
 @inline _H2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Hk(j, twi, cache, Val{as_tps}(), 2)
 @inline _H3(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Hk(j, twi, cache, Val{as_tps}(), 3)
 
+@inline function _Bk(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
+  if k == 1
+    sym = :B1
+  elseif k == 2
+    sym = :B2
+  elseif k == 3
+    sym = :B3
+  else
+    error("Index for de Moivre B matrix must be between 1 and 3")
+  end
+
+  if haskey(cache.smatrix4, sym)
+    return cache.smatrix4[sym]
+  elseif haskey(cache.smatrix6, sym)
+    return cache.smatrix6[sym]
+  elseif haskey(cache.map, sym)
+    return as_tps ? cache.map[sym] : NNF.jacobian(cache.map[sym], NNF.HVARS)
+  end
+  
+  mo = maxord(twi)
+  nn = ndiffs(twi)
+  coast = iscoasting(twi)
+  nhv = nhvars(twi)
+
+  if k == 3 && coast
+    error("Unable to compute de Moivre matrix H3: beam is coasting")
+  end
+
+  if mo == 1 || (nn == 6 && !coast)
+    if coast
+      if !haskey(cache.smatrix4, :a1_mat)
+        cache.smatrix4[:a1_mat] = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
+        cache.smatrix4[:a1i_mat] = inv(NNF.jacobian(twi.fac[j].a1, NNF.HVARS))
+      end
+      a1_mat = cache.smatrix4[:a1_mat]
+      a1i_mat = cache.smatrix4[:a1i_mat]
+    else
+      if !haskey(cache.smatrix6, :a1_mat)
+        cache.smatrix6[:a1_mat] = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
+        cache.smatrix6[:a1i_mat] = inv(NNF.jacobian(twi.fac[j].a1, NNF.HVARS))
+      end
+      a1_mat = cache.smatrix6[:a1_mat]
+      a1i_mat = cache.smatrix6[:a1i_mat]
+    end
+    a1_matk1 = StaticArrays.sacollect(SVector{nhv,Float64}, a1_mat[row,(2*k-1)] for row in 1:nhv)
+    a1_matk2 = StaticArrays.sacollect(SVector{nhv,Float64}, a1_mat[row,(2*k)] for row in 1:nhv)
+    a1i_matk1 = StaticArrays.sacollect(SVector{nhv,Float64}, a1i_mat[row,(2*k-1)] for row in 1:nhv)
+    a1i_matk2 = StaticArrays.sacollect(SVector{nhv,Float64}, a1i_mat[row,(2*k)] for row in 1:nhv)
+    Bk = a1_matk1*transpose(a1i_matk2) - a1_matk2*transpose(a1i_matk1)
+    if coast
+      cache.smatrix4[sym] = Bk
+    else
+      cache.smatrix6[sym] = Bk
+    end
+    return Bk
+  else
+    if !haskey(cache.persistent_map, :tmp1)
+      cache.persistent_map[:tmp1] = zero(twi.fac[j].a)
+    end
+    if !haskey(cache.map, :a1i)
+      cache.map[:a1i] = inv(twi.fac[j].a1)
+    end
+    tmp1 = cache.persistent_map[:tmp1]
+    NNF.clear!(tmp1)
+    a1 = twi.fac[j].a1
+    a1i = cache.map[:a1i]
+    NNF.setray!(tmp1.v, v_matrix=NNF.jp_mat(a1, k))
+    Bk = a1∘tmp1∘a1i
+    cache.map[sym] = Bk
+    return as_tps ? Bk : NNF.jacobian(Bk, NNF.HVARS)
+  end
+end
+
+@inline _B1(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Bk(j, twi, cache, Val{as_tps}(), 1)
+@inline _B2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Bk(j, twi, cache, Val{as_tps}(), 2)
+@inline _B3(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Bk(j, twi, cache, Val{as_tps}(), 3)
+
+
 @inline function _gammac(j, twi, cache, ::Val{as_tps}) where {as_tps}
   if haskey(cache.float, :gammac)
     return cache.float[:gammac]
   elseif haskey(cache.tps, :gammac)
     return as_tps ? cache.tps[:gammac] : scalar(cache.tps[:gammac])
   elseif !haskey(cache.map, :H1) && !(haskey(cache.smatrix4, :H1) || haskey(cache.smatrix6, :H1))
-    _H1(j, twi, cache)
+    _H1(j, twi, cache, Val{as_tps}())
   end
 
   if haskey(cache.smatrix4, :H1)
@@ -104,7 +182,7 @@ end
     mo = maxord(twi)
     gammac = TI.cutord(sqrt(NNF.factor_out(H1.v[1], 1)), mo)
     cache.tps[:gammac] = gammac
-    return as_tps ? gammac : scalar(gamma_c)
+    return as_tps ? gammac : scalar(gammac)
   end
 end
 
@@ -126,7 +204,7 @@ end
   elseif haskey(cache.tps, sym)
     return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
   elseif !haskey(cache.float, :gammac) && !haskey(cache.tps, :gammac)
-    _gammac(j, twi, cache)
+    _gammac(j, twi, cache, Val{as_tps}())
   end
 
   if haskey(cache.float, :gammac)
@@ -174,9 +252,9 @@ end
     return cache.smatrix4[:Vi]
   elseif haskey(cache.map, :Vi)
     Vi = cache.map[:Vi]
-    return as_tps ? Vi : StaticArrays.sacollect(SMatrix{4,4,Float64}, Vi[row][col] for col in 1:4 for row in 1:4)
+    return as_tps ? Vi : StaticArrays.sacollect(SMatrix{4,4,Float64}, TI.geti(Vi.v[row], col) for col in 1:4 for row in 1:4)
   elseif !haskey(cache.float, :c11) && !haskey(cache.tps, :c11)
-    _c11(j, twi, cache) # all coupling matrix components computed when this is executed
+    _c11(j, twi, cache, Val{as_tps}()) # all coupling matrix components computed when this is executed
   end
 
   if haskey(cache.float, :c11)
@@ -200,7 +278,7 @@ end
 
     C = SA[c11 c12; c21 c22]
     Ct = SA[c22 -c12; -c21 c11]
-    Vi_mat = gammac*I + vcat(hcat(zero(C), -C), hcat(Ct, zero(Ct)))
+    Vi_mat = gammac*I + vcat(hcat(zero.(C), -C), hcat(Ct, zero.(Ct)))
     Vi = zero(twi.fac[j].a)
     if iscoasting(twi)
       TI.seti!(Vi.v[6], 1, 6) # identity in delta if coasting 
@@ -212,7 +290,7 @@ end
       end
     end
     cache.map[:Vi] = Vi
-    return as_tps ? Vi : Vi_mat
+    return as_tps ? Vi : StaticArrays.sacollect(SMatrix{4,4,Float64}, TI.geti(Vi.v[row], col) for col in 1:4 for row in 1:4)
   else
     throwunreachable()
   end
@@ -223,9 +301,9 @@ end
     return cache.smatrix4[:N]
   elseif haskey(cache.map, :N)
     N = cache.map[:N]
-    return as_tps ? N : StaticArrays.sacollect(SMatrix{4,4,Float64}, N[row][col] for col in 1:4 for row in 1:4)
+    return as_tps ? N : StaticArrays.sacollect(SMatrix{4,4,Float64}, TI.geti(N.v[row], col) for col in 1:4 for row in 1:4)
   elseif !haskey(cache.smatrix4, :Vi) && !haskey(cache.map, :Vi)
-    _Vi(j, twi, cache) # forces computation of Vi
+    _Vi(j, twi, cache, Val{as_tps}()) # forces computation of Vi
   end
 
   if haskey(cache.smatrix4, :Vi)
@@ -241,7 +319,7 @@ end
   elseif haskey(cache.map, :Vi)
     N = cache.map[:Vi] ∘ twi.fac[j].a1 
     cache.map[:N] = N
-    return as_tps ? N : StaticArrays.sacollect(SMatrix{4,4,Float64}, N.v[row][col] for col in 1:4 for row in 1:4)
+    return as_tps ? N : StaticArrays.sacollect(SMatrix{4,4,Float64}, TI.geti(N.v[row], col) for col in 1:4 for row in 1:4)
   else
     throwunreachable()
   end
@@ -261,7 +339,7 @@ end
   elseif haskey(cache.tps, sym)
     return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
   elseif !haskey(cache.smatrix4, :N) && !haskey(cache.map, :N)
-    _N(j, twi, cache) # Forces computation of N and storage in cache
+    _N(j, twi, cache, Val{as_tps}()) # Forces computation of N and storage in cache
   end
 
   # Now N will exist in one of the two:
@@ -298,7 +376,7 @@ end
   elseif haskey(cache.tps, sym)
     return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
   elseif !haskey(cache.smatrix4, :N) && !haskey(cache.map, :N)
-    _N(j, twi, cache) # Forces computation of N and storage in cache
+    _N(j, twi, cache, Val{as_tps}()) # Forces computation of N and storage in cache
   end
 
   # Now N will exist in one of the two:
@@ -321,42 +399,8 @@ end
 @inline _alpha1(j, twi, cache, ::Val{as_tps}) where {as_tps} = _alphak(j, twi, cache, Val{as_tps}(), 1)
 @inline _alpha2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _alphak(j, twi, cache, Val{as_tps}(), 2)
 
-@inline function _phi(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
-  if k == 1
-    sym = :phi1
-  elseif k == 2
-    sym = :phi2
-  elseif k == 3
-    sym = :phi3_or_slip
-  else
-    error("Phase advance index must be between 1 and 3")
-  end
-
-  return as_tps ? getproperty(twi, sym)[j] : scalar(getproperty(twi, sym)[j])
-end
-
-@inline _phi1(j, twi, cache, ::Val{as_tps}) where {as_tps} = _phi(j, twi, cache, Val{as_tps}(), 1)
-@inline _phi2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _phi(j, twi, cache, Val{as_tps}(), 2)
-@inline function _phi3(j, twi, cache, ::Val{as_tps}) where {as_tps}
-  if k == 3 && iscoasting(twi) 
-    error("Cannot compute phi3: beam is coasting")
-  end
-  return _phi(j, twi, cache, Val{as_tps}(), 3)
-end
-
-@inline function _slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
-  if iscoasting(twi)
-    return _phi(j, twi, cache, Val{as_tps}(), 3)
-  end
-
-  # convert z (bmad) to tau (mad)
-  pz = scalar(twi.fac[j].a0.v[6])
-  rel_p = 1 + pz
-  beta = rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)
-
-
-end
-
+# orbit, like the H matrix, also is a "fundamental" quantity where what is stored 
+# in the cache defines certain features (delta-dependent/parameter dependent)
 @inline function _orbit(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
   if k == 1
     sym = :x
@@ -381,9 +425,10 @@ end
   end
 
   o = twi.fac[j].a0.v[k]
+  nn = ndiffs(twi)
 
   # Check what's going on with the orbit - should we store as TPS or float?
-  if iscoasting(twi) || nn > 6 # then cache as tps
+  if (iscoasting(twi) && k < 5) || nn > 6 # then cache as tps
     vk = zero(o)
     TI.copy_tps!(vk, o)
     if k < 6 || !iscoasting(twi)
@@ -403,6 +448,88 @@ end
 @inline _py(j, twi, cache, ::Val{as_tps}) where {as_tps}  = _orbit(j, twi, cache, Val{as_tps}(), 4)
 @inline _z( j, twi, cache, ::Val{as_tps}) where {as_tps}  = _orbit(j, twi, cache, Val{as_tps}(), 5)
 @inline _pz(j, twi, cache, ::Val{as_tps}) where {as_tps}  = _orbit(j, twi, cache, Val{as_tps}(), 6)
+
+
+@inline function _phi(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
+  if k == 1
+    sym = :phi1
+  elseif k == 2
+    sym = :phi2
+  elseif k == 3
+    sym = :phi3_or_slip
+  else
+    error("Phase advance index must be between 1 and 3")
+  end
+  phi = getproperty(twi, sym)[j]
+
+  # Note that if canonise=0, then slip will just be a scalar
+  # else, slip will be a TPSA in delta/parameters, and the appropriate monomial (first order term)
+  # must be extracted depending on what people want
+
+  # If as_tps = true, then the only option is to return as a full TPS
+  # if as_tps = false, then presumably no parameters, so people want 
+  # linear slip in delta
+  if as_tps
+    return phi
+  else
+    if k == 3 && iscoasting(twi) && TI.is_tps_type(typeof(phi)) isa TI.IsTPSType
+      return TI.geti(phi, 6)
+    else
+      return scalar(phi)
+    end
+  end
+end
+
+@inline _phi1(j, twi, cache, ::Val{as_tps}) where {as_tps} = _phi(j, twi, cache, Val{as_tps}(), 1)
+@inline _phi2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _phi(j, twi, cache, Val{as_tps}(), 2)
+@inline function _phi3(j, twi, cache, ::Val{as_tps}) where {as_tps}
+  if k == 3 && iscoasting(twi) 
+    error("Cannot compute phi3: beam is coasting")
+  end
+  return _phi(j, twi, cache, Val{as_tps}(), 3)
+end
+
+@inline function _slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
+  # convert z (bmad) to tau (mad)
+  # Need to include parameter/delta dependence in Lorentz beta...
+  beta_gamma_ref = twi.beta_gamma_ref[j]
+  tilde_m = 1/beta_gamma_ref
+  if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)
+    _pz(j, twi, cache, Val{true}()) # Force (potentially TPSA) calculation of z
+  end
+
+  if haskey(cache.tps, :pz)
+    pz = cache.tps[:pz]
+  elseif haskey(cache.float, :pz)
+    pz = cache.float[:pz]
+  else
+    throwunreachable()
+  end
+
+  rel_p = 1 + pz
+  beta = rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)
+
+  phi3 = _phi(j, twi, cache, Val{as_tps}(), 3)
+
+  if iscoasting(twi)
+    return phi3 #/ beta
+  end 
+
+  # Else use the approximation of Etienne
+  # B3[5,6]*sin(phi[3]*2*pi)
+  if !haskey(cache.smatrix6, :B3) && !haskey(cache.map, :B3)
+    _B3(j, twi, cache, Val{as_tps}())
+  end
+  if haskey(cache.smatrix6, :B3) # Then no parameter dependence
+    return cache.smatrix6[:B3][5,6]*sin(2*pi*phi3) / beta
+  elseif haskey(cache.map, :B3) # Parameter dependence
+    B3 = cache.map[:B3]
+    slip = NNF.factor_out(B3.v[5], 6) / beta
+    return as_tps ? slip : scalar(slip)
+  else
+    throwunreachable()
+  end
+end
 
 @inline function _linear_dispersion(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
   if k == 1
@@ -496,6 +623,14 @@ end
     throwunreachable()
   end
 end
+
+@inline _zx( j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 1)
+@inline _zpx(j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 2)
+@inline _zy( j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 3)
+@inline _zpy(j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 4)
+
+
+
 #=
 @inline function _nonlin_dispersion(j, twi, cache, ::Val{as_tps}, k, order) where {as_tps}
   if !iscoasting(twi)
