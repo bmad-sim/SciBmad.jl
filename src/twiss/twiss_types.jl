@@ -35,12 +35,13 @@ nhvars(twi::TwissInternal) = NNF.nhvars(twi.fac[1].a)
 iscoasting(twi::TwissInternal) = NNF.iscoasting(twi.fac[1].a)
 maxord(twi::TwissInternal) = NNF.maxord(twi.fac[1].a)
 
-struct TwissCache{M,T,F,SM,SV}
+struct TwissCache{M,T,F,SM4,SM6}
  map::M
  tps::T
  float::F
- smatrix4::SM
- smatrix6::SV
+ smatrix4::SM4
+ smatrix6::SM6
+ persistent_map::M
 end
 
 function build_cache(::Type{T}, n=10) where {T}

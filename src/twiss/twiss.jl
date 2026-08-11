@@ -86,7 +86,7 @@ function twiss(
   v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
 
   # The lattice functions to compute
-  cols = [_beta_1,
+  cols = [_beta1,
 _gammac,
 _c11,
 _c12, 
@@ -379,7 +379,7 @@ function _twiss_cache_make_callback(_step_save, _in_body_coordinates, _maps)
     _cur_step_save_idx = 1
   end
   let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx), in_body_coordinates=_in_body_coordinates
-    return (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+    return (i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
       curstep[] += 1
       if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]] # Store the current map
         map = maps[cur_step_save_idx[]]
@@ -451,7 +451,7 @@ function _twiss_make_callback(_step_save, initial_step_save_idx, _in_body_coordi
     phi1=_phi1, phi2=_phi2, phi3_or_slip=_phi3_or_slip, damp=_damp, damp1=_damp1, damp2=_damp2, damp3=_damp3,
     curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(initial_step_save_idx), map=_map
     
-    return (i, coords, cur_s, cur_t_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+    return (i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
       curstep[] += 1
       if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]]
         if !in_body_coordinates
