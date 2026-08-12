@@ -1,79 +1,60 @@
-#=
-const TENG_EDWARDS = [      
-  phi1    ,
-  beta1   ,
-  alpha1  ,
-  phi2    ,
-  beta2   ,
-  alpha2  ,
-  phi3    , # Will be slip if coasting
-  gammac  ,
-  c11     ,
-  c12     ,
-  c21     ,
-  c22     ,
-  x       ,
-  px      ,
-  y       ,
-  py      ,
-  z       ,
-  pz      ,
-  dx_1    ,
-  dpx_1   ,
-  dy_1    ,
-  dpy_1   ,
-  dz_1    ,
-  dpz_1   ,
+const TENG_EDWARDS_COAST = [   
+  "beta1"  ,
+  "phi1"   ,
+  "dx"     ,
+  "x"      ,
+  "beta2"  ,
+  "phi2"   ,
+  "dy"     ,
+  "y"      ,
+  "slip"   ,
+  "alpha1" ,
+  "alpha2" ,
+  "px"     ,
+  "py"     ,
+  "z"      ,
+  "pz"     ,
+  "dpx"    ,
+  "dpy"    ,
+  "gammac" ,
+  "c11"    ,
+  "c12"    ,
+  "c21"    ,
+  "c22"    ,
 ]
 
-const DE_MOIVRE = [      
-  phi1    ,
-  beta1   ,
-  alpha1  ,
-  phi2    ,
-  beta2   ,
-  alpha2  ,
-  phi3    , # Will be slip if coasting
-  gammac  ,
-  c11     ,
-  c12     ,
-  c21     ,
-  c22     ,
-  x       ,
-  px      ,
-  y       ,
-  py      ,
-  z       ,
-  pz      ,
-  dx_1    ,
-  dpx_1   ,
-  dy_1    ,
-  dpy_1   ,
-  dz_1    ,
-  dpz_1   ,
+const TENG_EDWARDS = [   
+  "beta1"  ,
+  "phi1"   ,
+  "dx"     ,
+  "x"      ,
+  "beta2"  ,
+  "phi2"   ,
+  "dy"     ,
+  "y"      ,
+  "slip"   ,
+  "phi3"   ,
+  "alpha1" ,
+  "alpha2" ,
+  "px"     ,
+  "py"     ,
+  "z"      ,
+  "pz"     ,
+  "dpx"    ,
+  "dpy"    ,
+  "gammac" ,
+  "c11"    ,
+  "c12"    ,
+  "c21"    ,
+  "c22"    ,
 ]
 
-const SPIN = [
-  nx    ,
-  ny    ,
-  nz    ,
-  dnx_1 , # dnx/ddelta
-  dny_1 , # dny/ddelta
-  dnz_1 , # dnz/ddelta
-  n     , # ISF as a Taylor series
-]
-=#
-
-# Amplitude dependent terms:
-# dq_2 , dq_111
+base_cols::Vector{String} = ["index", "name", "kind", "s"]
 
 function twiss(
   bl::Beamline; 
 
-  # High level customizer kwargs
-  at::Union{Colon, Vector}  = :,
-  de_moivre::Bool           = false,
-  spin::Bool                = false,
+  at::Union{Colon, AbstractVector}  = :,
   in_body_coordinates::Bool = false, 
 
   # GTPSA truncation order sets:
@@ -85,28 +66,36 @@ function twiss(
   delta0::Number = 0.,
   v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
 
-  # The lattice functions to compute
-  cols = [_beta1,
-_gammac,
-_c11,
-_c12, 
-_c21, 
-_c22, 
-_Vi,
-_N,
-_slip], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
-
   start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
   a_initial::Union{Nothing,DAMap}   = nothing, # TODO
   damping::Union{Nothing,Bool} = nothing, # nothing = auto-detect from a_initial
 
-  symplectic_tol=1e-8, # Tolerance below which to include damping
-  )
+  # The lattice functions to compute
+  spin::Bool      = isnothing(a_initial) ? false : !isnothing(a_initial.q),
+  base_cols       = SciBmad.base_cols,
+  cols            = nothing, # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
 
+  symplectic_tol = 1e-8, # Tolerance below which to include damping
+  )
   if isnothing(start)
     v0_and_coast = co_and_coast(bl, v0)
   else
     v0_and_coast = (v0, false) # Always do 6D if open
+  end
+
+  if isnothing(cols)
+    if v0_and_coast[2]
+      cols = TENG_EDWARDS_COAST
+    else
+      cols = TENG_EDWARDS
+    end
+  end
+
+  if spin
+    spincols = ["n0x", "n0y", "n0z", "dnx_1", "dny_1", "dnz_1"]
+    for spincol in spincols
+      spincol in cols || push!(cols, spincol)
+    end
   end
 
   if isnothing(GTPSA_descriptor)
@@ -135,7 +124,6 @@ _slip], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[]).
     GTPSA_descriptor = GTPSA.getdesc(first(a_initial.v))
   end
 
-
   init = TI.InitGTPSA{GTPSA.Dynamic,Descriptor}(; dynamic_descriptor=GTPSA_descriptor)
 
   # Check if output are TPSA in parameters (delta excluded)
@@ -146,7 +134,7 @@ _slip], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[]).
   end
 
   # Assemble locations. Note that start and end of the Beamline are ALWAYS included
-  s, names, idxs, step_save = _twiss_assemble_locations(bl, at)
+  s, names, kinds, idxs, step_save = _twiss_assemble_locations(bl, at)
   beta_gamma_ref = Vector{Float64}(undef, length(s)) # Store the reference energy at each step
   t_ref = Vector{Float64}(undef, length(s)) # Store the reference time at each step
 
@@ -187,14 +175,14 @@ _slip], # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[]).
     fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
   end
 
-  twi = TwissInternal(s, names, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes)
+  twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes)
 
   # Finally, construct the summary and the table (with provided columns)
   # And post-process with the provided columns
   # Need to do one row first then can construct the DataFrame
-  table = _twiss_table(cols, twi)
+  table = _twiss_table(vcat(base_cols, cols), twi)
 
-  return table, r_and_tunes[2]
+  return Twiss(Dict{Symbol,Nothing}(),table)#, r_and_tunes[2]
 end
 
 function co_and_coast(bl, v0)
@@ -214,6 +202,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   
   stmp = Vector{Any}(undef, 0)
   names = Vector{String}(undef, 0)
+  kinds = Vector{String}(undef, 0)
   idxs = Vector{Int}(undef, 0)
   step_save = Vector{Int}(undef, 0)
 
@@ -222,6 +211,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   n_ele = length(bl.line)
   sizehint!(stmp, n_ele+1)
   sizehint!(names, n_ele+1)
+  sizehint!(kinds, n_ele+1)
   sizehint!(idxs, n_ele+1)
   sizehint!(step_save, n_ele)
 
@@ -231,6 +221,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
     idx = ((ele.BeamlineParams)::BeamlineParams).beamline_index
     up = (ele.UniversalParams)::UniversalParams
     name = up.name
+    kind = up.kind
     tm = up.tracking_method
     L = up.L
     n_steps, ds_step = BeamTracking.find_steps(tm, L)
@@ -241,6 +232,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
       if any(x -> x[1] <= scur < x[2], at_ranges)
         push!(stmp, scur)
         push!(names, name)
+        push!(kinds, kind)
         push!(idxs, idx)
         push!(step_save, step_cur)
         found = true
@@ -257,6 +249,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
         ))
         push!(stmp, scur - ds_step*n_steps)
         push!(names, name)
+        push!(kinds, kind)
         push!(idxs, idx)
         push!(step_save, step_cur-n_steps)
         #step_cur += 1
@@ -265,14 +258,15 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
 
   # Always store the last step
   push!(stmp, scur)
-  push!(names, "END OF BEAMLINE")
+  push!(names, "END")
+  push!(kinds, "N/A")
   push!(idxs, -1)
   push!(step_save, step_cur)
 
   # Now resolve type of s:
   s = typeof(scur).(stmp)
 
-  return s, names, idxs, step_save
+  return s, names, kinds, idxs, step_save
 end
 
 function _check_cachable(GTPSA_descriptor)

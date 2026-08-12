@@ -17,7 +17,8 @@ using Reexport
         OrderedCollections,
         StaticArrays,
         ForwardDiff,
-        DelimitedFiles
+        DelimitedFiles,
+        PrettyTables
   @reexport using ADTypes      
   @reexport using BeamTracking
   @reexport using Beamlines
@@ -45,6 +46,7 @@ include("twiss/twiss_types.jl")
 include("twiss/twiss_operators.jl")
 include("twiss/twiss_table.jl")
 include("twiss/twiss.jl")
+include("twiss/twiss_map.jl")
 #include("twiss/twiss_table.jl")
 #include("twiss/twiss_concat.jl")
 #include("twiss/twiss_noconcat.jl")

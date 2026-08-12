@@ -1,9 +1,9 @@
-function _twiss_table(cols, twi)
+function _twiss_table(colnames, twi)
+  cols, collabels = _twiss_map(colnames)
   ncols = length(cols)
   nrows = length(twi.s)
   row1 = Vector{Any}(undef, ncols)
-  colnames = nameof.(cols)
-  
+
   map_cache = build_cache(typeof(twi.fac[1].a))
   tps_cache = build_cache(typeof(first(twi.fac[1].a.v)))
   float_cache = build_cache(Float64)
@@ -13,7 +13,6 @@ function _twiss_table(cols, twi)
   persistent_map_cache = build_cache(typeof(twi.fac[1].a))
 
   cache = TwissCache(map_cache, tps_cache, float_cache, smatrix4_cache, smatrix6_cache, persistent_map_cache)
-
   for i in 1:ncols
     col = cols[i]
     row1[i] = @noinline col(1, twi, cache, Val{false}())
@@ -21,6 +20,9 @@ function _twiss_table(cols, twi)
   
   # Now construct DataFrame
   table = DataFrame([Vector{typeof(row1[i])}(undef, nrows) for i in 1:ncols], colnames)
+  for i in 1:ncols
+    colmetadata!(table, colnames[i], "label", collabels[i]; style=:note)
+  end
   table[1,:] = row1
 
   # enter type stable loop

@@ -17,10 +17,19 @@ function Base.getproperty(tw::Twiss, s::Symbol)
   end
 end
 
+function Base.show(io::IO, tw::Twiss)
+  df = tw.table
+  labels = [something(DataFrames.colmetadata(df, col, "label", nothing), string(col)) for col in names(df)]
+  show(io, rename(df, labels); eltypes=false)
+  #headers = [something(DataFrames.colmetadata(df, col, "label", nothing), string(col)) for col in names(df)]
+  #pretty_table(df; column_labels = headers)
+end
+
 struct TwissInternal{F,P,D,R}
   s::Vector{Float64}
-  names::Vector{String}
-  idxs::Vector{Int}
+  name::Vector{String}
+  kind::Vector{String}
+  index::Vector{Int}
   beta_gamma_ref::Vector{Float64}
   t_ref::Vector{Float64}
   fac::F

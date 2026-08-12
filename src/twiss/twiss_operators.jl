@@ -1,5 +1,10 @@
 throwunreachable() = error("Unreachable error hit, please submit a minimal working example")
 
+@inline _index(j, twi, cache, ::Val{as_tps}) where {as_tps} = twi.index[j]
+@inline _name(j, twi, cache, ::Val{as_tps})  where {as_tps} = twi.name[j]
+@inline _kind(j, twi, cache, ::Val{as_tps})  where {as_tps} = twi.kind[j]
+@inline _s(j, twi, cache, ::Val{as_tps})     where {as_tps} = twi.s[j]
+
 #NOTE: the H's and B's essentially define the structure of the lattice functions (LFs)
 # i.e. if cache.smatrix6 has the H matrix, then all downstream LFs can safely 
 # assume that there is no coasting AND no parameter dependence.
@@ -421,7 +426,7 @@ end
   if haskey(cache.float, sym)
     return cache.float[sym]
   elseif haskey(cache.tps, sym)
-    return as_tps ? cache.tps[sym] : scalar(cache.tps)
+    return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
   end
 
   o = twi.fac[j].a0.v[k]
