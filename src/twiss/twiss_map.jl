@@ -1,9 +1,3 @@
-# If periodic + coasting: slip
-# if periodic + not coasting: phi3, slip
-# If open: always phi3, slip
-
-
-
 const _TWISS_FCN_MAP = Dict{String,Function}(
   "index"  => _index  ,
   "name"   => _name   ,
@@ -27,6 +21,10 @@ const _TWISS_FCN_MAP = Dict{String,Function}(
   "dpx"    => _dpx    ,
   "dy"     => _dy     ,
   "dpy"    => _dpy    ,
+  "dx_1"   => _dx     ,
+  "dpx_1"  => _dpx    ,
+  "dy_1"   => _dy     ,
+  "dpy_1"  => _dpy    ,
   "zx"     => _zx     ,
   "zpx"    => _zpx    ,
   "zy"     => _zy     ,
@@ -51,62 +49,103 @@ const _TWISS_FCN_MAP = Dict{String,Function}(
 )
 
 
-const _TWISS_COLLABEL_MAP = Dict{String,String}(
-  "index"  => "index"     ,
-  "name"   => "name"      ,
-  "kind"   => "kind"      ,
-  "s"      => "s\n[m]"     ,    
-  "beta1"  => "beta1\n[m]" ,
-  "beta2"  => "beta2\n[m]" ,
-  "alpha1" => "alpha1\n[1]",
-  "alpha2" => "alpha2\n[1]",
-  "phi1"   => "phi1\n[2π]" ,
-  "phi2"   => "phi2\n[2π]" ,
-  "phi3"   => "phi3\n[2π]" ,
-  "slip"   => "slip\n[m]"  ,
-  "x"      => "x\n[m]"     ,
-  "px"     => "px\n[1]"    ,
-  "y"      => "y\n[m]"     ,
-  "py"     => "py\n[1]"    ,
-  "z"      => "z\n[m]"     ,
-  "pz"     => "pz\n[1]"    ,
-  "dx"     => "dx\n[m]"    ,
-  "dpx"    => "dpx\n[1]"   ,
-  "dy"     => "dy\n[m]"    ,
-  "dpy"    => "dpy\n[1]"   ,
-  "zx"     => "zx\n[1]"    ,
-  "zpx"    => "zpx\n[m⁻¹]" ,
-  "zy"     => "zy\n[1]"    ,
-  "zpy"    => "zpy\n[m⁻¹]" ,
+const _TWISS_COLUNIT_MAP = Dict{String,String}(
+  "index"  => ""      ,
+  "name"   => ""      ,
+  "kind"   => ""      ,
+  "s"      => "[m]"   ,    
+  "beta1"  => "[m]"   ,
+  "beta2"  => "[m]"   ,
+  "alpha1" => "[1]"   ,
+  "alpha2" => "[1]"   ,
+  "phi1"   => "[2π]"  ,
+  "phi2"   => "[2π]"  ,
+  "phi3"   => "[2π]"  ,
+  "slip"   => "[m]"   ,
+  "x"      => "[m]"   ,
+  "px"     => "[1]"   ,
+  "y"      => "[m]"   ,
+  "py"     => "[1]"   ,
+  "z"      => "[m]"   ,
+  "pz"     => "[1]"   ,
+  "dx"     => "[m]"   ,
+  "dpx"    => "[1]"   ,
+  "dy"     => "[m]"   ,
+  "dpy"    => "[1]"   ,
+  "dx_1"   => "[m]"   ,
+  "dpx_1"  => "[1]"   ,
+  "dy_1"   => "[m]"   ,
+  "dpy_1"  => "[1]"   ,
+  "zx"     => "[1]"   ,
+  "zpx"    => "[m⁻¹]" ,
+  "zy"     => "[1]"   ,
+  "zpy"    => "[m⁻¹]" ,
   #"nx"     => _nx     ,
   #"ny"     => _ny     ,
   #"nz"     => _nz     ,
   #"n"      => _n      ,
-  "N"      =>  "N"        ,
-  "Vi"     =>  "Vi"       ,
-  "c11"    =>  "c11"      ,
-  "c12"    =>  "c12"      ,
-  "c21"    =>  "c21"      ,
-  "c22"    =>  "c22"      ,
-  "gammac" =>  "gammac"   ,
-  "H1"     =>  "H1"       ,
-  "H2"     =>  "H2"       ,
-  "H3"     =>  "H3"       ,
-  "B1"     =>  "B1"       ,
-  "B2"     =>  "B2"       ,
-  "B3"     =>  "B3"       ,
+  "N"      =>  ""  ,
+  "Vi"     =>  ""  ,
+  "c11"    =>  ""  ,
+  "c12"    =>  ""  ,
+  "c21"    =>  ""  ,
+  "c22"    =>  ""  ,
+  "gammac" =>  ""  ,
+  "H1"     =>  ""  ,
+  "H2"     =>  ""  ,
+  "H3"     =>  ""  ,
+  "B1"     =>  ""  ,
+  "B2"     =>  ""  ,
+  "B3"     =>  ""  ,
 )
 
+@inline function _chrom_derivative(cfcn, order, j, twi, cache, ::Val{as_tps}) where {as_tps}
+  if !iscoasting(twi)
+    inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
+    error("
+      To compute d$(inverted[fcn]))_$(order) (which requires higher order derivatives in δ), 
+      beam must be coasting (no longitudinal oscillations).
+    ")
+  end
+
+  x = cfcn(j, twi, cache, Val{true}()) # as_tps=true !!!!!
+  if as_tps
+    for _ in 1:order
+      x = TI.deriv(x, 6)            
+    end
+    return x
+  else
+    mono = zeros(UInt8, 6)
+    mono[end] = order
+    return factorial(order-1)*TI.getm(x, mono)
+  end
+end
 
 # things like RDTs and arbitrary-order derivatives must be handled specially
 
 function _twiss_map(cols)
   fcn = Vector{Function}(undef, length(cols))
-  collabel = Vector{String}(undef, length(cols))
+  unit = Vector{String}(undef, length(cols))
   for i in 1:length(cols)
     col = cols[i]
-    fcn[i] = col in keys(_TWISS_FCN_MAP) ? _TWISS_FCN_MAP[col] : error()
-    collabel[i] = col in keys(_TWISS_COLLABEL_MAP) ? _TWISS_COLLABEL_MAP[col] : error()
+    fcn[i] = _twiss_map_fcn(col) #col in keys(_TWISS_FCN_MAP) ? _TWISS_FCN_MAP[col] : error()
+    unit[i] = col in keys(_TWISS_COLUNIT_MAP) ? _TWISS_COLUNIT_MAP[col] : ""
   end
-  return fcn, collabel 
+  return fcn, unit
+end
+
+function _twiss_map_fcn(col)
+  if haskey(_TWISS_FCN_MAP, col)
+    return _TWISS_FCN_MAP[col]
+  end
+
+  pattern = Regex("^d(" * join(escape_string.(keys(_TWISS_FCN_MAP)), "|") * ")(?:_([1-9]))?\$")
+  m = match(pattern, col)
+  if !isnothing(m)
+    ccol = m.captures[1]
+    order = isnothing(m.captures[2]) ? 1 : parse(Int, m.captures[2])
+    let cfcn=_TWISS_FCN_MAP[ccol], order=order
+      return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, j, twi, cache, vas_tps)
+    end
+  end
 end

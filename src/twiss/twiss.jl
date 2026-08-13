@@ -177,12 +177,12 @@ function twiss(
 
   twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes)
 
-  # Finally, construct the summary and the table (with provided columns)
+  # Finally, construct the summary and the dataframe (with provided columns)
   # And post-process with the provided columns
   # Need to do one row first then can construct the DataFrame
-  table = _twiss_table(vcat(base_cols, cols), twi)
+  df = _twiss_df(vcat(base_cols, cols), twi)
 
-  return Twiss(Dict{Symbol,Nothing}(),table)#, r_and_tunes[2]
+  return Twiss(Dict{Symbol,Nothing}(), df)#, r_and_tunes[2]
 end
 
 function co_and_coast(bl, v0)
@@ -259,7 +259,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   # Always store the last step
   push!(stmp, scur)
   push!(names, "END")
-  push!(kinds, "N/A")
+  push!(kinds, "-"^3)
   push!(idxs, -1)
   push!(step_save, step_cur)
 

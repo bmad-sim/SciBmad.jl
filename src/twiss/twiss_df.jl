@@ -1,5 +1,5 @@
-function _twiss_table(colnames, twi)
-  cols, collabels = _twiss_map(colnames)
+function _twiss_df(colnames, twi)
+  cols, colunits = _twiss_map(colnames)
   ncols = length(cols)
   nrows = length(twi.s)
   row1 = Vector{Any}(undef, ncols)
@@ -19,21 +19,23 @@ function _twiss_table(colnames, twi)
   end
   
   # Now construct DataFrame
-  table = DataFrame([Vector{typeof(row1[i])}(undef, nrows) for i in 1:ncols], colnames)
-  for i in 1:ncols
-    colmetadata!(table, colnames[i], "label", collabels[i]; style=:note)
-  end
-  table[1,:] = row1
+  df = DataFrame([Vector{typeof(row1[i])}(undef, nrows) for i in 1:ncols], colnames)
 
-  # enter type stable loop
-  return _twiss_table_loop(table, cols, twi, cache)
+  # Add unit information
+  for i in 1:ncols
+    colmetadata!(df, colnames[i], "unit", colunits[i]; style=:note)
+  end
+  df[1,:] = row1
+
+  # enter type sdf loop
+  return _twiss_df_loop(df, cols, twi, cache)
 end
 
-function _twiss_table_loop(table, cols, twi, cache)
-  nrows, ncols = size(table)
+function _twiss_df_loop(df, cols, twi, cache)
+  nrows, ncols = size(df)
   for row in 2:nrows
     for col in 1:ncols
-      table[row,col] = @noinline (cols[col])(row, twi, cache, Val{false}())
+      df[row,col] = @noinline (cols[col])(row, twi, cache, Val{false}())
       empty!(cache.map)
       empty!(cache.tps)
       empty!(cache.float)
@@ -41,6 +43,6 @@ function _twiss_table_loop(table, cols, twi, cache)
       empty!(cache.smatrix6)
     end
   end
-  return table
+  return df
 end
 

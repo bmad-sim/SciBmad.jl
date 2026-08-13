@@ -633,14 +633,54 @@ end
 @inline _zpx(j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 2)
 @inline _zy( j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 3)
 @inline _zpy(j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 4)
-
-
-
 #=
 @inline function _nonlin_dispersion(j, twi, cache, ::Val{as_tps}, k, order) where {as_tps}
   if !iscoasting(twi)
     error("Higher-order dispersion can only be calculated with coasting beam (no longitudinal oscillations)")
   end
+  if order == 1
+    error("Use _linear_dispersion to compute the first order dispersion")
+  end
 
+  if k == 1
+    sym = :dx
+    osym = :x
+  elseif k == 2
+    sym = :dpx
+    osym = :px
+  elseif k == 3
+    sym = :dy
+    osym = :y
+  elseif k == 4
+    sym = :dpy
+    osym = :py
+  else
+    error("Linear dispersion index must be between 1 and 4")
+  end
+
+  no6 = no6(twi)
+  if order > no6
+    error("Unable to compute $(String(sym))_$(order): order in delta is only $no6. Try increasing `chrom`.")
+  end
+
+  if !haskey(cache.tps, sym) # run dispersion calculation
+    _linear_dispersion(j, twi, cache, Val{as_tps}(), k)
+  end
+
+  dk = cache.tps[sym] # dispersion as TPS in delta
+  if as_tps
+    for _ in 2:order
+      dk = TI.deriv(dk, 6)            
+    end
+    return dk
+  else
+    mono = zeros(UInt8, 6)
+    mono[end] = order-1
+    return factorial(order-1)*TI.getm(dk, mono)
+  end
 end
+@inline _dx_2( j, twi, cache, ::Val{as_tps}) where {as_tps} = _linear_dispersion(j, twi, cache, Val{as_tps}(), 1)
+@inline _dpx_2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _linear_dispersion(j, twi, cache, Val{as_tps}(), 2)
+@inline _dy_2( j, twi, cache, ::Val{as_tps}) where {as_tps} = _linear_dispersion(j, twi, cache, Val{as_tps}(), 3)
+@inline _dpy_2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _linear_dispersion(j, twi, cache, Val{as_tps}(), 4)
 =#

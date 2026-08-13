@@ -1,28 +1,33 @@
 struct Twiss{T}
   summary::Dict{Symbol,T}
-  table::DataFrame  # s-dependent quantities
+  df::DataFrame  # s-dependent quantities
 end
 
 function Base.getproperty(tw::Twiss, s::Symbol)
-  if s == :table
-    return getfield(tw, :table)
+  if s == :df
+    return getfield(tw, :df)
   elseif s == :summary
     return getfield(tw, :summary)
   else
+    summary = getfield(tw, :summary)
+    df = getfield(tw, :df)
     if haskey(summary, s)
       return summary[s]
+    elseif hasproperty(df, s)
+      return getproperty(df, s)
     else
       error("Twiss summary does not have $s")
     end
   end
 end
 
+Base.propertynames(tw::Twiss) = vcat(keys(tw.summary), propertynames(tw.df))
+
 function Base.show(io::IO, tw::Twiss)
-  df = tw.table
-  labels = [something(DataFrames.colmetadata(df, col, "label", nothing), string(col)) for col in names(df)]
-  show(io, rename(df, labels); eltypes=false)
-  #headers = [something(DataFrames.colmetadata(df, col, "label", nothing), string(col)) for col in names(df)]
-  #pretty_table(df; column_labels = headers)
+  # Note: copy-pasted
+  df = tw.df
+  units = [something(DataFrames.colmetadata(df, col, "unit", nothing), "") for col in names(df)]
+  show(io, df; eltypes=true, column_labels = [names(df), units],)
 end
 
 struct TwissInternal{F,P,D,R}
@@ -48,6 +53,7 @@ nvars(twi::TwissInternal) = NNF.nvars(twi.fac[1].a)
 nhvars(twi::TwissInternal) = NNF.nhvars(twi.fac[1].a)
 iscoasting(twi::TwissInternal) = NNF.iscoasting(twi.fac[1].a)
 maxord(twi::TwissInternal) = NNF.maxord(twi.fac[1].a)
+no6(twi::TwissInternal) = unsafe_load(unsafe_load(GTPSA.getdesc(first(twi.fac[1].a)).desc).no, 6)
 
 struct TwissCache{M,T,F,SM4,SM6}
  map::M
