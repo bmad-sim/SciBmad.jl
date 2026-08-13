@@ -1,4 +1,4 @@
-function _twiss_df(colnames, twi)
+function _twiss_df(colnames, twi, ::Val{as_taylor_series}) where {as_taylor_series}
   cols, colunits = _twiss_map(colnames)
   ncols = length(cols)
   nrows = length(twi.s)
@@ -15,7 +15,7 @@ function _twiss_df(colnames, twi)
   cache = TwissCache(map_cache, tps_cache, float_cache, smatrix4_cache, smatrix6_cache, persistent_map_cache)
   for i in 1:ncols
     col = cols[i]
-    row1[i] = @noinline col(1, twi, cache, Val{false}())
+    row1[i] = @noinline col(1, twi, cache, Val{as_taylor_series}())
   end
   
   # Now construct DataFrame
@@ -28,14 +28,14 @@ function _twiss_df(colnames, twi)
   df[1,:] = row1
 
   # enter type sdf loop
-  return _twiss_df_loop(df, cols, twi, cache)
+  return _twiss_df_loop(df, cols, twi, cache, Val{as_taylor_series}())
 end
 
-function _twiss_df_loop(df, cols, twi, cache)
+function _twiss_df_loop(df, cols, twi, cache, ::Val{as_taylor_series}) where {as_taylor_series}
   nrows, ncols = size(df)
   for row in 2:nrows
     for col in 1:ncols
-      df[row,col] = @noinline (cols[col])(row, twi, cache, Val{false}())
+      df[row,col] = @noinline (cols[col])(row, twi, cache, Val{as_taylor_series}())
       empty!(cache.map)
       empty!(cache.tps)
       empty!(cache.float)

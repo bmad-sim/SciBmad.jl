@@ -29,10 +29,12 @@ const _TWISS_FCN_MAP = Dict{String,Function}(
   "zpx"    => _zpx    ,
   "zy"     => _zy     ,
   "zpy"    => _zpy    ,
-  #"nx"     => _nx     ,
-  #"ny"     => _ny     ,
-  #"nz"     => _nz     ,
-  #"n"      => _n      ,
+  "nx"     => _nx     ,
+  "ny"     => _ny     ,
+  "nz"     => _nz     ,
+  "n0x"     => _n0x     ,
+  "n0y"     => _n0y     ,
+  "n0z"     => _n0z     ,
   "N"      => _N      ,
   "Vi"     => _Vi     ,
   "c11"    => _c11    ,
@@ -80,10 +82,12 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "zpx"    => "[m⁻¹]" ,
   "zy"     => "[1]"   ,
   "zpy"    => "[m⁻¹]" ,
-  #"nx"     => _nx     ,
-  #"ny"     => _ny     ,
-  #"nz"     => _nz     ,
-  #"n"      => _n      ,
+  "nx"     =>  ""     ,
+  "ny"     =>  ""     ,
+  "nz"     =>  ""     ,
+  "n0x"     =>  ""     ,
+  "n0y"     =>  ""     ,
+  "n0z"     =>  ""     ,
   "N"      =>  ""  ,
   "Vi"     =>  ""  ,
   "c11"    =>  ""  ,
@@ -103,12 +107,22 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   if !iscoasting(twi)
     inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
     error("
-      To compute d$(inverted[fcn]))_$(order) (which requires higher order derivatives in δ), 
+      To compute d$(inverted[cfcn]))_$(order) (which requires higher order derivatives in δ), 
       beam must be coasting (no longitudinal oscillations).
     ")
   end
 
   x = cfcn(j, twi, cache, Val{true}()) # as_tps=true !!!!!
+  if !(TI.is_tps_type(typeof(x)) isa TI.IsTPSType)
+    inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
+    error("
+      Chromatic derivative-getting is currently only compatible with scalar-valued outputs, and 
+      $(inverted[cfcn]) is a matrix/map.
+
+      Try setting the `twiss` keyword argument `as_taylor_series=true` and include \"$(inverted[cfcn])\" 
+      in the `cols`. The desired chromatic derivative can then be extracted
+    ")
+  end
   if as_tps
     for _ in 1:order
       x = TI.deriv(x, 6)            
@@ -148,4 +162,5 @@ function _twiss_map_fcn(col)
       return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, j, twi, cache, vas_tps)
     end
   end
+  error("Unrecognized input col: $col")
 end

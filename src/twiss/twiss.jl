@@ -73,7 +73,8 @@ function twiss(
   # The lattice functions to compute
   spin::Bool      = isnothing(a_initial) ? false : !isnothing(a_initial.q),
   base_cols       = SciBmad.base_cols,
-  cols            = nothing, # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],
+  cols            = nothing, # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],\
+  as_taylor_series::Union{Nothing,Bool} = nothing, # nothing = auto-select (if nn > 6, true, else false)
 
   symplectic_tol = 1e-8, # Tolerance below which to include damping
   )
@@ -127,10 +128,12 @@ function twiss(
   init = TI.InitGTPSA{GTPSA.Dynamic,Descriptor}(; dynamic_descriptor=GTPSA_descriptor)
 
   # Check if output are TPSA in parameters (delta excluded)
-  if TI.ndiffs(init) > 6
-    parametric = Val{true}()
-  else
-    parametric = Val{false}()
+  if isnothing(as_taylor_series)
+    if TI.ndiffs(init) > 6
+      as_taylor_series = true
+    else
+      as_taylor_series = false
+    end
   end
 
   # Assemble locations. Note that start and end of the Beamline are ALWAYS included
@@ -180,7 +183,7 @@ function twiss(
   # Finally, construct the summary and the dataframe (with provided columns)
   # And post-process with the provided columns
   # Need to do one row first then can construct the DataFrame
-  df = _twiss_df(vcat(base_cols, cols), twi)
+  df = _twiss_df(vcat(base_cols, cols), twi, Val{as_taylor_series}())
 
   return Twiss(Dict{Symbol,Nothing}(), df)#, r_and_tunes[2]
 end
@@ -489,8 +492,12 @@ function _twiss_make_callback(_step_save, initial_step_save_idx, _in_body_coordi
   end
 end
 
-function _twiss_make_base_columns(n, ::T, phase, damp) where {T}
-  fac = Vector{@NamedTuple{a0::T, a1::T, a2::T, a::T, r::T}}(undef, n)
+function _twiss_make_base_columns(n, a::T, phase, damp) where {T}
+  if !isnothing(a.q)
+    fac = Vector{@NamedTuple{as::T, a0::T, a1::T, a2::T, a::T, r::T}}(undef, n)
+  else
+    fac = Vector{@NamedTuple{a0::T, a1::T, a2::T, a::T, r::T}}(undef, n)
+  end
   phi1 = Vector{eltype(phase)}(undef, n)
   phi2 = Vector{eltype(phase)}(undef, n)
   phi3_or_slip = Vector{eltype(phase)}(undef, n) 
