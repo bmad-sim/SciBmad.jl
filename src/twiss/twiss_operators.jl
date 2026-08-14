@@ -633,54 +633,81 @@ end
 @inline _zpx(j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 2)
 @inline _zy( j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 3)
 @inline _zpy(j, twi, cache, ::Val{as_tps}) where {as_tps} = _zeta(j, twi, cache, Val{as_tps}(), 4)
-#=
-@inline function _nonlin_dispersion(j, twi, cache, ::Val{as_tps}, k, order) where {as_tps}
-  if !iscoasting(twi)
-    error("Higher-order dispersion can only be calculated with coasting beam (no longitudinal oscillations)")
-  end
-  if order == 1
-    error("Use _linear_dispersion to compute the first order dispersion")
-  end
 
+@inline function _nk(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
   if k == 1
-    sym = :dx
-    osym = :x
+    sym = :nx
   elseif k == 2
-    sym = :dpx
-    osym = :px
+    sym = :ny
   elseif k == 3
-    sym = :dy
-    osym = :y
-  elseif k == 4
-    sym = :dpy
-    osym = :py
+    sym = :nz
   else
-    error("Linear dispersion index must be between 1 and 4")
+    error("ISF index must be between 1 and 3")
   end
 
-  no6 = no6(twi)
-  if order > no6
-    error("Unable to compute $(String(sym))_$(order): order in delta is only $no6. Try increasing `chrom`.")
+  if isnothing(twi.fac[j].a.q)
+    error("Unable to compute the invariant spin field n: please set `spin=true`")
   end
 
-  if !haskey(cache.tps, sym) # run dispersion calculation
-    _linear_dispersion(j, twi, cache, Val{as_tps}(), k)
-  end
-
-  dk = cache.tps[sym] # dispersion as TPS in delta
-  if as_tps
-    for _ in 2:order
-      dk = TI.deriv(dk, 6)            
+  if !haskey(cache.tps, sym)
+    if !haskey(cache.persistent_map, :i2)
+      i2 = zero(twi.fac[j].a)
+      NNF.setray!(i2.v; v_matrix=I)
+      TI.seti!(i2.q.q2, 1, 0)
+      cache.persistent_map[:i2] = i2
+    else
+      i2 = cache.persistent_map[:i2]
     end
-    return dk
-  else
-    mono = zeros(UInt8, 6)
-    mono[end] = order-1
-    return factorial(order-1)*TI.getm(dk, mono)
+
+    a = twi.fac[j].a
+    ai = inv(a)
+
+    n = a ∘ i2 ∘ ai
+    cache.tps[:nx] = n.q.q1
+    cache.tps[:ny] = n.q.q2
+    cache.tps[:nz] = n.q.q3
   end
+
+  return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
 end
-@inline _dx_2( j, twi, cache, ::Val{as_tps}) where {as_tps} = _linear_dispersion(j, twi, cache, Val{as_tps}(), 1)
-@inline _dpx_2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _linear_dispersion(j, twi, cache, Val{as_tps}(), 2)
-@inline _dy_2( j, twi, cache, ::Val{as_tps}) where {as_tps} = _linear_dispersion(j, twi, cache, Val{as_tps}(), 3)
-@inline _dpy_2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _linear_dispersion(j, twi, cache, Val{as_tps}(), 4)
-=#
+
+@inline function _n0k(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
+  if k == 1
+    osym = :nx
+  elseif k == 2
+    osym = :ny
+  elseif k == 3
+    osym = :nz
+  else
+    error("ISF index must be between 1 and 3")
+  end
+
+  if !haskey(cache.tps, osym)
+    n0k = _nk(j, twi, cache, Val{as_tps}(), k)
+  else
+    n0k = cache.tps[osym]
+  end
+
+  if !as_tps
+    return scalar(n0k)
+  end
+
+  # Get parameter-dependent part only
+  if !haskey(cache.persistent_map, :tmp1)
+    cache.persistent_map[:tmp1] = zero(twi.fac[j].a)
+  end
+  tmp1 = cache.persistent_map[:tmp1]
+  NNF.clear!(tmp1)
+  TI.seti!(tmp1.q.q0, 1, 0)
+  return n0k ∘ tmp1
+end
+  
+
+@inline _n0x(j, twi, cache, ::Val{as_tps}) where {as_tps} = _n0k(j, twi, cache, Val{as_tps}(), 1)
+@inline _n0y(j, twi, cache, ::Val{as_tps}) where {as_tps} = _n0k(j, twi, cache, Val{as_tps}(), 2)
+@inline _n0z(j, twi, cache, ::Val{as_tps}) where {as_tps} = _n0k(j, twi, cache, Val{as_tps}(), 3)
+
+@inline _nx(j, twi, cache, ::Val{as_tps}) where {as_tps} = _nk(j, twi, cache, Val{as_tps}(), 1)
+@inline _ny(j, twi, cache, ::Val{as_tps}) where {as_tps} = _nk(j, twi, cache, Val{as_tps}(), 2)
+@inline _nz(j, twi, cache, ::Val{as_tps}) where {as_tps} = _nk(j, twi, cache, Val{as_tps}(), 3)
+

@@ -32,9 +32,9 @@ const _TWISS_FCN_MAP = Dict{String,Function}(
   "nx"     => _nx     ,
   "ny"     => _ny     ,
   "nz"     => _nz     ,
-  "n0x"     => _n0x     ,
-  "n0y"     => _n0y     ,
-  "n0z"     => _n0z     ,
+  "n0x"     => _n0x   ,
+  "n0y"     => _n0y   ,
+  "n0z"     => _n0z   ,
   "N"      => _N      ,
   "Vi"     => _Vi     ,
   "c11"    => _c11    ,
@@ -49,7 +49,6 @@ const _TWISS_FCN_MAP = Dict{String,Function}(
   "B2"     => _B2     ,
   "B3"     => _B3     ,
 )
-
 
 const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "index"  => ""      ,
@@ -85,9 +84,9 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "nx"     =>  ""     ,
   "ny"     =>  ""     ,
   "nz"     =>  ""     ,
-  "n0x"     =>  ""     ,
-  "n0y"     =>  ""     ,
-  "n0z"     =>  ""     ,
+  "n0x"     =>  ""    ,
+  "n0y"     =>  ""    ,
+  "n0z"     =>  ""    ,
   "N"      =>  ""  ,
   "Vi"     =>  ""  ,
   "c11"    =>  ""  ,
@@ -103,16 +102,26 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "B3"     =>  ""  ,
 )
 
-@inline function _chrom_derivative(cfcn, order, j, twi, cache, ::Val{as_tps}) where {as_tps}
-  if !iscoasting(twi)
+@inline function _chrom_derivative(cfcn, order, override, j, twi, cache, ::Val{as_tps}) where {as_tps}
+  if !override && !iscoasting(twi)
     inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
     error("
-      To compute d$(inverted[cfcn]))_$(order) (which requires higher order derivatives in δ), 
-      beam must be coasting (no longitudinal oscillations).
+      To compute d$(inverted[cfcn])_$(order), beam must be coasting (no longitudinal oscillations).
     ")
   end
 
   x = cfcn(j, twi, cache, Val{true}()) # as_tps=true !!!!!
+  dord = no6(twi)
+  if cfcn in (_x, _px, _y, _py, _n0x, _n0y, _n0z, _nx, _ny, _nz)
+    if order > dord # these guys require order <= no6
+      inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
+      error("Chromatic order must be at least $order to compute d$(inverted[cfcn])_$(order)")
+    end
+  elseif order >= dord # else require order < no6
+    inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
+    error("Chromatic order must be at least $(order+1) to compute d$(inverted[cfcn])_$(order)")
+  end
+  
   if !(TI.is_tps_type(typeof(x)) isa TI.IsTPSType)
     inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
     error("
@@ -158,8 +167,11 @@ function _twiss_map_fcn(col)
   if !isnothing(m)
     ccol = m.captures[1]
     order = isnothing(m.captures[2]) ? 1 : parse(Int, m.captures[2])
-    let cfcn=_TWISS_FCN_MAP[ccol], order=order
-      return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, j, twi, cache, vas_tps)
+    cfcn = _TWISS_FCN_MAP[ccol]
+    # note unlike others we can always compute dnx_1, dnx_2, dnx_5, etc. when coasting
+    override = (cfcn in (_nx, _ny, _nz))
+    let cfcn=cfcn, order=order, override=override
+      return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, override, j, twi, cache, vas_tps)
     end
   end
   error("Unrecognized input col: $col")

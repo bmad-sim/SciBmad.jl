@@ -58,8 +58,8 @@ function twiss(
   in_body_coordinates::Bool = false, 
 
   # GTPSA truncation order sets:
-  chrom::Integer = 0,
   order::Integer = 1,
+  chrom::Integer = order,
   GTPSA_descriptor::Union{Descriptor,Nothing} = nothing,
 
   # Initial input, CO guess if periodic, initial orbit if not periodic
@@ -84,30 +84,33 @@ function twiss(
     v0_and_coast = (v0, false) # Always do 6D if open
   end
 
+  coast = v0_and_coast[2]
+
   if isnothing(cols)
-    if v0_and_coast[2]
+    if coast
       cols = TENG_EDWARDS_COAST
     else
       cols = TENG_EDWARDS
     end
   end
-
+  
   if spin
-    spincols = ["n0x", "n0y", "n0z", "dnx_1", "dny_1", "dnz_1"]
-    for spincol in spincols
-      spincol in cols || push!(cols, spincol)
+    spinregex = r"^(?:nx|ny|nz|n0x|n0y|n0z|d(?:nx|ny|nz|n0x|n0y|n0z)(?:_[1-9])?)$"
+    if !any(x->occursin(spinregex, x), cols)
+      # Then add default cols:
+      cols = vcat(cols, ["n0x", "n0y", "n0z", "dnx", "dny", "dnz"])
     end
   end
 
   if isnothing(GTPSA_descriptor)
     storedesc = GTPSA.desc_current
-    GTPSA_descriptor = Descriptor([order, order, order, order, order, order+chrom], order+chrom)
+    GTPSA_descriptor = Descriptor([order, order, order, order, order, chrom], max(order,chrom))
     GTPSA.desc_current = storedesc # Don't reset the global
-  elseif chrom != 0 || order != 1
+  elseif chrom != 1 || order != 1
     @info "`GTPSA_descriptor` has been explicitly provided: ignoring `order`/`chrom` inputs"
   end
 
-  if !v0_and_coast[2] && chrom != 0
+  if !coast && chrom > 1
     error("""
     You specified `chrom`, but this beamline has synchrotron motion. Please turn off RF 
     cavities to get delta-dependent Twiss functions.
@@ -156,9 +159,9 @@ function twiss(
     # Determine:
     if _check_cachable(GTPSA_descriptor)
       # also fills beta_gamma_ref, t_ref
-      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
+      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0, init, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
     else
-      a_initial, r_and_tunes = _compute_periodic_a(bl, v0, init, Val{v0_and_coast[2]}(), Val{spin}())
+      a_initial, r_and_tunes = _compute_periodic_a(bl, v0, init, Val{coast}(), Val{spin}())
     end
   end
 
@@ -167,7 +170,7 @@ function twiss(
   end
 
   # Determine canonization level
-  canonise, phase, damp = canonise_phase_damp(GTPSA_descriptor, v0_and_coast[2], damping)
+  canonise, phase, damp = canonise_phase_damp(GTPSA_descriptor, coast, damping)
 
   a_initial = factorise(a_initial; canonise=canonise, damping=isnothing(damp) ? false : true).a
 
