@@ -711,3 +711,206 @@ end
 @inline _ny(j, twi, cache, ::Val{as_tps}) where {as_tps} = _nk(j, twi, cache, Val{as_tps}(), 2)
 @inline _nz(j, twi, cache, ::Val{as_tps}) where {as_tps} = _nk(j, twi, cache, Val{as_tps}(), 3)
 
+@inline function _wk(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
+  if k == 1
+    bet = _beta1
+    al = _alpha1
+  elseif k == 2
+    bet  = _beta2
+    al = _alpha2
+  else
+    error("Montague function index must be between 1 and 2")
+  end
+  betak = bet(j, twi, cache, Val{as_tps}())
+  dbetak = _chrom_derivative(bet, 1, false, j, twi, cache, Val{as_tps}())
+  alphak = al(j, twi, cache, Val{as_tps}())
+  dalphak = _chrom_derivative(al, 1, false, j, twi, cache, Val{as_tps}())
+  wkb = dbetak/betak
+  wka = dalphak - alphak*wkb
+  wk = sqrt(wka^2 + wkb^2)
+  if as_tps
+    return TI.cutord(wk, no6(twi)-1) # kill the incorrect feed-down terms from above operations
+  else
+    return wk
+  end
+end
+
+@inline function _wka(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
+  if k == 1
+    bet = _beta1
+    al = _alpha1
+  elseif k == 2
+    bet  = _beta2
+    al = _alpha2
+  else
+    error("Montague function index must be between 1 and 2")
+  end
+  betak = bet(j, twi, cache, Val{as_tps}())
+  dbetak = _chrom_derivative(bet, 1, false, j, twi, cache, Val{as_tps}())
+  alphak = al(j, twi, cache, Val{as_tps}())
+  dalphak = _chrom_derivative(al, 1, false, j, twi, cache, Val{as_tps}())
+  wka = dalphak - alphak/betak*dbetak
+  if as_tps
+    return TI.cutord(wka, no6(twi)-1) # kill the incorrect feed-down terms from above operations
+  else
+    return wka
+  end
+end
+
+@inline function _wkb(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
+  if k == 1
+    bet = _beta1
+  elseif k == 2
+    bet  = _beta2
+  else
+    error("Montague function index must be between 1 and 2")
+  end
+  betak = bet(j, twi, cache, Val{as_tps}())
+  dbetak = _chrom_derivative(bet, 1, false, j, twi, cache, Val{as_tps}())
+  wkb = dbetak/betak
+  if as_tps
+    return TI.cutord(wkb, no6(twi)-1) # kill the incorrect feed-down terms from above operations
+  else
+    return wkb
+  end
+end
+
+@inline _w1(j, twi, cache, ::Val{as_tps}) where {as_tps} = _wk(j, twi, cache, Val{as_tps}(), 1)
+@inline _w2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _wk(j, twi, cache, Val{as_tps}(), 2)
+@inline _w1a(j, twi, cache, ::Val{as_tps}) where {as_tps} = _wka(j, twi, cache, Val{as_tps}(), 1)
+@inline _w2a(j, twi, cache, ::Val{as_tps}) where {as_tps} = _wka(j, twi, cache, Val{as_tps}(), 2)
+@inline _w1b(j, twi, cache, ::Val{as_tps}) where {as_tps} = _wkb(j, twi, cache, Val{as_tps}(), 1)
+@inline _w2b(j, twi, cache, ::Val{as_tps}) where {as_tps} = _wkb(j, twi, cache, Val{as_tps}(), 2)
+
+@inline function _make_h!(j, twi, cache)
+  nhv = nhvars(twi)
+  nv = nvars(twi)
+  nn = ndiffs(twi)
+  ords = zeros(UInt8, nn)
+
+  # Take log of (in curly Dragt notation): inv(A2) R A2 inv(R_linear)
+  a2 = twi.fac[j].a2
+  if j == 1
+    a2i = inv(twi.fac[j].a2)
+    r12 = one(a2i)
+  else
+    a2i = inv(twi.fac[j-1].a2)
+    r12 = twi.fac[j].r
+  end
+  
+  # R_linear needs to have nonlinear parameter dependence, so do that with r
+  if !haskey(cache.persistent_map, :tmp1)
+    cache.persistent_map[:tmp1] = zero(twi.fac[j].a)
+  end
+  if !haskey(cache.persistent_map, :c)
+    cache.persistent_cmap[:c] = c_map(twi.fac[j].a)
+  end
+  if !haskey(cache.persistent_map, :ci)
+    cache.persistent_cmap[:ci] = ci_map(twi.fac[j].a)
+  end
+  r12_lin = cache.persistent_map[:tmp1]
+  c = cache.persistent_cmap[:c]
+  ci = cache.persistent_cmap[:ci] 
+  NNF.clear!(r12_lin)
+  tmp = zero(a2.v[1])
+
+  # Gets the linear part but retains nonlinear parameter dependence
+  v = Ref{TI.numtype(eltype(r12.v))}() # monomial value 
+  for i in 1:nhv
+    TI.clear!(tmp)
+    ords .= 0
+    idx = TI.cycle!(r12.v[i], 0, mono=ords, val=v)
+    while idx > -1
+      if sum(view(ords, 1:nhv)) == 1
+        TI.setm!(tmp, v[], ords)
+      end
+      idx = TI.cycle!(r12.v[i], idx, mono=ords, val=v)
+    end
+    TI.copy_tps!(r12_lin.v[i], tmp)
+  end
+
+  # for the coasting part need to remove quadratic orbital part:
+  if iscoasting(twi)
+    TI.clear!(tmp)
+    ords .= 0
+    nt = nv
+    idx = TI.cycle!(r12.v[nt], 0, mono=ords, val=v)
+    while idx > -1
+      if sum(view(ords, 1:nhv)) <= 2
+        TI.setm!(tmp, v[], ords)
+      end
+      idx = TI.cycle!(r12.v[nt], idx, mono=ords, val=v)
+    end
+    TI.seti!(tmp, 1, nt)
+    TI.copy_tps!(r12_lin.v[nt], tmp)
+  end
+  exphc = ci ∘ inv(r12_lin) ∘ a2 ∘ r12 ∘ a2i ∘ c
+  cache.vf[:h] = log(exphc)
+end
+
+@inline function _h(j, twi, cache, ::Val{true}, mono)
+  nv = nvars(twi)
+  nn = ndiffs(twi)
+  ords = zeros(UInt8, nn)
+
+  if !haskey(cache.vf, :h)
+    _make_h!(j, twi, cache)
+  end
+
+  hvf = cache.vf[:h]
+
+  hk = zero(first(hvf.v))
+
+  v = Ref{TI.numtype(eltype(hvf.v))}() # monomial value 
+  
+  fac = sum(mono)
+  for k in 1:min(nv, length(mono))
+    sgn = isodd(k) ? +1 : -1
+    downgr = false
+    if mono[k + sgn] != 0
+      downgr = true
+      mono[k + sgn] -= 1
+    end
+
+    s = sgn*im
+
+    idx = TI.cycle!(hvf.v[k], 0, mono=ords, val=v)
+    while idx > 0
+      if view(ords, 1:length(mono)) == mono
+        view(ords, 1:length(mono)) .= 0
+        TI.setm!(hk, s * v[] / fac, ords)
+      end
+      idx = TI.cycle!(hvf.v[k], idx, mono=ords, val=v)
+    end
+   
+    if downgr
+      mono[k + sgn] += 1
+    end
+  end
+  return hk
+end
+
+@inline function _h(j, twi, cache, ::Val{false}, mono)
+  nv = nvars(twi)
+
+  if !haskey(cache.vf, :h)
+    _make_h!(j, twi, cache)
+  end
+
+  hvf = cache.vf[:h]
+
+  hk = zero(Float64)
+  
+  fac = sum(mono)
+  for k in 1:min(nv, length(mono))
+    sgn = isodd(k) ? +1 : -1
+    if mono[k + sgn] != 0
+      mono[k + sgn] -= 1
+      s = sgn*im
+      hk += s * TI.getm(hvf.v[k], mono) / fac
+      mono[k + sgn] += 1
+    end
+  end
+
+  return hk
+end

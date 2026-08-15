@@ -48,7 +48,15 @@ const _TWISS_FCN_MAP = Dict{String,Function}(
   "B1"     => _B1     ,
   "B2"     => _B2     ,
   "B3"     => _B3     ,
+  "w1a"    => _w1a    ,
+  "w2a"    => _w2a    ,
+  "w1b"    => _w1b    ,
+  "w2b"    => _w2b    ,
+  "w1"     => _w1     ,
+  "w2"     => _w2     ,  
 )
+
+const _INVERTED_TWISS_FCN_MAP = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
 
 const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "index"  => ""      ,
@@ -100,13 +108,18 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "B1"     =>  ""  ,
   "B2"     =>  ""  ,
   "B3"     =>  ""  ,
+  "w1a"    =>  "[1]" ,
+  "w2a"    =>  "[1]" ,
+  "w1b"    =>  "[1]" ,
+  "w2b"    =>  "[1]" ,
+  "w1"     =>  "[1]" ,
+  "w2"     =>  "[1]" ,
 )
 
 @inline function _chrom_derivative(cfcn, order, override, j, twi, cache, ::Val{as_tps}) where {as_tps}
   if !override && !iscoasting(twi)
-    inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
     error("
-      To compute d$(inverted[cfcn])_$(order), beam must be coasting (no longitudinal oscillations).
+      To compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order), beam must be coasting (no longitudinal oscillations).
     ")
   end
 
@@ -114,21 +127,22 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   dord = no6(twi)
   if cfcn in (_x, _px, _y, _py, _n0x, _n0y, _n0z, _nx, _ny, _nz)
     if order > dord # these guys require order <= no6
-      inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
-      error("Chromatic order must be at least $order to compute d$(inverted[cfcn])_$(order)")
+      error("Chromatic order must be at least $order to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
+    end
+  elseif cfcn in (_w1, _w2, _w1a, _w1b, _w2a, _w2b) # requires order < no6-1
+    if order + 1 >= dord
+      error("Chromatic order must be at least $(order+2) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
     end
   elseif order >= dord # else require order < no6
-    inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
-    error("Chromatic order must be at least $(order+1) to compute d$(inverted[cfcn])_$(order)")
+    error("Chromatic order must be at least $(order+1) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
   end
   
   if !(TI.is_tps_type(typeof(x)) isa TI.IsTPSType)
-    inverted = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
     error("
       Chromatic derivative-getting is currently only compatible with scalar-valued outputs, and 
-      $(inverted[cfcn]) is a matrix/map.
+      $(_INVERTED_TWISS_FCN_MAP[cfcn]) is a matrix/map.
 
-      Try setting the `twiss` keyword argument `as_taylor_series=true` and include \"$(inverted[cfcn])\" 
+      Try setting the `twiss` keyword argument `as_taylor_series=true` and include \"$(_INVERTED_TWISS_FCN_MAP[cfcn])\" 
       in the `cols`. The desired chromatic derivative can then be extracted
     ")
   end
@@ -160,6 +174,13 @@ end
 function _twiss_map_fcn(col)
   if haskey(_TWISS_FCN_MAP, col)
     return _TWISS_FCN_MAP[col]
+  end
+  m = match(r"^h([0-9]{4,6})$", col)
+  if !isnothing(m)
+    mono = [parse(Int, c) for c in m.captures[1]]
+    let mono=mono
+      return (j, twi, cache, vas_tps) -> _h(j, twi, cache, vas_tps, mono)
+    end
   end
 
   pattern = Regex("^d(" * join(escape_string.(keys(_TWISS_FCN_MAP)), "|") * ")(?:_([1-9]))?\$")

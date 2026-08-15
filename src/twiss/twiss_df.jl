@@ -9,10 +9,12 @@ function _twiss_df(colnames, twi, ::Val{as_taylor_series}) where {as_taylor_seri
   float_cache = build_cache(Float64)
   smatrix4_cache = build_cache(SMatrix{4,4,Float64})
   smatrix6_cache = build_cache(SMatrix{6,6,Float64})
+  vf_cache = build_cache(complex(typeof(zero(VectorField, twi.fac[1].a))))
 
   persistent_map_cache = build_cache(typeof(twi.fac[1].a))
+  persistent_cmap_cache = build_cache(complex(typeof(twi.fac[1].a)))
 
-  cache = TwissCache(map_cache, tps_cache, float_cache, smatrix4_cache, smatrix6_cache, persistent_map_cache)
+  cache = TwissCache(map_cache, tps_cache, float_cache, smatrix4_cache, smatrix6_cache, vf_cache, persistent_map_cache, persistent_cmap_cache)
   for i in 1:ncols
     col = cols[i]
     row1[i] = @noinline col(1, twi, cache, Val{as_taylor_series}())
@@ -41,6 +43,7 @@ function _twiss_df_loop(df, cols, twi, cache, ::Val{as_taylor_series}) where {as
       empty!(cache.float)
       empty!(cache.smatrix4)
       empty!(cache.smatrix6)
+      empty!(cache.vf)
     end
   end
   return df
