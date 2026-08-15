@@ -133,8 +133,8 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
     if order + 1 >= dord
       error("Chromatic order must be at least $(order+2) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
     end
-  elseif order >= dord # else require order < no6
-    error("Chromatic order must be at least $(order+1) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
+  #elseif order >= dord # else require order < no6
+  #  error("Chromatic order must be at least $(order+1) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
   end
   
   if !(TI.is_tps_type(typeof(x)) isa TI.IsTPSType)
@@ -183,10 +183,18 @@ function _twiss_map_fcn(col)
     end
   end
 
-  pattern = Regex("^d(" * join(escape_string.(keys(_TWISS_FCN_MAP)), "|") * ")(?:_([1-9]))?\$")
+  pattern = Regex("^d(" * join([escape_string.(keys(_TWISS_FCN_MAP)); "h([0-9]{4,6})"], "|") * ")(?:_([1-9]))?\$")
   m = match(pattern, col)
   if !isnothing(m)
     ccol = m.captures[1]
+    if !isnothing(match(r"^h([0-9]{4,6})$", ccol) )
+      order = isnothing(m.captures[3]) ? 1 : parse(Int, m.captures[3])
+      mono = [parse(Int, c) for c in m.captures[2]]
+      let mono=mono, order=order
+        cfcn = (j, twi, cache, vas_tps) -> _h(j, twi, cache, vas_tps, mono)
+        return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, false, j, twi, cache, vas_tps)
+      end
+    end
     order = isnothing(m.captures[2]) ? 1 : parse(Int, m.captures[2])
     cfcn = _TWISS_FCN_MAP[ccol]
     # note unlike others we can always compute dnx_1, dnx_2, dnx_5, etc. when coasting

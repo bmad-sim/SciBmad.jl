@@ -782,69 +782,109 @@ end
 @inline _w1b(j, twi, cache, ::Val{as_tps}) where {as_tps} = _wkb(j, twi, cache, Val{as_tps}(), 1)
 @inline _w2b(j, twi, cache, ::Val{as_tps}) where {as_tps} = _wkb(j, twi, cache, Val{as_tps}(), 2)
 
-@inline function _make_h!(j, twi, cache)
+@inline function _make_ri_lin!(twi, cache)
   nhv = nhvars(twi)
   nv = nvars(twi)
   nn = ndiffs(twi)
   ords = zeros(UInt8, nn)
 
-  # Take log of (in curly Dragt notation): inv(A2) R A2 inv(R_linear)
-  a2 = twi.fac[j].a2
-  if j == 1
-    a2i = inv(twi.fac[j].a2)
-    r12 = one(a2i)
-  else
-    a2i = inv(twi.fac[j-1].a2)
-    r12 = twi.fac[j].r
+  if isnothing(twi.r_and_tunes)
+    error("Open lattice Bengtsson polynomial `h` calculation not implemented yet")
   end
-  
-  # R_linear needs to have nonlinear parameter dependence, so do that with r
-  if !haskey(cache.persistent_map, :tmp1)
-    cache.persistent_map[:tmp1] = zero(twi.fac[j].a)
+  if !haskey(cache.persistent_cmap, :c)
+    cache.persistent_cmap[:c] = c_map(twi.fac[1].a)
   end
-  if !haskey(cache.persistent_map, :c)
-    cache.persistent_cmap[:c] = c_map(twi.fac[j].a)
+  if !haskey(cache.persistent_cmap, :ci)
+    cache.persistent_cmap[:ci] = ci_map(twi.fac[1].a)
   end
-  if !haskey(cache.persistent_map, :ci)
-    cache.persistent_cmap[:ci] = ci_map(twi.fac[j].a)
-  end
-  r12_lin = cache.persistent_map[:tmp1]
   c = cache.persistent_cmap[:c]
   ci = cache.persistent_cmap[:ci] 
-  NNF.clear!(r12_lin)
-  tmp = zero(a2.v[1])
+  rc = twi.r_and_tunes[1]
+  r = real(c ∘ rc ∘ ci)
+  cache.persistent_map[:r] = r
+  r_lin = zero(r)
+  tmp = zero(r.v[1])
 
-  # Gets the linear part but retains nonlinear parameter dependence
-  v = Ref{TI.numtype(eltype(r12.v))}() # monomial value 
-  for i in 1:nhv
+   # Gets the linear part but retains nonlinear parameter dependence
+  v = Ref{TI.numtype(eltype(r.v))}() # monomial value 
+  for k in 1:nhv
     TI.clear!(tmp)
     ords .= 0
-    idx = TI.cycle!(r12.v[i], 0, mono=ords, val=v)
+    idx = TI.cycle!(r.v[k], 0, mono=ords, val=v)
     while idx > -1
       if sum(view(ords, 1:nhv)) == 1
         TI.setm!(tmp, v[], ords)
       end
-      idx = TI.cycle!(r12.v[i], idx, mono=ords, val=v)
+      idx = TI.cycle!(r.v[k], idx, mono=ords, val=v)
     end
-    TI.copy_tps!(r12_lin.v[i], tmp)
+    TI.copy_tps!(r_lin.v[k], tmp)
   end
 
-  # for the coasting part need to remove quadratic orbital part:
+  # for the coasting part need to do quadratic orbital part:
   if iscoasting(twi)
     TI.clear!(tmp)
     ords .= 0
     nt = nv
-    idx = TI.cycle!(r12.v[nt], 0, mono=ords, val=v)
+    idx = TI.cycle!(r.v[nt], 0, mono=ords, val=v)
     while idx > -1
       if sum(view(ords, 1:nhv)) <= 2
         TI.setm!(tmp, v[], ords)
       end
-      idx = TI.cycle!(r12.v[nt], idx, mono=ords, val=v)
+      idx = TI.cycle!(r.v[nt], idx, mono=ords, val=v)
     end
     TI.seti!(tmp, 1, nt)
-    TI.copy_tps!(r12_lin.v[nt], tmp)
+    TI.copy_tps!(r_lin.v[nt], tmp)
   end
-  exphc = ci ∘ inv(r12_lin) ∘ a2 ∘ r12 ∘ a2i ∘ c
+
+  ri_lin = inv(r_lin)
+  cache.persistent_map[:ri_lin] = ri_lin
+  return ri_lin
+end
+
+@inline function _make_h!(j, twi, cache)
+  # exphc = ri_lin ∘ a1i_lin ∘ a1 ∘ a2 ∘ r ∘ a2i ∘ a1i ∘ a1_lin
+  # note performance could definitely be improved here...
+  if isnothing(twi.r_and_tunes)
+    error("Open lattice Bengtsson polynomial `h` calculation not implemented yet")
+  end
+
+  # Take log of (in curly Dragt notation): inv(A2) R A2 inv(R_linear)
+  a2 = twi.fac[j].a2
+  a1 = twi.fac[j].a1
+
+  # R_linear needs to have nonlinear parameter dependence, so do that with r
+  if !haskey(cache.persistent_map, :ri_lin)
+    _make_ri_lin!(twi, cache)
+  end
+  if !haskey(cache.persistent_cmap, :c)
+    cache.persistent_cmap[:c] = c_map(twi.fac[j].a)
+  end
+  if !haskey(cache.persistent_cmap, :ci)
+    cache.persistent_cmap[:ci] = ci_map(twi.fac[j].a)
+  end
+  r = cache.persistent_map[:r]
+  ri_lin = cache.persistent_map[:ri_lin]
+  c = cache.persistent_cmap[:c]
+  ci = cache.persistent_cmap[:ci] 
+  a2i = inv(a2)
+  if !haskey(cache.map, :a1i)
+    cache.map[:a1i] = inv(a1)
+  end
+  a1i = cache.map[:a1i]
+  if !haskey(cache.persistent_map, :tmp1)
+    cache.persistent_map[:tmp1] = zero(twi.fac[j].a)
+  end
+  a1_lin = cache.persistent_map[:tmp1]
+  NNF.clear!(a1_lin)
+  NNF.setray!(a1_lin.v, v_matrix=I) 
+  NNF.setray!(a1_lin.v, v_matrix=NNF.jacobian(a1, NNF.HVARS))
+  
+  half = a1 ∘ a2 ∘ r ∘ a2i ∘ a1i ∘ a1_lin
+  NNF.clear!(a1_lin)
+  NNF.setray!(a1_lin.v, v_matrix=I) 
+  NNF.setray!(a1_lin.v, v_matrix=inv(NNF.jacobian(a1, NNF.HVARS)))
+
+  exphc = ci ∘ ri_lin ∘ a1_lin ∘ half ∘ c  
   cache.vf[:h] = log(exphc)
 end
 
@@ -866,24 +906,17 @@ end
   fac = sum(mono)
   for k in 1:min(nv, length(mono))
     sgn = isodd(k) ? +1 : -1
-    downgr = false
     if mono[k + sgn] != 0
-      downgr = true
       mono[k + sgn] -= 1
-    end
-
-    s = sgn*im
-
-    idx = TI.cycle!(hvf.v[k], 0, mono=ords, val=v)
-    while idx > 0
-      if view(ords, 1:length(mono)) == mono
-        view(ords, 1:length(mono)) .= 0
-        TI.setm!(hk, s * v[] / fac, ords)
+      s = sgn*im
+      idx = TI.cycle!(hvf.v[k], 0, mono=ords, val=v)
+      while idx > 0
+        if view(ords, 1:length(mono)) == mono
+          view(ords, 1:length(mono)) .= 0
+          TI.setm!(hk, s * v[] / fac, ords)
+        end
+        idx = TI.cycle!(hvf.v[k], idx, mono=ords, val=v)
       end
-      idx = TI.cycle!(hvf.v[k], idx, mono=ords, val=v)
-    end
-   
-    if downgr
       mono[k + sgn] += 1
     end
   end
