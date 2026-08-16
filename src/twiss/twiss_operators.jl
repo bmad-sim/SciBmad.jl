@@ -722,9 +722,9 @@ end
     error("Montague function index must be between 1 and 2")
   end
   betak = bet(j, twi, cache, Val{as_tps}())
-  dbetak = _chrom_derivative(bet, 1, false, j, twi, cache, Val{as_tps}())
+  dbetak = _chrom_derivative(bet, 1, j, twi, cache, Val{as_tps}())
   alphak = al(j, twi, cache, Val{as_tps}())
-  dalphak = _chrom_derivative(al, 1, false, j, twi, cache, Val{as_tps}())
+  dalphak = _chrom_derivative(al, 1, j, twi, cache, Val{as_tps}())
   wkb = dbetak/betak
   wka = dalphak - alphak*wkb
   wk = sqrt(wka^2 + wkb^2)
@@ -746,9 +746,9 @@ end
     error("Montague function index must be between 1 and 2")
   end
   betak = bet(j, twi, cache, Val{as_tps}())
-  dbetak = _chrom_derivative(bet, 1, false, j, twi, cache, Val{as_tps}())
+  dbetak = _chrom_derivative(bet, 1, j, twi, cache, Val{as_tps}())
   alphak = al(j, twi, cache, Val{as_tps}())
-  dalphak = _chrom_derivative(al, 1, false, j, twi, cache, Val{as_tps}())
+  dalphak = _chrom_derivative(al, 1, j, twi, cache, Val{as_tps}())
   wka = dalphak - alphak/betak*dbetak
   if as_tps
     return TI.cutord(wka, noi(twi, 6)-1) # kill the incorrect feed-down terms from above operations
@@ -766,7 +766,7 @@ end
     error("Montague function index must be between 1 and 2")
   end
   betak = bet(j, twi, cache, Val{as_tps}())
-  dbetak = _chrom_derivative(bet, 1, false, j, twi, cache, Val{as_tps}())
+  dbetak = _chrom_derivative(bet, 1, j, twi, cache, Val{as_tps}())
   wkb = dbetak/betak
   if as_tps
     return TI.cutord(wkb, noi(twi, 6)-1) # kill the incorrect feed-down terms from above operations
@@ -920,18 +920,9 @@ end
       end
       mono[k + sgn] += 1
     end
-  end
-
-  if iscoasting(twi) # extra iteration
-    idx = TI.cycle!(hvf.v[5], 0, mono=ords, val=v)
-    while idx > 0
-      if view(ords, 1:length(mono)) == mono
-        view(ords, 1:length(mono)) .= 0
-        ords[6] += 1
-        TI.setm!(hk, TI.getm(hk, ords) - im * v[], ords)
-      end
-      idx = TI.cycle!(hvf.v[5], idx, mono=ords, val=v)
-    end
+    # Note that for coasting case, the monomial is h[a,b,c,d,0,dord]
+    # the one added to it is h.v[5][[a,b,c,d,0,dord-1]]
+    # and the time part is always 0 so no v[6]. 
   end
 
   return hk
@@ -954,10 +945,6 @@ end
       hk += s * TI.getm(hvf.v[k], mono)
       mono[k + sgn] += 1
     end
-  end
-
-  if iscoasting(twi) # extra iteration
-    hk += -im * TI.getm(hvf.v[5], mono)
   end
 
   return hk
