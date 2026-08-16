@@ -116,36 +116,9 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "w2"     =>  "[1]" ,
 )
 
-@inline function _chrom_derivative(cfcn, order, override, j, twi, cache, ::Val{as_tps}) where {as_tps}
-  if !override && !iscoasting(twi)
-    error("
-      To compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order), beam must be coasting (no longitudinal oscillations).
-    ")
-  end
-
+@inline function _chrom_derivative(cfcn, order, j, twi, cache, ::Val{as_tps}) where {as_tps}
   x = cfcn(j, twi, cache, Val{true}()) # as_tps=true !!!!!
-  dord = no6(twi)
-  if cfcn in (_x, _px, _y, _py, _n0x, _n0y, _n0z, _nx, _ny, _nz)
-    if order > dord # these guys require order <= no6
-      error("Chromatic order must be at least $order to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
-    end
-  elseif cfcn in (_w1, _w2, _w1a, _w1b, _w2a, _w2b) # requires order < no6-1
-    if order + 1 >= dord
-      error("Chromatic order must be at least $(order+2) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
-    end
-  #elseif order >= dord # else require order < no6
-  #  error("Chromatic order must be at least $(order+1) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
-  end
   
-  if !(TI.is_tps_type(typeof(x)) isa TI.IsTPSType)
-    error("
-      Chromatic derivative-getting is currently only compatible with scalar-valued outputs, and 
-      $(_INVERTED_TWISS_FCN_MAP[cfcn]) is a matrix/map.
-
-      Try setting the `twiss` keyword argument `as_taylor_series=true` and include \"$(_INVERTED_TWISS_FCN_MAP[cfcn])\" 
-      in the `cols`. The desired chromatic derivative can then be extracted
-    ")
-  end
   if as_tps
     for _ in 1:order
       x = TI.deriv(x, 6)            
@@ -160,24 +133,38 @@ end
 
 # things like RDTs and arbitrary-order derivatives must be handled specially
 
-function _twiss_map(cols)
+function _twiss_map(cols, twi)
   fcn = Vector{Function}(undef, length(cols))
   unit = Vector{String}(undef, length(cols))
   for i in 1:length(cols)
     col = cols[i]
-    fcn[i] = _twiss_map_fcn(col) #col in keys(_TWISS_FCN_MAP) ? _TWISS_FCN_MAP[col] : error()
+    fcn[i] = _twiss_map_fcn(col, twi) #col in keys(_TWISS_FCN_MAP) ? _TWISS_FCN_MAP[col] : error()
     unit[i] = col in keys(_TWISS_COLUNIT_MAP) ? _TWISS_COLUNIT_MAP[col] : ""
   end
   return fcn, unit
-end
+end 
 
-function _twiss_map_fcn(col)
+function _twiss_map_fcn(col, twi)
   if haskey(_TWISS_FCN_MAP, col)
     return _TWISS_FCN_MAP[col]
   end
   m = match(r"^h([0-9]{4,6})$", col)
   if !isnothing(m)
     mono = [parse(Int, c) for c in m.captures[1]]
+    mo = maxord(twi)
+    if iscoasting(twi) && length(mono) != 4
+      error("Invalid RDT/detune coefficient `h$(join(mono))`: length of monomial must be 4 (beam is coasting)")
+    elseif !iscoasting(twi) && length(mono) != 6
+      error("Invalid RDT/detune coefficient `h$(join(mono))`: length of monomial must be 6 (beam has longitudinal oscillations)")
+    elseif sum(mono) > mo+1
+      error("Unable to compute h$(join(mono)): TPSA max order not high enough (must be at least $(sum(mono)-1))")
+    end
+
+    for k in 1:length(mono)
+      if mono[k]-1 > noi(twi, k) 
+        error("Unable to compute h$(join(mono)): TPSA order not high enough (must be at least $(mono[k]) for variable $(k))")
+      end
+    end
     let mono=mono
       return (j, twi, cache, vas_tps) -> _h(j, twi, cache, vas_tps, mono)
     end
@@ -190,17 +177,66 @@ function _twiss_map_fcn(col)
     if !isnothing(match(r"^h([0-9]{4,6})$", ccol) )
       order = isnothing(m.captures[3]) ? 1 : parse(Int, m.captures[3])
       mono = [parse(Int, c) for c in m.captures[2]]
+      mo = maxord(twi)
+
+      if length(mono) != 4
+        error("
+          Unable to compute dh$(join(mono))_$(order): length of monomial must be 4
+        ")
+      elseif !iscoasting(twi)
+        error("
+          To compute the chromatic derivative dh$(join(mono))_$(order), beam must be coasting (no longitudinal oscillations).
+        ")
+      elseif sum(mono)+order > mo+1
+        error("Unable to compute h$(join(mono)): TPSA max order not high enough (must be at least $(sum(mono)-1+order))")
+      end
+
+      for k in 1:length(mono)
+        if k == 6 && (mono[k]-1+order > noi(twi, 6))
+          error("Unable to compute dh$(join(mono))_$(order): TPSA order not high enough (must be at least $(mono[k]-1+order) for variable $(k))")
+        elseif mono[k]-1 > noi(twi, k) 
+          error("Unable to compute h$(join(mono)): TPSA order not high enough (must be at least $(mono[k]) for variable $(k))")
+        end
+      end
       let mono=mono, order=order
         cfcn = (j, twi, cache, vas_tps) -> _h(j, twi, cache, vas_tps, mono)
-        return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, false, j, twi, cache, vas_tps)
+        return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, j, twi, cache, vas_tps)
       end
     end
+
+
     order = isnothing(m.captures[2]) ? 1 : parse(Int, m.captures[2])
     cfcn = _TWISS_FCN_MAP[ccol]
+    dord = noi(twi, 6)
+    if !(cfcn in (_nx, _ny, _nz)) && !iscoasting(twi)
+      error("
+        To compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order), beam must be coasting (no longitudinal oscillations).
+      ")
+    end
+    if cfcn in (_x, _px, _y, _py, _n0x, _n0y, _n0z, _nx, _ny, _nz)
+      if order > dord # these guys require order <= no6
+        error("Chromatic order must be at least $order to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
+      end
+    elseif cfcn in (_w1, _w2, _w1a, _w1b, _w2a, _w2b) # requires order < no6-1
+      if order + 1 >= dord
+        error("Chromatic order must be at least $(order+2) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
+      end
+    elseif order >= dord # else require order < no6
+      error("Chromatic order must be at least $(order+1) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
+    end
+    
+    if !(TI.is_tps_type(typeof(x)) isa TI.IsTPSType)
+      error("
+        Chromatic derivative-getting is currently only compatible with scalar-valued outputs, and 
+        $(_INVERTED_TWISS_FCN_MAP[cfcn]) is a matrix/map.
+
+        Try setting the `twiss` keyword argument `as_taylor_series=true` and include \"$(_INVERTED_TWISS_FCN_MAP[cfcn])\" 
+        in the `cols`. The desired chromatic derivative can then be extracted
+      ")
+    end
     # note unlike others we can always compute dnx_1, dnx_2, dnx_5, etc. when coasting
-    override = (cfcn in (_nx, _ny, _nz))
-    let cfcn=cfcn, order=order, override=override
-      return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, override, j, twi, cache, vas_tps)
+    let cfcn=cfcn, order=order
+      return (j, twi, cache, vas_tps) -> _chrom_derivative(cfcn, order, j, twi, cache, vas_tps)
     end
   end
   error("Unrecognized input col: $col")

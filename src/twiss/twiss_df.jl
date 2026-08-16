@@ -1,5 +1,5 @@
 function _twiss_df(colnames, twi, ::Val{as_taylor_series}) where {as_taylor_series}
-  cols, colunits = _twiss_map(colnames)
+  cols, colunits = _twiss_map(colnames, twi)
   ncols = length(cols)
   nrows = length(twi.s)
   row1 = Vector{Any}(undef, ncols)

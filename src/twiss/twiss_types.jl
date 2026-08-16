@@ -53,7 +53,7 @@ nvars(twi::TwissInternal) = NNF.nvars(twi.fac[1].a)
 nhvars(twi::TwissInternal) = NNF.nhvars(twi.fac[1].a)
 iscoasting(twi::TwissInternal) = NNF.iscoasting(twi.fac[1].a)
 maxord(twi::TwissInternal) = NNF.maxord(twi.fac[1].a)
-no6(twi::TwissInternal) = unsafe_load(unsafe_load(GTPSA.getdesc(first(twi.fac[1].a.v)).desc).no, 6)
+noi(twi::TwissInternal, i) = unsafe_load(unsafe_load(GTPSA.getdesc(first(twi.fac[1].a.v)).desc).no, i)
 
 struct TwissCache{M,T,F,SM4,SM6,VF,CM}
  map::M

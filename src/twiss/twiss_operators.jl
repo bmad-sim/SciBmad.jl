@@ -729,7 +729,7 @@ end
   wka = dalphak - alphak*wkb
   wk = sqrt(wka^2 + wkb^2)
   if as_tps
-    return TI.cutord(wk, no6(twi)-1) # kill the incorrect feed-down terms from above operations
+    return TI.cutord(wk, noi(twi, 6)-1) # kill the incorrect feed-down terms from above operations
   else
     return wk
   end
@@ -751,7 +751,7 @@ end
   dalphak = _chrom_derivative(al, 1, false, j, twi, cache, Val{as_tps}())
   wka = dalphak - alphak/betak*dbetak
   if as_tps
-    return TI.cutord(wka, no6(twi)-1) # kill the incorrect feed-down terms from above operations
+    return TI.cutord(wka, noi(twi, 6)-1) # kill the incorrect feed-down terms from above operations
   else
     return wka
   end
@@ -769,7 +769,7 @@ end
   dbetak = _chrom_derivative(bet, 1, false, j, twi, cache, Val{as_tps}())
   wkb = dbetak/betak
   if as_tps
-    return TI.cutord(wkb, no6(twi)-1) # kill the incorrect feed-down terms from above operations
+    return TI.cutord(wkb, noi(twi, 6)-1) # kill the incorrect feed-down terms from above operations
   else
     return wkb
   end
@@ -889,8 +889,8 @@ end
 end
 
 @inline function _h(j, twi, cache, ::Val{true}, mono)
-  nv = nvars(twi)
   nn = ndiffs(twi)
+  nhv = nhvars(twi)
   ords = zeros(UInt8, nn)
 
   if !haskey(cache.vf, :h)
@@ -898,13 +898,14 @@ end
   end
 
   hvf = cache.vf[:h]
-
   hk = zero(first(hvf.v))
 
+  # problem is that to get dh2000 = h200001,
+  # includes monomial h.vf[5][[2,0,0,0,0,0]]
+
+  # for TPSA we should do extra iteration assuming that there is a delta dependence IF COASTING
   v = Ref{TI.numtype(eltype(hvf.v))}() # monomial value 
-  
-  fac = sum(mono)
-  for k in 1:min(nv, length(mono))
+  for k in 1:nhv
     sgn = isodd(k) ? +1 : -1
     if mono[k + sgn] != 0
       mono[k + sgn] -= 1
@@ -913,36 +914,50 @@ end
       while idx > 0
         if view(ords, 1:length(mono)) == mono
           view(ords, 1:length(mono)) .= 0
-          TI.setm!(hk, s * v[] / fac, ords)
+          TI.setm!(hk, s * v[], ords)
         end
         idx = TI.cycle!(hvf.v[k], idx, mono=ords, val=v)
       end
       mono[k + sgn] += 1
     end
   end
+
+  if iscoasting(twi) # extra iteration
+    idx = TI.cycle!(hvf.v[5], 0, mono=ords, val=v)
+    while idx > 0
+      if view(ords, 1:length(mono)) == mono
+        view(ords, 1:length(mono)) .= 0
+        ords[6] += 1
+        TI.setm!(hk, TI.getm(hk, ords) - im * v[], ords)
+      end
+      idx = TI.cycle!(hvf.v[5], idx, mono=ords, val=v)
+    end
+  end
+
   return hk
 end
 
 @inline function _h(j, twi, cache, ::Val{false}, mono)
-  nv = nvars(twi)
-
   if !haskey(cache.vf, :h)
     _make_h!(j, twi, cache)
   end
+  
+  nhv = nhvars(twi)
 
   hvf = cache.vf[:h]
-
   hk = zero(Float64)
-  
-  fac = sum(mono)
-  for k in 1:min(nv, length(mono))
+  for k in 1:nhv
     sgn = isodd(k) ? +1 : -1
     if mono[k + sgn] != 0
       mono[k + sgn] -= 1
       s = sgn*im
-      hk += s * TI.getm(hvf.v[k], mono) / fac
+      hk += s * TI.getm(hvf.v[k], mono)
       mono[k + sgn] += 1
     end
+  end
+
+  if iscoasting(twi) # extra iteration
+    hk += -im * TI.getm(hvf.v[5], mono)
   end
 
   return hk
