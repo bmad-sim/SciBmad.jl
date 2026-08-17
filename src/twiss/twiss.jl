@@ -51,6 +51,11 @@ const TENG_EDWARDS = [
 
 base_cols::Vector{String} = ["index", "name", "kind", "s"]
 
+"""
+    twiss(bl::Beamline; kwargs...)
+
+Computes 
+"""
 function twiss(
   bl::Beamline; 
 
@@ -63,13 +68,24 @@ function twiss(
   chrom::Integer = order,
   GTPSA_descriptor::Union{Descriptor,Nothing} = nothing,
 
+  #start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
+  a_initial::Union{Nothing,DAMap}   = nothing, 
+  damping::Union{Nothing,Bool} = nothing, # nothing = auto-detect from a_initial
+
   # Initial input, CO guess if periodic, initial orbit if not periodic
   delta0::Number = 0.,
-  v0::Matrix     = [0. 0. 0. 0. 0. delta0], 
-
-  start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
-  a_initial::Union{Nothing,DAMap}   = nothing, # TODO
-  damping::Union{Nothing,Bool} = nothing, # nothing = auto-detect from a_initial
+  v0::Matrix     = (if isnothing(a_initial)
+        [0. 0. 0. 0. 0. delta0]
+    else
+      t = zeros(1,6)
+      if length(a_initial.v0) == 5
+        t[1:5] .= a_initial.v0
+        t[6] = delta0
+      else
+        t .= a_initial.v0
+      end
+    end
+  ), 
 
   # The lattice functions to compute
   spin::Bool      = isnothing(a_initial) ? false : !isnothing(a_initial.q),
@@ -87,10 +103,10 @@ function twiss(
     foreach(x->x.RFParams=nothing, cavities)
   end
 
-  if isnothing(start)
+  if isnothing(a_initial)
     v0_and_coast = co_and_coast(bl, v0)
   else
-    v0_and_coast = (v0, !rf_on) 
+    v0_and_coast = (v0, isodd(NNF.nvars(a_initial))) 
   end
 
   coast = v0_and_coast[2]
@@ -168,9 +184,9 @@ function twiss(
     # Determine:
     if _check_cachable(GTPSA_descriptor)
       # also fills beta_gamma_ref, t_ref
-      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0, init, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
+      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0_and_coast[1], init, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
     else
-      a_initial, r_and_tunes = _compute_periodic_a(bl, v0, init, Val{coast}(), Val{spin}())
+      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, Val{coast}(), Val{spin}())
     end
   end
 
