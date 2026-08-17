@@ -1,4 +1,3 @@
-__precompile__(false)
 module SciBmad
 using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
 using Reexport
@@ -99,16 +98,6 @@ include("experimental/Experimental.jl")
     t = twiss(fodo; GTPSA_descriptor=desc2);
     t = twiss(fodo; GTPSA_descriptor=desc1, spin=true);
     t = twiss(fodo; GTPSA_descriptor=desc2, spin=true);
-    #=
-    # Parameters, coast and no coast:
-    descp = Descriptor(7, 1);
-    qf.Kn1 = qf.Kn1 + vars(descp)[7];
-    t = twiss(fodo; GTPSA_descriptor=descp);
-    t = twiss(fodo; GTPSA_descriptor=descp, spin=true);
-    rf.voltage = 1e6;
-    t = twiss(fodo; GTPSA_descriptor=descp);
-    t = twiss(fodo; GTPSA_descriptor=descp, spin=true);
-    =#
   end
 end
 
