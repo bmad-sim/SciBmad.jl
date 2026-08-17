@@ -1,5 +1,29 @@
+struct TwissSummary
+  sdict::LittleDict{Symbol,Union{Float64,AmplitudeDependentValue}}
+end
+
+Base.propertynames(summ::TwissSummary) = [keys(summ.sdict)...]
+function Base.getproperty(summ::TwissSummary, s::Symbol)
+  if s == :sdict
+    return getfield(summ, :sdict)
+  else
+    getfield(summ, :sdict)[s]
+  end
+end
+function _show_summ(summ::TwissSummary)
+  io = IOBuffer()
+  width = length(" alphac") # longest string 
+  for (k,v) in summ.sdict
+    println(io, rpad(" " * string(k), width), " = ", v isa AmplitudeDependentValue ? _show_adv(v) : repr(v))
+  end
+  count = length(keys(summ.sdict))
+  return String(take!(io)), count
+end
+
+Base.show(io::IO, summ::TwissSummary) = print(io, "TwissSummary:\n", _show_summ(summ)[1])
+
 struct Twiss
-  summ::LittleDict{Symbol,Union{Float64,AmplitudeDependentValue}}
+  summ::TwissSummary
   df::DataFrame         # s-dependent quantities
 end
 
@@ -11,8 +35,8 @@ function Base.getproperty(tw::Twiss, s::Symbol)
   else
     summ = getfield(tw, :summ)
     df = getfield(tw, :df)
-    if haskey(summ, s)
-      return summ[s]
+    if haskey(summ.sdict, s)
+      return summ.sdict[s]
     elseif hasproperty(df, s)
       return getproperty(df, s)
     else
@@ -21,19 +45,16 @@ function Base.getproperty(tw::Twiss, s::Symbol)
   end
 end
 
-Base.propertynames(tw::Twiss) = vcat(keys(tw.summ)..., propertynames(tw.df))
+Base.propertynames(tw::Twiss) = vcat(propertynames(tw.summ), propertynames(tw.df))
 
 function Base.show(io::IO, tw::Twiss)
   # Note: copy-pasted
   summ = tw.summ
   df = tw.df
   println(io, "Twiss:")
-  width = length(" alphac") # longest string 
+  str, count = _show_summ(summ)
   println(io, "summ:")
-  for (k,v) in summ
-    println(io, rpad(" " * string(k), width), " = ", v isa AmplitudeDependentValue ? _show_adv(v) : repr(v))
-  end
-  count = length(keys(summ))
+  print(io, str)
   println(io, "\ndf:")
   units = [something(DataFrames.colmetadata(df, col, "unit", nothing), "") for col in names(df)]
   show(io, df; eltypes=true, column_labels = [names(df), units], reserved_display_lines = 2+count+4)

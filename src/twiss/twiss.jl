@@ -56,6 +56,7 @@ function twiss(
 
   at::Union{Colon, AbstractVector}  = :,
   in_body_coordinates::Bool = false, 
+  rf_on::Bool = true,
 
   # GTPSA truncation order sets:
   order::Integer = 1,
@@ -78,10 +79,18 @@ function twiss(
 
   symplectic_tol = 1e-8, # Tolerance below which to include damping
   )
+
+  if !rf_on
+    cavities = filter(x->!isnothing(x.RFParams), bl.line)
+    rfps = map(x->x.RFParams, cavities)
+    # Turn them all off (doing this way to ensure inheritance + DefExpr remains):
+    foreach(x->x.RFParams=nothing, cavities)
+  end
+
   if isnothing(start)
     v0_and_coast = co_and_coast(bl, v0)
   else
-    v0_and_coast = (v0, false) # Always do 6D if open
+    v0_and_coast = (v0, !rf_on) 
   end
 
   coast = v0_and_coast[2]
@@ -191,6 +200,10 @@ function twiss(
   # q1, q2, slip factor eta_c, momentum compaction alpha_c, [q3, qspin]
   # only thing is with 3d motion, need to compute 
   summ = _twiss_summ(twi, cache)
+
+  if !rf_on
+    foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
+  end
 
   return Twiss(summ, df)
 end
@@ -609,5 +622,5 @@ function _twiss_summ(twi, cache)
     summ[:damp2] = oper(twi.damp2[end])
     summ[:damp3] = oper(twi.damp3[end])
   end
-  return summ
+  return TwissSummary(summ)
 end

@@ -146,7 +146,11 @@ end
 
 function _twiss_map_fcn(col, twi)
   if haskey(_TWISS_FCN_MAP, col)
-    return _TWISS_FCN_MAP[col]
+    cfcn = _TWISS_FCN_MAP[col]
+    if cfcn in (_w1, _w1a, _w1b, _w2, _w2a, _w2b) && noi(twi, 6) < 2
+      error("Chromatic order must be at least 2 to compute $(_INVERTED_TWISS_FCN_MAP[cfcn])")
+    end
+    return cfcn
   end
   m = match(r"^h([0-9]{4,6})$", col)
   if !isnothing(m)
@@ -161,8 +165,8 @@ function _twiss_map_fcn(col, twi)
     end
 
     for k in 1:length(mono)
-      if mono[k]-1 > noi(twi, k) 
-        error("Unable to compute h$(join(mono)): TPSA order not high enough (must be at least $(mono[k]) for variable $(k))")
+      if mo-1 > noi(twi, k) 
+        error("Unable to compute h$(join(mono)): TPSA order not high enough (must be at least $(mo-1) for all pseudo-harmonic oscillating variables)")
       end
     end
     let mono=mono
@@ -210,6 +214,7 @@ function _twiss_map_fcn(col, twi)
     if !(cfcn in (_nx, _ny, _nz)) && !iscoasting(twi)
       error("
         To compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order), beam must be coasting (no longitudinal oscillations).
+        Try setting the twiss keyword argument `rf_on=false`
       ")
     end
     if cfcn in (_x, _px, _y, _py, _n0x, _n0y, _n0z, _nx, _ny, _nz)
