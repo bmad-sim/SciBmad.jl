@@ -204,7 +204,6 @@ function _twiss_map_fcn(col, twi)
       end
     end
 
-
     order = isnothing(m.captures[2]) ? 1 : parse(Int, m.captures[2])
     cfcn = _TWISS_FCN_MAP[ccol]
     dord = noi(twi, 6)
@@ -225,7 +224,7 @@ function _twiss_map_fcn(col, twi)
       error("Chromatic order must be at least $(order+1) to compute d$(_INVERTED_TWISS_FCN_MAP[cfcn])_$(order)")
     end
     
-    if !(TI.is_tps_type(typeof(x)) isa TI.IsTPSType)
+    if cfcn in (_Vi, _N, _B1, _B2, _B3, _H1, _H2, _H3)
       error("
         Chromatic derivative-getting is currently only compatible with scalar-valued outputs, and 
         $(_INVERTED_TWISS_FCN_MAP[cfcn]) is a matrix/map.

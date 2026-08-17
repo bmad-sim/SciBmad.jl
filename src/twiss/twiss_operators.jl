@@ -488,10 +488,46 @@ end
 @inline _phi1(j, twi, cache, ::Val{as_tps}) where {as_tps} = _phi(j, twi, cache, Val{as_tps}(), 1)
 @inline _phi2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _phi(j, twi, cache, Val{as_tps}(), 2)
 @inline function _phi3(j, twi, cache, ::Val{as_tps}) where {as_tps}
-  if k == 3 && iscoasting(twi) 
+  if iscoasting(twi) 
     error("Cannot compute phi3: beam is coasting")
   end
   return _phi(j, twi, cache, Val{as_tps}(), 3)
+end
+
+@inline function _z_slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
+  # Need to include parameter/delta dependence in Lorentz beta...
+  if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)
+    _pz(j, twi, cache, Val{true}()) # Force (potentially TPSA) calculation of z
+  end
+
+  if haskey(cache.tps, :pz)
+    pz = cache.tps[:pz]
+  elseif haskey(cache.float, :pz)
+    pz = cache.float[:pz]
+  else
+    throwunreachable()
+  end
+
+  phi3 = _phi(j, twi, cache, Val{as_tps}(), 3)
+
+  if iscoasting(twi)
+    return phi3
+  end 
+
+  # Else use the approximation of Etienne
+  # B3[5,6]*sin(phi[3]*2*pi)
+  if !haskey(cache.smatrix6, :B3) && !haskey(cache.map, :B3)
+    _B3(j, twi, cache, Val{as_tps}())
+  end
+  if haskey(cache.smatrix6, :B3) # Then no parameter dependence
+    return cache.smatrix6[:B3][5,6]*sin(2*pi*phi3)
+  elseif haskey(cache.map, :B3) # Parameter dependence
+    B3 = cache.map[:B3]
+    z_slip = NNF.factor_out(B3.v[5], 6)
+    return as_tps ? z_slip : scalar(z_slip)
+  else
+    throwunreachable()
+  end
 end
 
 @inline function _slip(j, twi, cache, ::Val{as_tps}) where {as_tps}

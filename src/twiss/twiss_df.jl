@@ -1,7 +1,13 @@
-function _twiss_df(colnames, twi, ::Val{as_taylor_series}) where {as_taylor_series}
+function _twiss_df(colnames, twi, include_start, include_end, ::Val{as_taylor_series}) where {as_taylor_series}
   cols, colunits = _twiss_map(colnames, twi)
   ncols = length(cols)
   nrows = length(twi.s)
+  if !include_start
+    nrows -= 1
+  end
+  if !include_end
+    nrows -= 1
+  end
   row1 = Vector{Any}(undef, ncols)
 
   map_cache = build_cache(typeof(twi.fac[1].a))
@@ -27,17 +33,22 @@ function _twiss_df(colnames, twi, ::Val{as_taylor_series}) where {as_taylor_seri
   for i in 1:ncols
     colmetadata!(df, colnames[i], "unit", colunits[i]; style=:note)
   end
-  df[1,:] = row1
+  if include_start
+    df[1,:] = row1
+    shift = 0
+  else
+    shift = -1
+  end
 
   # enter type sdf loop
-  return _twiss_df_loop(df, cols, twi, cache, Val{as_taylor_series}())
+  return _twiss_df_loop(df, cols, twi, cache, shift, Val{as_taylor_series}()), cache
 end
 
-function _twiss_df_loop(df, cols, twi, cache, ::Val{as_taylor_series}) where {as_taylor_series}
+function _twiss_df_loop(df, cols, twi, cache, shift, ::Val{as_taylor_series}) where {as_taylor_series}
   nrows, ncols = size(df)
-  for row in 2:nrows
+  for row in 2:(nrows-shift)
     for col in 1:ncols
-      df[row,col] = @noinline (cols[col])(row, twi, cache, Val{as_taylor_series}())
+      df[row+shift,col] = @noinline (cols[col])(row, twi, cache, Val{as_taylor_series}())
       empty!(cache.map)
       empty!(cache.tps)
       empty!(cache.float)

@@ -93,7 +93,7 @@ function twiss(
       cols = TENG_EDWARDS
     end
   end
-  
+
   if spin
     spinregex = r"^(?:nx|ny|nz|n0x|n0y|n0z|d(?:nx|ny|nz|n0x|n0y|n0z)(?:_[1-9])?)$"
     if !any(x->occursin(spinregex, x), cols)
@@ -110,7 +110,7 @@ function twiss(
     @info "`GTPSA_descriptor` has been explicitly provided: ignoring `order`/`chrom` inputs"
   end
 
-  if !coast && chrom > 1
+  if !coast && chrom != order
     error("""
     You specified `chrom`, but this beamline has synchrotron motion. Please turn off RF 
     cavities to get delta-dependent Twiss functions.
@@ -140,7 +140,7 @@ function twiss(
   end
 
   # Assemble locations. Note that start and end of the Beamline are ALWAYS included
-  s, names, kinds, idxs, step_save = _twiss_assemble_locations(bl, at)
+  s, names, kinds, idxs, step_save, include_start, include_end = _twiss_assemble_locations(bl, at)
   beta_gamma_ref = Vector{Float64}(undef, length(s)) # Store the reference energy at each step
   t_ref = Vector{Float64}(undef, length(s)) # Store the reference time at each step
 
@@ -183,12 +183,16 @@ function twiss(
 
   twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes)
 
-  # Finally, construct the summary and the dataframe (with provided columns)
+  # Finally, construct the summ and the dataframe (with provided columns)
   # And post-process with the provided columns
   # Need to do one row first then can construct the DataFrame
-  df = _twiss_df(vcat(base_cols, cols), twi, Val{as_taylor_series}())
+  df, cache = _twiss_df(vcat(base_cols, cols), twi, include_start, include_end, Val{as_taylor_series}())
 
-  return Twiss(Dict{Symbol,Nothing}(), df)#, r_and_tunes[2]
+  # q1, q2, slip factor eta_c, momentum compaction alpha_c, [q3, qspin]
+  # only thing is with 3d motion, need to compute 
+  summ = _twiss_summ(twi, cache)
+
+  return Twiss(summ, df)
 end
 
 function co_and_coast(bl, v0)
@@ -205,6 +209,11 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   at_idxs = filter(x->x isa Integer, at)
   at_eles = filter(x->x isa LineElement, at)
   at_ranges = filter(x->x isa Tuple, at)
+
+  if any(x->x[1] > x[2], at_ranges)
+    t = at_ranges[findfirst(x->x[1] > x[2], at_ranges)]
+    error("Invalid s range ($(t[1]),$(t[2])): start index must be <= end index")
+  end
   
   stmp = Vector{Any}(undef, 0)
   names = Vector{String}(undef, 0)
@@ -258,7 +267,6 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
         push!(kinds, kind)
         push!(idxs, idx)
         push!(step_save, step_cur-n_steps)
-        #step_cur += 1
     end
   end
 
@@ -272,7 +280,14 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   # Now resolve type of s:
   s = typeof(scur).(stmp)
 
-  return s, names, kinds, idxs, step_save
+  include_start = any(x->x[1]<=0<=x[2], at_ranges) || any(x->x==1, at_idxs) || any(at_eles) do x
+    x == bl.line[1] || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(bl.line[1], :pdict)[InheritParams].parent) : false)
+  end
+  include_end = any(x->x[1]<=scur<=x[2], at_ranges) || any(x->x==length(bl.line), at_idxs) || any(at_eles) do x
+    x == bl.line[end] || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(bl.line[end], :pdict)[InheritParams].parent) : false)
+  end
+
+  return s, names, kinds, idxs, step_save, include_start, include_end
 end
 
 function _check_cachable(GTPSA_descriptor)
@@ -535,7 +550,6 @@ function _twiss_push_a!(bl, step_save, a_initial, canonise, phase, damp, beta_ga
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 
-
 function _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
   fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
   a = a_initial
@@ -552,4 +566,48 @@ function _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, d
     a = fac[j].a
   end
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
+end
+
+function _twiss_summ(twi, cache)
+  j = length(twi.s)
+  q1 = _phi1(j, twi, cache, Val{true}())
+  coast = iscoasting(twi)
+  is_tps = TI.is_tps_type(typeof(q1)) isa TI.IsTPSType
+  oper = is_tps ? x->AmplitudeDependentValue(x, coast) : x->x
+  summ = LittleDict{Symbol,Union{Float64,AmplitudeDependentValue}}()
+  summ[:q1] = oper(q1)
+  summ[:q2] = oper(_phi2(j, twi, cache, Val{true}()))
+
+  if !iscoasting(twi)
+    summ[:q3] = oper(_phi3(j, twi, cache, Val{true}()))
+  end
+
+  etac = -_slip(j, twi, cache, Val{true}()) / (C_LIGHT * twi.t_ref[end])
+  alphac = -_z_slip(j, twi, cache, Val{true}()) / twi.s[end]
+  if coast && TI.is_tps_type(typeof(etac)) isa TI.IsTPSType
+    etac = TI.deriv(etac, 6)
+  end
+  if coast && TI.is_tps_type(typeof(alphac)) isa TI.IsTPSType
+    alphac = TI.deriv(alphac, 6)
+  end
+  summ[:etac] = oper(etac)
+  summ[:alphac] = oper(alphac)
+
+  if length(twi.r_and_tunes[2]) == 4
+    qspin = twi.r_and_tunes[2][end]
+    if !is_tps && !coast
+      qspin = scalar(qspin)
+    else
+      qspin = AmplitudeDependentValue(qspin, coast)
+    end
+    summ[:qspin] = qspin
+  end
+  
+
+  if !isnothing(twi.damp1)
+    summ[:damp1] = oper(twi.damp1[end])
+    summ[:damp2] = oper(twi.damp2[end])
+    summ[:damp3] = oper(twi.damp3[end])
+  end
+  return summ
 end

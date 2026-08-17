@@ -1,33 +1,42 @@
-struct Twiss{T}
-  summary::Dict{Symbol,T}
-  df::DataFrame  # s-dependent quantities
+struct Twiss
+  summ::LittleDict{Symbol,Union{Float64,AmplitudeDependentValue}}
+  df::DataFrame         # s-dependent quantities
 end
 
 function Base.getproperty(tw::Twiss, s::Symbol)
   if s == :df
     return getfield(tw, :df)
-  elseif s == :summary
-    return getfield(tw, :summary)
+  elseif s == :summ
+    return getfield(tw, :summ)
   else
-    summary = getfield(tw, :summary)
+    summ = getfield(tw, :summ)
     df = getfield(tw, :df)
-    if haskey(summary, s)
-      return summary[s]
+    if haskey(summ, s)
+      return summ[s]
     elseif hasproperty(df, s)
       return getproperty(df, s)
     else
-      error("Twiss summary does not have $s")
+      error("Twiss summ does not have $s")
     end
   end
 end
 
-Base.propertynames(tw::Twiss) = vcat(keys(tw.summary), propertynames(tw.df))
+Base.propertynames(tw::Twiss) = vcat(keys(tw.summ)..., propertynames(tw.df))
 
 function Base.show(io::IO, tw::Twiss)
   # Note: copy-pasted
+  summ = tw.summ
   df = tw.df
+  println(io, "Twiss:")
+  width = length(" alphac") # longest string 
+  println(io, "summ:")
+  for (k,v) in summ
+    println(io, rpad(" " * string(k), width), " = ", v isa AmplitudeDependentValue ? _show_adv(v) : repr(v))
+  end
+  count = length(keys(summ))
+  println(io, "\ndf:")
   units = [something(DataFrames.colmetadata(df, col, "unit", nothing), "") for col in names(df)]
-  show(io, df; eltypes=true, column_labels = [names(df), units],)
+  show(io, df; eltypes=true, column_labels = [names(df), units], reserved_display_lines = 2+count+4)
 end
 
 struct TwissInternal{F,P,D,R}
@@ -73,3 +82,5 @@ function build_cache(::Type{T}, n=10) where {T}
   sizehint!(vals, n)
   return LittleDict(keys, vals)
 end
+
+
