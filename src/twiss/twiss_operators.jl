@@ -57,7 +57,7 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
       a1i_mat = cache.smatrix6[:a1i_mat]
     end
     a1_matk = StaticArrays.sacollect(SMatrix{nhv,2,Float64}, a1_mat[row,col] for col in (2*k-1):(2*k) for row in 1:nhv)
-    a1i_matk = StaticArrays.sacollect(SMatrix{nhv,2,Float64}, a1i_mat[row,col] for col in (2*k-1):(2*k) for row in 1:nhv)
+    a1i_matk = StaticArrays.sacollect(SMatrix{nhv,2,Float64}, a1i_mat[col,row] for col in (2*k-1):(2*k) for row in 1:nhv)
     Hk = a1_matk * a1i_matk'
     if coast
       cache.smatrix4[sym] = Hk

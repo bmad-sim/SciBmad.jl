@@ -40,7 +40,7 @@ function Base.getproperty(tw::Twiss, s::Symbol)
     elseif hasproperty(df, s)
       return getproperty(df, s)
     else
-      error("Twiss summ does not have $s")
+      error("Twiss does not have $s")
     end
   end
 end

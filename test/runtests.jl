@@ -37,22 +37,22 @@ using Test
 
         # N+1 entries: N element beginnings + END OF BEAMLINE
         N = size(ref, 1)
-        @test length(tw.table.beta_1) == N + 1
+        @test length(tw.beta1) == N + 1
 
         # Beta functions: element-wise relative tolerance (beta ranges 0.59–702 m)
-        @test all(isapprox.(tw.table.beta_1[1:N], ref[:,1]; rtol=1e-5, atol=0))
-        @test all(isapprox.(tw.table.beta_2[1:N], ref[:,2]; rtol=1e-5, atol=0))
+        @test all(isapprox.(tw.beta1[1:N], ref[:,1]; rtol=1e-5, atol=0))
+        @test all(isapprox.(tw.beta2[1:N], ref[:,2]; rtol=1e-5, atol=0))
 
         # Alpha functions: atol covers elements where alpha ≈ 0 at the periodic solution
-        @test all(isapprox.(tw.table.alpha_1[1:N], ref[:,3]; rtol=1e-5, atol=1e-8))
-        @test all(isapprox.(tw.table.alpha_2[1:N], ref[:,4]; rtol=1e-5, atol=1e-8))
+        @test all(isapprox.(tw.alpha1[1:N], ref[:,3]; rtol=1e-5, atol=1e-8))
+        @test all(isapprox.(tw.alpha2[1:N], ref[:,4]; rtol=1e-5, atol=1e-8))
 
         # Ring closure: END OF BEAMLINE entry equals the start of the ring.
         # Alpha uses atol since it is ≈0 at the periodic solution (pure relative tol is meaningless).
-        @test tw.table.beta_1[end]  ≈ tw.table.beta_1[1]
-        @test tw.table.beta_2[end]  ≈ tw.table.beta_2[1]
-        @test isapprox(tw.table.alpha_1[end], tw.table.alpha_1[1]; atol=1e-8)
-        @test isapprox(tw.table.alpha_2[end], tw.table.alpha_2[1]; atol=1e-8)
+        @test tw.beta1[end]  ≈ tw.beta1[1]
+        @test tw.beta2[end]  ≈ tw.beta2[1]
+        @test isapprox(tw.alpha1[end], tw.alpha1[1]; atol=1e-8)
+        @test isapprox(tw.alpha2[end], tw.alpha2[1]; atol=1e-8)
     end
 
     @testset "ESR Coupling Matrix vs Tao/Bmad" begin
@@ -69,10 +69,10 @@ using Test
         N = size(ref, 1)
 
         # atol covers elements where cmat ≈ 0 (ring has very weak coupling overall)
-        @test all(isapprox.(tw.table.c11[1:N], ref[:,1]; rtol=1e-5, atol=1e-8))
-        @test all(isapprox.(tw.table.c12[1:N], ref[:,2]; rtol=1e-5, atol=1e-8))
-        @test all(isapprox.(tw.table.c21[1:N], ref[:,3]; rtol=1e-5, atol=1e-8))
-        @test all(isapprox.(tw.table.c22[1:N], ref[:,4]; rtol=1e-5, atol=1e-8))
+        @test all(isapprox.(tw.c11[1:N], ref[:,1]; rtol=1e-5, atol=1e-8))
+        @test all(isapprox.(tw.c12[1:N], ref[:,2]; rtol=1e-5, atol=1e-8))
+        @test all(isapprox.(tw.c21[1:N], ref[:,3]; rtol=1e-5, atol=1e-8))
+        @test all(isapprox.(tw.c22[1:N], ref[:,4]; rtol=1e-5, atol=1e-8))
     end
 
     @testset "ESR Chromatic Functions vs Tao/Bmad" begin
@@ -90,22 +90,14 @@ using Test
         ring = include(joinpath(@__DIR__, "lattices", "esr.jl"))
 
         # Descriptor(6,2): 6 phase-space variables, order 2 → enables chromatic derivatives
-        tw = twiss(ring; GTPSA_descriptor=Descriptor(6, 2))
+        tw = twiss(ring; chrom=2, cols=["dbeta1", "dbeta2", "dalpha1", "dalpha2"])
 
         N = size(ref, 1)
-
-        # Extract linear pz coefficient = ∂/∂pz evaluated at closed orbit
-        # Monomial [0,0,0,0,0,1] = pz^1 (variables: x,px,y,py,z,pz)
-        dbeta1  = [tw.table.beta_1[i][[0,0,0,0,0,1]]  for i in 1:N]
-        dbeta2  = [tw.table.beta_2[i][[0,0,0,0,0,1]]  for i in 1:N]
-        dalpha1 = [tw.table.alpha_1[i][[0,0,0,0,0,1]] for i in 1:N]
-        dalpha2 = [tw.table.alpha_2[i][[0,0,0,0,0,1]] for i in 1:N]
-
         # Chromatic functions range up to ~5000 m; atol covers near-zero cases
-        @test_broken all(isapprox.(dbeta1,  ref[:,1]; rtol=1e-4, atol=1e-5))
-        @test_broken all(isapprox.(dbeta2,  ref[:,2]; rtol=1e-4, atol=1e-5))
-        @test_broken all(isapprox.(dalpha1, ref[:,3]; rtol=1e-4, atol=1e-5))
-        @test_broken all(isapprox.(dalpha2, ref[:,4]; rtol=1e-4, atol=1e-5))
+        @test_broken all(isapprox.(tw.dbeta1,  ref[:,1]; rtol=1e-4, atol=1e-5))
+        @test_broken all(isapprox.(tw.dbeta2,  ref[:,2]; rtol=1e-4, atol=1e-5))
+        @test_broken all(isapprox.(tw.dalpha1, ref[:,3]; rtol=1e-4, atol=1e-5))
+        @test_broken all(isapprox.(tw.dalpha2, ref[:,4]; rtol=1e-4, atol=1e-5))
     end
 
     @testset "ESR Closed Orbit (cv01_7 kicker) vs Tao/Bmad" begin
