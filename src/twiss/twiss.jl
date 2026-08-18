@@ -733,8 +733,7 @@ function _twiss_summ(twi, cache)
   j = length(twi.s)
   q1 = _phi1(j, twi, cache, Val{true}())
   coast = iscoasting(twi)
-  is_tps = TI.is_tps_type(typeof(q1)) isa TI.IsTPSType
-  oper = is_tps ? x->AmplitudeDependentValue(x, coast) : x->x
+  oper = x -> (TI.is_tps_type(typeof(x)) isa TI.IsTPSType ? AmplitudeDependentValue(x, coast) : x)
   summ = LittleDict{Symbol,Union{Float64,AmplitudeDependentValue}}()
   summ[:q1] = oper(q1)
   summ[:q2] = oper(_phi2(j, twi, cache, Val{true}()))
@@ -756,7 +755,7 @@ function _twiss_summ(twi, cache)
 
   if length(twi.r_and_tunes[2]) == 4
     qspin = twi.r_and_tunes[2][end]
-    if !is_tps && !coast
+    if !(TI.is_tps_type(typeof(q1)) isa TI.IsTPSType) && !coast
       qspin = scalar(qspin)
     else
       qspin = AmplitudeDependentValue(qspin, coast)
