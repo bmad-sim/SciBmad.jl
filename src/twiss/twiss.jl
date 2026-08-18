@@ -54,7 +54,65 @@ base_cols::Vector{String} = ["index", "name", "kind", "s"]
 """
     twiss(bl::Beamline; kwargs...)
 
-Computes 
+General function to compute the (parametric and nonlinear) Twiss parameters of a `Beamline`. 
+Returns a `Twiss`struct that contains the (amplitude-dependent) (spin) tunes/slip, and a 
+dataframe of the Twiss parameters at each specified integration step. By default, lattice 
+functions of the Sagan-Rubin/Edwards-Teng coupling formalism are computed in the dataframe 
+at every integration step.
+
+The `cols` keyword argument can be set to customize what quantities will be computed and 
+stored as columns in the returned dataframe. E.g., 
+```julia
+tw = twiss(bl; cols=["beta1"])
+```
+will compute only the horizontal-like beta function. We can also specify so-called 
+"resonance driving terms"/"detune coefficients" of the Bengtsson polynomial, similarly,
+```julia
+tw = twiss(bl; cols=["beta1", "h3000"], order=2)
+```
+where the total order of the `twiss` call has also been set appropriately to compute `h3000`.
+
+An arbitrary order chromatic derivative of any scalar-valued column can be taken using the 
+syntax `d<column>_<order>`. If `order==1`, then the `_1` can be omitted. E.g., the linear and 
+2nd order dispersions, as well as ∂β₁/∂δ can be computed with
+```julia
+tw = twiss(bl; cols=["dx", "dx_2","dbeta1"], chrom=2)
+```
+where the `chrom` keyword argument, which specifies solely the truncation order of δ, has been 
+set appropriately. 
+
+For chromatic derivative calculation, you may need to set the keyword argument `rf_on=false`.
+
+To customize the output, such as computing higher order (chromatic) lattice functions, spin 
+lattice functions/tune, amplitude-dependent tunes, and parametric quantities, see the 
+keyword arguments:
+
+## Keyword arguments
+- `at::Union{Colon, AbstractVector}`: A vector containing `LineElement`s, element beamline 
+    indexes, and/or tuples of s-ranges specifying where to compute the Twiss parameters.
+- `in_body_coordinates::Bool`: If `true` Twiss parameters inside misaligned elements are not
+    transformed back to the reference curve coordinates. Default is `false`
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+    entirety of the Twiss tracking and calculation. Default is `true`
+- `order::Integer`: TPSA truncation order for all phase space coordinates used in the Twiss 
+    calculation, default is 1
+- `chrom::Integer`: TPSA truncation order for only δ, default is `order`
+- `GTPSA_descriptor::Union{Descriptor,Nothing}`: Custom GTPSA `Descriptor` to use for the Twiss 
+    calculation, required to provide to do parametric normal form and lattice function 
+    calculations. Default is `Descriptor([order, order, order, order, order, chrom], max(order,chrom))`.
+- `a_initial::Union{DAMap,Nothing}`: A `DAMap` of the initial transformation from normal form 
+    coordinates to laboratory coordinates, to compute "open" lattice Twiss functions. Default is 
+    `nothing`, to compute the periodic ("closed") lattice Twiss functions
+- `damping::Union{Bool,Nothing}`: Specifies if radiation damping is included. Default is `nothing`,
+    which will auto-detect from `a_initial` or the periodic `a`.
+- `delta0`: 
+
+
+To see a description of all quantities available to include in `cols`, see the extended help 
+section using `??twiss`
+
+# Extended help
+
 """
 function twiss(
   bl::Beamline; 
@@ -102,6 +160,8 @@ function twiss(
     # Turn them all off (doing this way to ensure inheritance + DefExpr remains):
     foreach(x->x.RFParams=nothing, cavities)
   end
+  
+  try
 
   if isnothing(a_initial)
     v0_and_coast = co_and_coast(bl, v0)
@@ -216,12 +276,14 @@ function twiss(
   # q1, q2, slip factor eta_c, momentum compaction alpha_c, [q3, qspin]
   # only thing is with 3d motion, need to compute 
   summ = _twiss_summ(twi, cache)
-
-  if !rf_on
-    foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
-  end
-
   return Twiss(summ, df)
+  
+  catch e
+    if !rf_on
+      foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
+    end
+    rethrow(e)
+  end
 end
 
 function co_and_coast(bl, v0)

@@ -37,7 +37,11 @@ export  twiss,
         track_spin,
         track_spin!,
         TrackingResult,
-        TrackingConfig
+        TrackingConfig,
+        Twiss,
+        TwissSummary,
+        getterm,
+        AmplitudeDependentValue 
         
 include("closed_orbit.jl") 
 include("track.jl")

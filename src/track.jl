@@ -1,3 +1,37 @@
+"""
+    struct TrackingConfig
+
+Defines configuration settings for a particles tracking run.
+
+## Properties
+- `n_turns::Int`: Number of turns, defaults to `1`
+- `save_every_n_turns::Int`: Multiple of turn number which specifies the turns tracking 
+    data is saved, defaults to `1`
+- `scalar_params::Bool`: If `true`, only uses the primal values of any `LineElement` 
+    properties set as `GTPSA.TPS`, `ForwardDiff.Dual`, or `ReverseDiff.TrackedReal` 
+    (ignores derivatives part, useful for closed orbit finding prior to parametric 
+    normal form). Default is `false`
+- `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
+    energy is a `TimeFunction`), then particle energies will be artificially ramped with 
+    the reference energy. Default is `false`
+- `ramp_update_each_particle::Bool`: If `true` when ramping, then the z-offset/time-offset 
+    of each individual particle at the element entrances is taken into account when 
+    tracking particles through the time-dependent element parameters. Usually only needed 
+    if ramping is fast compared to the time scale of bunch passage through elements. 
+    Default is `false`.
+- `verbose::Bool`: If `true`, print the the status of tracking. Default is `false`
+- `groupsize::Int`: Designates a group of threads acting in parallel, preferably in 
+    lockstep. If tracking on a CUDA GPU, this is equal to the "block" size. On the CPU, 
+    would be a multiple of the vector register width. Default is `0` which lets 
+    `KernelAbstractions` decide.
+- `use_cpu_multithreading::Bool `: If `true`, then CPU multithreading will be used. Only 
+    beneficial for a large number of particles, as there is a cost to launching threads. 
+    Default is `false`.
+- `use_KA::Bool`: If `true`, uses `KernelAbstractions` to launch tracking kernels. Default 
+    is `true`, and it must be `true` for the GPU. 
+- `use_explicit_SIMD::Bool`: If `true`, uses `SciBmad`'s explicit CPU SIMD tracking, which
+    often guarantees vectorization of tracking on the CPU. Default is `!use_KA`
+"""
 @kwdef struct TrackingConfig
   n_turns::Int                          = 1
   save_every_n_turns::Int               = 1
@@ -21,6 +55,19 @@ function Base.show(io::IO, config::TrackingConfig)
   return
 end
 
+"""
+    struct TrackingResult{S,V,Q}
+
+Contains all information for a given particle tracking run.
+
+## Properties
+- `config`: A `TrackingConfig` struct containing configuration settings
+- `elapsed_time`: The tracking execution time in minutes 
+- `state`: A matrix of particle states at each saved turn
+- `v`: A tensor of particle phase space coordinates at each saved turn
+- `q`: If spin tracking was enabled, a tensor of particle quaternions at each saved turn
+- `bunch`: The `Bunch` at the end of tracking
+"""
 struct TrackingResult{S,V,Q}
   config::TrackingConfig
   elapsed_time::Float64 # in minutes
@@ -65,15 +112,45 @@ end
 All-encompassing function to track particles through the beamline `bl` using the configured 
 settings specified by the keyword arguments `kwargs`.
 
-# Keyword Arguments
+## Keyword Arguments
 - `v0`: A matrix of size `(n_particles, 6)` storing the initial particle phase space coordinates
 - `spin`: If `true`, spin tracking will be enabled with identity quaternions as initial quaternions
 - `q0`: A matrix of size `(n_particles, 4)` storing the initial particle spin quaternions if spin tracking
 - `weight`: Optional vector of length `(n_particles)` specifying macroparticle weights per particle, default 
     is `nothing` corresponding to uniform weights for all particles
-
-  
-
+- `bunch`: Instead of specifying `v0`, `spin`, `q0`, and `weight`, an initial `Bunch` may be explicitly provided
+- `n_turns::Int`: Number of turns, defaults to `1`
+- `save_every_n_turns::Int`: Multiple of turn number which specifies the turns tracking 
+    data is saved, defaults to `1`
+- `scalar_params::Bool`: If `true`, only uses the primal values of any `LineElement` 
+    properties set as `GTPSA.TPS`, `ForwardDiff.Dual`, or `ReverseDiff.TrackedReal` 
+    (ignores derivatives part, useful for closed orbit finding prior to parametric 
+    normal form). Default is `false`
+- `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
+    energy is a `TimeFunction`), then particle energies will be artificially ramped with 
+    the reference energy. Default is `false`
+- `ramp_update_each_particle::Bool`: If `true` when ramping, then the z-offset/time-offset 
+    of each individual particle at the element entrances is taken into account when 
+    tracking particles through the time-dependent element parameters. Usually only needed 
+    if ramping is fast compared to the time scale of bunch passage through elements. 
+    Default is `false`.
+- `verbose::Bool`: If `true`, print the the status of tracking. Default is `false`
+- `groupsize::Int`: Designates a group of threads acting in parallel, preferably in 
+    lockstep. If tracking on a CUDA GPU, this is equal to the "block" size. On the CPU, 
+    would be a multiple of the vector register width. Default is `0` which lets 
+    `KernelAbstractions` decide.
+- `use_cpu_multithreading::Bool `: If `true`, then CPU multithreading will be used. Only 
+    beneficial for a large number of particles, as there is a cost to launching threads. 
+    Default is `false`.
+- `use_KA::Bool`: If `true`, uses `KernelAbstractions` to launch tracking kernels. Default 
+    is `true` if `v0` is a GPU array, else `false`.
+- `use_explicit_SIMD::Bool`: If `true`, uses `SciBmad`'s explicit CPU SIMD tracking, which
+    often guarantees vectorization of tracking on the CPU. Default is `!use_KA`
+- `config`: Instead of specifying `n_turns`, `save_every_n_turns`, `scalar_params`, 
+    `ramp_particle_energy_without_rf`, `ramp_update_each_particle`, `verbose`, `groupsize`, 
+    `use_cpu_multithreading`, `use_KA`, and `use_explicit_SIMD`, a single `TrackingConfig` 
+    struct can be provided instead. Setting any of these keyword arguments will override 
+    that in `config`.
 """
 function track(
     bl::Beamline;

@@ -4,7 +4,7 @@ struct AmplitudeDependentValue
 end
 
 Base.getindex(a::AmplitudeDependentValue; delta::Integer=0, J1::Integer=0, J2::Integer=0, J3::Integer=0, as_taylor_series::Bool=false) = _adv_get(a, delta, J1, J2, J3, Val{as_taylor_series}())
-
+getterm(a::AmplitudeDependentValue; delta::Integer=0, J1::Integer=0, J2::Integer=0, J3::Integer=0, as_taylor_series::Bool=false) = _adv_get(a, delta, J1, J2, J3, Val{as_taylor_series}())
 function _adv_get(a, delta, J1, J2, J3, ::Val{as_taylor_series}) where {as_taylor_series}
   if a.coast && J3 != 0
     error("`J3` is NOT an amplitude in this value (beam is coasting), use `delta` instead")

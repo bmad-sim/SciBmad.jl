@@ -164,6 +164,64 @@ end
 @inline _B2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Bk(j, twi, cache, Val{as_tps}(), 2)
 @inline _B3(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Bk(j, twi, cache, Val{as_tps}(), 3)
 
+@inline function _Ek(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
+  if k == 1
+    sym = :E1
+    osym = :B1
+  elseif k == 2
+    sym = :E2
+    osym = :B2
+  elseif k == 3
+    sym = :E3
+    osym = :B2
+  else
+    error("Index for de Moivre E matrix must be between 1 and 3")
+  end
+
+  if haskey(cache.smatrix4, sym)
+    return cache.smatrix4[sym]
+  elseif haskey(cache.smatrix6, sym)
+    return cache.smatrix6[sym]
+  elseif haskey(cache.map, sym)
+    return as_tps ? cache.map[sym] : NNF.jacobian(cache.map[sym], NNF.HVARS)
+  elseif !haskey(cache.map, osym) && !(haskey(cache.smatrix4, osym) || haskey(cache.smatrix6, osym))
+    _Bk(j, twi, cache, Val{as_tps}(), k)
+  end
+
+  coast = iscoasting(twi)
+
+  if k == 3 && coast
+    error("Unable to compute de Moivre matrix E3: beam is coasting")
+  end
+
+  njmat = -NNF.j_mat(twi.fac[j].a1)
+
+  if haskey(cache.map, osym)
+    Bk = cache.map[osym]
+    if !haskey(cache.persistent_map, :tmp1)
+      cache.persistent_map[:tmp1] = zero(twi.fac[j].a)
+    end
+    tmp1 = cache.persistent_map[:tmp1]
+    NNF.clear!(tmp1)
+    NNF.setray!(tmp1.v, v_matrix=njmat)
+    Ek = Bk ∘ tmp1
+    return as_tps ? Ek : NNF.jacobian(Ek, NNF.HVARS)
+  else
+    if haskey(cache.smatrix4, osym)
+      Bk = cache.smatrix4[osym]
+    elseif haskey(cache.smatrix6, osym)
+      Bk = cache.smatrix6[osym]
+    else
+      throwunreachable()
+    end
+    return Bk*njmat # no need to store in cache, not used by anything (unlike B and H)
+  end
+end
+
+@inline _E1(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Ek(j, twi, cache, Val{as_tps}(), 1)
+@inline _E2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Ek(j, twi, cache, Val{as_tps}(), 2)
+@inline _E3(j, twi, cache, ::Val{as_tps}) where {as_tps} = _Ek(j, twi, cache, Val{as_tps}(), 3)
+
 
 @inline function _gammac(j, twi, cache, ::Val{as_tps}) where {as_tps}
   if haskey(cache.float, :gammac)
