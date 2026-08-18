@@ -160,6 +160,7 @@ function track(
     spin::Bool=false,
     q0::Union{AbstractMatrix,Nothing}=spin ? (q = similar(v0, (size(v0, 1), 4)); q .= 0; q[:,1] .= 1; q) : nothing,
     weight::Union{AbstractMatrix,Nothing}=nothing,
+    callbacks::Tuple=(),
 
     # Or explicitly provide a Bunch:
     bunch::Bunch=Bunch(; 
@@ -167,7 +168,8 @@ function track(
       q=(!isnothing(q0) ? copy.(q0) : nothing), 
       weight=(!isnothing(weight) ? copy.(weight) : nothing), 
       species=bl.species_ref, 
-      p_over_q_ref=(_p_over_q_ref = bl.p_over_q_ref; _p_over_q_ref isa TimeDependentParam ? _p_over_q_ref(0) : _p_over_q_ref)
+      p_over_q_ref=(_p_over_q_ref = bl.p_over_q_ref; _p_over_q_ref isa TimeDependentParam ? _p_over_q_ref(0) : _p_over_q_ref),
+      callbacks=callbacks,
     ),
 
     config=TrackingConfig(use_KA=!(KA.get_backend(bunch.v) isa KA.CPU)),
@@ -253,7 +255,7 @@ function _track(bl, bunch, config, groupsize)
 end
 
 """
-    track_spin(s0::AbstractVecOrMat, q::AbstractArray{<:Any,3})
+    track_spin(q::AbstractArray{<:Any,3}, s0::AbstractVecOrMat)
 
 Given initial spin(s) `s0` and the quaternion output tensor `q` from `track`, 
 returns a tensor `s` of size `(n_particles, 3, n_saved_turns)` of the particles' 

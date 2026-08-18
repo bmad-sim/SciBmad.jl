@@ -214,7 +214,7 @@ function _twiss_map_fcn(col, twi)
       end
     end
 
-    order = isnothing(m.captures[2]) ? 1 : parse(Int, m.captures[2])
+    order = isnothing(m.captures[3]) ? 1 : parse(Int, m.captures[3])
     cfcn = _TWISS_FCN_MAP[ccol]
     dord = noi(twi, 6)
     if !(cfcn in (_nx, _ny, _nz)) && !iscoasting(twi)
