@@ -105,8 +105,24 @@ keyword arguments:
     `nothing`, to compute the periodic ("closed") lattice Twiss functions
 - `damping::Union{Bool,Nothing}`: Specifies if radiation damping is included. Default is `nothing`,
     which will auto-detect from `a_initial` or the periodic `a`.
-- `delta0`: 
-
+- `delta0`: If the beam is coasting (no longitudinal oscillations), then the Twiss parameters will 
+    be computed around this delta-dependent orbit. Else, this will be an initial guess for the 
+    6D closed orbit calculation. Default is `0.`. If `a_initial` is provided then this will be ignored, 
+    UNLESS `a_initial` is coasting, in which case this will set the value for δ. 
+- `v0`: Initial guess for the closed orbit finder if `a_initial` is not provided, else setting this 
+    will override the orbit expansion origin coordinates in `a_initial.v0`.
+- `spin::Bool`: If `true`, spin is included in the Twiss calculation. Default is `false`.
+- `base_cols`: A vector of "base columns", that will always be included in the Twiss dataframe regardless 
+    of what is specified in `cols`. Defaults to the global variable `SciBmad.base_cols`, which defaults 
+    to `["index", "name", "kind", "s"]`.
+- `cols`: A vector of columns to include in the Twiss dataframe. See the extended help for all possible 
+    columns.
+- `as_taylor_series::Union{Bool,Nothing}`: If `true`, that the lattice functions in the dataframe are 
+    returned as Taylor series types - this will be necessary if doiong parametric normal form. Default 
+    is `nothing`, which autoselects to `false` if there are no parameters in the GTPSA, and `true` if 
+    there are parameters.
+- `symplectic_tol::Float64`: Tolerance of symplectic condition violation, above which radiation damping 
+    is assumed. Default is `1e-8`.
 
 To see a description of all quantities available to include in `cols`, see the extended help 
 section using `??twiss`
@@ -131,7 +147,7 @@ function twiss(
   damping::Union{Nothing,Bool} = nothing, # nothing = auto-detect from a_initial
 
   # Initial input, CO guess if periodic, initial orbit if not periodic
-  delta0::Number = 0.,
+  delta0::Number=0.,
   v0::Matrix     = (if isnothing(a_initial)
         [0. 0. 0. 0. 0. delta0]
     else
