@@ -129,6 +129,60 @@ section using `??twiss`
 
 # Extended help
 
+Columns to include in `cols` are detailed below. As a reminder, an arbitrary order chromatic derivative 
+of *any* scalar-valued output can be computed using the syntax "d<column>_<order" (e.g. "dx_1" is the 
+linear dispersion).
+
+- `index`  : Beamline index of the containing `LineElement`
+- `name`   : Name of the containing `LineElement`
+- `kind`   : Kind of the containing `LineElement`
+- `s`      : s-position of the Twiss parameter calculation (may be inside of `LineElement`)
+- `beta1`  : Horizontal-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism
+- `beta2`  : Vertical-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism
+- `alpha1` : Horizontal-like alpha function of the Sagan-Rubin/Edwards-Teng coupling formalism
+- `alpha2` : Vertical-like alpha function of the Sagan-Rubin/Edwards-Teng coupling formalism
+- `phi1`   : Horizontal-like phase advance in units of [2π]
+- `phi2`   : Vertical-like phase advance in units of [2π]
+- `phi3`   : Longitudinal-like phase advance in units of [2π]
+- `slip`   : Slip factor in units cΔt [m]
+- `x`      : Orbit canonical x coordinate
+- `px`     : Orbit canonical px coordinate
+- `y`      : Orbit canonical y coordinate
+- `py`     : Orbit canonical py coordinate
+- `z`      : Orbit canonical z coordinate
+- `pz`     : Orbit canonize pz coordinate
+- `zx`     : Adiabatic dependence of x on initial longitudinal position/time (AKA "crab dispersion") 
+- `zpx`    : Adiabatic dependence of px on initial longitudinal position/time (AKA "crab dispersion")
+- `zy`     : Adiabatic dependence of y on initial longitudinal position/time (AKA "crab dispersion")
+- `zpy`    : Adiabatic dependence of py on initial longitudinal position/time (AKA "crab dispersion")
+- `nx`     : Invariant spin field x-component (recommended to use with `as_taylor_series=true`)
+- `ny`     : Invariant spin field y-component (recommended to use with `as_taylor_series=true`)
+- `nz`     : Invariant spin field z-component (recommended to use with `as_taylor_series=true`)
+- `n0x`    : Closed orbit periodic spin direction x-component
+- `n0y`    : Closed orbit periodic spin direction y-component
+- `n0z`    : Closed orbit periodic spin direction z-component
+- `N`      : N matrix of the Sagan-Rubin coupling formalism
+- `Vi`     : V⁻¹ matrix of the Sagan-Rubin coupling formalism
+- `c11`    : [1,1] component of the Sagan-Rubin coupling matrix C
+- `c12`    : [1,2] component of the Sagan-Rubin coupling matrix C
+- `c21`    : [2,1] component of the Sagan-Rubin coupling matrix C
+- `c22`    : [2,2] component of the Sagan-Rubin coupling matrix C
+- `gammac` : Coupling factor of the Sagan-Rubin coupling formalism
+- `w1a`    : Horizontal-like Montague function "a" component, requires `chrom > 1` and/or `order > 1`
+- `w2a`    : Vertical-like Montague function "a" component, requires `chrom > 1` and/or `order > 1`
+- `w1b`    : Horizontal-like Montague function "b" component, requires `chrom > 1` and/or `order > 1`
+- `w2b`    : Vertical-like Montague function "b" component, requires `chrom > 1` and/or `order > 1`
+- `w1`     : Horizontal-like Montague function, requires `chrom > 1` and/or `order > 1`
+- `w2`     : Vertical-like Montague function, requires `chrom > 1` and/or `order > 1`
+- `H1`     : De Moivre-Ripken H¹ matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `H2`     : De Moivre-Ripken H² matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `H3`     : De Moivre-Ripken H³ matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `B1`     : De Moivre-Ripken B¹ matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `B2`     : De Moivre-Ripken B² matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `B3`     : De Moivre-Ripken B³ matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `E1`     : De Moivre-Ripken E¹ matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `E2`     : De Moivre-Ripken E² matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `E3`     : De Moivre-Ripken E³ matrix (see E. Forest, _From Tracking Code to Analysis_)
 """
 function twiss(
   bl::Beamline; 
