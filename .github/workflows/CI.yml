@@ -23,15 +23,14 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.12'
-          - '1.11'
+          - '1'
           - 'lts'
         os:
           - ubuntu-latest
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
@@ -40,7 +39,7 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v7
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -51,9 +50,10 @@ jobs:
     permissions:
       actions: write # needed to allow julia-actions/cache to proactively delete old caches that it has created
       contents: write
+      pull-requests: write # needed to comment the preview link on the PR
       statuses: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
         with:
           version: '1'
@@ -72,12 +72,11 @@ jobs:
         run: pip install -r docs/requirements.txt
       - name: Build documentation
         run: python docs/build.py
-      - name: Upload documentation preview
-        uses: actions/upload-artifact@v7
+      - name: Deploy PR preview
         if: github.event_name == 'pull_request'
+        uses: rossjrw/pr-preview-action@v1
         with:
-          name: documentation-preview
-          path: gh-pages/
+          source-dir: ./gh-pages
       - name: Deploy documentation
         uses: peaceiris/actions-gh-pages@v4
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))

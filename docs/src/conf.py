@@ -10,10 +10,23 @@ author = 'SciBmad.jl Contributors'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
-    'myst_parser',
+    'myst_nb',          # superset of myst_parser that also renders Jupyter notebooks
     'sphinx.ext.githubpages',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
+    'sphinxcontrib.bibtex',
+]
+
+# -- Jupyter notebook handling (myst-nb) -------------------------------------
+# Notebooks are committed already-executed (they need a Julia/IJulia kernel that
+# isn't available in CI), so render their stored outputs instead of re-executing.
+nb_execution_mode = "off"
+
+numfig = True
+bibtex_bibfiles = ['bibliography.bib']
+suppress_warnings = [
+    "myst.header",               # files whose first heading is H1, not H2
+    "mystnb.unknown_mime_type",  # notebook outputs that also carry text/csv or text/tsv (text/plain is rendered)
 ]
 
 # -- Intersphinx configuration -----------------------------------------------
@@ -91,7 +104,10 @@ myst_enable_extensions = [
 ]
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = [
+    'parameters',              # included via other pages, not as standalone docs
+    '**/.ipynb_checkpoints',   # Jupyter scratch copies under examples/
+]
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'furo'
@@ -101,11 +117,16 @@ html_theme_options = {
     'source_branch': 'main',
     'source_directory': 'docs/src/',
     'navigation_with_keys': True,
-    'sidebar_hide_name': False,
+    'sidebar_hide_name': True,
+    # Logo shown at the top left of the sidebar (paths relative to html_static_path).
+    'light_logo': 'SciBmad-Logo.png',
+    'dark_logo': 'SciBmad-Logo-dark.png',
 }
 
 html_title = 'SciBmad.jl Documentation'
 html_static_path = ['_static']
+html_css_files = ['custom.css']
+html_js_files = ['topbar-github.js']
 
 # Sidebar settings with custom external links
 html_sidebars = {

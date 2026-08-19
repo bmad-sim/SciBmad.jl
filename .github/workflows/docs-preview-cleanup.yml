@@ -1,0 +1,14 @@
+name: Clean up docs PR preview
+on:
+  pull_request:
+    types: [closed]
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Remove PR preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          action: remove

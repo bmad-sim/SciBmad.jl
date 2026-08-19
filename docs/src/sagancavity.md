@@ -1,3 +1,0 @@
-# SaganCavity
-
-In development...

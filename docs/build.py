@@ -27,14 +27,14 @@ result = subprocess.run(
 if result.returncode != 0:
     exit(1)
 
-## Install Sphinx dependencies
-#print("\nInstalling Sphinx dependencies...")
-#result = subprocess.run(
-#    ["pip", "install", "-r", "requirements.txt"],
-#    cwd=docs_dir
-#)
-#if result.returncode != 0:
-#    exit(1)
+# Install Sphinx dependencies
+print("\nInstalling Sphinx dependencies...")
+result = subprocess.run(
+    ["pip", "install", "-r", "requirements.txt"],
+    cwd=docs_dir
+)
+if result.returncode != 0:
+    exit(1)
 
 # Build Sphinx
 print("\nBuilding Sphinx documentation...")

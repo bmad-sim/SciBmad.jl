@@ -6,7 +6,7 @@
 [![Coverage](https://codecov.io/gh/bmad-sim/SciBmad.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bmad-sim/SciBmad.jl)
 !-->
 
-[Slides](https://github.com/user-attachments/files/25094046/scibmad-eic-02-02-2026.pdf),    [Examples](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples)
+[Paper](https://github.com/bmad-sim/SciBmad.jl/blob/main/paper/THP5325.pdf), [Slides](https://github.com/user-attachments/files/25094046/scibmad-eic-02-02-2026.pdf),    [Examples](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples)
 
 ## Overview
 
@@ -24,37 +24,38 @@ Users are pointed to example Jupyter notebooks in both Julia and Python in the [
 
 ## Project Status
 
-SciBmad development is progressing rapidly. Features included in the current state of the project (0.3.1), the next release (0.4.0), and currently being planned for later releases are:
+SciBmad development is progressing rapidly. Features included in the current state of the project (0.5.0) and currently being planned for later releases are:
 
-### Current Release 0.3.1
+### Current Release 0.5.0
 - CPU/GPU parallelized 6D symplectic particle tracking including spin and radiation
 - Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything
 - Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
-- Arbitrary time-dependent accelerator parameters (e.g. magnet strengths, misalignments)
+- Arbitrary time-dependent accelerator parameters (e.g. magnet strengths, reference energy, misalignments)
 - CPU/GPU parallelized tracking and analysis over differing accelerator parameters (batch parameter evaluation)
-- Arbitrarily-interdependent accelerator parameters
+- Arbitrarily-interdependent accelerator parameters with lazily-evaluated deferred expressions
 - CPU/GPU parallelized dynamic aperture scans
 - Arbitrary placements and orientations of accelerator elements
-
-
-### Next Release 0.4.0
 - CPU/GPU parallelized intrabeam scattering (IBS)
 - CPU/GPU parallelized Numerical Analysis of Fundamental Frequencies (NAFF)
+- CPU/GPU parallelized Newton root finder
+- CPU/GPU parallelized and differentiable symplectic tracking through arbitrary electromagnetic fields (implicit integration)
 - Twiss functions at every integration step (inside elements)
-- Open lattice Twiss function propagation
-- CPU/GPU parallelized Newton-Raphson, differential evolution, and genetic algorithm solvers
-- Symplectic tracking through arbitrary electromagnetic fields (implicit integration)
+- Resonance driving terms (including parameter dependence) included in Twiss
+- Context-switching for evalution of deferred expressions for accelerator parameters
+- Open lattice Twiss functions given initial normalizing transformation
+- CPU/GPU parallelized compatible Gaussian intra-beam scattering (IBS) tracking
 
 ### Future Releases
+- Easy optimization interface
 - Generalized gradient field description
+- Wakefields
+- Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strong-strong beam beam)
 - Weak-strong symplectic beam-beam interaction
 - PyTorch bindings
 - Exact multipoles in curved coordinate systems
 - Electric multipoles
 - Space charge
-- Wakefields
 - Coherent synchrotron radiation
-
 
 ## SciBmad Family
 
