@@ -24,13 +24,13 @@ Users are pointed to example Jupyter notebooks in both Julia and Python in the [
 
 ## Project Status
 
-SciBmad development is progressing rapidly. Features included in the current state of the project (0.4.0), the next release (0.4.1), and currently being planned for later releases are:
+SciBmad development is progressing rapidly. Features included in the current state of the project (0.5.0) and currently being planned for later releases are:
 
-### Current Release 0.4.2
+### Current Release 0.5.0
 - CPU/GPU parallelized 6D symplectic particle tracking including spin and radiation
 - Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything
 - Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
-- Arbitrary time-dependent accelerator parameters (e.g. magnet strengths, misalignments)
+- Arbitrary time-dependent accelerator parameters (e.g. magnet strengths, reference energy, misalignments)
 - CPU/GPU parallelized tracking and analysis over differing accelerator parameters (batch parameter evaluation)
 - Arbitrarily-interdependent accelerator parameters with lazily-evaluated deferred expressions
 - CPU/GPU parallelized dynamic aperture scans
@@ -42,19 +42,19 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Twiss functions at every integration step (inside elements)
 - Resonance driving terms (including parameter dependence) included in Twiss
 - Context-switching for evalution of deferred expressions for accelerator parameters
-
-### Release 0.4.3
-- Open lattice Twiss function propagation
+- Open lattice Twiss functions given initial normalizing transformation
+- CPU/GPU parallelized compatible Gaussian intra-beam scattering (IBS) tracking
 
 ### Future Releases
+- Easy optimization interface
 - Generalized gradient field description
-- Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strogn-strong beam beam)
+- Wakefields
+- Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strong-strong beam beam)
 - Weak-strong symplectic beam-beam interaction
 - PyTorch bindings
 - Exact multipoles in curved coordinate systems
 - Electric multipoles
 - Space charge
-- Wakefields
 - Coherent synchrotron radiation
 
 ## SciBmad Family

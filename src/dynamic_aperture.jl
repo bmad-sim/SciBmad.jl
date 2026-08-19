@@ -22,14 +22,19 @@ function dynamic_aperture(
     track_kwargs... # Get passed to track!
   )
   Base.require_one_based_indexing(deltas)
-
   if delta_dependent_orbits && emit_3 != 0
     error("You specified delta_dependent_orbits = true but a nonzero emit_3. Instead specify sig_pz")
   elseif !delta_dependent_orbits && sig_pz != 0
     error("You specified delta_dependent_orbits = true but a nonzero emit_3. Instead specify sig_pz")
   end
 
-  co = zeros(length(deltas), 6)
+  if !issorted(deltas)
+    deltas = sort(deltas)
+  end
+  n_deltas = length(deltas)
+  co = zeros(n_deltas, 6)
+  co[:,6] .= deltas
+  
   if delta_dependent_orbits
     # First, turn off all the cavities and store their strengths in 
     # an array
@@ -40,15 +45,15 @@ function dynamic_aperture(
 
     local t
     try
-      tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
-      if !tw.coasting_beam
+      tw = twiss(bl, at=[1], cols=["E1", "E2", "dx", "dy"])
+      if (:q3 in propertynames(tw))
         error("
-        To compute delta_dependent_orbits, the beam must be coasting. We tried turning off 
-        all cavities, but still did not detect coasting beam. Please turn off any elements 
-        that cause longitudinal motion.
+          To compute delta_dependent_orbits, the beam must be coasting. We tried turning off 
+          all cavities, but still did not detect coasting beam. Please turn off any elements 
+          that cause longitudinal motion.
         ")
       end
-      t = tw.table
+      t = tw
     catch e
       # Put cavities back
       foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
@@ -56,41 +61,37 @@ function dynamic_aperture(
     end
 
     # Now compute sigmas at first element, just first order:
-    E = t.E[1]
-    sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 
-    sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 
-    eta_x = t.orbit_x[1][6]
-    eta_y = t.orbit_y[1][6]
-    sig_x += (eta_x*sig_pz)^2
-    sig_y += (eta_y*sig_pz)^2
+    sig_x = t.E1[1][1,1]*emit_1 + t.E2[1][1,1]*emit_2 
+    sig_y = t.E1[1][3,3]*emit_1 + t.E2[1][3,3]*emit_2 
+    sig_x += (t.dx[1]*sig_pz)^2
+    sig_y += (t.dy[1]*sig_pz)^2
     sig_x = sqrt(sig_x)
     sig_y = sqrt(sig_y)
+
     # Compute delta-dependent closed orbits (with RF off)
-    for i in 1:length(deltas)
-      co[i,6] = deltas[i]
-      sol = find_closed_orbit(bl, v0=co[i,:]')
-      if sol.sol.retcode != BatchSolve.RETCODE_SUCCESS
-        error("Unable for find delta-dependent closed orbit (with RF off) for delta = $delta.
-              Please remove this delta from the input deltas.")
-      end
-      co[i,:] = sol.v0
-    end
+    sol = find_closed_orbit(bl; v0=co, batch=Val{true}(), coasting_beam=true)
     # OK now we can turn the cavities back on:
     foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
+    if any(sol.sol.retcode .!= BatchSolve.RETCODE_SUCCESS) # If any failed:
+      error(
+        """
+        Unable for find delta-dependent closed orbits (with RF off) for deltas = $(deltas[findall(sol.sol.retcode .!= 0x0)]).
+        Please remove these deltas from the input.
+        """
+      )
+    end
   else
-    tw = twiss(bl, at=[first(bl.line)], de_moivre=true)
-    t = tw.table
+    t = twiss(bl, at=[1], cols=["E1", "E2", "E3"])
     # Now compute sigmas at first element, just first order:
-    E = t.E[1]
-    sig_x = E[1][1,1]*emit_1 + E[2][1,1]*emit_2 + E[3][1,1]*emit_3
-    sig_y = E[1][3,3]*emit_1 + E[2][3,3]*emit_2 + E[3][3,3]*emit_3
+    sig_x = t.E1[1][1,1]*emit_1 + t.E2[1][1,1]*emit_2 + t.E3[1][1,1]*emit_3
+    sig_y = t.E1[1][3,3]*emit_1 + t.E2[1][3,3]*emit_2 + t.E3[1][3,3]*emit_3
     sig_x = sqrt(sig_x)
     sig_y = sqrt(sig_y)
     sol = find_closed_orbit(bl)
     if sol.sol.retcode != BatchSolve.RETCODE_SUCCESS
         error("Unable to find closed orbit")
     end
-    for i in 1:length(deltas)
+    for i in 1:n_deltas
       co[i,:] = sol.v0
       co[i,6] += deltas[i]
     end
@@ -99,12 +100,12 @@ function dynamic_aperture(
   thetas = range(theta_lims[1], theta_lims[2], length=n_theta)
   rs = range(0, 1, length=n_r)[2:end]
 
-  n_particles = length(deltas)*(1+length(rs)*length(thetas))
+  n_particles = n_deltas*(1+length(rs)*length(thetas))
   println("Initializing dynamic_aperture with $n_particles particles")
   v0 = zeros(n_particles, 6)
   v = zeros(n_particles, 6)
   idx_particle = 1
-  for i in 1:length(deltas)
+  for i in 1:n_deltas
     delta = deltas[i]
     # Initialize v0 in closed orbit basis, v in integration basis:
     v0[idx_particle,:] = [0, 0, 0, 0, 0, delta]
@@ -146,8 +147,8 @@ function dynamic_aperture(
   state = Array(b0.coords.state)
 
   # each column is a DA line
-  x_norm_da = zeros(length(thetas), length(deltas))
-  y_norm_da = zeros(length(thetas), length(deltas))
+  x_norm_da = zeros(length(thetas), n_deltas)
+  y_norm_da = zeros(length(thetas), n_deltas)
 
   # Loop thru the thetas, find max for each along r
   idx_particle = 1

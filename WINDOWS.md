@@ -22,6 +22,8 @@ Depending on whether you plan to use SciBmad in Python or Julia, follow your lan
 
 ## Python
 
+## NOTE: Python support through `juliacall` is being phased out in favor of [PySciBmad](https://github.com/bmad-sim/PySciBmad)
+
 In Python, SciBmad is currently called through the [`juliacall` package](https://juliapy.github.io/PythonCall.jl/stable/juliacall/). We'll first install this package, and set an environment variable to ensure that the long-term suppport (LTS) version of Julia is used. In a (Anaconda) Powershell:
 
 ```
