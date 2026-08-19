@@ -15,7 +15,20 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinxcontrib.bibtex',
+    'sphinx_copybutton',
 ]
+
+# -- Copy button on code blocks ----------------------------------------------
+# Applied to code *inputs* only. The parent of a rendered output block carries
+# class "output" (e.g. <div class="output text_plain ...">), so excluding it
+# leaves the button on hand-written fences and on executed `{code-cell}` inputs
+# while keeping it off the results, which are not meant to be pasted anywhere.
+copybutton_selector = "div:not(.output) > div.highlight pre"
+
+# Nothing in the docs is written as a REPL transcript today, but strip the
+# prompts if one ever appears, so the copied text stays runnable.
+copybutton_prompt_text = r"julia> |shell> |\(.*\) pkg> |help\?> "
+copybutton_prompt_is_regexp = True
 
 # -- Jupyter notebook handling (myst-nb) -------------------------------------
 # Two kinds of notebook content live in this site:
