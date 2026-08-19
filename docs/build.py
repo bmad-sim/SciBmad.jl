@@ -10,9 +10,13 @@ docs_dir = Path(__file__).parent
 project_root = docs_dir.parent
 
 # Instantiate the docs Julia environment
+# `Pkg.develop` is what makes the runnable pages and the API docs build against this
+# checkout rather than the registered release -- without it a local build can silently
+# document a different version of SciBmad than the one you are editing.
 print("Instantiating docs Julia environment...")
 result = subprocess.run(
-    ["julia", f"--project={docs_dir}", "-e", "using Pkg; Pkg.instantiate()"],
+    ["julia", f"--project={docs_dir}", "-e",
+     "using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()"],
     cwd=project_root
 )
 if result.returncode != 0:

@@ -85,26 +85,43 @@ include("lattices/esr-v6.3.1-tapered.jl")   # defines `ring`
 
 ## Computing Twiss functions
 
-`twiss` returns the periodic (nonlinear) Twiss functions of the lattice, including
-the tunes:
+`twiss` returns the periodic (nonlinear) Twiss functions of the lattice — a summary
+of the lattice-wide quantities plus a per-element table:
 
 ```{code-cell} julia
-tw = twiss(ring)
-tw.tunes
+tw = twiss(ring; damping=false)
 ```
 
-The per-element table is a `TypedTables.Table`, so the usual column access works:
+:::{note}
+This FODO cell has no RF cavity, so the beam is coasting. `twiss` decides whether to
+include radiation damping by testing how far the one-turn map is from symplectic, and
+for a coasting lattice that test can trip on numerical noise — canonization cannot be
+combined with damping for a coasting beam, so the call then fails. Passing
+`damping=false` states the intent explicitly. Lattices with RF (such as those in
+[`lattices/`](https://github.com/bmad-sim/SciBmad.jl/tree/main/lattices)) need no such
+argument, and the [Examples](examples-index.md) call plain `twiss(ring)`.
+:::
+
+The summary quantities are properties of the result — `q1` and `q2` are the tunes:
 
 ```{code-cell} julia
-tw.table.beta_1
+tw.q1, tw.q2
+```
+
+The per-element table is a `DataFrame`, reachable as `tw.df`, and its columns are
+forwarded onto `tw` itself:
+
+```{code-cell} julia
+tw.df.beta1
 ```
 
 ## Tracking
 
-Choose a tracking method and assign it to the elements:
+Choose a tracking method and assign it to the elements. `Symplectic` picks a splitting
+scheme appropriate to each element type:
 
 ```{code-cell} julia
-tm = Yoshida(order=2, radiation_damping_on=true)
+tm = Symplectic(order=2, radiation_damping_on=true)
 foreach(t -> t.tracking_method = tm, ring.line)
 ring.line[1].tracking_method
 ```
