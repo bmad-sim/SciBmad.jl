@@ -3,12 +3,12 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Overview" href="../../overview.html"><link rel="prev" title="Nonlinear Twiss" href="nonlinear-twiss.html">
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Overview" href="../../overview.html"><link rel="prev" title="Nonlinear Twiss (Python example compatible with SciBmad version &lt; 0.5.0)" href="nonlinear-twiss.html">
         <link rel="prefetch" href="../../_static/SciBmad-Logo.png" as="image">
         <link rel="prefetch" href="../../_static/SciBmad-Logo-dark.png" as="image">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>Ramping through a spin-orbit resonance with SciBmad - SciBmad.jl Documentation</title>
+        <title>Ramping through a spin-orbit resonance with SciBmad (Python example compatible with SciBmad version &lt; 0.5.0) - SciBmad.jl Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -206,7 +206,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../julia/ad-examples.html">Automatic differentiation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../julia/orbit-response.html">Orbit response</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../julia/errors-fitting.html">Errors and fitting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../julia/ags-spin-ramp.html">AGS spin ramp</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">AGS spin ramp</a></li>
@@ -268,8 +267,8 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="ramping-through-a-spin-orbit-resonance-with-scibmad">
-<h1>Ramping through a spin-orbit resonance with SciBmad<a class="headerlink" href="#ramping-through-a-spin-orbit-resonance-with-scibmad" title="Link to this heading">¶</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="ramping-through-a-spin-orbit-resonance-with-scibmad-python-example-compatible-with-scibmad-version-0-5-0">
+<h1>Ramping through a spin-orbit resonance with SciBmad (Python example compatible with SciBmad version &lt; 0.5.0)<a class="headerlink" href="#ramping-through-a-spin-orbit-resonance-with-scibmad-python-example-compatible-with-scibmad-version-0-5-0" title="Link to this heading">¶</a></h1>
 <p>BNL’s Relativistic Heavy Ion Collider (RHIC) and its successor the Hadron Storage Ring (HSR) of the Electron-Ion Collider (EIC) are characterized by their high degree of polarization. The lack of a significant self-polarization mechanism for protons and ions means that these species have to be polarized at the source and accelerated without a significant loss of polarization. However, without special care, the electromagnetic fields used to accelerate the particles will destroy their polarization. This is often discussed in the context of the Alternating Gradient Synchrotron (AGS), as if particles cannot maintain their polarization through the AGS, there will be no polarization left to maintain once the particles reach RHIC/HSR.</p>
 <p>The equation of motion for the rest-frame spin of relativistic particles is the Thomas-Bargmann-Michel-Telegdi (T-BMT) equation. As the length of the spin is constant (usually taken to be unity for simplicity), the T-BMT equation is a precession equation:
 $<span class="math notranslate nohighlight">\( \dot{\vec{S}}(t)=\vec{\Omega}(t)\times\vec{S}(t). \)</span><span class="math notranslate nohighlight">\(
@@ -290,7 +289,7 @@ As can be seen below, this formula is often quite accurate even when crossing fr
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">juliacall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Main</span> <span class="k">as</span> <span class="n">jl</span>
-<span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="s2">&quot;using SciBmad&quot;</span><span class="p">)</span>
+<span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="s2">"using SciBmad"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -298,7 +297,7 @@ As can be seen below, this formula is often quite accurate even when crossing fr
 <p>We will use a simple FODO lattice based on the AGS with superperiod <span class="math notranslate nohighlight">\(P=60\)</span>:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ring</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">include</span><span class="p">(</span><span class="s2">&quot;../../lattices/ags.jl&quot;</span><span class="p">);</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ring</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">include</span><span class="p">(</span><span class="s2">"../../lattices/ags.jl"</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -330,7 +329,7 @@ As can be seen below, this formula is often quite accurate even when crossing fr
 <p>We can convert to <span class="math notranslate nohighlight">\(E=\gamma mc^2\)</span> using our physical constants package:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">Species</span><span class="p">(</span><span class="s2">&quot;proton&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">Species</span><span class="p">(</span><span class="s2">"proton"</span><span class="p">)</span>
 <span class="n">E_start</span> <span class="o">=</span> <span class="n">Gγ_start</span> <span class="o">/</span> <span class="n">jl</span><span class="o">.</span><span class="n">gyromagnetic_anomaly</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="n">jl</span><span class="o">.</span><span class="n">massof</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 <span class="n">E_end</span>   <span class="o">=</span> <span class="n">Gγ_end</span>   <span class="o">/</span> <span class="n">jl</span><span class="o">.</span><span class="n">gyromagnetic_anomaly</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="n">jl</span><span class="o">.</span><span class="n">massof</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 </pre></div>
@@ -357,7 +356,7 @@ As can be seen below, this formula is often quite accurate even when crossing fr
 <p>Note that there are other ways to go through a resonance, e.g., to vary the tune by changing quadrupole strengths or to drive the resonance with an AC dipole. Using <code class="docutils literal notranslate"><span class="pre">Time()</span></code>, both of these are easily simulated in <code class="docutils literal notranslate"><span class="pre">SciBmad</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ring</span><span class="o">.</span><span class="n">E_ref</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">E_start</span><span class="si">}</span><span class="s2"> + </span><span class="si">{</span><span class="n">dE_dt</span><span class="si">}</span><span class="s2">*Time()&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ring</span><span class="o">.</span><span class="n">E_ref</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">E_start</span><span class="si">}</span><span class="s2"> + </span><span class="si">{</span><span class="n">dE_dt</span><span class="si">}</span><span class="s2">*Time()"</span><span class="p">)</span>
 <span class="c1"># This is saying E_ref(t) = E_start + dE_dt*t, but it could also be more complicated like sin(Time()), etc.</span>
 </pre></div>
 </div>
@@ -406,13 +405,13 @@ Setting bunch.p_over_q_ref = 118.63882003823007 (reference p_over_q_ref from the
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Gγ</span><span class="p">,</span> <span class="n">s_y</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;G*gamma_0&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;S_y&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"G*gamma_0"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"S_y"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0, 0.5, &#39;S_y&#39;)
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0, 0.5, 'S_y')
 </pre></div>
 </div>
 <img alt="../../_images/d302c41438f44fa9f49ce49480bf16d1c27f1c7e32719fb89f14a4442c95c186.png" src="../../_images/d302c41438f44fa9f49ce49480bf16d1c27f1c7e32719fb89f14a4442c95c186.png" />
@@ -447,7 +446,7 @@ Setting bunch.p_over_q_ref = 118.63882003823007 (reference p_over_q_ref from the
 <span class="n">final_s_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">turns</span><span class="p">))</span>
 
 <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">N</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">turns</span><span class="p">):</span>
-    <span class="n">ring</span><span class="o">.</span><span class="n">E_ref</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">E_start</span><span class="si">}</span><span class="s2"> + </span><span class="si">{</span><span class="mi">1000</span><span class="o">/</span><span class="n">N</span><span class="o">*</span><span class="n">dE_dt</span><span class="si">}</span><span class="s2">*Time()&quot;</span><span class="p">)</span>
+    <span class="n">ring</span><span class="o">.</span><span class="n">E_ref</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">E_start</span><span class="si">}</span><span class="s2"> + </span><span class="si">{</span><span class="mi">1000</span><span class="o">/</span><span class="n">N</span><span class="o">*</span><span class="n">dE_dt</span><span class="si">}</span><span class="s2">*Time()"</span><span class="p">)</span>
 
     <span class="c1"># Initialize bunch</span>
     <span class="n">v0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.5e-4</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span> <span class="c1"># Initial phase space coordinate</span>
@@ -469,10 +468,10 @@ Setting bunch.p_over_q_ref = 118.63882003823007 (reference p_over_q_ref from the
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">turns</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="o">/</span><span class="n">turns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="mi">10000</span><span class="p">),</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">turns</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="o">/</span><span class="n">turns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="mi">10000</span><span class="p">)])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;$</span><span class="se">\\</span><span class="s2">alpha$&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Final $S_y$&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">turns</span><span class="p">),</span> <span class="n">final_s_y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s2">"log"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"$</span><span class="se">\\</span><span class="s2">alpha$"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"Final $S_y$"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">turns</span><span class="p">),</span> <span class="n">final_s_y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"red"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -507,7 +506,7 @@ Setting bunch.p_over_q_ref = 118.63882003823007 (reference p_over_q_ref from the
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Nonlinear Twiss</div>
+                <div class="title">Nonlinear Twiss (Python example compatible with SciBmad version &lt; 0.5.0)</div>
                 
               </div>
             </a>

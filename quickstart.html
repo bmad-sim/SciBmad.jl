@@ -206,7 +206,6 @@
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/orbit-response.html">Orbit response</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/julia/errors-fitting.html">Errors and fitting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ags-spin-ramp.html">AGS spin ramp</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/python/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/python/ags-spin-ramp.html">AGS spin ramp</a></li>
@@ -286,7 +285,7 @@ instructions:</p>
 </ul>
 <p>Once Julia is set up, install the package from the Julia REPL:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span>
-<span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;SciBmad&quot;</span><span class="p">)</span>
+<span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">"SciBmad"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -307,7 +306,7 @@ collect them into a <code class="docutils literal notranslate"><span class="pre"
 <p>Larger machines are usually defined in a lattice file that you <code class="docutils literal notranslate"><span class="pre">include</span></code>. Several
 ready-to-run lattices live in the <a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl/tree/main/lattices"><code class="docutils literal notranslate"><span class="pre">lattices/</span></code></a>
 directory:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="p">(</span><span class="s">&quot;lattices/esr-v6.3.1-tapered.jl&quot;</span><span class="p">)</span><span class="w">   </span><span class="c"># defines `ring`</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="p">(</span><span class="s">"lattices/esr-v6.3.1-tapered.jl"</span><span class="p">)</span><span class="w">   </span><span class="c"># defines `ring`</span>
 </pre></div>
 </div>
 </section>

@@ -206,7 +206,6 @@
 <li class="toctree-l2"><a class="reference internal" href="dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Automatic differentiation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbit-response.html">Orbit response</a></li>
-<li class="toctree-l2"><a class="reference internal" href="errors-fitting.html">Errors and fitting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ags-spin-ramp.html">AGS spin ramp</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../python/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../python/ags-spin-ramp.html">AGS spin ramp</a></li>
@@ -276,7 +275,7 @@
 <span class="k">using</span><span class="w"> </span><span class="n">DifferentiationInterface</span>
 <span class="k">import</span><span class="w"> </span><span class="n">DifferentiationInterface</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">DI</span>
 <span class="c"># Different differentiation packages:</span>
-<span class="k">using</span><span class="w"> </span><span class="n">ForwardDiff</span><span class="p">,</span><span class="w"> </span><span class="n">Enzyme</span><span class="p">,</span><span class="w"> </span><span class="n">GTPSA</span><span class="p">,</span><span class="w"> </span><span class="n">ReverseDiff</span><span class="p">,</span><span class="w"> </span><span class="n">FiniteDiff</span><span class="p">,</span><span class="w"> </span><span class="n">FiniteDifferences</span>
+<span class="k">using</span><span class="w"> </span><span class="n">ForwardDiff</span><span class="p">,</span><span class="w"> </span><span class="n">GTPSA</span><span class="p">,</span><span class="w"> </span><span class="n">ReverseDiff</span><span class="p">,</span><span class="w"> </span><span class="n">FiniteDiff</span><span class="p">,</span><span class="w"> </span><span class="n">FiniteDifferences</span>
 </pre></div>
 </div>
 </div>
@@ -292,7 +291,7 @@
 <span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SBend</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="n">angle</span><span class="o">=</span><span class="nb">π</span><span class="o">/</span><span class="mi">132</span><span class="p">)</span>
 <span class="n">qd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">Kn1</span><span class="o">=-</span><span class="n">K1</span><span class="p">)</span>
 <span class="n">sd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Sextupole</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="n">Kn2</span><span class="o">=-</span><span class="n">K2</span><span class="p">)</span>
-<span class="n">fodo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">sf</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">&quot;electron&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">);</span>
+<span class="n">fodo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">sf</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -322,32 +321,11 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6×6 Matrix{Float64}:
- -0.501301     8.58617      0.000765453  -0.00240033  0.0   0.122029
- -0.257394     2.41377     -0.000629133  -0.00359376  0.0   0.0439702
-  0.00154156  -0.00171283   2.41678       8.59153     0.0  -0.013781
-  4.81099e-5  -0.00281752  -0.256971     -0.499744    0.0   0.00253851
- -0.00937178  -0.0829428   -0.0027041    -0.0152556   1.0  -0.000483029
-  0.0          0.0          0.0           0.0         0.0   1.0
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="c"># Forward AD using Enzyme.jl:</span>
-<span class="n">autodiff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AutoEnzyme</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">Enzyme</span><span class="o">.</span><span class="n">set_runtime_activity</span><span class="p">(</span><span class="n">Forward</span><span class="p">))</span>
-<span class="n">prep_enz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DI</span><span class="o">.</span><span class="n">prepare_jacobian</span><span class="p">(</span><span class="n">track_a_particle</span><span class="p">,</span><span class="w"> </span><span class="n">autodiff</span><span class="p">,</span><span class="w"> </span><span class="n">x0</span><span class="p">,</span><span class="w"> </span><span class="n">Constant</span><span class="p">(</span><span class="n">fodo</span><span class="p">))</span>
-<span class="n">J_enz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DI</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">track_a_particle</span><span class="p">,</span><span class="w"> </span><span class="n">prep_enz</span><span class="p">,</span><span class="w"> </span><span class="n">autodiff</span><span class="p">,</span><span class="w"> </span><span class="n">x0</span><span class="p">,</span><span class="w"> </span><span class="n">Constant</span><span class="p">(</span><span class="n">fodo</span><span class="p">))</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6×6 Matrix{Float64}:
- -0.501301     8.58617      0.000765453  -0.00240033  0.0   0.122029
- -0.257394     2.41377     -0.000629133  -0.00359376  0.0   0.0439702
-  0.00154156  -0.00171283   2.41678       8.59153     0.0  -0.013781
-  4.81099e-5  -0.00281752  -0.256971     -0.499744    0.0   0.00253851
- -0.00937178  -0.0829428   -0.0027041    -0.0152556   1.0  -0.000483029
+ -0.501416     8.58615      0.000636536  -0.00249574  0.0   0.122032
+ -0.257407     2.41344     -0.000628957  -0.00349052  0.0   0.0439657
+  0.00144004  -0.00172371   2.41666       8.59143     0.0  -0.0137791
+  4.51196e-5  -0.00268696  -0.257062     -0.500081    0.0   0.00254115
+ -0.00937098  -0.0829397   -0.00270373   -0.0152576   1.0  -0.000482999
   0.0          0.0          0.0           0.0         0.0   1.0
 </pre></div>
 </div>
@@ -363,11 +341,11 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6×6 Matrix{Float64}:
- -0.501301     8.58617      0.000765453  -0.00240033  0.0   0.122029
- -0.257394     2.41377     -0.000629133  -0.00359376  0.0   0.0439702
-  0.00154156  -0.00171283   2.41678       8.59153     0.0  -0.013781
-  4.81099e-5  -0.00281752  -0.256971     -0.499744    0.0   0.00253851
- -0.00937178  -0.0829428   -0.0027041    -0.0152556   1.0  -0.000483029
+ -0.501416     8.58615      0.000636536  -0.00249574  0.0   0.122032
+ -0.257407     2.41344     -0.000628957  -0.00349052  0.0   0.0439657
+  0.00144004  -0.00172371   2.41666       8.59143     0.0  -0.0137791
+  4.51196e-5  -0.00268696  -0.257062     -0.500081    0.0   0.00254115
+ -0.00937098  -0.0829397   -0.00270373   -0.0152576   1.0  -0.000482999
   0.0          0.0          0.0           0.0         0.0   1.0
 </pre></div>
 </div>
@@ -383,11 +361,11 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6×6 Matrix{Float64}:
- -0.501301     8.58617      0.000765453  -0.00240033  0.0   0.122029
- -0.257394     2.41377     -0.000629133  -0.00359376  0.0   0.0439702
-  0.00154156  -0.00171283   2.41678       8.59153     0.0  -0.013781
-  4.81099e-5  -0.00281752  -0.256971     -0.499744    0.0   0.00253851
- -0.00937178  -0.0829428   -0.0027041    -0.0152556   1.0  -0.000483029
+ -0.501416     8.58615      0.000636536  -0.00249574  0.0   0.122032
+ -0.257407     2.41344     -0.000628957  -0.00349052  0.0   0.0439657
+  0.00144004  -0.00172371   2.41666       8.59143     0.0  -0.0137791
+  4.51196e-5  -0.00268696  -0.257062     -0.500081    0.0   0.00254115
+ -0.00937098  -0.0829397   -0.00270373   -0.0152576   1.0  -0.000482999
   0.0          0.0          0.0           0.0         0.0   1.0
 </pre></div>
 </div>
@@ -403,11 +381,11 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6×6 Matrix{Float64}:
- -0.501301     8.58617      0.000765455  -0.00240034  0.0   0.122029
- -0.257394     2.41377     -0.000629133  -0.00359377  0.0   0.0439702
-  0.00154156  -0.00171282   2.41678       8.59153     0.0  -0.013781
-  4.81099e-5  -0.00281752  -0.256971     -0.499744    0.0   0.00253851
- -0.00937178  -0.0829429   -0.00270414   -0.0152558   1.0  -0.000483002
+ -0.501416     8.58615      0.000636537  -0.00249575  0.0   0.122032
+ -0.257407     2.41344     -0.000628957  -0.00349053  0.0   0.0439657
+  0.00144004  -0.00172371   2.41666       8.59143     0.0  -0.0137791
+  4.51196e-5  -0.00268696  -0.257062     -0.500081    0.0   0.00254115
+ -0.00937099  -0.0829397   -0.00270366   -0.0152578   1.0  -0.000482963
   0.0          0.0          0.0           0.0         0.0   1.0
 </pre></div>
 </div>
@@ -423,11 +401,11 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6×6 Matrix{Float64}:
- -0.501301     8.58617      0.000765453  -0.00240033  0.0   0.122029
- -0.257394     2.41377     -0.000629133  -0.00359376  0.0   0.0439702
-  0.00154156  -0.00171283   2.41678       8.59153     0.0  -0.013781
-  4.81099e-5  -0.00281752  -0.256971     -0.499744    0.0   0.00253851
- -0.00937178  -0.0829428   -0.0027041    -0.0152556   1.0  -0.000483029
+ -0.501416     8.58615      0.000636536  -0.00249574  0.0   0.122032
+ -0.257407     2.41344     -0.000628957  -0.00349052  0.0   0.0439657
+  0.00144004  -0.00172371   2.41666       8.59143     0.0  -0.0137791
+  4.51196e-5  -0.00268696  -0.257062     -0.500081    0.0   0.00254115
+ -0.00937098  -0.0829397   -0.00270373   -0.0152576   1.0  -0.000482999
   0.0          0.0          0.0           0.0         0.0   1.0
 </pre></div>
 </div>
@@ -435,8 +413,8 @@
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="c"># Show they&#39;re all equal:</span>
-<span class="n">J_FD</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_enz</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_GTPSA</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_RD</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_fdif1</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_fdif2</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="c"># Show they're all equal:</span>
+<span class="n">J_FD</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_GTPSA</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_RD</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_fdif1</span><span class="w"> </span><span class="o">≈</span><span class="w"> </span><span class="n">J_fdif2</span>
 </pre></div>
 </div>
 </div>

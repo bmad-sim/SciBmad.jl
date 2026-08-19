@@ -3,12 +3,12 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Ramping through a spin-orbit resonance with SciBmad" href="ags-spin-ramp.html"><link rel="prev" title="Ramping through a spin-orbit resonance with SciBmad" href="../julia/ags-spin-ramp.html">
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Ramping through a spin-orbit resonance with SciBmad (Python example compatible with SciBmad version &lt; 0.5.0)" href="ags-spin-ramp.html"><link rel="prev" title="Ramping through a spin-orbit resonance with SciBmad" href="../julia/ags-spin-ramp.html">
         <link rel="prefetch" href="../../_static/SciBmad-Logo.png" as="image">
         <link rel="prefetch" href="../../_static/SciBmad-Logo-dark.png" as="image">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>Nonlinear Twiss - SciBmad.jl Documentation</title>
+        <title>Nonlinear Twiss (Python example compatible with SciBmad version &lt; 0.5.0) - SciBmad.jl Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -206,7 +206,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../julia/ad-examples.html">Automatic differentiation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../julia/orbit-response.html">Orbit response</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../julia/errors-fitting.html">Errors and fitting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../julia/ags-spin-ramp.html">AGS spin ramp</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ags-spin-ramp.html">AGS spin ramp</a></li>
@@ -268,29 +267,55 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="nonlinear-twiss">
-<h1>Nonlinear Twiss<a class="headerlink" href="#nonlinear-twiss" title="Link to this heading">¶</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="nonlinear-twiss-python-example-compatible-with-scibmad-version-0-5-0">
+<h1>Nonlinear Twiss (Python example compatible with SciBmad version &lt; 0.5.0)<a class="headerlink" href="#nonlinear-twiss-python-example-compatible-with-scibmad-version-0-5-0" title="Link to this heading">¶</a></h1>
 <p>This Jupyter notebook introduces SciBmad’s parametric nonlinear normal form routines, with the goal of familiarizing users with Truncated Power Series Algebra (TPSA) methods in accelerator physics. Various “nonlinear Twiss” calculations are made using the Electron Storage Ring of the Electron-Ion Collider. E.g., we will compute the beta function as a Taylor series in the momentum deviation <span class="math notranslate nohighlight">\(\delta\)</span>, and can also do so as a Taylor series in variations of some parameters, e.g. sextupole strengths.</p>
 <p>Map-based perturbation theory is an approach to perturbation theory introduced by Dragt and Finn, and developed in great detail for accelerator physics applications by Forest back in the early 90s. It is the only fully general and self consistent way to compute all such important quantities of the map, without any approximations up to the truncation order of the Taylor series. <em>All</em> quantities computed by SciBmad use this most powerful and general formalism.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">juliacall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Main</span> <span class="k">as</span> <span class="n">jl</span>
-<span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="s1">&#39;using SciBmad&#39;</span><span class="p">)</span>
+<span class="n">jl</span><span class="o">.</span><span class="n">seval</span><span class="p">(</span><span class="s1">'using SciBmad'</span><span class="p">)</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Detected IPython. Loading juliacall extension. See https://juliapy.github.io/PythonCall.jl/stable/compat/#IPython
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Matplotlib is building the font cache; this may take a moment.
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">jl</span><span class="o">.</span><span class="n">include</span><span class="p">(</span><span class="s2">&quot;../../lattices/esr-v6.3.1.jl&quot;</span><span class="p">);</span> <span class="c1"># ESR lattice in lattices directory of SciBmad repo</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">jl</span><span class="o">.</span><span class="n">include</span><span class="p">(</span><span class="s2">"../../lattices/esr-v6.3.1.jl"</span><span class="p">);</span> <span class="c1"># ESR lattice in lattices directory of SciBmad repo</span>
 <span class="n">ring</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">ring</span>
+<span class="n">ring</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Beamline:
+ species_ref = electron
+ pc_ref = 1.784626263654482e10
+
+  Index   Name      Kind         s [m]                L [m]
+  1       IP6       Marker       0                    0.0f0
+  2       DRIFT0    Drift        0.0f0                5.3
+  3       Q1ER_6    Quadrupole   5.3                  1.8
+  4       DRIFT1    Drift        7.1                  0.5
+  5       Q2ER_6    Quadrupole   7.6                  1.4
+  6       DRIFT2    Drift        9.0                  7.74999999999994
+  7       D2ER_6    SBend        16.74999999999994    5.500091667736123
+  8       DRIFT3    Drift        22.25009166773606    19.81459999999994
+  9       SQ3ER_6   Quadrupole   42.064691667736      0.25
+  10      DRIFT4    Drift        42.314691667736      0.15000000000000568
+  11      Q3ER_6    Quadrupole   42.464691667736005   0.6
+  12      DRIFT5    Drift        43.06469166773601    3.5
+  13      SQ4ER_6   Quadrupole   46.56469166773601    0.25
+  ⋮       ⋮         ⋮            ⋮                    ⋮
+
+                                                          6257 rows omitted
 </pre></div>
 </div>
 </div>
@@ -305,9 +330,39 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
- coasting_beam = true
- tunes[1:3]    = [Qx, Qy, slip]
- table         has columns: beamline_index, name, s, phi_1, beta_1, alpha_1, phi_2, beta_2, alpha_2, phi_3, gamma_c, c11, c12, c21, c22, orbit_x, orbit_px, orbit_y, orbit_py, orbit_z, orbit_pz
+summ:
+ q1     = 48.07999999808013
+ q2     = 44.14000000380505
+ etac   = 0.000608873286122615
+ alphac = 0.0006088732861226137
+
+df:
+6271×26 DataFrame
+  Row │ index  name       kind        s       beta1       phi1       dx        ⋯
+      │                               [m]     [m]         [2π]       [m]       ⋯
+──────┼─────────────────────────────────────────────────────────────────────────
+    1 │     1  IP6        Marker         0.0    0.589999   0.0        4.74366e ⋯
+    2 │     2  DRIFT0     Drift          0.0    0.589999   0.0        4.74366e
+    3 │     3  Q1ER_6     Quadrupole     5.3   48.2002     0.232355   6.01291e
+    4 │     4  DRIFT1     Drift          7.1  151.952      0.236135   1.05195e
+  ⋮   │   ⋮        ⋮          ⋮         ⋮         ⋮           ⋮           ⋮    ⋱
+ 6269 │  6269  DRIFT2662  Drift       3828.2   57.607     47.8461    -5.58669e ⋯
+ 6270 │  6270  IP6        Marker      3834.0    0.589999  48.08       4.74366e
+ 6271 │    -1  END        ---         3834.0    0.589999  48.08       4.74366e
+                                                20 columns and 6264 rows omitted
+</pre></div>
+</div>
+</div>
+</div>
+<p>To see what properties <code class="docutils literal notranslate"><span class="pre">tw</span></code> has, use <code class="docutils literal notranslate"><span class="pre">propertynames</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">jl</span><span class="o">.</span><span class="n">propertynames</span><span class="p">(</span><span class="n">tw</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[:q1, :q2, :etac, :alphac, :index, :name, :kind, :s, :beta1, :phi1, :dx, :x, :beta2, :phi2, :dy, :y, :slip, :alpha1, :alpha2, :px, :py, :z, :pz, :dpx, :dpy, :gammac, :c11, :c12, :c21, :c22]
 </pre></div>
 </div>
 </div>
@@ -315,33 +370,494 @@
 <p>We can plot the betas:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">table</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;beta_1&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;beta_2&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Beta Function [m]&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'beta1'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">beta2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'beta2'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Beta Function [m]'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="p">;</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../_images/7ac5c3b9a929125f653e38698d2bec6279c6ece8f90ad8169416fd272cbc81b5.png" src="../../_images/7ac5c3b9a929125f653e38698d2bec6279c6ece8f90ad8169416fd272cbc81b5.png" />
+<img alt="../../_images/e3d7d5dac58753e22db1c02319938f3f5cc0e43d90257abf13e0b6a3b7d7a9ae.png" src="../../_images/e3d7d5dac58753e22db1c02319938f3f5cc0e43d90257abf13e0b6a3b7d7a9ae.png" />
 </div>
 </div>
-<p>Note that the plot shows <span class="math notranslate nohighlight">\(\beta_a\)</span> and <span class="math notranslate nohighlight">\(\beta_b\)</span> using a Teng-Edwards coupling formalism.</p>
-<p>Now let’s look at the closed orbit at the beginning:</p>
+<p>Note that the plot shows <span class="math notranslate nohighlight">\(\beta_1\)</span> and <span class="math notranslate nohighlight">\(\beta_2\)</span> using a Teng-Edwards coupling formalism.</p>
+<p>The closed orbit can be accessed from fields <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">px</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">py</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code>, and <code class="docutils literal notranslate"><span class="pre">pz</span></code>, and the periodic dispersion can be obtained from <code class="docutils literal notranslate"><span class="pre">dx</span></code>, <code class="docutils literal notranslate"><span class="pre">dpx</span></code>, <code class="docutils literal notranslate"><span class="pre">dy</span></code>, and <code class="docutils literal notranslate"><span class="pre">dpy</span></code>. The syntax <code class="docutils literal notranslate"><span class="pre">d&lt;column&gt;_&lt;order&gt;</span></code> can be used for <em>any</em> scalar-valued to take a chromatic derivative, and by omitting <code class="docutils literal notranslate"><span class="pre">_&lt;order&gt;</span></code> the order is assumed to be 1.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">orbit_x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">dx</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'etax'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">dy</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'etay'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Dispersion [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TPS64{GTPSA.Dynamic}:
-Descriptor(NV=6, MO=1)
- COEFFICIENT             ORDER   EXPONENTS
- 4.7436551156208019E-08    1     0 0  0 0  0 1
+<img alt="../../_images/6fefdb0a30ab94e3c5754e546bfab512c450234c25f16824d4ff5d121bf6dffe.png" src="../../_images/6fefdb0a30ab94e3c5754e546bfab512c450234c25f16824d4ff5d121bf6dffe.png" />
+</div>
+</div>
+<p>Higher order chromatic quantities can be computed by setting the chromatic order <code class="docutils literal notranslate"><span class="pre">chrom</span></code> appropriately, and requesting the corresponding column in the <code class="docutils literal notranslate"><span class="pre">twiss</span></code> result using <code class="docutils literal notranslate"><span class="pre">cols</span></code>. E.g., to get the second order dispersions <span class="math notranslate nohighlight">\(\frac{\partial^2x}{\partial\delta^2}\)</span>, <span class="math notranslate nohighlight">\(\frac{\partial^2y}{\partial\delta^2}\)</span> as well as the chromatic beta beat <span class="math notranslate nohighlight">\(\frac{\partial\beta_1}{\partial\delta}\)</span>, <span class="math notranslate nohighlight">\(\frac{\partial\beta_2}{\partial\delta}\)</span>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw2</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s1">'dx_2'</span><span class="p">,</span> <span class="s1">'dy_2'</span><span class="p">,</span> <span class="s1">'beta1'</span><span class="p">,</span> <span class="s1">'dbeta1'</span><span class="p">,</span> <span class="s1">'beta2'</span><span class="p">,</span> <span class="s1">'dbeta2'</span><span class="p">],</span> <span class="n">chrom</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">tw2</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 48.07999999808019 + 1.0002256005657928 δ
+ q2     = 44.14000000380508 + 0.9998145974907912 δ
+ etac   = 0.0006088732861226299 + 0.0011325508462984035 δ
+ alphac = 0.0006088732861226285 + 0.0011325508462984011 δ
+
+df:
+6271×10 DataFrame
+  Row │ index  name       kind        s       dx_2       dy_2         beta1    ⋯
+      │                               [m]                             [m]      ⋯
+──────┼─────────────────────────────────────────────────────────────────────────
+    1 │     1  IP6        Marker         0.0   -6.98496   2.44576e-5    0.5899 ⋯
+    2 │     2  DRIFT0     Drift          0.0   -6.98496   2.44576e-5    0.5899
+    3 │     3  Q1ER_6     Quadrupole     5.3   16.294     0.00218448   48.2002
+    4 │     4  DRIFT1     Drift          7.1   31.677     0.00206566  151.952
+  ⋮   │   ⋮        ⋮          ⋮         ⋮         ⋮           ⋮           ⋮    ⋱
+ 6269 │  6269  DRIFT2662  Drift       3828.2  -32.4601   -0.00233934   57.607  ⋯
+ 6270 │  6270  IP6        Marker      3834.0   -6.98496   2.44576e-5    0.5899
+ 6271 │    -1  END        ---         3834.0   -6.98496   2.44576e-5    0.5899
+                                                 4 columns and 6264 rows omitted
+</pre></div>
+</div>
+</div>
+</div>
+<p>Note the chromaticities have also been computed</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dx_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'d^2 x/ddelta^2'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dy_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'d^2 y/ddelta^2'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Second Order Dispersion [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/9297a42f2075c257d3a7933d0ed1ccb55ace6592a9dae10a211f2bc4282fc12b.png" src="../../_images/9297a42f2075c257d3a7933d0ed1ccb55ace6592a9dae10a211f2bc4282fc12b.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nparray</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">dbeta1</span> <span class="o">/</span> <span class="n">tw2</span><span class="o">.</span><span class="n">beta1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">KeyboardInterrupt</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">20</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dbeta1</span> <span class="o">/</span> <span class="n">tw2</span><span class="o">.</span><span class="n">beta1</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/ipykernel/displayhook.py:173,</span> in <span class="ni">ZMQShellDisplayHook.finish_displayhook</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">171</span>             <span class="bp">self</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">172</span>             <span class="k">return</span>
+<span class="ne">--&gt; </span><span class="mi">173</span>     <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pub_socket</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">ident</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">174</span> <span class="bp">self</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/jupyter_client/session.py:856,</span> in <span class="ni">Session.send</span><span class="nt">(self, stream, msg_or_type, content, parent, ident, buffers, track, header, metadata)</span>
+<span class="g g-Whitespace">    </span><span class="mi">854</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_version</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">855</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">adapt</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_version</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">856</span> <span class="n">to_send</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">ident</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">857</span> <span class="n">to_send</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">buffers</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
+<span class="g g-Whitespace">    </span><span class="mi">858</span> <span class="n">longest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">to_send</span><span class="p">])</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/jupyter_client/session.py:727,</span> in <span class="ni">Session.serialize</span><span class="nt">(self, msg, ident)</span>
+<span class="g g-Whitespace">    </span><span class="mi">725</span>     <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">none</span>
+<span class="g g-Whitespace">    </span><span class="mi">726</span> <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="ne">--&gt; </span><span class="mi">727</span>     <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">728</span> <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">729</span>     <span class="c1"># content is already packed, as in a relayed message</span>
+<span class="g g-Whitespace">    </span><span class="mi">730</span>     <span class="k">pass</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/jupyter_client/session.py:103,</span> in <span class="ni">json_packer</span><span class="nt">(obj)</span>
+<span class="g g-Whitespace">     </span><span class="mi">96</span><span class="w"> </span><span class="sd">"""Convert a json object to a bytes."""</span>
+<span class="g g-Whitespace">     </span><span class="mi">97</span> <span class="k">try</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">98</span>     <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+<span class="g g-Whitespace">     </span><span class="mi">99</span>         <span class="n">obj</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">100</span>         <span class="n">default</span><span class="o">=</span><span class="n">json_default</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">101</span>         <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">102</span>         <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="ne">--&gt; </span><span class="mi">103</span>     <span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"surrogateescape"</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">104</span> <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">105</span>     <span class="c1"># Fallback to trying to clean the json before serializing</span>
+<span class="g g-Whitespace">    </span><span class="mi">106</span>     <span class="n">packed</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">107</span>         <span class="n">json_clean</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span>
+<span class="g g-Whitespace">    </span><span class="mi">108</span>         <span class="n">default</span><span class="o">=</span><span class="n">json_default</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">109</span>         <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">110</span>         <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">111</span>     <span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"surrogateescape"</span><span class="p">)</span>
+
+<span class="ne">KeyboardInterrupt</span>: 
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw2</span><span class="o">.</span><span class="n">dbeta1</span> <span class="o">/</span> <span class="n">tw2</span><span class="o">.</span><span class="n">beta1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">KeyboardInterrupt</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">18</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dbeta1</span> <span class="o">/</span> <span class="n">tw2</span><span class="o">.</span><span class="n">beta1</span>
+
+<span class="nn">File ~/.julia/packages/PythonCall/5WGSP/src/JlWrap/any.jl:295,</span> in <span class="ni">__truediv__</span><span class="nt">(self, other)</span>
+<span class="g g-Whitespace">    </span><span class="mi">293</span>     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jl_callmethod</span><span class="p">(</span><span class="err">$</span><span class="p">(</span><span class="n">pyjl_methodnum</span><span class="p">(</span><span class="n">pyjlany_op</span><span class="p">(</span><span class="o">*</span><span class="p">))),</span> <span class="n">other</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">294</span> <span class="k">def</span><span class="w"> </span><span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="ne">--&gt; </span><span class="mi">295</span>     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jl_callmethod</span><span class="p">(</span><span class="err">$</span><span class="p">(</span><span class="n">pyjl_methodnum</span><span class="p">(</span><span class="n">pyjlany_op</span><span class="p">(</span><span class="o">/</span><span class="p">))),</span> <span class="n">other</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">296</span> <span class="k">def</span><span class="w"> </span><span class="fm">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">297</span>     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jl_callmethod</span><span class="p">(</span><span class="err">$</span><span class="p">(</span><span class="n">pyjl_methodnum</span><span class="p">(</span><span class="n">pyjlany_op</span><span class="p">(</span><span class="err">÷</span><span class="p">))),</span> <span class="n">other</span><span class="p">)</span>
+
+<span class="ne">KeyboardInterrupt</span>: 
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dbeta1</span> <span class="o">/</span> <span class="n">tw2</span><span class="o">.</span><span class="n">beta1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'d^2 x/ddelta^2'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dy_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'d^2 y/ddelta^2'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Second Order Dispersion [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/Users/matthewsignorelli/miniconda3/envs/condamatt2/lib/python3.12/site-packages/IPython/core/events.py:101: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
+  func(*args, **kwargs)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Error in callback &lt;function _draw_all_if_interactive at 0x16f908040&gt; (for post_execute), with arguments args (),kwargs {}:
+</pre></div>
+</div>
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">KeyboardInterrupt</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/pyplot.py:300,</span> in <span class="ni">_draw_all_if_interactive</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">298</span> <span class="k">def</span><span class="w"> </span><span class="nf">_draw_all_if_interactive</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">299</span>     <span class="k">if</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">is_interactive</span><span class="p">():</span>
+<span class="ne">--&gt; </span><span class="mi">300</span>         <span class="n">draw_all</span><span class="p">()</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/_pylab_helpers.py:133,</span> in <span class="ni">Gcf.draw_all</span><span class="nt">(cls, force)</span>
+<span class="g g-Whitespace">    </span><span class="mi">131</span> <span class="k">for</span> <span class="n">manager</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_all_fig_managers</span><span class="p">():</span>
+<span class="g g-Whitespace">    </span><span class="mi">132</span>     <span class="k">if</span> <span class="n">force</span> <span class="ow">or</span> <span class="n">manager</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">stale</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">133</span>         <span class="n">manager</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw_idle</span><span class="p">()</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backend_bases.py:1989,</span> in <span class="ni">FigureCanvasBase.draw_idle</span><span class="nt">(self, *args, **kwargs)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1987</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_idle_drawing</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">1988</span>     <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idle_draw_cntx</span><span class="p">():</span>
+<span class="ne">-&gt; </span><span class="mi">1989</span>         <span class="bp">self</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backends/backend_agg.py:438,</span> in <span class="ni">FigureCanvasAgg.draw</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">435</span> <span class="c1"># Acquire a lock on the shared font cache.</span>
+<span class="g g-Whitespace">    </span><span class="mi">436</span> <span class="k">with</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toolbar</span><span class="o">.</span><span class="n">_wait_cursor_for_draw_cm</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">toolbar</span>
+<span class="g g-Whitespace">    </span><span class="mi">437</span>       <span class="k">else</span> <span class="n">nullcontext</span><span class="p">()):</span>
+<span class="ne">--&gt; </span><span class="mi">438</span>     <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">439</span>     <span class="c1"># A GUI class may be need to update a window using this draw, so</span>
+<span class="g g-Whitespace">    </span><span class="mi">440</span>     <span class="c1"># don't forget to call the superclass.</span>
+<span class="g g-Whitespace">    </span><span class="mi">441</span>     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/artist.py:94,</span> in <span class="ni">_finalize_rasterization.&lt;locals&gt;.draw_wrapper</span><span class="nt">(artist, renderer, *args, **kwargs)</span>
+<span class="g g-Whitespace">     </span><span class="mi">92</span> <span class="nd">@wraps</span><span class="p">(</span><span class="n">draw</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">93</span> <span class="k">def</span><span class="w"> </span><span class="nf">draw_wrapper</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="ne">---&gt; </span><span class="mi">94</span>     <span class="n">result</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">95</span>     <span class="k">if</span> <span class="n">renderer</span><span class="o">.</span><span class="n">_rasterizing</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">96</span>         <span class="n">renderer</span><span class="o">.</span><span class="n">stop_rasterizing</span><span class="p">()</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/artist.py:71,</span> in <span class="ni">allow_rasterization.&lt;locals&gt;.draw_wrapper</span><span class="nt">(artist, renderer)</span>
+<span class="g g-Whitespace">     </span><span class="mi">68</span>     <span class="k">if</span> <span class="n">artist</span><span class="o">.</span><span class="n">get_agg_filter</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">69</span>         <span class="n">renderer</span><span class="o">.</span><span class="n">start_filter</span><span class="p">()</span>
+<span class="ne">---&gt; </span><span class="mi">71</span>     <span class="k">return</span> <span class="n">draw</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">72</span> <span class="k">finally</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">73</span>     <span class="k">if</span> <span class="n">artist</span><span class="o">.</span><span class="n">get_agg_filter</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/figure.py:3282,</span> in <span class="ni">Figure.draw</span><span class="nt">(self, renderer)</span>
+<span class="g g-Whitespace">   </span><span class="mi">3279</span>             <span class="c1"># ValueError can occur when resizing a window.</span>
+<span class="g g-Whitespace">   </span><span class="mi">3281</span>     <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="ne">-&gt; </span><span class="mi">3282</span>     <span class="n">mimage</span><span class="o">.</span><span class="n">_draw_list_compositing_images</span><span class="p">(</span>
+<span class="g g-Whitespace">   </span><span class="mi">3283</span>         <span class="n">renderer</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">artists</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">suppressComposite</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">3285</span>     <span class="n">renderer</span><span class="o">.</span><span class="n">close_group</span><span class="p">(</span><span class="s1">'figure'</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">3286</span> <span class="k">finally</span><span class="p">:</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/image.py:133,</span> in <span class="ni">_draw_list_compositing_images</span><span class="nt">(renderer, parent, artists, suppress_composite)</span>
+<span class="g g-Whitespace">    </span><span class="mi">131</span> <span class="k">if</span> <span class="n">not_composite</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">has_images</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">132</span>     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">artists</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">133</span>         <span class="n">a</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">134</span> <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">135</span>     <span class="c1"># Composite any adjacent images together</span>
+<span class="g g-Whitespace">    </span><span class="mi">136</span>     <span class="n">image_group</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/artist.py:71,</span> in <span class="ni">allow_rasterization.&lt;locals&gt;.draw_wrapper</span><span class="nt">(artist, renderer)</span>
+<span class="g g-Whitespace">     </span><span class="mi">68</span>     <span class="k">if</span> <span class="n">artist</span><span class="o">.</span><span class="n">get_agg_filter</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">69</span>         <span class="n">renderer</span><span class="o">.</span><span class="n">start_filter</span><span class="p">()</span>
+<span class="ne">---&gt; </span><span class="mi">71</span>     <span class="k">return</span> <span class="n">draw</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">72</span> <span class="k">finally</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">73</span>     <span class="k">if</span> <span class="n">artist</span><span class="o">.</span><span class="n">get_agg_filter</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/axes/_base.py:3367,</span> in <span class="ni">_AxesBase.draw</span><span class="nt">(self, renderer)</span>
+<span class="g g-Whitespace">   </span><span class="mi">3364</span> <span class="k">if</span> <span class="n">artists_rasterized</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">3365</span>     <span class="n">_draw_rasterized</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_figure</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">artists_rasterized</span><span class="p">,</span> <span class="n">renderer</span><span class="p">)</span>
+<span class="ne">-&gt; </span><span class="mi">3367</span> <span class="n">mimage</span><span class="o">.</span><span class="n">_draw_list_compositing_images</span><span class="p">(</span>
+<span class="g g-Whitespace">   </span><span class="mi">3368</span>     <span class="n">renderer</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">artists</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_figure</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">suppressComposite</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">3370</span> <span class="n">renderer</span><span class="o">.</span><span class="n">close_group</span><span class="p">(</span><span class="s1">'axes'</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">3371</span> <span class="bp">self</span><span class="o">.</span><span class="n">stale</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/image.py:133,</span> in <span class="ni">_draw_list_compositing_images</span><span class="nt">(renderer, parent, artists, suppress_composite)</span>
+<span class="g g-Whitespace">    </span><span class="mi">131</span> <span class="k">if</span> <span class="n">not_composite</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">has_images</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">132</span>     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">artists</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">133</span>         <span class="n">a</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">134</span> <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">135</span>     <span class="c1"># Composite any adjacent images together</span>
+<span class="g g-Whitespace">    </span><span class="mi">136</span>     <span class="n">image_group</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/artist.py:71,</span> in <span class="ni">allow_rasterization.&lt;locals&gt;.draw_wrapper</span><span class="nt">(artist, renderer)</span>
+<span class="g g-Whitespace">     </span><span class="mi">68</span>     <span class="k">if</span> <span class="n">artist</span><span class="o">.</span><span class="n">get_agg_filter</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">69</span>         <span class="n">renderer</span><span class="o">.</span><span class="n">start_filter</span><span class="p">()</span>
+<span class="ne">---&gt; </span><span class="mi">71</span>     <span class="k">return</span> <span class="n">draw</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">72</span> <span class="k">finally</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">73</span>     <span class="k">if</span> <span class="n">artist</span><span class="o">.</span><span class="n">get_agg_filter</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/legend.py:794,</span> in <span class="ni">Legend.draw</span><span class="nt">(self, renderer)</span>
+<span class="g g-Whitespace">    </span><span class="mi">791</span>     <span class="n">Shadow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">legendPatch</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_shadow_props</span><span class="p">)</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">793</span> <span class="bp">self</span><span class="o">.</span><span class="n">legendPatch</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">794</span> <span class="bp">self</span><span class="o">.</span><span class="n">_legend_box</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">796</span> <span class="n">renderer</span><span class="o">.</span><span class="n">close_group</span><span class="p">(</span><span class="s1">'legend'</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">797</span> <span class="bp">self</span><span class="o">.</span><span class="n">stale</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/artist.py:38,</span> in <span class="ni">_prevent_rasterization.&lt;locals&gt;.draw_wrapper</span><span class="nt">(artist, renderer, *args, **kwargs)</span>
+<span class="g g-Whitespace">     </span><span class="mi">35</span>     <span class="n">renderer</span><span class="o">.</span><span class="n">stop_rasterizing</span><span class="p">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">36</span>     <span class="n">renderer</span><span class="o">.</span><span class="n">_rasterizing</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="ne">---&gt; </span><span class="mi">38</span> <span class="k">return</span> <span class="n">draw</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/offsetbox.py:383,</span> in <span class="ni">OffsetBox.draw</span><span class="nt">(self, renderer)</span>
+<span class="g g-Whitespace">    </span><span class="mi">381</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">ox</span><span class="p">,</span> <span class="n">oy</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_visible_children</span><span class="p">(),</span> <span class="n">offsets</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">382</span>     <span class="n">c</span><span class="o">.</span><span class="n">set_offset</span><span class="p">((</span><span class="n">px</span> <span class="o">+</span> <span class="n">ox</span><span class="p">,</span> <span class="n">py</span> <span class="o">+</span> <span class="n">oy</span><span class="p">))</span>
+<span class="ne">--&gt; </span><span class="mi">383</span>     <span class="n">c</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">384</span> <span class="n">_bbox_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">props</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.</span><span class="p">))</span>
+<span class="g g-Whitespace">    </span><span class="mi">385</span> <span class="bp">self</span><span class="o">.</span><span class="n">stale</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/artist.py:38,</span> in <span class="ni">_prevent_rasterization.&lt;locals&gt;.draw_wrapper</span><span class="nt">(artist, renderer, *args, **kwargs)</span>
+<span class="g g-Whitespace">     </span><span class="mi">35</span>     <span class="n">renderer</span><span class="o">.</span><span class="n">stop_rasterizing</span><span class="p">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">36</span>     <span class="n">renderer</span><span class="o">.</span><span class="n">_rasterizing</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="ne">---&gt; </span><span class="mi">38</span> <span class="k">return</span> <span class="n">draw</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/offsetbox.py:383,</span> in <span class="ni">OffsetBox.draw</span><span class="nt">(self, renderer)</span>
+<span class="g g-Whitespace">    </span><span class="mi">381</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">ox</span><span class="p">,</span> <span class="n">oy</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_visible_children</span><span class="p">(),</span> <span class="n">offsets</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">382</span>     <span class="n">c</span><span class="o">.</span><span class="n">set_offset</span><span class="p">((</span><span class="n">px</span> <span class="o">+</span> <span class="n">ox</span><span class="p">,</span> <span class="n">py</span> <span class="o">+</span> <span class="n">oy</span><span class="p">))</span>
+<span class="ne">--&gt; </span><span class="mi">383</span>     <span class="n">c</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">384</span> <span class="n">_bbox_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">props</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.</span><span class="p">))</span>
+<span class="g g-Whitespace">    </span><span class="mi">385</span> <span class="bp">self</span><span class="o">.</span><span class="n">stale</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="p">[</span><span class="o">...</span> <span class="n">skipping</span> <span class="n">similar</span> <span class="n">frames</span><span class="p">:</span> <span class="n">_prevent_rasterization</span><span class="o">.&lt;</span><span class="nb">locals</span><span class="o">&gt;.</span><span class="n">draw_wrapper</span> <span class="n">at</span> <span class="n">line</span> <span class="mi">38</span> <span class="p">(</span><span class="mi">2</span> <span class="n">times</span><span class="p">),</span> <span class="n">OffsetBox</span><span class="o">.</span><span class="n">draw</span> <span class="n">at</span> <span class="n">line</span> <span class="mi">383</span> <span class="p">(</span><span class="mi">1</span> <span class="n">times</span><span class="p">)]</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/offsetbox.py:383,</span> in <span class="ni">OffsetBox.draw</span><span class="nt">(self, renderer)</span>
+<span class="g g-Whitespace">    </span><span class="mi">381</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">ox</span><span class="p">,</span> <span class="n">oy</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_visible_children</span><span class="p">(),</span> <span class="n">offsets</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">382</span>     <span class="n">c</span><span class="o">.</span><span class="n">set_offset</span><span class="p">((</span><span class="n">px</span> <span class="o">+</span> <span class="n">ox</span><span class="p">,</span> <span class="n">py</span> <span class="o">+</span> <span class="n">oy</span><span class="p">))</span>
+<span class="ne">--&gt; </span><span class="mi">383</span>     <span class="n">c</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">384</span> <span class="n">_bbox_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">props</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.</span><span class="p">))</span>
+<span class="g g-Whitespace">    </span><span class="mi">385</span> <span class="bp">self</span><span class="o">.</span><span class="n">stale</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/artist.py:38,</span> in <span class="ni">_prevent_rasterization.&lt;locals&gt;.draw_wrapper</span><span class="nt">(artist, renderer, *args, **kwargs)</span>
+<span class="g g-Whitespace">     </span><span class="mi">35</span>     <span class="n">renderer</span><span class="o">.</span><span class="n">stop_rasterizing</span><span class="p">()</span>
+<span class="g g-Whitespace">     </span><span class="mi">36</span>     <span class="n">renderer</span><span class="o">.</span><span class="n">_rasterizing</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="ne">---&gt; </span><span class="mi">38</span> <span class="k">return</span> <span class="n">draw</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/offsetbox.py:823,</span> in <span class="ni">TextArea.draw</span><span class="nt">(self, renderer)</span>
+<span class="g g-Whitespace">    </span><span class="mi">821</span> <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">822</span>     <span class="c1"># docstring inherited</span>
+<span class="ne">--&gt; </span><span class="mi">823</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_text</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">824</span>     <span class="n">_bbox_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">props</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.</span><span class="p">))</span>
+<span class="g g-Whitespace">    </span><span class="mi">825</span>     <span class="bp">self</span><span class="o">.</span><span class="n">stale</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/artist.py:71,</span> in <span class="ni">allow_rasterization.&lt;locals&gt;.draw_wrapper</span><span class="nt">(artist, renderer)</span>
+<span class="g g-Whitespace">     </span><span class="mi">68</span>     <span class="k">if</span> <span class="n">artist</span><span class="o">.</span><span class="n">get_agg_filter</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">69</span>         <span class="n">renderer</span><span class="o">.</span><span class="n">start_filter</span><span class="p">()</span>
+<span class="ne">---&gt; </span><span class="mi">71</span>     <span class="k">return</span> <span class="n">draw</span><span class="p">(</span><span class="n">artist</span><span class="p">,</span> <span class="n">renderer</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">72</span> <span class="k">finally</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">73</span>     <span class="k">if</span> <span class="n">artist</span><span class="o">.</span><span class="n">get_agg_filter</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/text.py:909,</span> in <span class="ni">Text.draw</span><span class="nt">(self, renderer)</span>
+<span class="g g-Whitespace">    </span><span class="mi">905</span>         <span class="n">textrenderer</span><span class="o">.</span><span class="n">draw_tex</span><span class="p">(</span><span class="n">gc</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">clean_line</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">906</span>                               <span class="bp">self</span><span class="o">.</span><span class="n">_fontproperties</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">907</span>                               <span class="n">mtext</span><span class="o">=</span><span class="n">mtext</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">908</span>     <span class="k">else</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">909</span>         <span class="n">textrenderer</span><span class="o">.</span><span class="n">draw_text</span><span class="p">(</span><span class="n">gc</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">clean_line</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">910</span>                                <span class="bp">self</span><span class="o">.</span><span class="n">_fontproperties</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">911</span>                                <span class="n">ismath</span><span class="o">=</span><span class="n">ismath</span><span class="p">,</span> <span class="n">mtext</span><span class="o">=</span><span class="n">mtext</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">913</span> <span class="n">gc</span><span class="o">.</span><span class="n">restore</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">914</span> <span class="n">renderer</span><span class="o">.</span><span class="n">close_group</span><span class="p">(</span><span class="s1">'text'</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backends/backend_agg.py:245,</span> in <span class="ni">RendererAgg.draw_text</span><span class="nt">(self, gc, x, y, s, prop, angle, ismath, mtext)</span>
+<span class="g g-Whitespace">    </span><span class="mi">240</span> <span class="n">items</span> <span class="o">=</span> <span class="n">font</span><span class="o">.</span><span class="n">_layout</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">241</span>     <span class="n">s</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">get_hinting_flag</span><span class="p">(),</span>
+<span class="g g-Whitespace">    </span><span class="mi">242</span>     <span class="n">features</span><span class="o">=</span><span class="n">mtext</span><span class="o">.</span><span class="n">get_fontfeatures</span><span class="p">()</span> <span class="k">if</span> <span class="n">mtext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">243</span>     <span class="n">language</span><span class="o">=</span><span class="n">mtext</span><span class="o">.</span><span class="n">get_language</span><span class="p">()</span> <span class="k">if</span> <span class="n">mtext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">244</span> <span class="n">size</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="n">get_size_in_points</span><span class="p">()</span>
+<span class="ne">--&gt; </span><span class="mi">245</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw_text_glyphs_and_boxes</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">246</span>     <span class="n">gc</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">247</span>     <span class="p">((</span><span class="n">item</span><span class="o">.</span><span class="n">ft_object</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">glyph_index</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">248</span>      <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">),</span>
+<span class="g g-Whitespace">    </span><span class="mi">249</span>     <span class="p">[])</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backends/backend_agg.py:196,</span> in <span class="ni">RendererAgg._draw_text_glyphs_and_boxes</span><span class="nt">(self, gc, x, y, angle, glyphs, boxes)</span>
+<span class="g g-Whitespace">    </span><span class="mi">194</span>         <span class="n">buffer</span> <span class="o">*=</span> <span class="mh">0xff</span>
+<span class="g g-Whitespace">    </span><span class="mi">195</span>     <span class="c1"># draw_text_image's y is downwards &amp; the bitmap bottom side.</span>
+<span class="ne">--&gt; </span><span class="mi">196</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_renderer</span><span class="o">.</span><span class="n">draw_text_image</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">197</span>         <span class="n">buffer</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">198</span>         <span class="n">bitmap</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">-</span> <span class="n">bitmap</span><span class="o">.</span><span class="n">top</span> <span class="o">+</span> <span class="n">buffer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<span class="g g-Whitespace">    </span><span class="mi">199</span>         <span class="mi">0</span><span class="p">,</span> <span class="n">gc</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">201</span> <span class="n">rgba</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">get_rgb</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">202</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rgba</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">gc</span><span class="o">.</span><span class="n">get_forced_alpha</span><span class="p">():</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backend_bases.py:976,</span> in <span class="ni">GraphicsContextBase.get_hatch_color</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">973</span>         <span class="k">return</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">974</span>     <span class="k">return</span> <span class="n">Path</span><span class="o">.</span><span class="n">hatch</span><span class="p">(</span><span class="n">hatch</span><span class="p">,</span> <span class="n">density</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">976</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_hatch_color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">977</span><span class="w">     </span><span class="sd">"""Get the hatch color."""</span>
+<span class="g g-Whitespace">    </span><span class="mi">978</span>     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hatch_color</span>
+
+<span class="ne">KeyboardInterrupt</span>: 
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/Users/matthewsignorelli/miniconda3/envs/condamatt2/lib/python3.12/site-packages/IPython/core/pylabtools.py:158: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
+  fig.canvas.print_figure(bytes_io, **kw)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Error in callback &lt;function flush_figures at 0x37782a5c0&gt; (for post_execute), with arguments args (),kwargs {}:
+</pre></div>
+</div>
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">AttributeError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/PIL/ImageFile.py:663,</span> in <span class="ni">_save</span><span class="nt">(im, fp, tile, bufsize)</span>
+<span class="g g-Whitespace">    </span><span class="mi">662</span> <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">663</span>     <span class="n">fh</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">664</span>     <span class="n">fp</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+<span class="ne">AttributeError</span>: '_idat' object has no attribute 'fileno'
+
+<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
+
+<span class="ne">KeyboardInterrupt</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib_inline/backend_inline.py:126,</span> in <span class="ni">flush_figures</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">123</span> <span class="k">if</span> <span class="n">InlineBackend</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span><span class="o">.</span><span class="n">close_figures</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">124</span>     <span class="c1"># ignore the tracking, just draw and close all figures</span>
+<span class="g g-Whitespace">    </span><span class="mi">125</span>     <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">126</span>         <span class="k">return</span> <span class="n">show</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">127</span>     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">128</span>         <span class="c1"># safely show traceback if in IPython, else raise</span>
+<span class="g g-Whitespace">    </span><span class="mi">129</span>         <span class="n">ip</span> <span class="o">=</span> <span class="n">get_ipython</span><span class="p">()</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib_inline/backend_inline.py:90,</span> in <span class="ni">show</span><span class="nt">(close, block)</span>
+<span class="g g-Whitespace">     </span><span class="mi">88</span> <span class="k">try</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">89</span>     <span class="k">for</span> <span class="n">figure_manager</span> <span class="ow">in</span> <span class="n">Gcf</span><span class="o">.</span><span class="n">get_all_fig_managers</span><span class="p">():</span>
+<span class="ne">---&gt; </span><span class="mi">90</span>         <span class="n">display</span><span class="p">(</span>
+<span class="g g-Whitespace">     </span><span class="mi">91</span>             <span class="n">figure_manager</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span>
+<span class="g g-Whitespace">     </span><span class="mi">92</span>             <span class="n">metadata</span><span class="o">=</span><span class="n">_fetch_figure_metadata</span><span class="p">(</span><span class="n">figure_manager</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">figure</span><span class="p">),</span>
+<span class="g g-Whitespace">     </span><span class="mi">93</span>         <span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">94</span> <span class="k">finally</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">95</span>     <span class="n">show</span><span class="o">.</span><span class="n">_to_draw</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backend_bases.py:2289,</span> in <span class="ni">FigureCanvasBase.print_figure</span><span class="nt">(self, filename, dpi, facecolor, edgecolor, orientation, format, bbox_inches, pad_inches, bbox_extra_artists, backend, **kwargs)</span>
+<span class="g g-Whitespace">   </span><span class="mi">2285</span> <span class="k">try</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">2286</span>     <span class="c1"># _get_renderer may change the figure dpi (as vector formats</span>
+<span class="g g-Whitespace">   </span><span class="mi">2287</span>     <span class="c1"># force the figure dpi to 72), so we need to set it again here.</span>
+<span class="g g-Whitespace">   </span><span class="mi">2288</span>     <span class="k">with</span> <span class="n">cbook</span><span class="o">.</span><span class="n">_setattr_cm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">):</span>
+<span class="ne">-&gt; </span><span class="mi">2289</span>         <span class="n">result</span> <span class="o">=</span> <span class="n">print_method</span><span class="p">(</span>
+<span class="g g-Whitespace">   </span><span class="mi">2290</span>             <span class="n">filename</span><span class="p">,</span>
+<span class="g g-Whitespace">   </span><span class="mi">2291</span>             <span class="n">facecolor</span><span class="o">=</span><span class="n">facecolor</span><span class="p">,</span>
+<span class="g g-Whitespace">   </span><span class="mi">2292</span>             <span class="n">edgecolor</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span>
+<span class="g g-Whitespace">   </span><span class="mi">2293</span>             <span class="n">orientation</span><span class="o">=</span><span class="n">orientation</span><span class="p">,</span>
+<span class="g g-Whitespace">   </span><span class="mi">2294</span>             <span class="n">bbox_inches_restore</span><span class="o">=</span><span class="n">_bbox_inches_restore</span><span class="p">,</span>
+<span class="g g-Whitespace">   </span><span class="mi">2295</span>             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">2296</span> <span class="k">finally</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">2297</span>     <span class="k">if</span> <span class="n">bbox_inches</span> <span class="ow">and</span> <span class="n">restore_bbox</span><span class="p">:</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backend_bases.py:2146,</span> in <span class="ni">FigureCanvasBase._switch_canvas_and_return_print_method.&lt;locals&gt;.&lt;lambda&gt;</span><span class="nt">(*args, **kwargs)</span>
+<span class="g g-Whitespace">   </span><span class="mi">2142</span>     <span class="n">optional_kws</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># Passed by print_figure for other renderers.</span>
+<span class="g g-Whitespace">   </span><span class="mi">2143</span>         <span class="s2">"dpi"</span><span class="p">,</span> <span class="s2">"facecolor"</span><span class="p">,</span> <span class="s2">"edgecolor"</span><span class="p">,</span> <span class="s2">"orientation"</span><span class="p">,</span>
+<span class="g g-Whitespace">   </span><span class="mi">2144</span>         <span class="s2">"bbox_inches_restore"</span><span class="p">}</span>
+<span class="g g-Whitespace">   </span><span class="mi">2145</span>     <span class="n">skip</span> <span class="o">=</span> <span class="n">optional_kws</span> <span class="o">-</span> <span class="p">{</span><span class="o">*</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">meth</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">}</span>
+<span class="ne">-&gt; </span><span class="mi">2146</span>     <span class="n">print_method</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">meth</span><span class="p">)(</span><span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">meth</span><span class="p">(</span>
+<span class="nn">   2147         *args, **{k: v for k, v</span> in <span class="ni">kwargs.items</span><span class="nt">() if k not in skip}))</span>
+<span class="g g-Whitespace">   </span><span class="mi">2148</span> <span class="k">else</span><span class="p">:</span>  <span class="c1"># Let third-parties do as they see fit.</span>
+<span class="g g-Whitespace">   </span><span class="mi">2149</span>     <span class="n">print_method</span> <span class="o">=</span> <span class="n">meth</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backends/backend_agg.py:537,</span> in <span class="ni">FigureCanvasAgg.print_png</span><span class="nt">(self, filename_or_obj, metadata, pil_kwargs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">490</span> <span class="k">def</span><span class="w"> </span><span class="nf">print_png</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename_or_obj</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pil_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">491</span><span class="w">     </span><span class="sd">"""</span>
+<span class="g g-Whitespace">    </span><span class="mi">492</span><span class="sd">     Write the figure to a PNG file.</span>
+<span class="g g-Whitespace">    </span><span class="mi">493</span><span class="sd"> </span>
+<span class="sd">   (...)    535         *metadata*, including the default 'Software' key.</span>
+<span class="g g-Whitespace">    </span><span class="mi">536</span><span class="sd">     """</span>
+<span class="ne">--&gt; </span><span class="mi">537</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_print_pil</span><span class="p">(</span><span class="n">filename_or_obj</span><span class="p">,</span> <span class="s2">"png"</span><span class="p">,</span> <span class="n">pil_kwargs</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/backends/backend_agg.py:486,</span> in <span class="ni">FigureCanvasAgg._print_pil</span><span class="nt">(self, filename_or_obj, fmt, pil_kwargs, metadata)</span>
+<span class="g g-Whitespace">    </span><span class="mi">481</span><span class="w"> </span><span class="sd">"""</span>
+<span class="g g-Whitespace">    </span><span class="mi">482</span><span class="sd"> Draw the canvas, then save it using `.image.imsave` (to which</span>
+<span class="g g-Whitespace">    </span><span class="mi">483</span><span class="sd"> *pil_kwargs* and *metadata* are forwarded).</span>
+<span class="g g-Whitespace">    </span><span class="mi">484</span><span class="sd"> """</span>
+<span class="g g-Whitespace">    </span><span class="mi">485</span> <span class="n">FigureCanvasAgg</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">486</span> <span class="n">mpl</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">imsave</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">487</span>     <span class="n">filename_or_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer_rgba</span><span class="p">(),</span> <span class="nb">format</span><span class="o">=</span><span class="n">fmt</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">"upper"</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">488</span>     <span class="n">dpi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">dpi</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">pil_kwargs</span><span class="o">=</span><span class="n">pil_kwargs</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/matplotlib/image.py:1722,</span> in <span class="ni">imsave</span><span class="nt">(fname, arr, vmin, vmax, cmap, format, origin, dpi, metadata, pil_kwargs)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1720</span> <span class="n">pil_kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"format"</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1721</span> <span class="n">pil_kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"dpi"</span><span class="p">,</span> <span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">dpi</span><span class="p">))</span>
+<span class="ne">-&gt; </span><span class="mi">1722</span> <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="o">**</span><span class="n">pil_kwargs</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/PIL/Image.py:2711,</span> in <span class="ni">Image.save</span><span class="nt">(self, fp, format, **params)</span>
+<span class="g g-Whitespace">   </span><span class="mi">2708</span>     <span class="n">fp</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">],</span> <span class="n">fp</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">2710</span> <span class="k">try</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">2711</span>     <span class="n">save_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">2712</span> <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">2713</span>     <span class="k">if</span> <span class="n">open_fp</span><span class="p">:</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/PIL/PngImagePlugin.py:1522,</span> in <span class="ni">_save</span><span class="nt">(im, fp, filename, chunk, save_all)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1520</span> <span class="k">if</span> <span class="n">single_im</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">1521</span>     <span class="n">_apply_encoderinfo</span><span class="p">(</span><span class="n">single_im</span><span class="p">,</span> <span class="n">im</span><span class="o">.</span><span class="n">encoderinfo</span><span class="p">)</span>
+<span class="ne">-&gt; </span><span class="mi">1522</span>     <span class="n">ImageFile</span><span class="o">.</span><span class="n">_save</span><span class="p">(</span>
+<span class="g g-Whitespace">   </span><span class="mi">1523</span>         <span class="n">single_im</span><span class="p">,</span>
+<span class="g g-Whitespace">   </span><span class="mi">1524</span>         <span class="n">cast</span><span class="p">(</span><span class="n">IO</span><span class="p">[</span><span class="nb">bytes</span><span class="p">],</span> <span class="n">_idat</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">chunk</span><span class="p">)),</span>
+<span class="g g-Whitespace">   </span><span class="mi">1525</span>         <span class="p">[</span><span class="n">ImageFile</span><span class="o">.</span><span class="n">_Tile</span><span class="p">(</span><span class="s2">"zip"</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">single_im</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rawmode</span><span class="p">)],</span>
+<span class="g g-Whitespace">   </span><span class="mi">1526</span>     <span class="p">)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1528</span> <span class="k">if</span> <span class="n">info</span><span class="p">:</span>
+<span class="g g-Whitespace">   </span><span class="mi">1529</span>     <span class="k">for</span> <span class="n">info_chunk</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">chunks</span><span class="p">:</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/PIL/ImageFile.py:667,</span> in <span class="ni">_save</span><span class="nt">(im, fp, tile, bufsize)</span>
+<span class="g g-Whitespace">    </span><span class="mi">665</span>     <span class="n">_encode_tile</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">tile</span><span class="p">,</span> <span class="n">bufsize</span><span class="p">,</span> <span class="n">fh</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">666</span> <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="n">io</span><span class="o">.</span><span class="n">UnsupportedOperation</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">667</span>     <span class="n">_encode_tile</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">tile</span><span class="p">,</span> <span class="n">bufsize</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">668</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">"flush"</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">669</span>     <span class="n">fp</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+<span class="nn">File ~/miniconda3/envs/condamatt2/lib/python3.12/site-packages/PIL/ImageFile.py:693,</span> in <span class="ni">_encode_tile</span><span class="nt">(im, fp, tile, bufsize, fh, exc)</span>
+<span class="g g-Whitespace">    </span><span class="mi">690</span> <span class="k">if</span> <span class="n">exc</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">691</span>     <span class="c1"># compress to Python file-compatible object</span>
+<span class="g g-Whitespace">    </span><span class="mi">692</span>     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">693</span>         <span class="n">errcode</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">bufsize</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="g g-Whitespace">    </span><span class="mi">694</span>         <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">695</span>         <span class="k">if</span> <span class="n">errcode</span><span class="p">:</span>
+
+<span class="ne">KeyboardInterrupt</span>: 
 </pre></div>
 </div>
 </div>
@@ -375,10 +891,10 @@ x_{co}=0 + 4.7436547838232309\times10^{-8}\delta \ .
 <span class="n">eta_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">orbit_y</span><span class="p">])</span>
 
 <span class="c1"># Now can plot the dispersions:</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">eta_x</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;eta_x&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">eta_y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;eta_y&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Dispersion [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">eta_x</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'eta_x'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">eta_y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'eta_y'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Dispersion [m]'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="p">;</span>
 </pre></div>
@@ -424,10 +940,10 @@ corresponds to <span class="math notranslate nohighlight">\(\frac{1}{2!}\frac{\p
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">deta_ddelta_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">orbit_x</span><span class="p">])</span> <span class="c1"># Multiply by 2! to get only derivative</span>
 <span class="n">deta_ddelta_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">orbit_y</span><span class="p">])</span> <span class="c1"># Multiply by 2! to get only derivative</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">deta_ddelta_x</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;deta_ddelta_x&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">deta_ddelta_y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;deta_ddelta_y&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Second-Order Dispersion [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">deta_ddelta_x</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'deta_ddelta_x'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">deta_ddelta_y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'deta_ddelta_y'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Second-Order Dispersion [m]'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="p">;</span>
 </pre></div>
@@ -462,10 +978,10 @@ Descriptor(NV=6, MO=2)
 <span class="n">dbeta_ddelta_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_1</span><span class="p">])</span>
 <span class="n">dbeta_ddelta_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">beta_2</span><span class="p">])</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">dbeta_ddelta_1</span><span class="o">/</span><span class="n">beta_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;dbeta_ddelta_1/beta_1&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">dbeta_ddelta_2</span><span class="o">/</span><span class="n">beta_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;dbeta_ddelta_2/beta_2&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Chromatic Beta-Beat [1]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">dbeta_ddelta_1</span><span class="o">/</span><span class="n">beta_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'dbeta_ddelta_1/beta_1'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">dbeta_ddelta_2</span><span class="o">/</span><span class="n">beta_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'dbeta_ddelta_2/beta_2'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Chromatic Beta-Beat [1]'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="p">;</span>
 </pre></div>
@@ -492,10 +1008,10 @@ W = \sqrt{A^2+B^2} \ , \ A=\frac{\partial\alpha}{\partial\delta}-\frac{\alpha}{\
 <span class="n">W_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">dalpha_ddelta_1</span><span class="o">-</span><span class="n">alpha_1</span><span class="o">/</span><span class="n">beta_1</span><span class="o">*</span><span class="n">dbeta_ddelta_1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">dbeta_ddelta_1</span><span class="o">/</span><span class="n">beta_1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">W_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">dalpha_ddelta_2</span><span class="o">-</span><span class="n">alpha_2</span><span class="o">/</span><span class="n">beta_2</span><span class="o">*</span><span class="n">dbeta_ddelta_2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">dbeta_ddelta_2</span><span class="o">/</span><span class="n">beta_2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;W_1&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;W_2&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Montague Functions&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'W_1'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'W_2'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Montague Functions'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="p">;</span>
 </pre></div>
@@ -527,10 +1043,10 @@ W_2=\sqrt{A_2^2+B_2^2}\ , \ A_2=\frac{1}{2!}\left(\frac{\partial^2\alpha}{\parti
 <span class="n">W2_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">d2alpha_ddelta2_1</span><span class="o">-</span><span class="n">alpha_1</span><span class="o">/</span><span class="n">beta_1</span><span class="o">*</span><span class="n">d2beta_ddelta2_1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">d2beta_ddelta2_1</span><span class="o">/</span><span class="n">beta_1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">W2_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">d2alpha_ddelta2_2</span><span class="o">-</span><span class="n">alpha_2</span><span class="o">/</span><span class="n">beta_2</span><span class="o">*</span><span class="n">d2beta_ddelta2_2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">d2beta_ddelta2_2</span><span class="o">/</span><span class="n">beta_2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W2_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;W^2_1&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W2_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;W^2_2&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Second-Order Montague Functions&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W2_1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'W^2_1'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">W2_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'W^2_2'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'s [m]'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Second-Order Montague Functions'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="p">;</span>
 </pre></div>
@@ -589,10 +1105,10 @@ INDEX  COEFFICIENT             ORDER   EXPONENTS
 <span class="n">Qyeval</span> <span class="o">=</span> <span class="p">[</span><span class="n">Qy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">delta</span><span class="p">]</span>
 
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">Qxeval</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Q_x&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">Qyeval</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Q_y&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;delta&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Fractional Tunes&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">Qxeval</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Q_x'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">Qyeval</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Q_y'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'delta'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'Fractional Tunes'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="p">;</span>
 </pre></div>
@@ -614,7 +1130,7 @@ INDEX  COEFFICIENT             ORDER   EXPONENTS
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Ramping through a spin-orbit resonance with SciBmad</div>
+                <div class="title">Ramping through a spin-orbit resonance with SciBmad (Python example compatible with SciBmad version &lt; 0.5.0)</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
