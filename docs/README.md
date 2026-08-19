@@ -93,6 +93,7 @@ docs/
 | Installation guide | `src/getting-started.md` | Markdown (MyST) |
 | Usage tutorials | `src/user-guide/*.md` | Markdown (MyST) |
 | Examples | `src/examples/*.md` | Markdown (MyST) |
+| Tutorial with live output | `src/*.md` with a `kernelspec` header | Runnable MyST (see below) |
 | Contributing guide | `src/developer-guide/*.md` | Markdown (MyST) |
 | API docstrings | Source code (`src/*.jl`) | Julia docstrings |
 | API organization | `api/src/index.md` | Markdown |
@@ -135,6 +136,84 @@ This is a warning box.
 **Resources:**
 - [MyST Markdown Guide](https://myst-parser.readthedocs.io/)
 - [Sphinx Documentation](https://www.sphinx-doc.org/)
+
+### Runnable pages (executed code blocks)
+
+A page can have its Julia code **executed at build time**, with the real output
+spliced in underneath each block — the same thing Documenter.jl's ```` ```@example ````
+blocks do on the [Beamlines.jl](https://bmad-sim.github.io/Beamlines.jl/stable/quickstart/)
+site. `src/quickstart.md` is the worked example.
+
+A runnable page is an ordinary `.md` file, so it goes in a `{toctree}` next to plain
+MyST pages and the two kinds interleave freely. Two things make it runnable:
+
+**1. Front matter** naming a Julia kernel, at the very top of the file:
+
+```yaml
+    ---
+    jupytext:
+      text_representation:
+        extension: .md
+        format_name: myst
+        format_version: 0.13
+    kernelspec:
+      display_name: Julia
+      language: julia
+      name: julia
+    ---
+```
+
+(`name: julia` is remapped by `conf.py` to whichever IJulia kernel is installed.)
+
+**2. `{code-cell}` blocks** instead of plain ```` ```julia ```` fences:
+
+```markdown
+    ```{code-cell} julia
+    qf = Quadrupole(Kn1=0.36, L=0.5)
+    ```
+```
+
+All cells on a page share one Julia session, in order, exactly like a single named
+Documenter `@example` block. Plain ```` ```julia ```` fences on the same page are still
+just displayed, never run — use those for snippets that shouldn't execute
+(`Pkg.add`, `include` of a big lattice, …).
+
+**Documenter → MyST equivalents**
+
+| Documenter | Runnable MyST page |
+|---|---|
+| ```` ```@example name ```` | ```` ```{code-cell} julia ```` (one session per page) |
+| ```` ```@setup name ```` | a `{code-cell}` with `:tags: [remove-cell]` |
+| `# hide` on a line | `:tags: [remove-input]` (hide code, keep output) or `[remove-output]` |
+| ```` ```@repl ```` | one `{code-cell}` per expression |
+| an example that should throw | `:tags: [raises-exception]` |
+
+Tags go on the first line of the cell:
+
+```markdown
+    ```{code-cell} julia
+    :tags: [remove-cell]
+    ENV["COLUMNS"] = 100
+    ```
+```
+
+**How the build runs them**
+
+- `docs/build.py` installs an IJulia kernel named `scibmad-docs` that starts with
+  `--project=docs`, so `using SciBmad` resolves in every executed page. `IJulia` is a
+  dependency in `docs/Project.toml`.
+- `nb_execution_mode = "auto"` in `conf.py` executes only notebooks with missing
+  outputs — i.e. the runnable `.md` pages. `nb_execution_excludepatterns = ["*.ipynb"]`
+  guarantees the committed, pre-executed `examples/` notebooks are never re-run.
+- `nb_execution_raise_on_error = True`: a cell that throws **fails the build**, so
+  examples can't silently rot. Tag the cell `raises-exception` if the error is the point.
+
+**Building runnable pages by hand.** `python docs/build.py` sets the kernel up for you.
+If you run `sphinx-build` directly, install the kernel once:
+
+```bash
+julia --project=docs -e 'using IJulia; IJulia.installkernel("SciBmad Docs", "--project=docs", specname="scibmad-docs")'
+```
 
 ### Embedding Jupyter notebooks
 

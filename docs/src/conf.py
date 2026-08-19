@@ -18,9 +18,50 @@ extensions = [
 ]
 
 # -- Jupyter notebook handling (myst-nb) -------------------------------------
-# Notebooks are committed already-executed (they need a Julia/IJulia kernel that
-# isn't available in CI), so render their stored outputs instead of re-executing.
-nb_execution_mode = "off"
+# Two kinds of notebook content live in this site:
+#
+#   1. `examples/**.ipynb` -- committed already-executed, rendered from their
+#      stored outputs. They are never re-run (see nb_execution_excludepatterns).
+#   2. "runnable" MyST pages -- ordinary `.md` files carrying a `kernelspec` in
+#      their front matter and `{code-cell}` blocks. These are executed by a Julia
+#      kernel at build time and their outputs are spliced into the page, the same
+#      way Documenter.jl's ```@example blocks work. They sit in the toctree next
+#      to plain MyST pages, so runnable and non-runnable pages interleave freely.
+#
+# "auto" executes only notebooks that are missing outputs, which is exactly the
+# runnable pages (they store no outputs); the exclude pattern below guarantees the
+# committed examples are never re-run even if one of their cells has no output.
+nb_execution_mode = "auto"
+# Matched with PurePosixPath.match against the file path, i.e. from the right:
+# "*.ipynb" covers every committed, pre-executed notebook under examples/.
+nb_execution_excludepatterns = ["*.ipynb"]
+nb_execution_raise_on_error = True   # a broken example fails the build, like Documenter
+nb_execution_show_tb = True
+nb_execution_timeout = 600           # seconds per cell; Julia's first `using` is slow
+nb_merge_streams = True              # one output block per cell, not one per print
+
+# Runnable pages declare `name: julia` in their kernelspec; map that to whichever
+# IJulia kernel is actually installed. `docs/build.py` installs `scibmad-docs`,
+# whose kernel runs against `docs/Project.toml`; fall back to any Julia kernel so a
+# bare `sphinx-build` still works on a machine with a generic IJulia install.
+def _julia_kernel_name(preferred="scibmad-docs"):
+    try:
+        from jupyter_client.kernelspec import KernelSpecManager
+        ksm = KernelSpecManager()
+        names = list(ksm.find_kernel_specs())
+        if preferred in names:
+            return preferred
+        for name in names:
+            try:
+                if ksm.get_kernel_spec(name).language.lower() == "julia":
+                    return name
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return preferred  # nothing installed; let myst-nb report the missing kernel
+
+nb_kernel_rgx_aliases = {"julia.*": _julia_kernel_name()}
 
 numfig = True
 bibtex_bibfiles = ['bibliography.bib']

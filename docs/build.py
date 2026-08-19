@@ -18,6 +18,19 @@ result = subprocess.run(
 if result.returncode != 0:
     exit(1)
 
+# Register the IJulia kernel used by the "runnable" MyST pages. The kernel runs
+# against docs/Project.toml, so `using SciBmad` resolves in every executed page.
+print("\nInstalling IJulia kernel for runnable documentation pages...")
+result = subprocess.run(
+    ["julia", f"--project={docs_dir}", "-e",
+     'using IJulia; IJulia.installkernel("SciBmad Docs", '
+     f'"--project={docs_dir}"; specname="scibmad-docs", '
+     'env=Dict("JULIA_NUM_THREADS" => "auto"))'],
+    cwd=project_root
+)
+if result.returncode != 0:
+    exit(1)
+
 # Build Documenter first (Sphinx intersphinx needs its objects.inv)
 print("Building Documenter.jl documentation...")
 result = subprocess.run(
