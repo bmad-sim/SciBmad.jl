@@ -35,7 +35,12 @@ nb_execution_mode = "auto"
 # Matched with PurePosixPath.match against the file path, i.e. from the right:
 # "*.ipynb" covers every committed, pre-executed notebook under examples/.
 nb_execution_excludepatterns = ["*.ipynb"]
-nb_execution_raise_on_error = True   # a broken example fails the build, like Documenter
+# NOTE: deliberately False. myst-nb's raise_on_error re-raises immediately and drops
+# the cell traceback, so a CI failure says only "ExecutionError: <path>". With it off,
+# myst-nb logs the full traceback as a warning, and `_fail_on_execution_error` below
+# fails the build at the end -- so a broken example still breaks CI, like Documenter,
+# but you can see *why*.
+nb_execution_raise_on_error = False
 nb_execution_show_tb = True
 nb_execution_timeout = 600           # seconds per cell; Julia's first `using` is slow
 nb_merge_streams = True              # one output block per cell, not one per print
@@ -131,9 +136,29 @@ class _JuliaDomain(Domain):
     def get_objects(self):
         return iter([])
 
+# -- Fail the build if a runnable page's code errored -------------------------
+def _fail_on_execution_error(app, exception):
+    """Raise at the end of the build if any executed page had a failing cell."""
+    if exception is not None:
+        return  # the build already failed for another reason
+    failures = []
+    for docname, data in getattr(app.env, 'nb_metadata', {}).items():
+        exec_data = data.get('exec_data')
+        if exec_data and exec_data.get('succeeded') is False:
+            failures.append((docname, exec_data))
+    if not failures:
+        return
+    from sphinx.errors import SphinxError
+    report = ['Code execution failed in %d runnable page(s):' % len(failures)]
+    for docname, exec_data in failures:
+        report.append('\n--- %s ---' % docname)
+        report.append(exec_data.get('traceback') or str(exec_data.get('error')))
+    raise SphinxError('\n'.join(report))
+
 def setup(app):
     app.add_domain(_JuliaDomain)
     app.connect('doctree-resolved', _fix_intersphinx_refs)
+    app.connect('build-finished', _fail_on_execution_error)
 
 # MyST Parser configuration
 myst_enable_extensions = [
