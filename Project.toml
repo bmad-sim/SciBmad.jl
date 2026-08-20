@@ -1,7 +1,7 @@
 name = "SciBmad"
 uuid = "7bf6e793-a2ec-421f-8700-d1465381ee80"
-authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
 version = "0.5.0"
+authors = ["mattsignorelli <mgs255@cornell.edu> and contributors"]
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -40,6 +40,7 @@ FundamentalFrequencies = "0.1.2"
 GTPSA = "1.5.6"
 KernelAbstractions = "0.9"
 NonlinearNormalForm = "0.5.0"
+OrderedCollections = "2"
 PrecompileTools = "1.2.1"
 PrettyTables = "3.4"
 Reexport = "1.2.2"
