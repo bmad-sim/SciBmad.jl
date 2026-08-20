@@ -261,7 +261,7 @@ n_particles = 10
 res = track(fodo, v0=rand(n_particles, 6).*1e-5, n_turns=10, spin=true)
 ```
 
-On the CPU, all tracking will automatically be parallelized using single-instruction, multiple data (SIMD) if your hardware supports it. CPU multithreading can also be enabled by starting Julia with threads, and setting `use_cpu_multithreading=true`. For more details, see the [CPU Parallized Tracking](@ref cpuparallel) section of the manual.
+On the CPU, all tracking will automatically be parallelized using single instruction, multiple data (SIMD) if your hardware supports it. CPU multithreading can also be enabled by starting Julia with threads, and setting `use_cpu_multithreading=true`. For more details, see the [CPU Parallized Tracking](@ref cpuparallel) section of the manual.
 
 For GPU parallelized tracking, simply initialize your initial particle coordinates as a GPU array. For example:
 

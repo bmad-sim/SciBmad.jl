@@ -188,6 +188,8 @@ linear dispersion).
 - `a1`     : Linear normalizing map around the parameter-dependent fixed point, including nonlinear parameter dependence
 - `a2`     : Nonlinear part of the normalizing map, around the parameter-dependent fixed point
 - `as`     : (Nonlinear) spin normalizing map
+- `h<ijkl>`   : The "ijkl" resonance driving term/detune coefficient/Bengtsson monomial for the coasting beam case
+- `h<ijklmn>` : The "ijklmn" resonance driving term/detune coefficient/Bengtsson monomial including longitudinal oscillations
 """
 function twiss(
   bl::Beamline; 

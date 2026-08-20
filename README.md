@@ -57,3 +57,30 @@ SciBmad consists of a set of modular packages:
 - **[`FundamentalFrequencies.jl`](https://github.com/bmad-sim/FundamentalFrequencies.jl):** GPU-batchable Numerical Analysis of Fundamental Frequencies (NAFF)
 - **[`AtomicAndPhysicalConstants.jl`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl):** Library providing physical constants and properties for any atomic or subatomic particle for use in simulations
 
+## Citation
+
+If you find SciBmad useful in your work, please cite the following paper:
+
+```
+@inproceedings{signorelli:ipac2026-thp5325,
+    author = {M. Signorelli and J. Devlin and G. Hoffstaetter and D. Sagan},
+    title = {SciBmad: A differentiable, GPU-parallelized software library for particle accelerator design, nonlinear analysis, and machine learning},
+    booktitle = {Proc. IPAC'26},
+    %  booktitle = {Proc. 17th International Particle Accelerator Conference},
+    pages = {4737-4740},
+    paper = {THP5325},
+    venue = {Deauville, France},
+    intype = {presented at IPAC'26},
+    series = {IPAC'26 - 17th International Particle Accelerator Conference},
+    number = {17},
+    publisher = {JACoW Publishing, Geneva, Switzerland},
+    month = {05},
+    year = {2026},
+    issn = {2673-5350},
+    isbn = {978-3-95450-252-3},
+    url = {https://jacow.org/ipac2026/pdf/THP5325.pdf},
+    note = {presented at IPAC'26, Deauville, France, 2026, paper THP5325},
+    language = {English},
+    eventdate = {2026-05-17/2026-05-22},
+}
+```
