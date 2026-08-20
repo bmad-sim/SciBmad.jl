@@ -10,21 +10,21 @@ Let's compute how the tunes depend on the quadrupole strengths in our FODO cell 
 using SciBmad # hide
 
 @elements begin
-  qf = Quadrupole(Kn1=DefExpr(c -> c.kq), L=0.5)
-  sf = Sextupole(Kn2=DefExpr(c-> c.sf), L=0.2)
+  qf = Quadrupole(Kn1=DefExpr(c -> c.kqf), L=0.5)
+  sf = Sextupole(Kn2=DefExpr(c-> c.ksf), L=0.2)
   d = Drift(L=0.1)
   b = SBend(L=1.2, angle=pi/132)
-  qd = Quadrupole(Kn1=DefExpr(c -> c.kd), L=0.5)
-  sd = Sextupole(Kn2=DefExpr(c -> c.sd), L=0.2)
+  qd = Quadrupole(Kn1=DefExpr(c -> c.kqd), L=0.5)
+  sd = Sextupole(Kn2=DefExpr(c -> c.ksd), L=0.2)
 end
 
 fodo = Beamline([qf, sf, b, d, qd, sd, b, d], 
         species_ref=Species("electron"), pc_ref=18e9)
 
-fodo.context.kq = 0.36
-fodo.context.kd = -0.36
-fodo.context.sf = 1.2
-fodo.context.sd = -1.2
+fodo.context.kqf = 0.36
+fodo.context.kqd = -0.36
+fodo.context.ksf = 1.2
+fodo.context.ksd = -1.2
 ```
 
 To do so, we will define a GTPSA `Descriptor` with two parameters, corresponding to infinitesimal variations in each of the quadrupoles. Because computing the tunes requires only 1st order in the phase space variables, we can save computation time by explicitly specifying the truncation orders for the variables to be 1, truncate the parameters part also at 1, but allow maximum order of 2:
@@ -32,8 +32,8 @@ To do so, we will define a GTPSA `Descriptor` with two parameters, corresponding
 ```@example nf
 dnf = Descriptor([1, 1, 1, 1, 1, 1], 2, [1, 1], 1)
 dk = params(dnf)
-fodo.context.kq += dk[1]
-fodo.context.kd += dk[2]
+fodo.context.kqf += dk[1]
+fodo.context.kqd += dk[2]
 ```
 
 Now we can just use `twiss` through the usual machinery, though this time provide the descriptor explicitly to the `GTPSA_descriptor` keyword argument
@@ -44,4 +44,59 @@ tw = twiss(fodo, GTPSA_descriptor=dnf)
 
 By explicitly providing a GTPSA descriptor including parameter dependence, the `as_taylor_series` keyword argument to `twiss` is automatically set to true. Therefore, the columns are now Taylor series.
 
-We also see the amplitude-dependent tunes are printed as Taylor series.
+We also see the amplitude-dependent tunes are printed as Taylor series *including the dependence on `kqf` and `kqd`!*
+
+To extract a gradient w.r.t. parameters as a vector, use the `grad` function:
+
+```@example nf
+grad(tw.q1) # [dq1/dkqf, dq1/dkqd]
+grad(tw.q2) # [dq2/dkqf, dq2/dkqd]
+```
+
+These can these be used in optimizations, for example to optimize the tunes.
+
+The same tools can be used on the lattice functions. For example, to see how the periodic beta functions at the beginning depend on the quadrupole strengths:
+
+```@example nf
+grad(tw.beta1[1]) # [dbeta1/dkf, dbeta1/dkd]
+grad(tw.beta2[1]) # [dbeta2/dkf, dbeta2/dkd]
+```
+
+This goes for any column we output with Twiss. 
+
+We can also see how the chromaticities vary with sextupole strength. To compute the chromaticity, we require 2nd order in δ. And since we need to see how this 2nd-order in δ quantity varies with parameters, the maximum truncation order must be increased to 3. 
+
+Before setting any parameters to be `TPS`'s from a different `Descriptor`, it is good to use `scalarize!` on the beamline, which changes all stored `TPS` values in a Beamline to be the "scalar" (0th order) part:
+
+```@example nf
+scalarize!(nf)
+```
+
+!!! warning
+    Mixing two `TPS` objects with different `Descriptor`s will cause the program to crash, by 
+    an error baked in to the GTPSA C library. Please take care to not do this.
+
+We then construct our new GTPSA descriptor and set the sextupole strengths as TPSA parameters:
+
+```@example nf
+dnf2 = Descriptor([1, 1, 1, 1, 1, 2], 3, [1, 1], 1)
+dk = params(dnf2)
+fodo.context.ksf += dk[1]
+fodo.context.ksd += dk[2]
+
+tw = twiss(fodo, GTPSA_descriptor=dnf2)
+```
+
+We can extract the horizontal and vertical chromaticities as Taylor series using `getterm`:
+
+```@example nf
+chromx = getterm(tw.q1, delta=1, as_taylor_series=true)
+chromy = getterm(tw.q2, delta=1, as_taylor_series=true)
+```
+
+And once again use `grad` to compute the gradient w.r.t. parameters
+
+```@example nf
+grad(chromx) # [dchromx/dksf, dchromx/dksd]
+grad(chromy) # [dchromy/dksf, dchromy/dksd]
+```
