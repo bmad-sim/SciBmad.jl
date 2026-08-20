@@ -183,6 +183,11 @@ linear dispersion).
 - `E1`     : De Moivre-Ripken E¹ matrix (see E. Forest, _From Tracking Code to Analysis_)
 - `E2`     : De Moivre-Ripken E² matrix (see E. Forest, _From Tracking Code to Analysis_)
 - `E3`     : De Moivre-Ripken E³ matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `a`      : (Nonlinear) map to transform from Floquet variables to laboratory variables
+- `a0`     : (Nonlinear) map to transform from to the parameter-dependent fixed point
+- `a1`     : Linear normalizing map around the parameter-dependent fixed point, including nonlinear parameter dependence
+- `a2`     : Nonlinear part of the normalizing map, around the parameter-dependent fixed point
+- `as`     : (Nonlinear) spin normalizing map
 """
 function twiss(
   bl::Beamline; 

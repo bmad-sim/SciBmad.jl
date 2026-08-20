@@ -10,17 +10,7 @@
 
 ## Overview
 
-SciBmad is a new open source, high-performance, CPU/GPU compatible, polymorphic, and forwards-/backwards-/Taylor-differentiable accelerator physics simulation ecosystem, usable within either Python and Julia.
-
-## Installation instructions
-
-SciBmad is compatible with [Windows](https://github.com/bmad-sim/SciBmad.jl/blob/main/WINDOWS.md), [Mac](https://github.com/bmad-sim/SciBmad.jl/blob/main/MAC.md), or [Linux](https://github.com/bmad-sim/SciBmad.jl/blob/main/LINUX.md). Click on your corresponding system to be linked to detailed installation instructions.
-
-
-## Examples
-
-Users are pointed to example Jupyter notebooks in both Julia and Python in the [examples directory](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples).
-
+SciBmad is a new open source, high-performance, CPU/GPU compatible, polymorphic, and forwards-/backwards-/Taylor-differentiable accelerator physics simulation ecosystem.
 
 ## Project Status
 
@@ -43,7 +33,6 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Resonance driving terms (including parameter dependence) included in Twiss
 - Context-switching for evalution of deferred expressions for accelerator parameters
 - Open lattice Twiss functions given initial normalizing transformation
-- CPU/GPU parallelized compatible Gaussian intra-beam scattering (IBS) tracking
 
 ### Future Releases
 - Easy optimization interface

@@ -5,6 +5,17 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
 @inline _kind(j, twi, cache, ::Val{as_tps})  where {as_tps} = twi.kind[j]
 @inline _s(j, twi, cache, ::Val{as_tps})     where {as_tps} = twi.s[j]
 
+@inline _a(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a, NNF.VARS_CPARAM)
+@inline _a(j, twi, cache, ::Val{true}) = twi.fac[j].a
+@inline _a0(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a0, NNF.VARS_CPARAM)
+@inline _a0(j, twi, cache, ::Val{true}) = twi.fac[j].a0
+@inline _a1(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a1, NNF.VARS_CPARAM)
+@inline _a1(j, twi, cache, ::Val{true}) = twi.fac[j].a1
+@inline _a2(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a2, NNF.VARS_CPARAM)
+@inline _a2(j, twi, cache, ::Val{true}) = twi.fac[j].a2
+@inline _as(j, twi, cache, ::Val{false}) = scalar.(twi.fac[j].as.q)
+@inline _as(j, twi, cache, ::Val{true}) = twi.fac[j].as
+
 #NOTE: the H's and B's essentially define the structure of the lattice functions (LFs)
 # i.e. if cache.smatrix6 has the H matrix, then all downstream LFs can safely 
 # assume that there is no coasting AND no parameter dependence.

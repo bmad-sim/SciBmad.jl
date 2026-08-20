@@ -1,3 +1,4 @@
+__precompile__(false)
 module SciBmad
 using PrecompileTools: @setup_workload, @compile_workload, @recompile_invalidations
 using Reexport
@@ -41,7 +42,10 @@ export  twiss,
         Twiss,
         TwissSummary,
         getterm,
-        AmplitudeDependentValue 
+        AmplitudeDependentValue,
+        grad,
+        val,
+        jac
         
 include("closed_orbit.jl") 
 include("track.jl")
@@ -53,6 +57,7 @@ include("twiss/twiss.jl")
 include("twiss/twiss_map.jl")
 include("dynamic_aperture.jl")
 include("experimental/Experimental.jl")
+include("utils.jl")
 
 @setup_workload begin
   
