@@ -22,17 +22,12 @@ makedocs(
     "Collective Effects" => "collective.md",
     "Time-Dependent Parameters and Ramping" => "timedependent.md",
     "Batch Parameters" => "batch.md",
-    "(Batch) Closed Orbit Finder" => "co.md",
+    "(GPU-)Batched Closed Orbit Finder" => "co.md",
     "Parametric Normal Form" => "parametric-nf.md",
     "Optimization with Autodiff" => "optimize.md",
     "Dynamic Aperture" => "dynamic-aperture.md",
     "Frequency Map Analysis" => "fma.md",
-    "API" => "api.md",
-    "Examples" => [
-                    "ex/a_chromaticity.md",
-                    "ex/b"
-                  ],
-    "For Developers" => "governance.md"
+    "SciBmad Governance" => "governance.md"
   ]
 )
 
