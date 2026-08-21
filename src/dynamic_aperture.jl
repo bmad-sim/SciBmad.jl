@@ -1,3 +1,44 @@
+"""
+    dynamic_aperture(ring::Beamline; kwargs...) -> NTuple{2,Vector{Float64}}
+
+Computes the acceptance of the ring by pushing a polar grid in `x/sig_x` and `y/sig_y` 
+space, for each of the provided `deltas`. Returns a tuple of two vectors defining the 
+first particle loss along the radius for a given angle on the polar grid, where the 
+first index corresponds to the line position in `x/sig_x` or `y/sig_y` space, and the 
+second index corresponds to that in `deltas`.
+
+## Required Keyword arguments
+- `n_r::Int`: Number of radial points to sample per angle on the polar grid
+- `n_theta::Int`: Number of angles to sample on the polar grid
+- `deltas::AbstractArray`: Array of each δ to compute the transverse acceptance
+- `max_sig_x::Real`: Maximum sigma-x of the polar grid, in units of sigma (e.g. 
+    `max_sigma_x=20` to check up to 20 sigma)
+- `max_sig_y::Real`: Maximum sigma-y of the polar grid, in units of sigma (e.g. 
+    `max_sigma_y=20` to check up to 20 sigma)
+- `emit_1::Real`: Horizontal-like emittance to assume
+- `emit_2::Real`: Vertical-like emittance to assume
+- `n_turns::Int`: Number of turns to track
+
+## Optional Keyword Arguments
+- `backend`: A CPU/GPU device backend to use, e.g. `CPU()`, or `CUDA.CUDABackend()` to 
+    use the GPU. Default is `CPU()`
+- `coordinates_number_type::Type`: The type of the phase space coordinates to use in 
+    tracking. Default is `Float64`
+- `delta_dependent_orbits::Bool`: If `true`, then for each δ in `deltas`, the 
+    computed acceptance line will be centered around that δ-dependent closed orbit 
+    (computed with `rf_on=false`). Else, all acceptance lines are centered around the 
+    6D closed orbit. Default is `true` if coasting beam is detected, `false` if 
+    longitudinal motion is detected.
+- `theta_lims`: A tuple specifying the range of thetas to scan on the polar grid. Default 
+    is `(0, pi)`
+- `sig_pz::Real`: sigma-δ of the beam to assume, default is 0
+- `emit_3::Real`: Longitudinal-like emittance to assume
+- `output_file`: If provided, then a file containing the initial particle coordinates (w.r.t. 
+    the closed orbit(s)) as rows, with the last column specifying the particle state at the 
+    end of tracking, will be written to the file. Default is `nothing`.
+- `track_kwargs...`: Any of the settings in `TrackingConfig` except for `n_turns` and 
+    `save_every_n_turns` may be provided to configure the tracking.
+"""
 function dynamic_aperture(
     bl::Beamline;
 
@@ -23,9 +64,9 @@ function dynamic_aperture(
   )
   Base.require_one_based_indexing(deltas)
   if delta_dependent_orbits && emit_3 != 0
-    error("You specified delta_dependent_orbits = true but a nonzero emit_3. Instead specify sig_pz")
+    error("delta_dependent_orbits = true, but a nonzero emit_3 was provided. Instead specify sig_pz")
   elseif !delta_dependent_orbits && sig_pz != 0
-    error("You specified delta_dependent_orbits = true but a nonzero emit_3. Instead specify sig_pz")
+    error("delta_dependent_orbits = true, but a nonzero emit_3 was provided. Instead specify sig_pz")
   end
 
   if !issorted(deltas)
