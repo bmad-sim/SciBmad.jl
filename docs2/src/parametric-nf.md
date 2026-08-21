@@ -12,13 +12,14 @@ using SciBmad # hide
 @elements begin
   qf = Quadrupole(Kn1=DefExpr(c -> c.kqf), L=0.5)
   sf = Sextupole(Kn2=DefExpr(c-> c.ksf), L=0.2)
+  cv = VKicker()
   d = Drift(L=0.1)
   b = SBend(L=1.2, angle=pi/132)
   qd = Quadrupole(Kn1=DefExpr(c -> c.kqd), L=0.5)
   sd = Sextupole(Kn2=DefExpr(c -> c.ksd), L=0.2)
 end
 
-fodo = Beamline([qf, sf, b, d, qd, sd, b, d], 
+fodo = Beamline([qf, sf, b, d, cv, qd, sd, b, d], 
         species_ref=Species("electron"), pc_ref=18e9)
 
 fodo.context.kqf = 0.36
