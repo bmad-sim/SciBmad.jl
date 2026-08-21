@@ -69,7 +69,7 @@ We can also see how the chromaticities vary with sextupole strength. To compute 
 Before setting any parameters to be `TPS`'s from a different `Descriptor`, it is good to use `scalarize!` on the beamline, which changes all stored `TPS` values in a Beamline to be the "scalar" (0th order) part:
 
 ```@example nf
-scalarize!(nf)
+scalarize!(fodo)
 ```
 
 !!! warning

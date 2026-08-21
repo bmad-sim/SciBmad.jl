@@ -173,6 +173,9 @@ v0 = CUDA.rand(Float64, n_particles, 6) .* 1e-5
 res = track(fodo, v0=v0, spin=true, n_turns=100)
 ```
 
+!!! note
+    Julia is a just-in-time (JIT) compiled language, meaning that many functions (including the tracking kernels in SciBmad) are only compiled once they are called with specific types (e.g., a `GPUArray`). We try to precompile for as many cases as possible, but precompilation for `GPUArray`s is not possible. As such, the first "turn" in tracking will have a latency in order for the JIT compiler to compile SciBmad's GPU tracking kernels.
+
 ### Multiple GPUs
 
 (Documentation in development, see [CUDA: Multiple GPUs](https://cuda.juliagpu.org/stable/usage/multigpu/#Multiple-GPUs) in the meantime)
