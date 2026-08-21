@@ -183,6 +183,13 @@ linear dispersion).
 - `E1`     : De Moivre-Ripken E¹ matrix (see E. Forest, _From Tracking Code to Analysis_)
 - `E2`     : De Moivre-Ripken E² matrix (see E. Forest, _From Tracking Code to Analysis_)
 - `E3`     : De Moivre-Ripken E³ matrix (see E. Forest, _From Tracking Code to Analysis_)
+- `a`      : (Nonlinear) map to transform from Floquet variables to laboratory variables
+- `a0`     : (Nonlinear) map to transform from to the parameter-dependent fixed point
+- `a1`     : Linear normalizing map around the parameter-dependent fixed point, including nonlinear parameter dependence
+- `a2`     : Nonlinear part of the normalizing map, around the parameter-dependent fixed point
+- `as`     : (Nonlinear) spin normalizing map
+- `h<ijkl>`   : The "ijkl" resonance driving term/detune coefficient/Bengtsson monomial for the coasting beam case
+- `h<ijklmn>` : The "ijklmn" resonance driving term/detune coefficient/Bengtsson monomial including longitudinal oscillations
 """
 function twiss(
   bl::Beamline; 
@@ -224,17 +231,8 @@ function twiss(
   symplectic_tol = 1e-8, # Tolerance below which to include damping
   )
 
-  if !rf_on
-    cavities = filter(x->!isnothing(x.RFParams), bl.line)
-    rfps = map(x->x.RFParams, cavities)
-    # Turn them all off (doing this way to ensure inheritance + DefExpr remains):
-    foreach(x->x.RFParams=nothing, cavities)
-  end
-  
-  try
-
   if isnothing(a_initial)
-    v0_and_coast = co_and_coast(bl, v0)
+    v0_and_coast = co_and_coast(bl, v0, rf_on)
   else
     v0_and_coast = (v0, isodd(NNF.nvars(a_initial))) 
   end
@@ -314,9 +312,9 @@ function twiss(
     # Determine:
     if _check_cachable(GTPSA_descriptor)
       # also fills beta_gamma_ref, t_ref
-      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0_and_coast[1], init, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
+      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0_and_coast[1], init, rf_on, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
     else
-      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, Val{coast}(), Val{spin}())
+      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, rf_on, Val{coast}(), Val{spin}())
     end
   end
 
@@ -331,7 +329,7 @@ function twiss(
 
   # Now we push 
   if isnothing(maps)
-    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a!(bl, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
+    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a!(bl, rf_on, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
   else
     fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
   end
@@ -347,17 +345,10 @@ function twiss(
   # only thing is with 3d motion, need to compute 
   summ = _twiss_summ(twi, cache)
   return Twiss(summ, df)
-  
-  catch e
-    if !rf_on
-      foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
-    end
-    rethrow(e)
-  end
 end
 
-function co_and_coast(bl, v0)
-  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}())
+function co_and_coast(bl, v0, rf_on)
+  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on)
   if co_sol.sol.retcode != RETCODE_SUCCESS
     error("Closed orbit finder did not converge.")
   end
@@ -497,7 +488,7 @@ function _twiss_setmap!(map, coords)
   return map
 end
 
-function _twiss_track!(eye, cbs, bl)
+function _twiss_track!(eye, cbs, bl, rf_on)
   if NNF.nvars(eye) == 5
     v = reshape([(i < 5 ? eye.v0[i]+copy(eye.v[i]) : copy(eye.v[i])) for i in 1:6], 1, 6)
   else
@@ -506,7 +497,7 @@ function _twiss_track!(eye, cbs, bl)
   q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
   b0 = Bunch(v=v, q=q, callbacks=cbs)
   BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
-  track!(b0, bl)
+  track!(b0, bl; rf_on)
   return b0
 end
 
@@ -532,9 +523,9 @@ function _a_r_tunes(m::DAMap)
   end
 end
 
-function _compute_periodic_a(bl::Beamline, v0, init, ::Val{coast}, ::Val{spin}, cbs=()) where {coast, spin}
+function _compute_periodic_a(bl::Beamline, v0, init, rf_on, ::Val{coast}, ::Val{spin}) where {coast, spin}
   eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
-  b0 = _twiss_track!(eye, (), bl)
+  b0 = _twiss_track!(eye, (), bl, rf_on)
   _twiss_setmap!(eye, b0.coords)
   a, r, tunes = _a_r_tunes(eye)
   return a, (r, tunes)
@@ -580,11 +571,11 @@ function _twiss_cache_make_callback(_step_save, _beta_gamma_ref, _t_ref, _in_bod
   end
 end
 
-function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, ::Val{coast}, ::Val{spin}, step_save, beta_gamma_ref, t_ref, in_body_coordinates) where {coast, spin}
+function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, rf_on, ::Val{coast}, ::Val{spin}, step_save, beta_gamma_ref, t_ref, in_body_coordinates) where {coast, spin}
   eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
   maps = _twiss_cache_preallocate(step_save, eye)
   cb = _twiss_cache_make_callback(step_save, beta_gamma_ref, t_ref, in_body_coordinates, maps)
-  _twiss_track!(eye, (cb,), bl)
+  _twiss_track!(eye, (cb,), bl, rf_on)
   m_turn = eye
   for map in maps
     m_turn = map ∘ m_turn
@@ -624,13 +615,13 @@ function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, ca
   damping = !isnothing(damp)
   facj = factorise(a; canonise=canonise, phase=phase, damp=damp, damping=damping)
   fac[j] = facj
-  phi1[j] = copy(phase[1])
-  phi2[j] = copy(phase[2])
-  phi3_or_slip[j] = copy(phase[3])
+  phi1[j] = j != 1 ? copy(phase[1]) : zero(phase[1])
+  phi2[j] = j != 1 ? copy(phase[2]) : zero(phase[2])
+  phi3_or_slip[j] = j != 1 ? copy(phase[3]) : zero(phase[3])
   if damping
-    damp1[j] = copy(damp[1])
-    damp2[j] = copy(damp[2])
-    damp3[j] = copy(damp[3])
+    damp1[j] = j != 1 ? copy(damp[1]) : zero(damp[1])
+    damp2[j] = j != 1 ? copy(damp[2]) : zero(damp[2])
+    damp3[j] = j != 1 ? copy(damp[3]) : zero(damp[3])
   end
   return
 end
@@ -692,7 +683,7 @@ function _twiss_make_base_columns(n, a::T, phase, damp) where {T}
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 
-function _twiss_push_a!(bl, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
+function _twiss_push_a!(bl, rf_on, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
   fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
   # Have to treat 0 specially:
   if first(step_save) == 0
@@ -707,7 +698,7 @@ function _twiss_push_a!(bl, step_save, a_initial, canonise, phase, damp, beta_ga
     initial_step_save_idx = 1
   end
   cb = _twiss_make_callback(step_save, initial_step_save_idx, in_body_coordinates, a_initial, fac, canonise, phase, phi1, phi2, phi3_or_slip, damp, damp1, damp2, damp3, beta_gamma_ref, t_ref)
-  _twiss_track!(a_initial, (cb,), bl)
+  _twiss_track!(a_initial, (cb,), bl, rf_on)
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 

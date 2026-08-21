@@ -11,6 +11,8 @@ Defines configuration settings for a particles tracking run.
     properties set as `GTPSA.TPS`, `ForwardDiff.Dual`, or `ReverseDiff.TrackedReal` 
     (ignores derivatives part, useful for closed orbit finding prior to parametric 
     normal form). Default is `false`
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+    entirety of the tracking. Default is `true`
 - `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
     energy is a `TimeFunction`), then particle energies will be artificially ramped with 
     the reference energy. Default is `false`
@@ -36,6 +38,7 @@ Defines configuration settings for a particles tracking run.
   n_turns::Int                          = 1
   save_every_n_turns::Int               = 1
   scalar_params::Bool                   = false
+  rf_on::Bool                           = true
   ramp_particle_energy_without_rf::Bool = false
   ramp_update_each_particle::Bool       = false
   verbose::Bool                         = false
@@ -126,6 +129,8 @@ settings specified by the keyword arguments `kwargs`.
     properties set as `GTPSA.TPS`, `ForwardDiff.Dual`, or `ReverseDiff.TrackedReal` 
     (ignores derivatives part, useful for closed orbit finding prior to parametric 
     normal form). Default is `false`
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+    entirety of the tracking. Default is `true`
 - `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
     energy is a `TimeFunction`), then particle energies will be artificially ramped with 
     the reference energy. Default is `false`
@@ -178,6 +183,7 @@ function track(
     n_turns                         = config.n_turns,
     save_every_n_turns              = config.save_every_n_turns,
     scalar_params                   = config.scalar_params,
+    rf_on                           = config.rf_on,
     ramp_particle_energy_without_rf = config.ramp_particle_energy_without_rf,
     ramp_update_each_particle       = config.ramp_update_each_particle,
     verbose                         = config.verbose,
@@ -193,6 +199,7 @@ function track(
     n_turns,
     save_every_n_turns,
     scalar_params,
+    rf_on,
     ramp_particle_energy_without_rf,
     ramp_update_each_particle,
     verbose,
@@ -212,6 +219,7 @@ function _track(bl, bunch, config, groupsize)
   n_turns                         = config.n_turns
   save_every_n_turns              = config.save_every_n_turns
   scalar_params                   = config.scalar_params
+  rf_on                           = config.rf_on
   ramp_particle_energy_without_rf = config.ramp_particle_energy_without_rf
   ramp_update_each_particle       = config.ramp_update_each_particle
   verbose                         = config.verbose
@@ -234,7 +242,7 @@ function _track(bl, bunch, config, groupsize)
   end
 
   t = @elapsed for i in 1:n_turns
-    track!(bunch, bl; scalar_params, ramp_particle_energy_without_rf, ramp_update_each_particle, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
+    track!(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf, ramp_update_each_particle, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
     if mod(i, save_every_n_turns) == 0
       idx = div(i,save_every_n_turns)+1
       state_data[:,idx] .= state

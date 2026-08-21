@@ -62,6 +62,7 @@ function _co_res!(
     set_kernel!,
     sub_kernel!,
     v_cache,
+    rf_on,
   )
   n_particles = size(v, 1)
   @assert length(v_res) == n_particles*6 "Incorrect size for residual vector"
@@ -69,7 +70,7 @@ function _co_res!(
   SciBmad.BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
   set_kernel!(v_res, v_cache, v, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
-  track!(b0, bl, scalar_params=true)
+  track!(b0, bl, scalar_params=true, rf_on=rf_on)
   sub_kernel!(v_res, v_cache, n_particles, Val{false}(); ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
   return v_res
@@ -82,7 +83,8 @@ function _co_res_coast!(
     set_kernel!,
     sub_kernel!,
     v_cache,
-    v_constant
+    v_constant,
+    rf_on,
   )
   n_particles = size(v_coast, 1)
   @assert length(v_res) == n_particles*4 "Incorrect size for residual vector"
@@ -92,13 +94,13 @@ function _co_res_coast!(
   SciBmad.BTBL.check_bl_bunch!(b0, bl, false) # Do not notify  
   set_kernel!(v_res, v_cache, v_constant, v_coast, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
-  track!(b0, bl, scalar_params=true)
+  track!(b0, bl, scalar_params=true, rf_on=rf_on)
   sub_kernel!(v_res, v_cache, n_particles, Val{true}(); ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
   return v_res
 end
 
-function coast_check(bl, autodiff=AutoForwardDiff())
+function coast_check(bl, autodiff=AutoForwardDiff(), rf_on::Bool=true)
   if isnothing(autodiff)
     autodiff=AutoForwardDiff()
   end
@@ -108,7 +110,7 @@ function coast_check(bl, autodiff=AutoForwardDiff())
   jac = zeros(6,6)
   set_kernel! = set_v!(KA.get_backend(v))
   sub_kernel! = sub_v!(KA.get_backend(v))
-  DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache))
+  DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache), DI.Constant(rf_on))
   return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 0]
 end
 
@@ -189,8 +191,9 @@ function find_closed_orbit(
     prep=nothing,
 
     # Closed orbit finder kwargs
+    rf_on::Bool=true,
     v0=zeros(1,6), 
-    coasting_beam=coast_check(bl, autodiff),
+    coasting_beam=coast_check(bl, autodiff, rf_on),
     batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
     warn=true,
   ) where {_batch}
@@ -212,14 +215,14 @@ function find_closed_orbit(
     v_coast .= view(v0, :, 1:4) 
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0); newton_kwargs...)
+    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0), DI.Constant(rf_on); newton_kwargs...)
     set_v_coast_final!(device)(v0, v_coast; ndrange=n_particles)
     KA.synchronize(device)
   else
     v = similar(v0)
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache); newton_kwargs...)
+    sol = newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(rf_on); newton_kwargs...)
   end
 
   if warn
