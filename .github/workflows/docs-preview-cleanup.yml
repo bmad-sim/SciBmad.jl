@@ -7,7 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write # needed to update the preview comment on the PR
     steps:
+      - uses: actions/checkout@v7 # pr-preview-action runs git in the workspace
       - name: Remove PR preview
         uses: rossjrw/pr-preview-action@v1
         with:
