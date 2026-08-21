@@ -1,4 +1,4 @@
-# Parametric Normal Form
+# [Parametric Normal Form](@id pnf)
 
 All analysis (e.g. computing amplitude-dependent tunes, nonlinear Twiss parameters, invariant spin field, etc.) is done using SciBmad's [`NonlinearNormalForm` package](https://github.com/bmad-sim/NonlinearNormalForm.jl). 
 
@@ -12,14 +12,13 @@ using SciBmad # hide
 @elements begin
   qf = Quadrupole(Kn1=DefExpr(c -> c.kqf), L=0.5)
   sf = Sextupole(Kn2=DefExpr(c-> c.ksf), L=0.2)
-  cv = VKicker()
   d = Drift(L=0.1)
   b = SBend(L=1.2, angle=pi/132)
   qd = Quadrupole(Kn1=DefExpr(c -> c.kqd), L=0.5)
   sd = Sextupole(Kn2=DefExpr(c -> c.ksd), L=0.2)
 end
 
-fodo = Beamline([qf, sf, b, d, cv, qd, sd, b, d], 
+fodo = Beamline([qf, sf, b, d, qd, sd, b, d], 
         species_ref=Species("electron"), pc_ref=18e9)
 
 fodo.context.kqf = 0.36
@@ -100,4 +99,22 @@ And once again use `grad` to compute the gradient w.r.t. parameters
 ```@example nf
 grad(chromx) # [dchromx/dksf, dchromx/dksd]
 grad(chromy) # [dchromy/dksf, dchromy/dksd]
+```
+
+As a last example, suppose we want to see how the first δ-derivative of the "resonance driving term" ``h_{2000}`` at the beginning depends on the sextupole strength. This column in `twiss` can be requested with `"dh2000"` (or equivalently `"dh2000_1"`). We first will re-`scalarize!` and then construct the appropriate GTPSA `Descriptor`: ``h_{2000}`` requires only first order in the phase space coordinates, but a chromatic derivative adds one order to δ. However, to accurately compute any resonance driving term/detune coefficient, all phase space variables must have the same truncation order (thus 2 for all). Then, to see how this quantity depends on a parameter, we have to bump up the maximum order to 3.
+
+```@example nf
+scalarize!(fodo)
+
+dnf3 = Descriptor([2, 2, 2, 2, 2, 2], 3, [1], 1)
+dk = params(dnf3)
+fodo.context.ksf += dk[1]
+
+tw = twiss(fodo, GTPSA_descriptor=dnf3, cols=["dh2000"])
+```
+
+Finally, we can just use `grad` again to extract ``\partial^2h_{2000}/\partial\delta\partial k_{sf}`` at the beginning of the beamline:
+
+```@example nf
+grad(tw.dh2000[1])
 ```
