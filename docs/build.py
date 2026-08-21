@@ -10,9 +10,26 @@ docs_dir = Path(__file__).parent
 project_root = docs_dir.parent
 
 # Instantiate the docs Julia environment
+# `Pkg.develop` is what makes the runnable pages and the API docs build against this
+# checkout rather than the registered release -- without it a local build can silently
+# document a different version of SciBmad than the one you are editing.
 print("Instantiating docs Julia environment...")
 result = subprocess.run(
-    ["julia", f"--project={docs_dir}", "-e", "using Pkg; Pkg.instantiate()"],
+    ["julia", f"--project={docs_dir}", "-e",
+     "using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()"],
+    cwd=project_root
+)
+if result.returncode != 0:
+    exit(1)
+
+# Register the IJulia kernel used by the "runnable" MyST pages. The kernel runs
+# against docs/Project.toml, so `using SciBmad` resolves in every executed page.
+print("\nInstalling IJulia kernel for runnable documentation pages...")
+result = subprocess.run(
+    ["julia", f"--project={docs_dir}", "-e",
+     'using IJulia; IJulia.installkernel("SciBmad Docs", '
+     f'"--project={docs_dir}"; specname="scibmad-docs", '
+     'env=Dict("JULIA_NUM_THREADS" => "auto"))'],
     cwd=project_root
 )
 if result.returncode != 0:

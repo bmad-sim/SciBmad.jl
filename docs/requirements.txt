@@ -3,3 +3,4 @@ myst-nb>=1.1          # MyST Markdown + executed-notebook rendering (includes my
 furo
 linkify-it-py
 sphinxcontrib-bibtex
+sphinx-copybutton      # "copy" button on every code block
