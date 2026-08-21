@@ -36,28 +36,13 @@ function dynamic_aperture(
   co[:,6] .= deltas
   
   if delta_dependent_orbits
-    # First, turn off all the cavities and store their strengths in 
-    # an array
-    cavities = filter(x->!isnothing(x.RFParams), bl.line)
-    rfps = map(x->x.RFParams, cavities)
-    # Turn them all off (doing this way to ensure inheritance + DefExpr remains):
-    foreach(x->x.RFParams=nothing, cavities)
-
-    local t
-    try
-      tw = twiss(bl, at=[1], cols=["E1", "E2", "dx", "dy"])
-      if (:q3 in propertynames(tw))
-        error("
-          To compute delta_dependent_orbits, the beam must be coasting. We tried turning off 
-          all cavities, but still did not detect coasting beam. Please turn off any elements 
-          that cause longitudinal motion.
-        ")
-      end
-      t = tw
-    catch e
-      # Put cavities back
-      foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
-      rethrow()
+    tw = twiss(bl, at=[1], cols=["E1", "E2", "dx", "dy"], rf_on=false)
+    if (:q3 in propertynames(tw))
+      error("
+        To compute delta_dependent_orbits, the beam must be coasting. We tried turning off 
+        all cavities, but still did not detect coasting beam. Please turn off any elements 
+        that cause longitudinal motion.
+      ")
     end
 
     # Now compute sigmas at first element, just first order:
@@ -69,9 +54,7 @@ function dynamic_aperture(
     sig_y = sqrt(sig_y)
 
     # Compute delta-dependent closed orbits (with RF off)
-    sol = find_closed_orbit(bl; v0=co, batch=Val{true}(), coasting_beam=true)
-    # OK now we can turn the cavities back on:
-    foreach((cavity,rfp)->cavity.RFParams=rfp, cavities, rfps)
+    sol = find_closed_orbit(bl; v0=co, batch=Val{true}(), coasting_beam=true, rf_on=false)
     if any(sol.sol.retcode .!= BatchSolve.RETCODE_SUCCESS) # If any failed:
       error(
         """
