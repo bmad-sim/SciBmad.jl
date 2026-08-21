@@ -12,6 +12,7 @@
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=3473b490" />
     
@@ -271,9 +272,14 @@
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h1>
 <p>SciBmad is a high-performance, CPU/GPU-compatible, fully-differentiable accelerator
 physics simulation ecosystem, usable from both Julia and Python. This page gets you
-from a fresh install to your first tracking run. For runnable, end-to-end examples
-see the <a class="reference internal" href="examples-index.html"><span class="std std-doc">Examples</span></a> section, whose notebooks are shown below with
-their outputs.</p>
+from a fresh install to your first tracking run.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Every Julia block on this page is executed when the documentation is built, and the
+output shown underneath it is the real result — nothing is pasted in by hand. See
+<a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/README.md">Runnable pages</a>
+in the docs README for how to write one.</p>
+</div>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
 <p>SciBmad runs on Windows, macOS, and Linux. Follow the detailed, per-platform
@@ -292,16 +298,55 @@ instructions:</p>
 <section id="your-first-lattice">
 <h2>Your first lattice<a class="headerlink" href="#your-first-lattice" title="Link to this heading">¶</a></h2>
 <p>Everything starts from <code class="docutils literal notranslate"><span class="pre">using</span> <span class="pre">SciBmad</span></code>, which re-exports the lattice element types
-from <a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl</a>. Build elements,
-collect them into a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>, and you have a ring:</p>
+from <a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl</a>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">SciBmad</span>
-
-<span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="n">qd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="n">d</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-
-<span class="n">ring</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">])</span>
 </pre></div>
+</div>
+</div>
+</div>
+<p>Build the elements, then collect them into a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>. Wrapping the definitions in
+an <code class="docutils literal notranslate"><span class="pre">&#64;elements</span></code> block makes each element pick up its variable name automatically:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">    </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">    </span><span class="n">qd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">    </span><span class="n">d</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="n">ring</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Beamline:
+ species_ref = electron
+ E_ref = 1.8e10
+
+ <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> s [m] </span> <span class=" -Color -Color-Bold"> L [m] </span>
+  1       qf     Quadrupole   0       0.5
+  2       d      Drift        0.5     1.0
+  3       qd     Quadrupole   1.5     0.5
+  4       d      Drift        2.0     1.0
+</pre></div>
+</div>
+</div>
+</div>
+<p>Each cell shares one Julia session with the cells before it, so <code class="docutils literal notranslate"><span class="pre">ring</span></code> is still
+available further down the page — exactly like a Documenter <code class="docutils literal notranslate"><span class="pre">&#64;example</span></code> block:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ring</span><span class="o">.</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Kn1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.5, 0.36)
+</pre></div>
+</div>
+</div>
 </div>
 <p>Larger machines are usually defined in a lattice file that you <code class="docutils literal notranslate"><span class="pre">include</span></code>. Several
 ready-to-run lattices live in the <a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl/tree/main/lattices"><code class="docutils literal notranslate"><span class="pre">lattices/</span></code></a>
@@ -310,16 +355,99 @@ directory:</p>
 </pre></div>
 </div>
 </section>
-<section id="computing-twiss-functions-and-tracking">
-<h2>Computing Twiss functions and tracking<a class="headerlink" href="#computing-twiss-functions-and-tracking" title="Link to this heading">¶</a></h2>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="c"># Periodic (nonlinear) Twiss functions, including the tunes</span>
-<span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
-<span class="n">tw</span><span class="o">.</span><span class="n">tunes</span>
-
-<span class="c"># Choose a tracking method, e.g. 2nd-order Yoshida with radiation damping</span>
-<span class="n">tm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Yoshida</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">radiation_damping_on</span><span class="o">=</span><span class="nb">true</span><span class="p">)</span>
-<span class="n">foreach</span><span class="p">(</span><span class="n">t</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">t</span><span class="o">.</span><span class="n">tracking_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tm</span><span class="p">,</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">line</span><span class="p">)</span>
+<section id="computing-twiss-functions">
+<h2>Computing Twiss functions<a class="headerlink" href="#computing-twiss-functions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">twiss</span></code> returns the periodic (nonlinear) Twiss functions of the lattice — a summary
+of the lattice-wide quantities plus a per-element table:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">;</span><span class="w"> </span><span class="n">damping</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span>
 </pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 0.03798642552955983
+ q2     = 0.03798642552956001
+ etac   = -8.059257024885211e-10
+ alphac = -8.059257024885211e-10
+
+df:
+<span class=" -Color -Color-Bold">5×26 DataFrame</span>
+<span class=" -Color -Color-Bold"> Row </span>│<span class=" -Color -Color-Bold"> index  name  kind        s    beta1    phi1        dx   x    beta2    phi2        dy   y   </span> ⋯
+<span class=" -Color -Color-Bold">     </span>│                          [m]  [m]      [2π]        [m]  [m]  [m]      [2π]        [m]  [m]  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────
+   1 │     1  qf    Quadrupole  0.0  13.7959  0.0         0.0  0.0  11.5123  0.0         0.0  0.0  ⋯
+   2 │     2  d     Drift       0.5  13.7959  0.00568327  0.0  0.0  11.5123  0.00701883  0.0  0.0
+   3 │     3  qd    Quadrupole  1.5  11.5123  0.0183254   0.0  0.0  13.7959  0.019661    0.0  0.0
+   4 │     4  d     Drift       2.0  11.5123  0.0253443   0.0  0.0  13.7959  0.0253443   0.0  0.0
+   5 │    -1  END   ---         3.0  13.7959  0.0379864   0.0  0.0  11.5123  0.0379864   0.0  0.0  ⋯
+<span class=" -Color -Color-Cyan">                                                                                  14 columns omitted</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This FODO cell has no RF cavity, so the beam is coasting. <code class="docutils literal notranslate"><span class="pre">twiss</span></code> decides whether to
+include radiation damping by testing how far the one-turn map is from symplectic, and
+for a coasting lattice that test can trip on numerical noise — canonization cannot be
+combined with damping for a coasting beam, so the call then fails. Passing
+<code class="docutils literal notranslate"><span class="pre">damping=false</span></code> states the intent explicitly. Lattices with RF (such as those in
+<a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl/tree/main/lattices"><code class="docutils literal notranslate"><span class="pre">lattices/</span></code></a>) need no such
+argument, and the <a class="reference internal" href="examples-index.html"><span class="std std-doc">Examples</span></a> call plain <code class="docutils literal notranslate"><span class="pre">twiss(ring)</span></code>.</p>
+</div>
+<p>The summary quantities are properties of the result — <code class="docutils literal notranslate"><span class="pre">q1</span></code> and <code class="docutils literal notranslate"><span class="pre">q2</span></code> are the tunes:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.03798642552955983, 0.03798642552956001)
+</pre></div>
+</div>
+</div>
+</div>
+<p>The per-element table is a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, reachable as <code class="docutils literal notranslate"><span class="pre">tw.df</span></code>, and its columns are
+forwarded onto <code class="docutils literal notranslate"><span class="pre">tw</span></code> itself:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">beta1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>5-element Vector{Float64}:
+ 13.79590147034587
+ 13.79590147034586
+ 11.51227296747173
+ 11.512272967471722
+ 13.79590147034585
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="tracking">
+<h2>Tracking<a class="headerlink" href="#tracking" title="Link to this heading">¶</a></h2>
+<p>Choose a tracking method and assign it to the elements. <code class="docutils literal notranslate"><span class="pre">Symplectic</span></code> picks a splitting
+scheme appropriate to each element type:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Symplectic</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">radiation_damping_on</span><span class="o">=</span><span class="nb">true</span><span class="p">)</span>
+<span class="n">foreach</span><span class="p">(</span><span class="n">t</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">t</span><span class="o">.</span><span class="n">tracking_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tm</span><span class="p">,</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">line</span><span class="p">)</span>
+<span class="n">ring</span><span class="o">.</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tracking_method</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Symplectic(2, 1, -1.0, true, false, BeamTracking.Fringe.BothEnds, false, false, false, true)
+</pre></div>
+</div>
+</div>
 </div>
 <p>From here you can run dynamic-aperture scans, normal-form analysis, parameter sweeps,
 and more — all differentiable and GPU-portable. The <a class="reference internal" href="examples-index.html"><span class="std std-doc">Examples</span></a>
@@ -333,9 +461,6 @@ Twiss, dynamic aperture, autodifferentiation, spin tracking, and fitting.</p></l
 <li><p><strong><a class="reference internal" href="overview.html"><span class="std std-doc">Overview</span></a></strong> — the SciBmad data model and concepts.</p></li>
 <li><p><strong><a class="reference external" href="api/index.html" title="(in SciBmad.jl API Reference)"><span class="xref std std-doc">API Reference</span></a></strong> — docstrings for every type and function.</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
 </section>
 </section>
 
@@ -397,7 +522,8 @@ Twiss, dynamic aperture, autodifferentiation, spin tracking, and fitting.</p></l
 <li><a class="reference internal" href="#">Quickstart</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#your-first-lattice">Your first lattice</a></li>
-<li><a class="reference internal" href="#computing-twiss-functions-and-tracking">Computing Twiss functions and tracking</a></li>
+<li><a class="reference internal" href="#computing-twiss-functions">Computing Twiss functions</a></li>
+<li><a class="reference internal" href="#tracking">Tracking</a></li>
 <li><a class="reference internal" href="#where-to-go-next">Where to go next</a></li>
 </ul>
 </li>
@@ -414,6 +540,8 @@ Twiss, dynamic aperture, autodifferentiation, spin tracking, and fitting.</p></l
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=552d2a3d"></script>
     <script src="_static/topbar-github.js?v=c13617d6"></script>
     </body>
 </html>
