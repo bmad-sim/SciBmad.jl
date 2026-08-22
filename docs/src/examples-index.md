@@ -14,7 +14,6 @@ Dynamic aperture <examples/julia/dynamic-aperture.ipynb>
 Dynamic aperture (GPU) <examples/julia/dynamic-aperture-gpu.ipynb>
 Automatic differentiation <examples/julia/ad-examples.ipynb>
 Orbit response <examples/julia/orbit-response.ipynb>
-Errors and fitting <examples/julia/errors-fitting.ipynb>
 AGS spin ramp <examples/julia/ags-spin-ramp.ipynb>
 ```
 
