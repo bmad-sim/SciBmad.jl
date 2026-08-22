@@ -146,6 +146,11 @@ class _JuliaDomain(Domain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         return None  # intersphinx handles external references
 
+    def resolve_any_xref(self, env, fromdocname, builder, target, node, contnode):
+        # Needed so MyST's "any"-style links (e.g. `[text](#label)`) don't warn about
+        # this domain; the domain holds no objects of its own.
+        return []
+
     def get_objects(self):
         return iter([])
 

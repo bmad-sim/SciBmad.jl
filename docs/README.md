@@ -67,11 +67,25 @@ Output: `docs/build/html/`
 docs/
 ├── src/                    # Narrative documentation (Sphinx/MyST)
 │   ├── conf.py            # Sphinx configuration
-│   ├── index.md           # Main landing page
-│   ├── getting-started.md # Installation and basic usage
-│   ├── user-guide/        # Detailed usage guides
-│   ├── examples/          # Practical examples
-│   ├── developer-guide/   # Contributing guidelines
+│   ├── index.md           # Main landing page, holds the toctrees
+│   ├── installation.md    # Installing Julia and SciBmad
+│   ├── quickstart.md      # Runnable tour of the package
+│   ├── element.md         # Defining a LineElement
+│   ├── beamline.md        # Defining a Beamline
+│   ├── defexpr.md         # Deferred expressions and Contexts
+│   ├── track.md           # Tracking, callbacks, CPU/GPU parallelization
+│   ├── twiss.md           # Linear, nonlinear, chromatic and spin Twiss
+│   ├── tracking-methods.md
+│   ├── co.md              # (GPU-)batched closed orbit finder
+│   ├── batch.md           # BatchParams / parameter scans
+│   ├── timedependent.md   # Time-dependent parameters and ramping
+│   ├── parametric-nf.md   # Parametric normal form
+│   ├── optimize.md        # Optimization with autodiff
+│   ├── dynamic-aperture.md, fma.md, collective.md
+│   ├── element-parameters.md, parameters/   # element parameter reference
+│   ├── coordinates.md, sagancavity-physics.md, tracking/  # physics
+│   ├── governance.md      # symlink to ../../GOVERNANCE.md
+│   ├── examples/          # symlink to ../../examples (Jupyter notebooks)
 │   ├── _static/           # CSS, images, and other static files
 │   └── _templates/        # Custom HTML templates
 ├── api/                    # API reference (Documenter.jl)
@@ -84,17 +98,20 @@ docs/
 └── README.md              # This file
 ```
 
+Every page must appear in one of the `{toctree}` blocks in `src/index.md`, or Sphinx will
+warn that it is not included in any toctree.
+
 ## Contributing to Documentation
 
 ### Where to Add Content
 
 | Type of Content | Location | Format |
 |----------------|----------|--------|
-| Installation guide | `src/getting-started.md` | Markdown (MyST) |
-| Usage tutorials | `src/user-guide/*.md` | Markdown (MyST) |
-| Examples | `src/examples/*.md` | Markdown (MyST) |
+| Installation guide | `src/installation.md` | Markdown (MyST) |
+| Usage tutorials | a new `src/*.md`, added to a toctree in `src/index.md` | Markdown (MyST) |
 | Tutorial with live output | `src/*.md` with a `kernelspec` header | Runnable MyST (see below) |
-| Contributing guide | `src/developer-guide/*.md` | Markdown (MyST) |
+| Example notebooks | `examples/**.ipynb` (repo root), listed in `src/examples-index.md` | Jupyter |
+| Element parameter reference | `src/parameters/*.md`, included from `src/element-parameters.md` | Markdown (MyST) |
 | API docstrings | Source code (`src/*.jl`) | Julia docstrings |
 | API organization | `api/src/index.md` | Markdown |
 
@@ -187,6 +204,32 @@ just displayed, never run — use those for snippets that shouldn't execute
 | `# hide` on a line | `:tags: [remove-input]` (hide code, keep output) or `[remove-output]` |
 | ```` ```@repl ```` | one `{code-cell}` per expression |
 | an example that should throw | `:tags: [raises-exception]` |
+
+**Converting a whole Documenter page to MyST.** Pages written for Documenter.jl (for
+example, drafts that came from a `make.jl`-based build) need these translations as well:
+
+| Documenter | MyST |
+|---|---|
+| `# [Title](@id label)` | a line `(label)=` immediately *before* `# Title` |
+| `[text](@ref label)` | `[text](#label)` — resolves project-wide, across pages |
+| `[text](@ref)` to a page | `[text](page.md)` |
+| ```` ```math ```` block | `$$ … $$` (the `dollarmath` extension is enabled) |
+| ``` ``x`` ``` inline math | `$x$` |
+| `!!! note` / `!!! warning` | `:::{note}` … `:::` / `:::{warning}` … `:::` |
+| ```` ```@docs ```` block | see below — docstrings are **not** rendered by Sphinx |
+
+Sphinx does not render Julia docstrings, so a ```` ```@docs ```` block has no MyST
+equivalent. Summarise the relevant parameters in prose and point at the Documenter-built
+API reference instead:
+
+```markdown
+    :::{seealso}
+    The full `twiss` docstring is in the {external:doc}`API Reference <index>`.
+    :::
+```
+
+Docstrings for types that live in Beamlines.jl, BeamTracking.jl, etc. are not in this
+site's API build at all; link to those packages' own documentation.
 
 Tags go on the first line of the cell:
 
