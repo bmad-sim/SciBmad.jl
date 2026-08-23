@@ -17,9 +17,8 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
 @inline _as(j, twi, cache, ::Val{true}) = twi.fac[j].as
 
 #NOTE: the H's and B's essentially define the structure of the lattice functions (LFs)
-# i.e. if cache.smatrix6 has the H matrix, then all downstream LFs can safely 
-# assume that there is no coasting AND no parameter dependence.
-# if smatrix4 has H matrix, now coasting and no parameter dependence
+# i.e. if cache.matrix has the H matrix, then all downstream LFs can safely 
+# assume that there is no parameter dependence.
 # if map, then parameter dependence
 # The H matrices are the first things that are computed. I assume it is safe 
 # for other LFs to derive this information given which cache the H's appear in
@@ -34,10 +33,8 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
     error("Index for de Moivre H matrix must be between 1 and 3")
   end
 
-  if haskey(cache.smatrix4, sym)
-    return cache.smatrix4[sym]
-  elseif haskey(cache.smatrix6, sym)
-    return cache.smatrix6[sym]
+  if haskey(cache.matrix, sym)
+    return cache.matrix[sym]
   elseif haskey(cache.map, sym)
     return as_tps ? cache.map[sym] : NNF.jacobian(cache.map[sym], NNF.HVARS)
   end
@@ -45,36 +42,23 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
   mo = maxord(twi)
   nn = ndiffs(twi)
   coast = iscoasting(twi)
-  nhv = nhvars(twi)
 
   if k == 3 && coast
     error("Unable to compute de Moivre matrix H3: beam is coasting")
   end
 
   if mo == 1 || (nn == 6 && !coast)
-    if coast
-      if !haskey(cache.smatrix4, :a1_mat)
-        cache.smatrix4[:a1_mat] = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
-        cache.smatrix4[:a1i_mat] = inv(NNF.jacobian(twi.fac[j].a1, NNF.HVARS))
-      end
-      a1_mat = cache.smatrix4[:a1_mat]
-      a1i_mat = cache.smatrix4[:a1i_mat]
+    if !haskey(cache.matrix, :a1_mat)
+      a1_mat = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
+      a1i_mat = inv(a1_mat)
+      cache.matrix[:a1_mat] = a1_mat
+      cache.matrix[:a1i_mat] = a1i_mat
     else
-      if !haskey(cache.smatrix6, :a1_mat)
-        cache.smatrix6[:a1_mat] = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
-        cache.smatrix6[:a1i_mat] = inv(NNF.jacobian(twi.fac[j].a1, NNF.HVARS))
-      end
-      a1_mat = cache.smatrix6[:a1_mat]
-      a1i_mat = cache.smatrix6[:a1i_mat]
+      a1_mat = cache.matrix[:a1_mat]
+      a1i_mat = cache.matrix[:a1i_mat]
     end
-    a1_matk = StaticArrays.sacollect(SMatrix{nhv,2,Float64}, a1_mat[row,col] for col in (2*k-1):(2*k) for row in 1:nhv)
-    a1i_matk = StaticArrays.sacollect(SMatrix{nhv,2,Float64}, a1i_mat[col,row] for col in (2*k-1):(2*k) for row in 1:nhv)
-    Hk = a1_matk * a1i_matk'
-    if coast
-      cache.smatrix4[sym] = Hk
-    else
-      cache.smatrix6[sym] = Hk
-    end
+    Hk = view(a1_mat, :, (2*k-1):(2*k)) * view(a1i_mat,(2*k-1):(2*k), :)
+    cache.matrix[sym] = Hk
     return Hk
   else
     if !haskey(cache.persistent_map, :tmp1)
@@ -87,7 +71,18 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
     NNF.clear!(tmp1)
     a1 = twi.fac[j].a1
     a1i = cache.map[:a1i]
-    NNF.setray!(tmp1.v, v_matrix=NNF.ip_mat(a1, k))
+    if k == 1
+      ipsym = :ip1
+    elseif k == 2
+      ipsym = :ip2
+    else
+      ipsym = :ip3
+    end
+    if !haskey(cache.persistent_matrix, ipsym)
+      cache.persistent_matrix[ipsym] = NNF.ip_mat(a1, k)
+    end
+    ipk = cache.persistent_matrix[ipsym]
+    NNF.setray!(tmp1.v, v_matrix=ipk)
     Hk = a1∘tmp1∘a1i
     cache.map[sym] = Hk
     return as_tps ? Hk : NNF.jacobian(Hk, NNF.HVARS)
@@ -109,10 +104,8 @@ end
     error("Index for de Moivre B matrix must be between 1 and 3")
   end
 
-  if haskey(cache.smatrix4, sym)
-    return cache.smatrix4[sym]
-  elseif haskey(cache.smatrix6, sym)
-    return cache.smatrix6[sym]
+  if haskey(cache.matrix, sym)
+    return cache.matrix[sym]
   elseif haskey(cache.map, sym)
     return as_tps ? cache.map[sym] : NNF.jacobian(cache.map[sym], NNF.HVARS)
   end
@@ -127,31 +120,21 @@ end
   end
 
   if mo == 1 || (nn == 6 && !coast)
-    if coast
-      if !haskey(cache.smatrix4, :a1_mat)
-        cache.smatrix4[:a1_mat] = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
-        cache.smatrix4[:a1i_mat] = inv(NNF.jacobian(twi.fac[j].a1, NNF.HVARS))
-      end
-      a1_mat = cache.smatrix4[:a1_mat]
-      a1i_mat = cache.smatrix4[:a1i_mat]
+    if !haskey(cache.matrix, :a1_mat)
+      a1_mat = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
+      a1i_mat = inv(a1_mat)
+      cache.matrix[:a1_mat] = a1_mat
+      cache.matrix[:a1i_mat] = a1i_mat
     else
-      if !haskey(cache.smatrix6, :a1_mat)
-        cache.smatrix6[:a1_mat] = NNF.jacobian(twi.fac[j].a1, NNF.HVARS)
-        cache.smatrix6[:a1i_mat] = inv(NNF.jacobian(twi.fac[j].a1, NNF.HVARS))
-      end
-      a1_mat = cache.smatrix6[:a1_mat]
-      a1i_mat = cache.smatrix6[:a1i_mat]
+      a1_mat = cache.matrix[:a1_mat]
+      a1i_mat = cache.matrix[:a1i_mat]
     end
-    a1_matk1 = StaticArrays.sacollect(SVector{nhv,Float64}, a1_mat[row,(2*k-1)] for row in 1:nhv)
-    a1_matk2 = StaticArrays.sacollect(SVector{nhv,Float64}, a1_mat[row,(2*k)] for row in 1:nhv)
-    a1i_matk1 = StaticArrays.sacollect(SVector{nhv,Float64}, a1i_mat[row,(2*k-1)] for row in 1:nhv)
-    a1i_matk2 = StaticArrays.sacollect(SVector{nhv,Float64}, a1i_mat[row,(2*k)] for row in 1:nhv)
+    a1_matk1 = view(a1_mat, :, (2*k-1))
+    a1_matk2 = view(a1_mat, :, (2*k))
+    a1i_matk1 = view(a1i_mat, :, (2*k-1))
+    a1i_matk2 = view(a1i_mat, :, (2*k))
     Bk = a1_matk1*transpose(a1i_matk2) - a1_matk2*transpose(a1i_matk1)
-    if coast
-      cache.smatrix4[sym] = Bk
-    else
-      cache.smatrix6[sym] = Bk
-    end
+    cache.matrix[sym] = Bk
     return Bk
   else
     if !haskey(cache.persistent_map, :tmp1)
@@ -164,7 +147,18 @@ end
     NNF.clear!(tmp1)
     a1 = twi.fac[j].a1
     a1i = cache.map[:a1i]
-    NNF.setray!(tmp1.v, v_matrix=NNF.jp_mat(a1, k))
+    if k == 1
+      jpsym = :jp1
+    elseif k == 2
+      jpsym = :jp2
+    else
+      jpsym = :jp3
+    end
+    if !haskey(cache.persistent_matrix, jpsym)
+      cache.persistent_matrix[jpsym] = NNF.jp_mat(a1, k)
+    end
+    jpk = cache.persistent_matrix[jpsym]
+    NNF.setray!(tmp1.v, v_matrix=jpk)
     Bk = a1∘tmp1∘a1i
     cache.map[sym] = Bk
     return as_tps ? Bk : NNF.jacobian(Bk, NNF.HVARS)
@@ -184,18 +178,16 @@ end
     osym = :B2
   elseif k == 3
     sym = :E3
-    osym = :B2
+    osym = :B3
   else
     error("Index for de Moivre E matrix must be between 1 and 3")
   end
 
-  if haskey(cache.smatrix4, sym)
-    return cache.smatrix4[sym]
-  elseif haskey(cache.smatrix6, sym)
-    return cache.smatrix6[sym]
+  if haskey(cache.matrix, sym)
+    return cache.matrix[sym]
   elseif haskey(cache.map, sym)
     return as_tps ? cache.map[sym] : NNF.jacobian(cache.map[sym], NNF.HVARS)
-  elseif !haskey(cache.map, osym) && !(haskey(cache.smatrix4, osym) || haskey(cache.smatrix6, osym))
+  elseif !haskey(cache.map, osym) && !haskey(cache.matrix, osym)
     _Bk(j, twi, cache, Val{as_tps}(), k)
   end
 
@@ -205,27 +197,32 @@ end
     error("Unable to compute de Moivre matrix E3: beam is coasting")
   end
 
-  njmat = -NNF.j_mat(twi.fac[j].a1)
-
-  if haskey(cache.map, osym)
+  if haskey(cache.matrix, osym)
+    Bk = cache.map[osym]
+    nhv = nhvars(twi)
+    Ek = zeros(eltype(Bk), nhv, nhv)
+    nd = div(nhv, 2)
+    for l in 1:nd
+      Ek[:,(2*l-1)] = -view(Bk, :, (2*l))
+      Ek[:,(2*l)] = view(Bk, :, (2*l-1))
+    end
+    return Ek # No need to store in cache, not used anywhere
+  elseif haskey(cache.map, osym)
     Bk = cache.map[osym]
     if !haskey(cache.persistent_map, :tmp1)
       cache.persistent_map[:tmp1] = zero(twi.fac[j].a)
     end
     tmp1 = cache.persistent_map[:tmp1]
     NNF.clear!(tmp1)
-    NNF.setray!(tmp1.v, v_matrix=njmat)
+    if !haskey(cache.persistent_matrix, j_mat)
+      cache.persistent_matrix[:j] = NNF.j_mat(tmp1s)
+    end
+    j_mat = cache.persistent_matrix[:j]
+    NNF.setray!(tmp1.v, v_matrix=j_mat)
     Ek = Bk ∘ tmp1
     return as_tps ? Ek : NNF.jacobian(Ek, NNF.HVARS)
   else
-    if haskey(cache.smatrix4, osym)
-      Bk = cache.smatrix4[osym]
-    elseif haskey(cache.smatrix6, osym)
-      Bk = cache.smatrix6[osym]
-    else
-      throwunreachable()
-    end
-    return Bk*njmat # no need to store in cache, not used by anything (unlike B and H)
+    throwunreachable()
   end
 end
 
@@ -239,16 +236,12 @@ end
     return cache.float[:gammac]
   elseif haskey(cache.tps, :gammac)
     return as_tps ? cache.tps[:gammac] : scalar(cache.tps[:gammac])
-  elseif !haskey(cache.map, :H1) && !(haskey(cache.smatrix4, :H1) || haskey(cache.smatrix6, :H1))
+  elseif !haskey(cache.map, :H1) && !haskey(cache.matrix, :H1)
     _H1(j, twi, cache, Val{as_tps}())
   end
 
-  if haskey(cache.smatrix4, :H1)
-    gammac = sqrt(cache.smatrix4[:H1][1,1])
-    cache.float[:gammac] = gammac
-    return gammac
-  elseif haskey(cache.smatrix6, :H1)
-    gammac = sqrt(cache.smatrix6[:H1][1,1])
+  if haskey(cache.matrix, :H1)
+    gammac = sqrt(cache.matrix[:H1][1,1])
     cache.float[:gammac] = gammac
     return gammac
   elseif haskey(cache.map, :H1)
@@ -257,6 +250,8 @@ end
     gammac = TI.cutord(sqrt(NNF.factor_out(H1.v[1], 1)), mo)
     cache.tps[:gammac] = gammac
     return as_tps ? gammac : scalar(gammac)
+  else
+    throwunreachable()
   end
 end
 
@@ -283,11 +278,7 @@ end
 
   if haskey(cache.float, :gammac)
     gammac = cache.float[:gammac]
-    if !haskey(cache.smatrix4, :H1)
-      H1_6 = cache.smatrix6[:H1]
-      cache.smatrix4[:H1] = StaticArrays.sacollect(SMatrix{4,4,Float64}, H1_6[row,col] for col in 1:4 for row in 1:4)
-    end
-    H1 = cache.smatrix4[:H1]
+    H1 = cache.matrix[:H1]
     c11 = -H1[1,3]/gammac
     c12 = -H1[1,4]/gammac
     c21 = -H1[2,3]/gammac
@@ -322,11 +313,21 @@ end
 @inline _c22(j, twi, cache, ::Val{as_tps}) where {as_tps} = _ckl(j, twi, cache, Val{as_tps}(), 22)
 
 @inline function _Vi(j, twi, cache, ::Val{as_tps}) where {as_tps}
-  if haskey(cache.smatrix4, :Vi)
-    return cache.smatrix4[:Vi]
+  if haskey(cache.matrix, :Vi)
+    return cache.matrix[:Vi]
   elseif haskey(cache.map, :Vi)
     Vi = cache.map[:Vi]
-    return as_tps ? Vi : StaticArrays.sacollect(SMatrix{4,4,Float64}, TI.geti(Vi.v[row], col) for col in 1:4 for row in 1:4)
+    if as_tps
+      return Vi
+    else
+      Vi_mat = zeros(eltype(Vi.v0), 4, 4) # always 4 x 4
+      for m in 1:4
+        for l in 1:4
+          Vi_mat[l,m] = TI.geti(Vi.v[l], m)
+        end
+      end
+      return Vi_mat
+    end
   elseif !haskey(cache.float, :c11) && !haskey(cache.tps, :c11)
     _c11(j, twi, cache, Val{as_tps}()) # all coupling matrix components computed when this is executed
   end
@@ -338,10 +339,13 @@ end
     c22 = cache.float[:c22]
     gammac = cache.float[:gammac]
 
-    C = SA[c11 c12; c21 c22]
-    Ct = SA[c22 -c12; -c21 c11]
-    Vi = gammac*I + vcat(hcat(zero(C), -C), hcat(Ct, zero(Ct)))
-    cache.smatrix4[:Vi] = Vi
+    Vi = zeros(typeof(c11), 4, 4)
+    for l in 1:4
+      Vi[l,l] = gammac
+    end
+    Vi[1:2,3:4] .= -SA[c11 c12; c21 c22]  # C
+    Vi[3:4,1:2] .= SA[c22 -c12; -c21 c11] # Ct
+    cache.matrix[:Vi] = Vi
     return Vi
   elseif haskey(cache.tps, :c11)
     c11 = cache.tps[:c11]
@@ -350,9 +354,19 @@ end
     c22 = cache.tps[:c22]
     gammac = cache.tps[:gammac]
 
-    C = SA[c11 c12; c21 c22]
-    Ct = SA[c22 -c12; -c21 c11]
-    Vi_mat = gammac*I + vcat(hcat(zero.(C), -C), hcat(Ct, zero.(Ct)))
+    Vi_mat = Matrix{typeof(c11)}(undef, 4, 4)
+    for l in 1:4
+      Vi_mat[l,l] = gammac
+    end
+    Vi_mat[1:2,3:4] .= -SA[c11 c12; c21 c22]  # C
+    Vi_mat[3:4,1:2] .= SA[c22 -c12; -c21 c11] # Ct
+
+    # Set rest of elements to zero
+    Vi_mat[1,2] = zero(c11)
+    Vi_mat[2,1] = zero(c11)
+    Vi_mat[3,4] = zero(c11)
+    Vi_mat[4,3] = zero(c11)
+
     Vi = zero(twi.fac[j].a)
     if iscoasting(twi)
       TI.seti!(Vi.v[6], 1, 6) # identity in delta if coasting 
@@ -364,36 +378,52 @@ end
       end
     end
     cache.map[:Vi] = Vi
-    return as_tps ? Vi : StaticArrays.sacollect(SMatrix{4,4,Float64}, TI.geti(Vi.v[row], col) for col in 1:4 for row in 1:4)
+    return as_tps ? Vi : Vi_mat
   else
     throwunreachable()
   end
 end
 
 @inline function _N(j, twi, cache, ::Val{as_tps}) where {as_tps}
-  if haskey(cache.smatrix4, :N)
-    return cache.smatrix4[:N]
+  if haskey(cache.matrix, :N)
+    return cache.matrix[:N]
   elseif haskey(cache.map, :N)
     N = cache.map[:N]
-    return as_tps ? N : StaticArrays.sacollect(SMatrix{4,4,Float64}, TI.geti(N.v[row], col) for col in 1:4 for row in 1:4)
-  elseif !haskey(cache.smatrix4, :Vi) && !haskey(cache.map, :Vi)
+    if as_tps
+      return N
+    else
+      N_mat = zeros(eltype(N.v0), 4, 4) # always 4 x 4
+      for m in 1:4
+        for l in 1:4
+          N_mat[l,m] = TI.geti(N.v[l], m)
+        end
+      end
+      return N_mat
+    end
+  elseif !haskey(cache.matrix, :Vi) && !haskey(cache.map, :Vi)
     _Vi(j, twi, cache, Val{as_tps}()) # forces computation of Vi
   end
 
-  if haskey(cache.smatrix4, :Vi)
-    if !haskey(cache.smatrix4, :a1_mat)
-      a1_mat6 = cache.smatrix6[:a1_mat]
-      cache.smatrix4[:a1_mat] = StaticArrays.sacollect(SMatrix{4,4,Float64}, a1_mat6[row,col] for col in 1:4 for row in 1:4)
-    end
-    Vi = cache.smatrix4[:Vi]
-    a1_mat = cache.smatrix4[:a1_mat]
-    N = Vi*a1_mat
-    cache.smatrix4[:N] = N
+  if haskey(cache.matrix, :Vi)
+    Vi = cache.matrix[:Vi]
+    a1_mat = cache.matrix[:a1_mat]
+    N = Vi * view(a1_mat, 1:4, 1:4)
+    cache.matrix[:N] = N
     return N
   elseif haskey(cache.map, :Vi)
     N = cache.map[:Vi] ∘ twi.fac[j].a1 
     cache.map[:N] = N
-    return as_tps ? N : StaticArrays.sacollect(SMatrix{4,4,Float64}, TI.geti(N.v[row], col) for col in 1:4 for row in 1:4)
+    if as_tps
+      return N
+    else
+      N_mat = zeros(eltype(N.v0), 4, 4) # always 4 x 4
+      for m in 1:4
+        for l in 1:4
+          N_mat[l,m] = TI.geti(N.v[l], m)
+        end
+      end
+      return N_mat
+    end
   else
     throwunreachable()
   end
@@ -412,13 +442,13 @@ end
     return cache.float[sym]
   elseif haskey(cache.tps, sym)
     return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
-  elseif !haskey(cache.smatrix4, :N) && !haskey(cache.map, :N)
+  elseif !haskey(cache.matrix, :N) && !haskey(cache.map, :N)
     _N(j, twi, cache, Val{as_tps}()) # Forces computation of N and storage in cache
   end
 
   # Now N will exist in one of the two:
-  if haskey(cache.smatrix4, :N)
-    N = cache.smatrix4[:N]
+  if haskey(cache.matrix, :N)
+    N = cache.matrix[:N]
     betak = N[2*k-1,2*k-1]^2
     cache.float[sym] = betak
     return betak
@@ -449,13 +479,13 @@ end
     return cache.float[sym]
   elseif haskey(cache.tps, sym)
     return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
-  elseif !haskey(cache.smatrix4, :N) && !haskey(cache.map, :N)
+  elseif !haskey(cache.matrix, :N) && !haskey(cache.map, :N)
     _N(j, twi, cache, Val{as_tps}()) # Forces computation of N and storage in cache
   end
 
   # Now N will exist in one of the two:
-  if haskey(cache.smatrix4, :N)
-    N = cache.smatrix4[:N]
+  if haskey(cache.matrix, :N)
+    N = cache.matrix[:N]
     alphak = -N[2*k,2*k-1]*N[2*k-1,2*k-1]
     cache.float[sym] = alphak
     return alphak
@@ -585,11 +615,11 @@ end
 
   # Else use the approximation of Etienne
   # B3[5,6]*sin(phi[3]*2*pi)
-  if !haskey(cache.smatrix6, :B3) && !haskey(cache.map, :B3)
+  if !haskey(cache.matrix, :B3) && !haskey(cache.map, :B3)
     _B3(j, twi, cache, Val{as_tps}())
   end
-  if haskey(cache.smatrix6, :B3) # Then no parameter dependence
-    return cache.smatrix6[:B3][5,6]*sin(2*pi*phi3)
+  if haskey(cache.matrix, :B3) # Then no parameter dependence
+    return cache.matrix[:B3][5,6]*sin(2*pi*phi3)
   elseif haskey(cache.map, :B3) # Parameter dependence
     B3 = cache.map[:B3]
     z_slip = NNF.factor_out(B3.v[5], 6)
@@ -627,11 +657,11 @@ end
 
   # Else use the approximation of Etienne
   # B3[5,6]*sin(phi[3]*2*pi)
-  if !haskey(cache.smatrix6, :B3) && !haskey(cache.map, :B3)
+  if !haskey(cache.matrix, :B3) && !haskey(cache.map, :B3)
     _B3(j, twi, cache, Val{as_tps}())
   end
-  if haskey(cache.smatrix6, :B3) # Then no parameter dependence
-    return cache.smatrix6[:B3][5,6]*sin(2*pi*phi3) / beta
+  if haskey(cache.matrix, :B3) # Then no parameter dependence
+    return cache.matrix[:B3][5,6]*sin(2*pi*phi3) / beta
   elseif haskey(cache.map, :B3) # Parameter dependence
     B3 = cache.map[:B3]
     slip = NNF.factor_out(B3.v[5], 6) / beta
@@ -658,8 +688,8 @@ end
     error("Linear dispersion index must be between 1 and 4")
   end
 
-  if haskey(cache.smatrix6, :H3) # Then no parameter dependence + not coasting
-    return cache.smatrix6[:H3][k,6]
+  if haskey(cache.matrix, :H3) # Then no parameter dependence + not coasting
+    return cache.matrix[:H3][k,6]
   elseif haskey(cache.tps, sym) # Potential parameter dependence and/or coasting
     return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
   end
@@ -675,11 +705,11 @@ end
   end
   
   # Approximation described by Etienne
-  if !haskey(cache.smatrix6, :H3) && !haskey(cache.map, :H3)
+  if !haskey(cache.matrix, :H3) && !haskey(cache.map, :H3)
     _H3(j, twi, cache, Val{as_tps}())
   end
-  if haskey(cache.smatrix6, :H3) # Then no parameter dependence, don't store in cache
-    return cache.smatrix6[:H3][k,6]
+  if haskey(cache.matrix, :H3) # Then no parameter dependence, don't store in cache
+    return cache.matrix[:H3][k,6]
   elseif haskey(cache.map, :H3) # Parameter dependence, store in cache.tps
     H3 = cache.map[:H3]
     dk = NNF.factor_out(H3.v[k], 6)
@@ -712,18 +742,18 @@ end
     error("Unable to compute zeta (AKA crab dispersion) in ring with coasting beam")
   end
 
-  if haskey(cache.smatrix6, :H3) # no parameter dependence
-    return cache.smatrix6[:H3][k,5]
+  if haskey(cache.matrix, :H3) # no parameter dependence
+    return cache.matrix[:H3][k,5]
   elseif haskey(cache.tps, sym)
     return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
   end
 
   # Approximation described by Etienne
-  if !haskey(cache.smatrix6, :H3) && !haskey(cache.map, :H3)
+  if !haskey(cache.matrix, :H3) && !haskey(cache.map, :H3)
     _H3(j, twi, cache, Val{as_tps}())
   end
-  if haskey(cache.smatrix6, :H3) # Then no parameter dependence, don't store in cache
-    return cache.smatrix6[:H3][k,5]
+  if haskey(cache.matrix, :H3) # Then no parameter dependence, don't store in cache
+    return cache.matrix[:H3][k,5]
   elseif haskey(cache.map, :H3) # Parameter dependence, store in cache.tps
     H3 = cache.map[:H3]
     zk = NNF.factor_out(H3.v[k], 5)
