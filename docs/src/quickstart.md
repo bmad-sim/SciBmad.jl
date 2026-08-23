@@ -12,6 +12,10 @@ kernelspec:
 
 # Quickstart Guide
 
+The following is a tour of SciBmad in one block — build a FODO cell, retune it, compute linear, 
+nonlinear, chromatic and spin Twiss parameters, and track particles with spin. 
+The rest of this page walks through it step by step.
+
 ```{code-cell} julia
 :tags: [remove-cell]
 # Hidden setup: keep printed tables narrow enough for the page.

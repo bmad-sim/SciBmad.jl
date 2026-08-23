@@ -7,6 +7,13 @@ README while Sphinx still gets the navigation structure it requires here.
 
 ```{toctree}
 :hidden:
+:maxdepth: 1
+
+Overview <self>
+```
+
+```{toctree}
+:hidden:
 :maxdepth: 2
 :caption: Getting Started
 
