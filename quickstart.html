@@ -305,6 +305,13 @@ from <a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU name (from build time).
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:71
+</pre></div>
+</div>
+</div>
 </div>
 <p>Build the elements, then collect them into a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>. Wrapping the definitions in
 an <code class="docutils literal notranslate"><span class="pre">&#64;elements</span></code> block makes each element pick up its variable name automatically:</p>
@@ -369,7 +376,7 @@ of the lattice-wide quantities plus a per-element table:</p>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
  q1     = 0.03798642552955983
- q2     = 0.03798642552956001
+ q2     = 0.03798642552955998
  etac   = -8.059257024885211e-10
  alphac = -8.059257024885211e-10
 
@@ -406,7 +413,7 @@ argument, and the <a class="reference internal" href="examples-index.html"><span
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.03798642552955983, 0.03798642552956001)
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.03798642552955983, 0.03798642552955998)
 </pre></div>
 </div>
 </div>
@@ -422,7 +429,7 @@ forwarded onto <code class="docutils literal notranslate"><span class="pre">tw</
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>5-element Vector{Float64}:
  13.79590147034587
- 13.79590147034586
+ 13.795901470345864
  11.51227296747173
  11.512272967471722
  13.79590147034585
