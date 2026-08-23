@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and combine SciBmad.jl documentation."""
+"""Build and combine SciBmad documentation."""
 
 import subprocess
 import shutil

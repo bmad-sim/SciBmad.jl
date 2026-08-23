@@ -24,3 +24,77 @@ figure:has(img.caption-left) figcaption {
     text-transform: none;
     font-size: 1.2rem;
 }
+
+/* ---------------------------------------------------------------------------
+   Link colour
+   Furo colours unvisited links blue but visited links purple. Keep every link
+   blue so the palette stays consistent as a reader works through the guide.
+   These overrides have to be scoped to `body`, not `:root`: Furo declares its
+   variables on `body`, and a value declared there beats one inherited from the
+   root element.
+   --------------------------------------------------------------------------- */
+body {
+    --color-brand-visited: #2757dd;
+}
+
+body[data-theme="dark"] {
+    --color-brand-visited: #5ca5ff;
+}
+
+@media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) {
+        --color-brand-visited: #5ca5ff;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Right-hand "On this page" table of contents
+   Furo sets it in 75% type and secondary grey. Make it a size larger and use the
+   primary foreground colour, so it reads as easily as the page it indexes.
+   (--color-foreground-primary follows the theme, so this stays legible in dark
+   mode too.)
+   --------------------------------------------------------------------------- */
+body {
+    --toc-font-size: var(--font-size--small);
+    --toc-title-font-size: var(--font-size--small--3);
+    --color-toc-item-text: var(--color-foreground-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   Julia docstrings rendered by the `{docstring}` directive
+   (docs/_ext/juliadocstrings.py)
+   --------------------------------------------------------------------------- */
+.julia-docstring {
+    border: 1px solid var(--color-background-border);
+    border-left: 3px solid var(--color-brand-primary);
+    border-radius: 0.2rem;
+    padding: 0.75rem 1rem 0.25rem;
+    margin: 1rem 0 1.5rem;
+    background: var(--color-background-secondary);
+}
+
+.julia-docstring > p.julia-docstring-header {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-foreground-secondary);
+}
+
+.julia-docstring > p.julia-docstring-header code.julia-docstring-name {
+    font-size: 1rem;
+    font-weight: 700;
+    background: none;
+    padding-left: 0;
+}
+
+.julia-docstring .highlight,
+.julia-docstring pre {
+    background: var(--color-background-primary);
+}
+
+.julia-docstring p.rubric {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    border-bottom: none;
+}

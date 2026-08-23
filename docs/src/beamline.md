@@ -55,10 +55,8 @@ end
 fodo = Beamline([beg, qf, sf, b, d, qd, sd, b, d])
 ```
 
-:::{note}
-`Beamline` is defined in [Beamlines.jl](https://bmad-sim.github.io/Beamlines.jl/stable/);
-its full docstring lives on that site.
-:::
+```{docstring} Beamline
+```
 
 ## Finding LineElements in a Beamline
 

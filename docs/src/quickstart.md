@@ -10,18 +10,7 @@ kernelspec:
   name: julia
 ---
 
-# Quickstart
-
-SciBmad is a high-performance, CPU/GPU-compatible, fully-differentiable accelerator
-physics simulation ecosystem, usable from both Julia and Python. This page gets you
-from a fresh install to your first Twiss calculation and tracking run.
-
-:::{note}
-Except where noted, every Julia block on this page is executed when the documentation is
-built, and the output shown underneath it is the real result — nothing is pasted in by hand.
-See [Runnable pages](https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/README.md)
-in the docs README for how to write one.
-:::
+# Quickstart Guide
 
 ```{code-cell} julia
 :tags: [remove-cell]
@@ -30,26 +19,9 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
-## Installation
+## A Simple Copy-Paste Example
 
-SciBmad runs on Windows, macOS, and Linux. Once Julia is set up, install the package from
-the Julia REPL:
-
-```julia
-import Pkg
-Pkg.add("SciBmad")
-```
-
-See [Installation](installation.md) for the full instructions, including installing Julia
-itself and using SciBmad from Python.
-
-## A simple copy-paste example
-
-The following is a complete tour of SciBmad in one block — build a FODO cell, retune it,
-compute linear, nonlinear, chromatic and spin Twiss parameters, and track particles with
-spin. The rest of this page walks through it step by step.
-
-```julia
+```{code-cell} julia
 using SciBmad
 
 # Define lattice elements using @elements
@@ -137,14 +109,9 @@ n_particles = 10
 res = track(fodo, v0=rand(n_particles, 6).*1e-5, n_turns=10, spin=true)
 ```
 
-## Constructing a Beamline
+## Step-By-Step Description
 
-Everything starts from `using SciBmad`, which re-exports the lattice element types from
-[Beamlines.jl](https://bmad-sim.github.io/Beamlines.jl/stable/):
-
-```{code-cell} julia
-using SciBmad
-```
+### Constructing a Beamline
 
 Let's start by constructing a simple FODO cell `Beamline`.
 
@@ -157,10 +124,9 @@ corresponding magnetic field so that a "reference particle" will follow the coor
 system curvature exactly. The coordinate system curvature and normalized field strength can
 be set independently using `g_ref` and `Kn0` respectively if desired.
 
-Wrapping the definitions in an `@elements` block makes each element pick up its variable
-name automatically:
-
 ```{code-cell} julia
+using SciBmad
+
 # Define lattice elements using @elements
 @elements begin
   qf = Quadrupole(Kn1=0.36, L=0.5)
@@ -179,15 +145,15 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
 Note that, under the hood, all element "kinds" (`Sextupole`, `Quadrupole`, etc.) are one
 single type `LineElement`. Therefore, there is nothing preventing you from writing e.g.
 `Drift(L=1.2, Ks8=123)`. This structure provides maximal flexibility for defining and
-modifying elements — see [Defining a LineElement](element.md).
+modifying elements (see [Defining a LineElement](element.md) for more).
 
 The [`AtomicAndPhysicalConstants`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl)
 package is used for specifying particle species, and so any species defined by that package
 may be provided. Also, instead of specifying the reference momentum `pc_ref`, we
-alternatively could have specified the total reference energy `E_ref`, or the *signed*
+alternatively could have specified the total reference energy `E_ref`, or the _signed_
 magnetic rigidity `p_over_q_ref`.
 
-We can find instances of elements in a `Beamline` by "indexing" it in the following manner:
+We can find instances of elements in a `Beamline`, by "indexing" it in the following manner:
 
 ```{code-cell} julia
 # Find the drifts `d` in `fodo`
@@ -210,18 +176,10 @@ qd.Kn1 = -0.37
 ```
 
 is reflected everywhere that element has been placed in a `Beamline`, without needing to
-rebuild `fodo` or search-and-replace through its element list. More on this in
-[Defining a Beamline](beamline.md).
+rebuild `fodo` or search-and-replace through its element list (see
+[Defining a Beamline](beamline.md) for more).
 
-Larger machines are usually defined in a lattice file that you `include`. Several
-ready-to-run lattices live in the
-[`lattices/`](https://github.com/bmad-sim/SciBmad.jl/tree/main/lattices) directory:
-
-```julia
-include("lattices/esr-v6.3.1-tapered.jl")   # defines `ring`
-```
-
-## Twiss
+### Twiss
 
 Once a `Beamline` is defined, we can compute the Twiss parameters with `twiss`:
 
@@ -232,14 +190,8 @@ tw = twiss(fodo)
 
 By default this computes the tunes and, in the Sagan-Rubin/Edwards-Teng coupling formalism,
 the beta functions, alpha functions, coupling matrix, phase advances/slip, closed orbit and
-(crab) dispersions at *all integration steps* in a
+(crab) dispersions at _all integration steps_ in a
 [`DataFrame`](https://dataframes.juliadata.org/stable/) struct.
-
-The summary quantities are properties of the result — `q1` and `q2` are the tunes:
-
-```{code-cell} julia
-tw.q1, tw.q2
-```
 
 If only a subset of quantities is needed, the `cols` keyword restricts the computation (and
 the columns returned) to exactly what you ask for, which can save computation time:
@@ -254,18 +206,110 @@ the columns returned) to exactly what you ask for, which can save computation ti
 tw = twiss(fodo, cols=["beta1", "phi2", "dx"])
 ```
 
-The per-element table is a `DataFrame`, reachable as `tw.df`, and its columns are forwarded
-onto `tw` itself:
+To see all available columns that can provided to `cols`, see the [`twiss`](twiss.md)
+docstring.
+
+### Nonlinear Twiss
+
+Beyond the purely linear optics, `twiss` can also compute higher-order and nonlinear
+quantities by increasing the order of the underlying truncated power series (DA) map used
+internally. All quantities are computed using SciBmad's Lie algebraic normal form analysis
+package [`NonlinearNormalForm`](https://github.com/bmad-sim/NonlinearNormalForm.jl). `twiss`
+exposes two independent "orders" that can be set:
+
+- `chrom`, the order to which the energy deviation `δ` is truncated, for computing higher
+  order chromatic quantities
+- `order`, the truncated order of all individual phase space variables, for computing
+  amplitude-dependent tunes and resonance driving terms
+
+For example, setting `chrom=2` will compute the chromaticities, and if requested in `cols`
+the Montague `w1`/`w2` functions, second-order dispersions `dx_2`/`dy_2`, chromatic beta
+beat `dbeta1`/`dbeta2` (equivalent to writing `dbeta1_1`/`dbeta2_1`), etc. In fact, we can
+request a chromatic derivative of _any_ scalar-valued quantity, using the notation
+`d<quantity>_<order>`. By omitting the `_<order>`, order is assumed to be one. For example,
+`dc11` is the first derivative w.r.t. δ of the coupling matrix component `c11`, and `dc11_2`
+is the second derivative w.r.t. δ.
 
 ```{code-cell} julia
-tw.df.beta1
+#=
+  Compute higher order chromatic quantities such as
+  the chromaticity, Montague W functions ("w1", "w2"),
+  and 2nd order dispersions ("dx_2", "dy_2") by setting
+  the order of δ (chrom) equal to 2
+=#
+tw = twiss(fodo, cols=["w1", "w2", "dx_2", "dy_2"], chrom=2)
 ```
 
-`twiss` does much more than the linear optics: chromatic and amplitude-dependent quantities,
-resonance driving terms, the invariant spin field and the spin tune, and derivatives with
-respect to element parameters. All of that is covered in [Twiss](twiss.md).
+Amplitude- and energy-dependent quantities, such as the tunes `q1`/`q2`, are returned not as
+plain numbers but as `AmplitudeDependentValue`s - Taylor series in the action-angle
+variables `J₁`, `J₂` and the energy deviation `δ`:
 
-## Track
+```{code-cell} julia
+print(tw.q2)
+```
+
+Individual terms of an `AmplitudeDependentValue` can be extracted with `getterm`, by
+specifying the power of each variable you want. For example, the linear chromaticity in `y`
+is the coefficient of `δ¹`:
+
+```{code-cell} julia
+# Get the y-chromaticity
+chromy = getterm(tw.q2, delta=1)
+```
+
+The same mechanism extends naturally to purely amplitude-dependent tune shifts (once `order`
+is raised high enough to resolve them), using the `J1` and `J2` keyword arguments to extract
+coefficients of `J₁`/`J₂`.
+
+Using the operator notation, the Bengtsson polynomial is defined as the polynomial $h$ in
+
+$$
+\mathcal{M} = \mathcal{A}_{cs}^{-1}\exp{(: h : )} \mathcal{R} \mathcal{A}_{cs}
+$$
+
+where $\mathcal{M}$ is the compositional operator representing the one turn map and
+$\mathcal{A}_{cs}$ is the compositional operator representing only a linear (Courant Snyder)
+normalizing transformation. Monomials of $h$ are sometimes referred to as **resonance
+driving terms** or **detune coefficients** depending on if they drive resonances or tune
+shifts with amplitude.
+
+We can extract any Bengtsson monomial by simply setting the `order` of `twiss` appropriately
+(must be at least one less than the total order of the monomial). And, if the beam is
+coasting, we can take chromatic derivatives as described before.
+
+```{code-cell} julia
+# Resonance driving terms h3000, h2100, require order=2
+tw = twiss(fodo, cols=["h3000", "h2100"], order=2)
+```
+
+### Spin
+
+`twiss` can additionally analyze the spin dynamics by setting `spin=true`. This enables
+computation of the invariant spin field (as a Taylor series in the phase space coordinates)
+and the amplitude-dependent spin tune:
+
+```{code-cell} julia
+#=
+  Spin analysis (invariant spin field as Taylor series,
+  amplitude-dependent spin tune).
+=#
+tw = twiss(fodo, cols=["nx", "ny", "nz"], spin=true,
+      as_taylor_series=true, order=2)
+n = [tw.nx, tw.ny, tw.nz] # ISF
+```
+
+With `as_taylor_series=true`, the components of the ISF are returned as full Taylor series in
+the phase space variables $(x,p_x,y,p_y,z,p_z)$, rather than just returning $\hat{n}_0$. The
+spin tune, accessible as `tw.qspin`, is likewise an `AmplitudeDependentValue`:
+
+```{code-cell} julia
+print(tw.qspin)
+```
+
+As with the orbital tunes, individual terms, such as the spin tune's linear dependence on
+energy, or on its amplitude `J₂`, can be pulled out with `getterm`.
+
+### Track
 
 To do particle tracking, a single function `track` is provided, which accepts initial phase
 space coordinates as an `n_particle x 6` matrix:
@@ -276,21 +320,12 @@ space coordinates as an `n_particle x 6` matrix:
   = [1e-3 0. 0. 0. 0. 1e-3] for n_turns=10
 =#
 res = track(fodo, v0=[1e-3 0. 0. 0. 0. 1e-3], n_turns=10)
-```
 
-Spin quaternion tracking is enabled with `spin=true`, and `track_spin` then applies the
-tracked quaternions to any initial spin direction:
-
-```{code-cell} julia
 # Also do spin quaternion tracking:
 res = track(fodo, v0=[1e-3 0. 0. 0. 0. 1e-3], n_turns=10, spin=true)
 # Apply spin quaternion to horizontal initial spin direction (FAST):
 s = track_spin(res.q, [1, 0, 0])
-```
 
-Tracking a bunch just means giving `track` more rows:
-
-```{code-cell} julia
 # Track a bunch, give matrix of size n_particles x 6:
 n_particles = 10
 res = track(fodo, v0=rand(n_particles, 6).*1e-5, n_turns=10, spin=true)
@@ -312,28 +347,3 @@ res = track(fodo, v0=v0, n_turns=10, spin=true)
 ```
 
 For more details, see the [GPU Parallelization](#gpuparallel) section of the manual.
-
-## Choosing a tracking method
-
-Every element carries a `tracking_method`, which defaults to `SciBmadStandard`. To use a
-different one — for example an explicitly symplectic integrator with radiation damping
-turned on — assign it to the elements:
-
-```{code-cell} julia
-tm = Symplectic(order=2, radiation_damping_on=true)
-foreach(t -> t.tracking_method = tm, fodo.line)
-fodo.line[1].tracking_method
-```
-
-See [Tracking Methods](tracking-methods.md) for the available methods.
-
-## Where to go next
-
-- **[Defining a LineElement](element.md)** and **[Defining a Beamline](beamline.md)** — the
-  lattice data model in full.
-- **[Twiss](twiss.md)** — linear, nonlinear, chromatic, parametric and spin lattice functions.
-- **[Track](track.md)** — the `TrackingResult`, configuration settings, callbacks, and
-  CPU/GPU parallelization.
-- **[Examples](examples-index.md)** — full Jupyter notebooks (with outputs) for Twiss,
-  dynamic aperture, autodifferentiation, spin tracking, and fitting.
-- **{external:doc}`API Reference <index>`** — docstrings for every type and function.

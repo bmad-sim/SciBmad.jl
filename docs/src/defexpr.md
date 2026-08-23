@@ -37,7 +37,7 @@ fodo = Beamline([qf, d, qd, d], E_ref=18e9,
 
 We set `qf.Kn1 = 0.36`, and `qd.Kn1 = -0.36`. But what if we want to ensure that
 `qd.Kn1 == -qf.Kn1` always? We can bake-in such an interdependence, common in accelerator
-parameters, using a "deferred expression" — an expression where evaluation is postponed
+parameters, using a "deferred expression" - an expression where evaluation is postponed
 until its result is actually needed, rather than immediately when it is defined.
 
 To do this, let's first define a function that returns the current value of `-qf.Kn1`. We
@@ -91,10 +91,8 @@ One can really "go crazy" with deferred expressions if they want to. They can be
 nested, and you can write any function that the programming language allows, for example
 file I/O, or even control system gets/puts with a real accelerator for a digital twin.
 
-:::{note}
-`DefExpr` is defined in [Beamlines.jl](https://bmad-sim.github.io/Beamlines.jl/stable/);
-its full docstring lives on that site.
-:::
+```{docstring} DefExpr
+```
 
 ## Contexts
 
@@ -154,7 +152,5 @@ bl = Beamline([qf], context=c1);
 bl[qf][1].Kn1 # Index the beamline with the `qf` to get all child `qf`s
 ```
 
-:::{note}
-`Context` is likewise defined in
-[Beamlines.jl](https://bmad-sim.github.io/Beamlines.jl/stable/).
-:::
+```{docstring} Context
+```

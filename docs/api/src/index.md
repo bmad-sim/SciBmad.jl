@@ -1,4 +1,4 @@
-# SciBmad.jl API Reference
+# SciBmad API Reference
 
 This documentation is a work in progress. Please see the [examples](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples) and [slides](https://github.com/user-attachments/files/25094046/scibmad-eic-02-02-2026.pdf) until this is complete.
 
@@ -11,7 +11,7 @@ This documentation is a work in progress. Please see the [examples](https://gith
 ```@index
 ```
 
-## SciBmad.jl
+## SciBmad
 
 ```@autodocs
 Modules = [SciBmad]

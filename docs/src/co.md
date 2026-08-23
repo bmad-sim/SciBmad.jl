@@ -127,6 +127,5 @@ kick.Kn0L = BatchParam(CuArray(kick_strengths))
 co_sol = find_closed_orbit(fodo, v0=v0)
 ```
 
-:::{seealso}
-The full `find_closed_orbit` docstring is in the {external:doc}`API Reference <index>`.
-:::
+```{docstring} find_closed_orbit
+```

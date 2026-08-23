@@ -3,10 +3,14 @@
 import os
 import sys
 
+# `docs/_ext` holds the Sphinx extensions written for this site.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(_HERE), '_ext'))
+
 # -- Project information -----------------------------------------------------
-project = 'SciBmad.jl'
-copyright = '2025, SciBmad.jl Contributors'
-author = 'SciBmad.jl Contributors'
+project = 'SciBmad'
+copyright = '2025, SciBmad Contributors'
+author = 'SciBmad Contributors'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -16,6 +20,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinxcontrib.bibtex',
     'sphinx_copybutton',
+    'juliadocstrings',  # docs/_ext/juliadocstrings.py -- the `{docstring}` directive
 ]
 
 # -- Copy button on code blocks ----------------------------------------------
@@ -173,10 +178,67 @@ def _fail_on_execution_error(app, exception):
         report.append(exec_data.get('traceback') or str(exec_data.get('error')))
     raise SphinxError('\n'.join(report))
 
+# -- Home page: a verbatim copy of the repository README ----------------------
+# The landing page is the README, so the two can never drift apart. Sphinx also
+# needs the site's `{toctree}` blocks to live in the root document, so they are
+# kept in `docs/toctree.md` and appended here; they are `:hidden:`, which puts
+# them in the sidebar without adding anything to the rendered page.
+_REPO_ROOT = os.path.dirname(os.path.dirname(_HERE))
+
+def _generate_index_page():
+    readme = os.path.join(_REPO_ROOT, 'README.md')
+    toctree = os.path.join(os.path.dirname(_HERE), 'toctree.md')
+    target = os.path.join(_HERE, 'index.md')
+
+    with open(readme, encoding='utf-8') as f:
+        content = f.read()
+    with open(toctree, encoding='utf-8') as f:
+        content = content.rstrip() + '\n\n' + f.read()
+
+    # Only rewrite when something actually changed, so Sphinx does not consider
+    # the landing page outdated on every build.
+    try:
+        with open(target, encoding='utf-8') as f:
+            if f.read() == content:
+                return
+    except FileNotFoundError:
+        pass
+    with open(target, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+_generate_index_page()
+
+# -- Left sidebar: expand the current page's own sections ---------------------
+# Furo builds its navigation tree with `titles_only=True`, so the sidebar lists
+# page titles and nothing else. Rebuild it with the section headings included, so
+# a reader can jump straight to a section of the page they are on. `collapse` has
+# to stay False: Sphinx prunes sub-entries before it knows which page is current,
+# so collapsing here would drop the very sections we want. Furo's own CSS folds
+# the other pages' sections away and leaves the current page's expanded.
+def _expand_navigation_tree(app, pagename, templatename, context, doctree):
+    if 'toctree' not in context:
+        return
+    try:
+        from furo.navigation import get_navigation_tree
+    except ImportError:
+        return
+    context['furo_navigation_tree'] = get_navigation_tree(
+        context['toctree'](
+            collapse=False,
+            titles_only=False,
+            maxdepth=2,
+            includehidden=True,
+        )
+    )
+
 def setup(app):
     app.add_domain(_JuliaDomain)
     app.connect('doctree-resolved', _fix_intersphinx_refs)
     app.connect('build-finished', _fail_on_execution_error)
+    # Furo is loaded as a theme, i.e. after conf.py's setup(), so its own
+    # html-page-context handler is registered last. A higher priority is what
+    # makes this one run after it and win.
+    app.connect('html-page-context', _expand_navigation_tree, priority=900)
 
 # MyST Parser configuration
 myst_enable_extensions = [
@@ -207,7 +269,7 @@ html_theme_options = {
     'dark_logo': 'SciBmad-Logo-dark.png',
 }
 
-html_title = 'SciBmad.jl Documentation'
+html_title = 'SciBmad Documentation'
 html_static_path = ['_static']
 html_css_files = ['custom.css']
 html_js_files = ['topbar-github.js']

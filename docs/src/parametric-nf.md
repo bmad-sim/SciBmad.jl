@@ -90,7 +90,7 @@ grad(tw.q1) # [dq1/dkqf, dq1/dkqd]
 grad(tw.q2) # [dq2/dkqf, dq2/dkqd]
 ```
 
-These can then be used in optimizations, for example to optimize the tunes — see
+These can then be used in optimizations, for example to optimize the tunes - see
 [Optimization with Autodiff](optimize.md).
 
 The same tools can be used on the lattice functions. For example, to see how the periodic

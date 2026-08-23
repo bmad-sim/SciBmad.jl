@@ -103,5 +103,3 @@ v0 = CUDA.rand(Float64, n_particles_per_beamline * n_quad_strengths, 6) .* 1e-5
 res = track(fodo, v0=v0, spin=true)
 ```
 
-See also [(GPU-)Batched Closed Orbit Finder](co.md), where `BatchParam`s are used together
-with the closed orbit finder.

@@ -48,7 +48,7 @@ res = track(fodo, v0=v0, n_turns=10)
 The outputted structure is a `TrackingResult`, which contains quite a lot of information
 about the tracking. First, `config` is a `TrackingConfig` structure that contains all the
 configuration settings we may have provided to `track`, for example `n_turns`. For a
-description of all settings, see [Configuration Settings](#configuration-settings) below.
+description of all settings, see the [`TrackingConfig`](#configuration-settings) docstring.
 
 Next, we have a matrix `state`, which corresponds to each particle's state at each saved
 turn. For example, particle 1's state at turn 3 is indexed with `res.state[1,4]`
@@ -89,7 +89,7 @@ res2 = track(fodo, bunch=res.bunch, n_turns=5)
 
 To do spin tracking, simply set `spin=true`. This will initialize all particles with their
 own spin [quaternion](https://en.wikipedia.org/wiki/Quaternion), each of which will be
-tracked along with the particle. A quaternion is essentially a rotation matrix — by tracking
+tracked along with the particle. A quaternion is essentially a rotation matrix - by tracking
 quaternions instead of spin 3-vectors, we can track one particle once and then observe the
 spin dynamics for any initial spin direction for that particle.
 
@@ -117,17 +117,20 @@ dimension is the spin 3-vector index (between 1 and 3). If you'd like to initial
 different initial spin directions for each particle (perhaps along the invariant spin
 field), give the initial spins as a matrix of size `n_particles x 3`.
 
-:::{seealso}
-The full `track` and `TrackingResult` docstrings are in the
-{external:doc}`API Reference <index>`.
-:::
+```{docstring} track
+```
+
+```{docstring} TrackingResult
+```
 
 ## Configuration Settings
 
 While configuration settings can be set as keyword arguments at the level of `track`, a
 `TrackingConfig` structure may be provided instead, to the keyword argument `config`. All of
-these settings are described in the `TrackingConfig` docstring, in the
-{external:doc}`API Reference <index>` (or with `?TrackingConfig` in a Julia session).
+these settings are described below in the docstring for `TrackingConfig`.
+
+```{docstring} TrackingConfig
+```
 
 ## The Bunch Struct
 
@@ -136,10 +139,11 @@ can be set at the level of `track`, these are ultimately used to construct a `Bu
 may alternatively be provided to `track` with the keyword argument `bunch`. A `Bunch`
 contains all information about a particle bunch, including its species, current reference
 time `t_ref` (used to evaluate [time-dependent parameters](timedependent.md)), and current
-reference energy `p_over_q_ref`.
+reference energy `p_over_q_ref`. All `Bunch` properties are described in the below
+docstring.
 
-`Bunch` is defined in [BeamTracking.jl](https://github.com/bmad-sim/BeamTracking.jl); its
-full docstring is available in a Julia session with `?Bunch`.
+```{docstring} Bunch
+```
 
 ## Callbacks
 

@@ -1,5 +1,23 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+kernelspec:
+  display_name: Julia
+  language: julia
+  name: julia
+---
+
 (optimize)=
 # Optimization with Autodiff
+
+```{code-cell} julia
+:tags: [remove-cell]
+ENV["COLUMNS"] = 100
+ENV["LINES"] = 30
+```
 
 When optimizing quantities such as beta functions, tunes, chromaticities, resonance driving
 terms, etc., many optimizers require gradients of these quantities w.r.t. the knobs you are
@@ -9,18 +27,11 @@ derivative you are computing. For example, to optimize the resonance driving ter
 $h_{2020}$ requires 3rd order derivatives in the phase space variables, and to see how this
 quantity varies with a parameter you have to add another order, so 4th order. Finite
 differencing may struggle with such an optimization. However, because SciBmad is fully
-differentiable, we can compute such a derivative *exactly!*
+differentiable, we can compute such a derivative _exactly!_
 
 This section assumes that you have gone through the
 [Parametric Normal Form](parametric-nf.md) section of the documentation and have basic
 familiarity with [`GTPSA`](https://github.com/bmad-sim/GTPSA.jl).
-
-:::{note}
-The code on this page uses `NonlinearSolve`, which is not a dependency of the documentation
-build, so these blocks are shown but not executed — unlike most other pages in this guide,
-the outputs are not spliced in below each block. Copy them into a Julia session to follow
-along.
-:::
 
 Let's optimize the phase advance through a FODO cell to be $90^\circ$ in both planes by
 varying the quadrupoles, and then optimize the chromaticity to be $+1$ in both planes by
@@ -46,7 +57,7 @@ import Pkg; Pkg.add("NonlinearSolve")
 
 We start with our FODO cell
 
-```julia
+```{code-cell} julia
 using SciBmad
 using NonlinearSolve
 
@@ -77,7 +88,7 @@ second positional argument that is the beamline itself. Note that, since we only
 tunes, we can pass an empty array for the `at` keyword argument to `twiss` to save
 computation time.
 
-```julia
+```{code-cell} julia
 function res_tunes(u, beamline)
   beamline.context.kqf = u[1]
   beamline.context.kqd = u[2]
@@ -96,11 +107,11 @@ function jac_tunes(u, beamline)
 end
 ```
 
-Now we follow the machinery of `NonlinearSolve` — that is, construct a `NonlinearFunction`
+Now we follow the machinery of `NonlinearSolve` - that is, construct a `NonlinearFunction`
 (providing the Jacobian function with keyword argument `jac`), then a `NonlinearProblem`
 passing our initial guess, and then `solve`:
 
-```julia
+```{code-cell} julia
 f = NonlinearFunction(res_tunes, jac=jac_tunes)
 u0 = [0.36, -0.36]
 prob = NonlinearProblem(f, u0, fodo)
@@ -109,20 +120,20 @@ sol = solve(prob, NewtonRaphson())
 
 Now when we call `twiss` again, we see that our tunes have been made `0.25`:
 
-```julia
+```{code-cell} julia
 twiss(fodo)
 ```
 
 Great! Now let's check the chromaticities:
 
-```julia
+```{code-cell} julia
 twiss(fodo, chrom=2)
 ```
 
 Both are not quite `+1`. Let's optimize the sextupoles now to make them both `+1`. Following
 the same procedure,
 
-```julia
+```{code-cell} julia
 function res_chrom(u, beamline)
   beamline.context.ksf = u[1]
   beamline.context.ksd = u[2]
@@ -152,15 +163,9 @@ sol2 = solve(prob2, NewtonRaphson())
 
 And now:
 
-```julia
+```{code-cell} julia
 twiss(fodo, chrom=2)
 ```
 
 Perfect. The same procedure can be applied to any column outputted from `twiss` at any
 element. For open-lattice matching, currently `a_initial` must be provided to `twiss`.
-
-:::{seealso}
-The [Automatic differentiation](examples/julia/ad-examples.ipynb) notebook in the
-[Examples](examples-index.md) section shows further optimization and fitting workflows with
-their outputs.
-:::

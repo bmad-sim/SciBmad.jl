@@ -102,67 +102,98 @@ documentation.
 
 SciBmad supports a continually-growing list of parameters to define accelerator elements.
 To see a full list of the parameters you can set, look at the docstring for the
-`LineElement` type. In a Julia session this is retrieved with `?LineElement` at the REPL, or
-with `Docs.doc(LineElement)` in a script:
+`LineElement` type, reproduced below. In a Julia session it can be retrieved with
+`Docs.doc(LineElement)`.
 
-```julia
-?LineElement          # in the REPL
-Docs.doc(LineElement) # in a script
+```{docstring} LineElement
 ```
 
 Note that parameters are split into "parameter groups", for organization and convenience.
+They are all documented below.
 
 (pgs)=
 ## Parameter Groups
 
-`LineElement` and its parameter groups are defined in
-[Beamlines.jl](https://bmad-sim.github.io/Beamlines.jl/stable/), so their full docstrings
-live on the Beamlines.jl site rather than being duplicated here. The groups are:
+### AlignmentParams
 
-`AlignmentParams`
-: Alignment of the element with respect to its nominal position (`x_offset`, `y_offset`,
-  `tilt`, `x_rot`, `y_rot`, …). Rotations are applied in the order `tilt`, `x_rot`, `y_rot`.
+```{docstring} AlignmentParams
+```
 
-`ApertureParams`
-: A mechanical aperture (shape and extent) for the element.
+(alignment.params)=
+```{include} parameters/alignment-params.md
+```
 
-`BMultipoleParams`
-: The magnetic (B) multipoles of the element, normal (`Kn1`, `Bn1`, …) or skew
-  (`Ks1`, `Bs1`, …), normalized or unnormalized, integrated or not.
+### ApertureParams
 
-`BeamlineParams`
-: Present only on elements that live inside a `Beamline`. Holds the `beamline` itself and
-  the `beamline_index`, and provides the `s`/`s_downstream` positions.
+```{docstring} ApertureParams
+```
 
-`BendParams`
-: The curvature of the reference coordinate system through the element and the entrance/exit
-  edge angles. Does *not* specify any magnetic field — that is `BMultipoleParams`.
+(aperture.params)=
+```{include} parameters/aperture-params.md
+```
 
-`FourPotentialParams`
-: The electromagnetic four-potential of the element, given as a function.
+### BMultipoleParams
 
-`InitialBeamlineParams`
-: Reference species and reference energy (`E_ref`, `pc_ref`, `p_over_q_ref`, …) carried by
-  the first element of a `Beamline`. See [Defining a Beamline](beamline.md).
+```{docstring} BMultipoleParams
+```
 
-`MapParams`
-: An arbitrary user-supplied `transport_map` function for the element — a matrix, a phase
-  trombone, a neural network, etc.
+(multipole.sol.params)=
+```{include} parameters/multipole-sol-params.md
+```
 
-`MetaParams`
-: Extra string properties (`alias`, `label`, `description`) useful for pattern matching or
-  bookkeeping.
+### BeamlineParams
 
-`PatchParams`
-: Properties of patches, which change the reference coordinate system. Rotations are applied
-  in the order `dz_rot`, `dx_rot`, `dy_rot`.
+```{docstring} BeamlineParams
+```
 
-`RFParams`
-: Parameters generally associated with radiofrequency cavities (`voltage`, `phi0`,
-  `rf_frequency`/`harmon`, …).
+### BendParams
 
-`UniversalParams`
-: The `kind`, `name`, length `L`, and `tracking_method` carried by every `LineElement`.
+```{docstring} BendParams
+```
 
-The physics conventions behind several of these groups are described in
-[Element Parameters](element-parameters.md).
+(bend.params)=
+```{include} parameters/bend-params.md
+```
+
+### FourPotentialParams
+
+```{docstring} FourPotentialParams
+```
+
+### InitialBeamlineParams
+
+```{docstring} InitialBeamlineParams
+```
+
+### MapParams
+
+```{docstring} MapParams
+```
+
+### MetaParams
+
+```{docstring} MetaParams
+```
+
+### PatchParams
+
+```{docstring} PatchParams
+```
+
+(patch.params)=
+```{include} parameters/patch-params.md
+```
+
+### RFParams
+
+```{docstring} RFParams
+```
+
+(rf.params)=
+```{include} parameters/rf-params.md
+```
+
+### UniversalParams
+
+```{docstring} UniversalParams
+```

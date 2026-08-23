@@ -1,5 +1,5 @@
 (rf:params)=
-## RF Parameter Group
+#### RF Parameter Group
 
 The `RFParams` parameter group defines values that characterize an oscillating electromagnetic field.
 User settable RF parameters are:

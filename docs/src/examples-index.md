@@ -1,7 +1,7 @@
 # Examples
 
 These are complete, runnable Jupyter notebooks. They are committed already-executed,
-so the cells and their outputs (including figures) are rendered inline below — no
+so the cells and their outputs (including figures) are rendered inline below - no
 kernel runs during the documentation build. The source notebooks live in the
 [`examples/`](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples) directory.
 
