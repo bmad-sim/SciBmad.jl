@@ -5,6 +5,12 @@ import subprocess
 import shutil
 from pathlib import Path
 
+# Every Julia subprocess below is launched with `--startup-file=no`. A personal
+# ~/.julia/config/startup.jl (e.g. `using Revise`) is not part of the docs
+# environment, so loading it would make the build fail on a developer machine for
+# reasons unrelated to the docs. The IJulia kernel spec gets the same flag so the
+# runnable pages execute in the same clean environment.
+
 # Get directories
 docs_dir = Path(__file__).parent
 project_root = docs_dir.parent
@@ -15,7 +21,7 @@ project_root = docs_dir.parent
 # document a different version of SciBmad than the one you are editing.
 print("Instantiating docs Julia environment...")
 result = subprocess.run(
-    ["julia", f"--project={docs_dir}", "-e",
+    ["julia", "--startup-file=no", f"--project={docs_dir}", "-e",
      "using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()"],
     cwd=project_root
 )
@@ -26,9 +32,9 @@ if result.returncode != 0:
 # against docs/Project.toml, so `using SciBmad` resolves in every executed page.
 print("\nInstalling IJulia kernel for runnable documentation pages...")
 result = subprocess.run(
-    ["julia", f"--project={docs_dir}", "-e",
+    ["julia", "--startup-file=no", f"--project={docs_dir}", "-e",
      'using IJulia; IJulia.installkernel("SciBmad Docs", '
-     f'"--project={docs_dir}"; specname="scibmad-docs", '
+     f'"--project={docs_dir}", "--startup-file=no"; specname="scibmad-docs", '
      'env=Dict("JULIA_NUM_THREADS" => "auto"))'],
     cwd=project_root
 )
@@ -38,7 +44,7 @@ if result.returncode != 0:
 # Build Documenter first (Sphinx intersphinx needs its objects.inv)
 print("Building Documenter.jl documentation...")
 result = subprocess.run(
-    ["julia", f"--project={docs_dir}", "docs/api/make.jl"],
+    ["julia", "--startup-file=no", f"--project={docs_dir}", "docs/api/make.jl"],
     cwd=project_root
 )
 if result.returncode != 0:
