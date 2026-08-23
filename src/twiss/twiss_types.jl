@@ -85,13 +85,13 @@ iscoasting(twi::TwissInternal) = NNF.iscoasting(twi.fac[1].a)
 maxord(twi::TwissInternal) = NNF.maxord(twi.fac[1].a)
 noi(twi::TwissInternal, i) = unsafe_load(unsafe_load(GTPSA.getdesc(first(twi.fac[1].a.v)).desc).no, i)
 
-struct TwissCache{M,T,F,SM4,SM6,VF,CM}
+struct TwissCache{M,T,F,A,VF,CM}
  map::M
  tps::T
  float::F
- smatrix4::SM4
- smatrix6::SM6
+ matrix::A
  vf::VF
+ persistent_matrix::A
  persistent_map::M
  persistent_cmap::CM
 end

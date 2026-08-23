@@ -433,10 +433,10 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   s = typeof(scur).(stmp)
 
   include_start = any(x->x[1]<=0<=x[2], at_ranges) || any(x->x==1, at_idxs) || any(at_eles) do x
-    x == bl.line[1] || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(bl.line[1], :pdict)[InheritParams].parent) : false)
+    x == bl.line[1] || (haskey(getfield(bl.line[1], :pdict), InheritParams) ? x == (getfield(bl.line[1], :pdict)[InheritParams].parent) : false)
   end
   include_end = any(x->x[1]<=scur<=x[2], at_ranges) || any(x->x==length(bl.line), at_idxs) || any(at_eles) do x
-    x == bl.line[end] || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(bl.line[end], :pdict)[InheritParams].parent) : false)
+    x == bl.line[end] || (haskey(getfield(bl.line[end], :pdict), InheritParams) ? x == (getfield(bl.line[end], :pdict)[InheritParams].parent) : false)
   end
 
   return s, names, kinds, idxs, step_save, include_start, include_end
