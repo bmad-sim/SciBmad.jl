@@ -1,0 +1,1059 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Defining a Beamline" href="beamline.html"><link rel="prev" title="Quickstart Guide" href="quickstart.html">
+        <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
+        <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Defining a LineElement - SciBmad Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=53336f2f" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">SciBmad Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="_static/SciBmad-Logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="_static/SciBmad-Logo-dark.png" alt="Dark Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="installation.html">Installation</a><input aria-label="Toggle navigation of Installation" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-julia">Installing Julia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-scibmad">Installing SciBmad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-scibmad-from-python">Using SciBmad from Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#a-simple-copy-paste-example">A Simple Copy-Paste Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-by-step-description">Step-By-Step Description</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parameter-groups">Parameter Groups</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-lineelements-in-a-beamline">Finding LineElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-lineelements-in-multiple-beamline">Multiple LineElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-lineelement-parameters">Beamline-Dependent LineElement Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#deferred-expressions">Deferred Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a><input aria-label="Toggle navigation of Dynamic Aperture" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#gpu-parallelization">GPU-Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#the-dynamic-aperture-function">The <code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> function</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="twiss.html">Twiss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimization with Autodiff</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture.html">Dynamic aperture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ags-spin-ramp.html">AGS spin ramp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/python/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/python/ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#reflection-patch">Reflection Patch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#floor-coordinates">Floor Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#edge-kick">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#energy-kick">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#rf-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
+</ul>
+</li>
+</ul>
+
+</div><div class="sidebar-tree">
+  <ul>
+    <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference →</a></li>
+    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
+  </ul>
+</div></div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/element.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/element.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="defining-a-lineelement">
+<span id="defining-lineelement"></span><h1>Defining a LineElement<a class="headerlink" href="#defining-a-lineelement" title="Link to this heading">¶</a></h1>
+<p>To construct a <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>,</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LineElement:
+  UniversalParams
+   kind            = ""
+   name            = ""
+   L               = 0.0f0
+   tracking_method = SciBmadStandard(
+     radiation_damping_on      = false,
+     radiation_fluctuations_on = false,
+     ibs_damping_on            = false,
+     ibs_fluctuations_on       = false,
+   )
+</pre></div>
+</div>
+</div>
+</div>
+<p>As you can see, the <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> by default comes with a “parameter group” structure
+called <code class="docutils literal notranslate"><span class="pre">UniversalParams</span></code>. This contains a <code class="docutils literal notranslate"><span class="pre">kind</span></code> as a string, a <code class="docutils literal notranslate"><span class="pre">name</span></code> as a string, a
+length <code class="docutils literal notranslate"><span class="pre">L</span></code>, and a <code class="docutils literal notranslate"><span class="pre">tracking_method</span></code>, which defaults to <code class="docutils literal notranslate"><span class="pre">SciBmadStandard</span></code>. For more details
+on the tracking methods available, see the <a class="reference internal" href="tracking-methods.html"><span class="std std-doc">Tracking Methods</span></a> section
+of the documentation.</p>
+<p>To set one of these parameters, use the natural syntax</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"ele"</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"Quadrupole"</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>123
+</pre></div>
+</div>
+</div>
+</div>
+<p>Alternatively, we could have set these parameters as keyword arguments (”<code class="docutils literal notranslate"><span class="pre">kwargs</span></code>”) during
+<code class="docutils literal notranslate"><span class="pre">LineElement</span></code> construction:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">"ele"</span><span class="p">,</span><span class="w"> </span><span class="n">kind</span><span class="o">=</span><span class="s">"Quadrupole"</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LineElement:
+  UniversalParams
+   kind            = "Quadrupole"
+   name            = "ele"
+   L               = 123
+   tracking_method = SciBmadStandard(
+     radiation_damping_on      = false,
+     radiation_fluctuations_on = false,
+     ibs_damping_on            = false,
+     ibs_fluctuations_on       = false,
+   )
+</pre></div>
+</div>
+</div>
+</div>
+<p>It would often be convenient if we can make the variable symbol (<code class="docutils literal notranslate"><span class="pre">ele</span></code> in this case)
+automatically fill in the <code class="docutils literal notranslate"><span class="pre">name</span></code> field for each element. We can do exactly this by wrapping
+all element definitions in a <code class="docutils literal notranslate"><span class="pre">&#64;elements</span></code> block:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">  </span><span class="n">ele1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">()</span>
+<span class="w">  </span><span class="n">ele2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">()</span>
+<span class="k">end</span>
+<span class="n">println</span><span class="p">(</span><span class="n">ele1</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="n">println</span><span class="p">(</span><span class="n">ele2</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>ele1
+ele2
+</pre></div>
+</div>
+</div>
+</div>
+<p>In SciBmad, all element “kinds” (e.g. <code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code>, <code class="docutils literal notranslate"><span class="pre">Sextupole</span></code>, <code class="docutils literal notranslate"><span class="pre">Multipole</span></code>, etc.) are one
+single type <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> under the hood. That is, the constructor for a <code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code> is
+precisely:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Quadrupole</span><span class="p">(;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(;</span><span class="w"> </span><span class="n">kind</span><span class="o">=</span><span class="s">"Quadrupole"</span><span class="p">,</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Therefore,</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">  </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">()</span>
+<span class="w">  </span><span class="n">sf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Sextupole</span><span class="p">()</span>
+<span class="k">end</span>
+<span class="n">println</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span>
+<span class="n">println</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Quadrupole
+Sextupole
+</pre></div>
+</div>
+</div>
+</div>
+<p>Such an implementation provides maximal flexibility, allowing you to define an element with
+any combination of parameters you may have. For example, there is nothing stopping you from
+doing</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">Ks21</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mi">200</span><span class="w"> </span><span class="c"># Set 21st order skew multipole</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-200
+</pre></div>
+</div>
+</div>
+</div>
+<p>This flexibility makes it easy to adjust the design on the fly. For example, in the Electron
+Storage Ring of the Electron-Ion Collider, we need to add multipoles to the drifts in the
+interaction region to simulate field crosstalk from the Hadron Storage Ring. With SciBmad,
+one does not need to edit the lattice and change these “drifts” to “multipoles”; just set
+the multipole!</p>
+<p>How an element is tracked through ultimately depends on the parameters defined within that
+<code class="docutils literal notranslate"><span class="pre">LineElement</span></code>. For details, see the <a class="reference internal" href="tracking-methods.html"><span class="std std-doc">Tracking Methods</span></a> section of the
+documentation.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>SciBmad supports a continually-growing list of parameters to define accelerator elements.
+To see a full list of the parameters you can set, look at the docstring for the
+<code class="docutils literal notranslate"><span class="pre">LineElement</span></code> type, reproduced below. In a Julia session it can be retrieved with
+<code class="docutils literal notranslate"><span class="pre">Docs.doc(LineElement)</span></code>.</p>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">LineElement</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">LineElement</span>
+</pre></div>
+</div>
+<p>The basic building block which makes up a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>. May be something physical like a
+quadrupole magnet, or something non-physical like a point in the accelerator you want
+to mark. A <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> may define a region in space distinguished by the presence of
+(possibly time-varying) electromagnetic fields, materials, apertures and other possible
+properties.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LineElement</span></code> properties are split into “parameter groups” for convenient organization:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  AlignmentParams         ApertureParams               BMultipoleParams
+   x_offset                x1_limit                     KnX
+   y_offset                x2_limit                     KsX
+   z_offset                y1_limit                     BnX
+   x_rot                   y2_limit                     BsX
+   y_rot                   aperture_shape               KnXL
+   tilt                    aperture_at                  KsXL
+                           aperture_shifts_with_body    BnXL
+                           aperture_active              BsXL
+                                                        tiltX
+
+  BeamlineParams          BendParams                   FourPotentialParams
+   beamline                g_ref                        four_potential
+   beamline_index          tilt_ref                     four_potential_params
+   s                       e1                           four_potential_normalized
+   s_downstream            e2
+   line                    edge1_int
+   context                 edge2_int
+   branch
+   branch_index
+
+  InitialBeamlineParams   MapParams                    MetaParams
+   species_ref             transport_map                alias
+   E_ref                   transport_map_params         label
+   pc_ref                                               description
+   p_over_q_ref
+   dE_ref
+   dpc_ref
+   dp_over_q_ref
+
+  PatchParams             RFParams                     UniversalParams
+   dt                      rf_frequency                 kind
+   dx                      harmon                       name
+   dy                      phi0                         L
+   dz                      zero_phase                   tracking_method
+   dx_rot                  traveling_wave
+   dy_rot                  is_crabcavity
+   dz_rot
+</pre></div>
+</div>
+<p>To set a property, use the natural syntax:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">()</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">   </span><span class="c"># Length </span>
+<span class="n">ele</span><span class="o">.</span><span class="n">Kn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="c"># Normal quadrupole strength</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">rf_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e6</span><span class="w"> </span>
+</pre></div>
+</div>
+<p>For detailed descriptions of properties in a given parameter group, see the documentation
+for that parameter group.</p>
+</div>
+<p>Note that parameters are split into “parameter groups”, for organization and convenience.
+They are all documented below.</p>
+</section>
+<section id="parameter-groups">
+<span id="pgs"></span><h2>Parameter Groups<a class="headerlink" href="#parameter-groups" title="Link to this heading">¶</a></h2>
+<section id="alignmentparams">
+<h3>AlignmentParams<a class="headerlink" href="#alignmentparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">AlignmentParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">AlignmentParams</span>
+</pre></div>
+</div>
+<p>Describe the alignment of the element with respect to the nominal position.
+Rotations are applied in order: <code class="docutils literal notranslate"><span class="pre">tilt</span></code>, <code class="docutils literal notranslate"><span class="pre">x_rot</span></code>, <code class="docutils literal notranslate"><span class="pre">y_rot</span></code>.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x_offset</span></code>: Offset along x-axis [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_offset</span></code>: Offset along y-axis [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">z_offset</span></code>: Offset along z-axis [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_rot</span></code>: Rotation around the x-axis [rad]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_rot</span></code>: Rotation around the y-axis [rad]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tilt</span></code>: Rotation around the z-axis [rad]</p></li>
+</ul>
+</div>
+<section id="alignment-parameters">
+<span id="id1"></span><span id="alignment-params"></span><h4>Alignment Parameters<a class="headerlink" href="#alignment-parameters" title="Link to this heading">¶</a></h4>
+<p>In construction…</p>
+</section>
+</section>
+<section id="apertureparams">
+<h3>ApertureParams<a class="headerlink" href="#apertureparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">ApertureParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ApertureParams</span>
+</pre></div>
+</div>
+<p>Describe a mechanical aperture.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x1_limit</span></code>: Left x-axis aperture edge [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x2_limit</span></code>: Right x-axis aperture edge [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y1_limit</span></code>: Lower y-axis aperture edge [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y2_limit</span></code>: Upper y-axis aperture edge [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aperture_shape</span></code>: Shape of the aperture, see <code class="docutils literal notranslate"><span class="pre">ApertureShape</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aperture_at</span></code>: Longitudinal aperture location(s), see <code class="docutils literal notranslate"><span class="pre">ApertureAt</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aperture_shifts_with_body</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the aperture position moves with element alignment, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aperture_active</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if particles are collimated by aperture, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div>
+<section id="aperture-parameters">
+<span id="id2"></span><span id="aperture-params"></span><h4>Aperture Parameters<a class="headerlink" href="#aperture-parameters" title="Link to this heading">¶</a></h4>
+<p>In construction…</p>
+</section>
+</section>
+<section id="bmultipoleparams">
+<h3>BMultipoleParams<a class="headerlink" href="#bmultipoleparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">BMultipoleParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BMultipoleParams</span>
+</pre></div>
+</div>
+<p>Defines magnetic (B) multipoles for an element.</p>
+<p>A given multipole can be set using any of the following:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">KnX</span></code>: Order X normal strength in [1/m^X] (normalized, nonintegrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">KsX</span></code>: Order X skew strength   in [1/m^X] (normalized, nonintegrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BnX</span></code>: Order X normal strength in [T/m^X] (unnormalized, nonintegrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BsX</span></code>: Order X skew strength   in [T/m^X] (unnormalized, nonintegrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">KnXL</span></code>: Order X normal strength in [1/m^(X-1)] (normalized, integrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">KsXL</span></code>: Order X skew strength in [1/m^(X-1)] (normalized, integrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BnXL</span></code>: Order X normal strength in [T/m^(X-1)] (unnormalized, integrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BsXL</span></code>: Order X skew strength in [T/m^(X-1)] (unnormalized, integrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tiltX</span></code>: Tilt to only order X multipole</p></li>
+</ul>
+<p>The solenoidal multipole can be set using any of the above with <code class="docutils literal notranslate"><span class="pre">X</span></code> = <code class="docutils literal notranslate"><span class="pre">sol</span></code> and
+omitting the <code class="docutils literal notranslate"><span class="pre">n</span></code>/<code class="docutils literal notranslate"><span class="pre">s</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">Ksol</span></code>, <code class="docutils literal notranslate"><span class="pre">Bsol</span></code>, <code class="docutils literal notranslate"><span class="pre">KsolL</span></code>, <code class="docutils literal notranslate"><span class="pre">BsolL</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The last <em>set</em> for a given multipole defines if both the normal and skew strengths
+for a given multipole order are normalized and integrated. E.g.</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="n">Ks1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span><span class="w"> </span><span class="c"># Order 1 is normalized, nonintegrated</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">Kn1L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span><span class="w">         </span><span class="c"># Order 1 independent variables are now normalized, integrated</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">Ks1L</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.2</span><span class="o">*</span><span class="mf">0.4</span><span class="w">    </span><span class="c"># true</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">Bn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="w">          </span><span class="c"># Order 1 independent variables are now unnormalized, nonintegrated</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">Bs1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.2</span><span class="o">*</span><span class="mf">0.5</span><span class="o">/</span><span class="mf">0.3</span><span class="w"> </span><span class="c"># true, set so that (Bs1/Bn1)_new = (Ks1L/Kn1L)_old</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="multipole-and-solenoid-parameters">
+<span id="multipole-solenoid-params"></span><span id="multipole-sol-params"></span><h4>Multipole and Solenoid Parameters<a class="headerlink" href="#multipole-and-solenoid-parameters" title="Link to this heading">¶</a></h4>
+<p>In construction…</p>
+</section>
+</section>
+<section id="beamlineparams">
+<h3>BeamlineParams<a class="headerlink" href="#beamlineparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">BeamlineParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BeamlineParams</span>
+</pre></div>
+</div>
+<p>Defines information for <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s that are in a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">beamline</span></code>: <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> that this <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> is in</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beamline_index</span></code>: Index of the <code class="docutils literal notranslate"><span class="pre">line</span></code> array of the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> that this element is at</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>: Longitudinal position from the start of the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> at the entrance of the element [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s_downstream</span></code>: Longitudinal position from the start of the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> at the exit of the element [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line</span></code>: A read-only array of <code class="docutils literal notranslate"><span class="pre">LineElements</span></code> in the beamline, in order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: <code class="docutils literal notranslate"><span class="pre">Context</span></code> struct containing control variables associated with the beamline</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">branch</span></code>: <code class="docutils literal notranslate"><span class="pre">Branch</span></code> that the beamline is placed in, if any</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">branch_index</span></code>: Index of the beamline in the <code class="docutils literal notranslate"><span class="pre">Branch</span></code>, if in a <code class="docutils literal notranslate"><span class="pre">Branch</span></code></p></li>
+</ul>
+</div>
+</section>
+<section id="bendparams">
+<h3>BendParams<a class="headerlink" href="#bendparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">BendParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BendParams</span>
+</pre></div>
+</div>
+<p>Defines a curvature in the reference coordinate system throught the element,
+as well as the edge angles of the element at the entrance and exit of the
+element. Does not specify any magnetic field.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">g_ref</span></code>: Coordinate system curvature [1 / m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code>: Tilt angle applied before the curvature, and undone after [rad]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">e1</span></code>: Edge angle of the entrance of the element w.r.t. the entering coordinate system [rad]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">e2</span></code>: Edge angle of the exit of the element w.r.t. the exit coordinate system [rad]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">edge1_int</span></code>: Pole face field integral at the entrance [T * m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">edge2_int</span></code>: Pole face field integral at the exit [T * m]</p></li>
+</ul>
+</div>
+<section id="bend-parameters">
+<span id="id3"></span><span id="bend-params"></span><h4>Bend Parameters<a class="headerlink" href="#bend-parameters" title="Link to this heading">¶</a></h4>
+<p>In construction…</p>
+</section>
+</section>
+<section id="fourpotentialparams">
+<h3>FourPotentialParams<a class="headerlink" href="#fourpotentialparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">FourPotentialParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">mutable</span><span class="w"> </span><span class="k">struct</span> <span class="kt">FourPotentialParams</span><span class="p">{</span><span class="kt">F</span><span class="o">&lt;:</span><span class="kt">Function</span><span class="p">,</span><span class="w"> </span><span class="kt">P</span><span class="p">}</span><span class="w"> </span><span class="o">&lt;:</span><span class="w"> </span><span class="kt">AbstractParams</span>
+</pre></div>
+</div>
+<p>Defines the electromagnetic four-potential of an element via the <code class="docutils literal notranslate"><span class="pre">four_potential</span></code> function.</p>
+<p class="rubric">Fields</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">four_potential(x,</span> <span class="pre">y,</span> <span class="pre">s,</span> <span class="pre">t,</span> <span class="pre">p=nothing)</span></code>  – Function of type <code class="docutils literal notranslate"><span class="pre">F</span></code> that returns:
+<code class="docutils literal notranslate">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">((ϕ,</span> <span class="pre">Ax,</span> <span class="pre">Ay,</span> <span class="pre">As),</span> <span class="pre">(∂ϕ/∂x,</span>&#160; <span class="pre">∂ϕ/∂y,</span>&#160; <span class="pre">∂ϕ/∂s,</span>&#160; <span class="pre">∂ϕ/∂t,</span></code>
+<code class="docutils literal notranslate">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">∂Ax/∂x,</span> <span class="pre">∂Ax/∂y,</span> <span class="pre">∂Ax/∂s,</span> <span class="pre">∂Ax/∂t,</span></code>
+<code class="docutils literal notranslate">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">∂Ay/∂x,</span> <span class="pre">∂Ay/∂y,</span> <span class="pre">∂Ay/∂s,</span> <span class="pre">∂Ay/∂t,</span></code>
+<code class="docutils literal notranslate">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">∂As/∂x,</span> <span class="pre">∂As/∂y,</span> <span class="pre">∂As/∂s,</span> <span class="pre">∂As/∂t))</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">four_potential[2]</span></code> is <code class="docutils literal notranslate"><span class="pre">nothing</span></code>, the derivatives are computed by automatic
+differentiation during tracking, which is probably slower.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">four_potential_params</span></code>  – Default is <code class="docutils literal notranslate"><span class="pre">nothing</span></code>. Parameters of type <code class="docutils literal notranslate"><span class="pre">P</span></code> passed to the four_potential function.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">four_potential_normalized</span></code>  – Set to <code class="docutils literal notranslate"><span class="pre">true</span></code> means the potential/derivatives are
+<code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span> <span class="pre">*</span> <span class="pre">four_potential</span></code>; <code class="docutils literal notranslate"><span class="pre">false</span></code> means the potential/derivatives are
+<code class="docutils literal notranslate"><span class="pre">four_potential</span></code>.</p></li>
+</ul>
+</div>
+</section>
+<section id="initialbeamlineparams">
+<h3>InitialBeamlineParams<a class="headerlink" href="#initialbeamlineparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">InitialBeamlineParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">InitialBeamlineParams</span>
+</pre></div>
+</div>
+<p>Defines the reference species and energy of the beamline. These parameters may be “set” in the
+first element of the beamline or at the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> level, and retrieved at any element in the
+beamline. If the reference species or energy is not set, then it will inherit that quantity from
+an upstream beamline if in a <code class="docutils literal notranslate"><span class="pre">Branch</span></code>.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">species_ref</span></code>: Reference species of the beamline</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">E_ref</span></code>: Total reference energy [eV]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pc_ref</span></code>: Reference momentum [eV/c]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span></code>: A <em>signed</em> reference magnetic rigidity [T * m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dE_ref</span></code>: Change in total reference energy w.r.t. the directly-upstream beamline [eV]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dpc_ref</span></code>: Change in reference momentum w.r.t. the directly-upstream beamline [eV/c]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dp_over_q_ref</span></code>: Change in <em>signed</em> reference magnetic rigidty w.r.t. the directly-upstream beamline [T * m]</p></li>
+</ul>
+</div>
+</section>
+<section id="mapparams">
+<h3>MapParams<a class="headerlink" href="#mapparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">MapParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">MapParams</span>
+</pre></div>
+</div>
+<p>Defines any arbitrary function to transport particle coordinates’ and optionally spin
+quaternions. This could be a matrix, a neural network, a phase trombone, etc.</p>
+<p>The input for the <code class="docutils literal notranslate"><span class="pre">transport_map</span></code> must be <code class="docutils literal notranslate"><span class="pre">(v,</span> <span class="pre">q,</span> <span class="pre">p=nothing)</span></code>, where <code class="docutils literal notranslate"><span class="pre">v</span></code> is a tuple of the
+input phase space coordinates <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">px,</span> <span class="pre">y,</span> <span class="pre">py,</span> <span class="pre">z,</span> <span class="pre">pz)</span></code> and <code class="docutils literal notranslate"><span class="pre">q</span></code> is <code class="docutils literal notranslate"><span class="pre">nothing</span></code> is there is no
+spin tracking, else <code class="docutils literal notranslate"><span class="pre">q</span></code> is a tuple of the input quaternion <code class="docutils literal notranslate"><span class="pre">(q0,</span> <span class="pre">q1,</span> <span class="pre">q2,</span> <span class="pre">q3)</span></code>. <code class="docutils literal notranslate"><span class="pre">p</span></code> may be a
+tuple of parameters that can be used inside of the <code class="docutils literal notranslate"><span class="pre">transport_map</span></code>. This might be neural
+network weights, for example, or perhaps phase evolutions for a phase trombone.</p>
+<p>For GPU compatibility, it is necessary that your function <code class="docutils literal notranslate"><span class="pre">transport_map</span></code> is GPU compatible:
+there should be no type instabilities. You should also try to make your <code class="docutils literal notranslate"><span class="pre">transport_map</span></code> be
+branchless, so both the CPU and GPU can vectorize it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">transport_map_params</span></code> should contain the tuple that is passed into <code class="docutils literal notranslate"><span class="pre">p</span></code> at the time of tracking.</p>
+<p class="rubric">Properties:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">transport_map</span></code>: Arbitrary function that transports particles’ coordinates <code class="docutils literal notranslate"><span class="pre">v</span></code>, and optionally spin
+quaternions <code class="docutils literal notranslate"><span class="pre">q</span></code>.  Must have the signature <code class="docutils literal notranslate"><span class="pre">&lt;your</span> <span class="pre">map</span> <span class="pre">name&gt;(v,</span> <span class="pre">q,</span> <span class="pre">p=nothing)</span></code> and
+returns the output as a tuple <code class="docutils literal notranslate"><span class="pre">(v,</span> <span class="pre">q)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transport_map_params</span></code>: Parameters of the transport map that will be inputted as the <code class="docutils literal notranslate"><span class="pre">p</span></code> variable in <code class="docutils literal notranslate"><span class="pre">transport_map</span></code></p></li>
+</ul>
+<p class="rubric">Example</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">StaticArrays</span>
+<span class="n">random_matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nd">@SMatrix</span><span class="w"> </span><span class="n">rand</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="c"># use StaticArrays for GPU compatibility</span>
+
+<span class="k">function</span><span class="w"> </span><span class="n">matrix</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="o">::</span><span class="kt">Nothing</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c"># `q::Nothing` -&gt; no spin tracking</span>
+<span class="w">  </span><span class="c"># Vectorizable matrix multiplication by `p`:</span>
+<span class="w">  </span><span class="n">vx</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="o">:</span><span class="p">]</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="n">v</span><span class="p">)</span>
+<span class="w">  </span><span class="n">vpx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="o">:</span><span class="p">]</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="n">v</span><span class="p">)</span>
+<span class="w">  </span><span class="n">vy</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="o">:</span><span class="p">]</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="n">v</span><span class="p">)</span>
+<span class="w">  </span><span class="n">vpy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="o">:</span><span class="p">]</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="n">v</span><span class="p">)</span>
+<span class="w">  </span><span class="n">vz</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="o">:</span><span class="p">]</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="n">v</span><span class="p">)</span>
+<span class="w">  </span><span class="n">vpz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="o">:</span><span class="p">]</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="n">v</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">((</span><span class="n">vx</span><span class="p">,</span><span class="w"> </span><span class="n">vpx</span><span class="p">,</span><span class="w"> </span><span class="n">vy</span><span class="p">,</span><span class="w"> </span><span class="n">vpy</span><span class="p">,</span><span class="w"> </span><span class="n">vz</span><span class="p">,</span><span class="w"> </span><span class="n">vpz</span><span class="p">),</span><span class="w"> </span><span class="n">q</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(</span><span class="n">transport_map</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span><span class="w"> </span><span class="n">transport_map_params</span><span class="o">=</span><span class="n">random_matrix</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="metaparams">
+<h3>MetaParams<a class="headerlink" href="#metaparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">MetaParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">MetaParams</span>
+</pre></div>
+</div>
+<p>Defines extra <code class="docutils literal notranslate"><span class="pre">String</span></code> properties that may be useful for pattern matching
+or storing extra information about a given element.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alias</span></code>: Alternate name for the element as a string</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label</span></code>: A label string</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code>: A descriptive string</p></li>
+</ul>
+</div>
+</section>
+<section id="patchparams">
+<h3>PatchParams<a class="headerlink" href="#patchparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">PatchParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">PatchParams</span>
+</pre></div>
+</div>
+<p>Defines properties for patches, which change the reference coordinate system.
+Rotations are applied in order: <code class="docutils literal notranslate"><span class="pre">dz_rot</span></code>, <code class="docutils literal notranslate"><span class="pre">dx_rot</span></code>, <code class="docutils literal notranslate"><span class="pre">dy_rot</span></code>.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dt</span></code>: Reference time shift [s]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dx</span></code>: New coordinate system offset in the x-direction [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dy</span></code>: New coordinate system offset in the y-direction [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dz</span></code>: New coordinate system offset in the z-direction [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dx_rot</span></code>: Rotation of coordinate system around the initial x-axis [rad]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dy_rot</span></code>: Rotation of coordinate system around the initial y-axis [rad]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dz_rot</span></code>: Rotation of coordinate system around the initial z-axis [rad]</p></li>
+</ul>
+</div>
+<section id="patch-parameters">
+<span id="id4"></span><span id="patch-params"></span><h4>Patch Parameters<a class="headerlink" href="#patch-parameters" title="Link to this heading">¶</a></h4>
+<p>In construction…</p>
+</section>
+</section>
+<section id="rfparams">
+<h3>RFParams<a class="headerlink" href="#rfparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">RFParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">RFParams</span>
+</pre></div>
+</div>
+<p>Defines parameters generally associated with radiofrequency (RF) cavities. The frequency
+of the oscillating electromagnetic field may be optionally specified using the property
+<code class="docutils literal notranslate"><span class="pre">rf_frequency</span></code> or <code class="docutils literal notranslate"><span class="pre">harmon</span></code>; whichever of these is <em>set</em> last will be the independent
+variable.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rf_frequency</span></code>: Frequency of the oscillating electromagnetic field [Hz]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">harmon</span></code>: Harmonic number of the oscillating electromagnetic field w.r.t. the length of the
+entire containing <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> [1]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phi0</span></code>: Phase offset of the oscillating field w.r.t. <code class="docutils literal notranslate"><span class="pre">zero_phase</span></code> [rad]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zero_phase</span></code>: A <code class="docutils literal notranslate"><span class="pre">PhaseRef</span></code> that specifies what <code class="docutils literal notranslate"><span class="pre">phi0</span></code> should mean, see <code class="docutils literal notranslate"><span class="pre">PhaseRef</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">traveling_wave</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if traveling wave, <code class="docutils literal notranslate"><span class="pre">false</span></code> if standing wave</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_crabcavity</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if this is a crab cavity, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise</p></li>
+</ul>
+</div>
+<section id="rf-parameter-group">
+<span id="id5"></span><span id="rf-params"></span><h4>RF Parameter Group<a class="headerlink" href="#rf-parameter-group" title="Link to this heading">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> parameter group defines values that characterize an oscillating electromagnetic field.
+User settable RF parameters are:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">voltage</span><span class="w">        </span><span class="o">::</span><span class="kt">T</span><span class="w">                 </span><span class="c"># Voltage in Volts</span>
+<span class="n">rf_frequency</span><span class="w">   </span><span class="o">::</span><span class="kt">T</span><span class="w">                 </span><span class="c"># RF frequency in Hz</span>
+<span class="n">harmon</span><span class="w">         </span><span class="o">::</span><span class="kt">T</span><span class="w">                 </span><span class="c"># Harmonic number</span>
+<span class="n">phi0</span><span class="w">           </span><span class="o">::</span><span class="kt">T</span><span class="w">                 </span><span class="c"># RF phase relative to the zero phase.</span>
+<span class="n">zero_phase</span><span class="w">     </span><span class="o">::</span><span class="kt">PhaseReference</span><span class="o">.</span><span class="n">T</span><span class="w">  </span><span class="c"># RF phase at phi0 = 0.</span>
+<span class="n">traveling_wave</span><span class="w"> </span><span class="o">::</span><span class="kt">Bool</span><span class="w">              </span><span class="c"># Traveling wave or standing wave?</span>
+<span class="n">is_crabcavity</span><span class="w">  </span><span class="o">::</span><span class="kt">Bool</span><span class="w">              </span><span class="c"># Is this a crab cavity?</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">T</span></code> is some type like a float or Taylor series. The <code class="docutils literal notranslate"><span class="pre">zero_phase</span></code> enum sets what the
+RF phase is at zero <code class="docutils literal notranslate"><span class="pre">phi0</span></code>. Possible settings for <code class="docutils literal notranslate"><span class="pre">zero_phase</span></code>
+are:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">PhaseReference</span><span class="o">.</span><span class="n">Accelerating</span><span class="w">      </span><span class="c"># phi0 = 0 is the maximum accelerating phase.</span>
+<span class="n">PhaseReference</span><span class="o">.</span><span class="n">BelowTransition</span><span class="w">   </span><span class="c"># phi0 = 0 is at the stable zero crossing for particles below transition.</span>
+<span class="n">PhaseReference</span><span class="o">.</span><span class="n">AboveTransition</span><span class="w">   </span><span class="c"># phi0 = 0 is at the stable zero crossing for particles above transition.</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> parameter group structure has the following components:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">mutable</span><span class="w"> </span><span class="k">struct</span> <span class="kt">RFParams</span><span class="p">{</span><span class="kt">T</span><span class="p">}</span><span class="w"> </span><span class="o">&lt;:</span><span class="w"> </span><span class="kt">AbstractParams</span>
+<span class="w">  </span><span class="n">rate</span><span class="w">               </span><span class="o">::</span><span class="kt">T</span><span class="w">                </span><span class="c"># RF frequency in Hz or Harmonic number</span>
+<span class="w">  </span><span class="n">voltage</span><span class="w">            </span><span class="o">::</span><span class="kt">T</span><span class="w">                </span><span class="c"># Voltage in Volts</span>
+<span class="w">  </span><span class="n">phi0</span><span class="w">               </span><span class="o">::</span><span class="kt">T</span><span class="w">                </span><span class="c"># Phase at reference energy</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">rate_meaning</span><span class="w"> </span><span class="o">::</span><span class="kt">RateMeaning</span><span class="o">.</span><span class="n">T</span><span class="w">    </span><span class="c"># false = frequency in Hz, true = harmonic number, -1 = Not set</span>
+<span class="w">  </span><span class="n">zero_phase</span><span class="w">         </span><span class="o">::</span><span class="kt">PhaseReference</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="c"># Determines the RF phase at phi0 = 0</span>
+<span class="w">  </span><span class="n">traveling_wave</span><span class="w">     </span><span class="o">::</span><span class="kt">Bool</span><span class="w">             </span><span class="c"># Traveling wave or standing wave cavity?</span>
+<span class="w">  </span><span class="n">is_crabcavity</span><span class="w">      </span><span class="o">::</span><span class="kt">Bool</span><span class="w">             </span><span class="c"># Is this a crab cavity?</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">rate_meaning</span></code> parameter records whether <code class="docutils literal notranslate"><span class="pre">rf_frequency</span></code> or <code class="docutils literal notranslate"><span class="pre">harmon</span></code> has been set by the User.
+Possible enum settings for <code class="docutils literal notranslate"><span class="pre">rate_meaning</span></code> are:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">RateMeaning</span><span class="o">.</span><span class="n">RFFrequency</span><span class="w">       </span><span class="c"># rf_frequency has been set.</span>
+<span class="n">RateMeaning</span><span class="o">.</span><span class="n">Harmon</span><span class="w">            </span><span class="c"># harmon has been set.</span>
+<span class="n">RateMeaning</span><span class="o">.</span><span class="n">Indeterminate</span><span class="w">     </span><span class="c"># Neither rf_frequency nor harmon has been set.</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="universalparams">
+<h3>UniversalParams<a class="headerlink" href="#universalparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">UniversalParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">UniversalParams</span>
+</pre></div>
+</div>
+<p>Describes the kind, name, length, and tracking method for a <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kind</span></code>: String specifing the “kind”, of an element, e.g. “Quadrupole”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of an element as a string</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">L</span></code>: Length of the element [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tracking_method</span></code>: Tracking method for the element, defaults to <code class="docutils literal notranslate"><span class="pre">SciBmadStandard()</span></code></p></li>
+</ul>
+</div>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="beamline.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Defining a Beamline</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="quickstart.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Quickstart Guide</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Defining a LineElement</a><ul>
+<li><a class="reference internal" href="#parameters">Parameters</a></li>
+<li><a class="reference internal" href="#parameter-groups">Parameter Groups</a><ul>
+<li><a class="reference internal" href="#alignmentparams">AlignmentParams</a><ul>
+<li><a class="reference internal" href="#alignment-parameters">Alignment Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#apertureparams">ApertureParams</a><ul>
+<li><a class="reference internal" href="#aperture-parameters">Aperture Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bmultipoleparams">BMultipoleParams</a><ul>
+<li><a class="reference internal" href="#multipole-and-solenoid-parameters">Multipole and Solenoid Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#beamlineparams">BeamlineParams</a></li>
+<li><a class="reference internal" href="#bendparams">BendParams</a><ul>
+<li><a class="reference internal" href="#bend-parameters">Bend Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fourpotentialparams">FourPotentialParams</a></li>
+<li><a class="reference internal" href="#initialbeamlineparams">InitialBeamlineParams</a></li>
+<li><a class="reference internal" href="#mapparams">MapParams</a></li>
+<li><a class="reference internal" href="#metaparams">MetaParams</a></li>
+<li><a class="reference internal" href="#patchparams">PatchParams</a><ul>
+<li><a class="reference internal" href="#patch-parameters">Patch Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rfparams">RFParams</a><ul>
+<li><a class="reference internal" href="#rf-parameter-group">RF Parameter Group</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#universalparams">UniversalParams</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=8a448e45"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=552d2a3d"></script>
+    <script src="_static/topbar-github.js?v=c13617d6"></script>
+    </body>
+</html>
