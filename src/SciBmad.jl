@@ -58,11 +58,7 @@ include("dynamic_aperture.jl")
 include("experimental/Experimental.jl")
 include("utils.jl")
 
-# Precompiling this workload under code-coverage instrumentation is
-# pathologically expensive: on Julia 1.12 it runs for over 20 minutes and
-# several GB before finishing, which takes the CI runner down before the test
-# suite ever starts. The workload exists purely to cut first-call latency for
-# users, so skip it when Julia is generating coverage data.
+# Only precompile when not processing code coverage
 if Base.JLOptions().code_coverage == 0
 @setup_workload begin
   
