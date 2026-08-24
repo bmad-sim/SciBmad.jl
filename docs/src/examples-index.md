@@ -1,7 +1,7 @@
 # Examples
 
 These are complete, runnable Jupyter notebooks. They are committed already-executed,
-so the cells and their outputs (including figures) are rendered inline below — no
+so the cells and their outputs (including figures) are rendered inline below - no
 kernel runs during the documentation build. The source notebooks live in the
 [`examples/`](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples) directory.
 
@@ -14,7 +14,6 @@ Dynamic aperture <examples/julia/dynamic-aperture.ipynb>
 Dynamic aperture (GPU) <examples/julia/dynamic-aperture-gpu.ipynb>
 Automatic differentiation <examples/julia/ad-examples.ipynb>
 Orbit response <examples/julia/orbit-response.ipynb>
-Errors and fitting <examples/julia/errors-fitting.ipynb>
 AGS spin ramp <examples/julia/ags-spin-ramp.ipynb>
 ```
 

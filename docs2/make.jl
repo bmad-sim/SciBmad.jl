@@ -6,7 +6,7 @@ cp(joinpath(@__DIR__, "..", "GOVERNANCE.md"), joinpath(@__DIR__, "src", "governa
 
 makedocs(
   sitename="SciBmad",
-  authors = "Matt Signorelli",
+  authors = "Matt Signorelli, David Sagan",
   format=Documenter.HTMLWriter.HTML(size_threshold = nothing),
   pages = 
   [
