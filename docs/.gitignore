@@ -1,2 +1,5 @@
 # MyST build outputs
 _build
+src/index.md
+src/_nbimages
+__pycache__/

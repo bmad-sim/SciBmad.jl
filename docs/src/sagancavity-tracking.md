@@ -1,6 +1,7 @@
-## SaganCavity Tracking
+(sagancavity.tracking)=
+# SaganCavity Tracking
 
-### Introduction
+## Introduction
 
 The `SagaņCavity` tracking method is used to track through RF cavities. 
 This method, implemented in `BeamTracking`, has both longitudinal energy
@@ -8,7 +9,7 @@ gain and transverse focusing effects. See the [SaganCavity Physics](#sagancavity
 section for details on how particles are tracked. This section discusses the parameters
 that affect the tracking.
 
-### SaganCavity Parameters.
+## SaganCavity Parameters.
 
 The `SaganCavity` tracking method itself has parameters:
 ```{code} yaml
@@ -30,7 +31,7 @@ If not set, the number of cells is chosen such that the cell width
 is approximately one-half wavelength and is commensurate with `L_active`.
 If `num_cells` is set to zero, a single kick is applied at the center of the element.
 
-### RF Parameters
+## RF Parameters
 
 Other RF parameters that can be set are:
 ```{code} julia
@@ -42,9 +43,9 @@ zero_phase::PhaseReference.T  # RF phase at phi0 = 0.
 traveling_wave::Bool          # Traveling wave or standing wave?
 is_crabcavity::Bool           # Is this a crab cavity?
 ```
-See the documentation on the [RF parameter group](#rf.group) for more details.
+See the documentation on the [RF parameter group](#rf.params) for more details.
 
-### Other Parameters
+## Other Parameters
 
 Besides the length `L`, other parameters that are used for tracking are [solenoid
 and multipole parameters](#multipole.sol.params). Solenoid and multipoles are DC fields that span

@@ -1,6 +1,6 @@
-# SciBmad.jl Documentation
+# SciBmad Documentation
 
-This directory contains all documentation for SciBmad.jl, combining narrative documentation (Sphinx/MyST) with API reference (Documenter.jl).
+This directory contains all documentation for SciBmad, combining narrative documentation (Sphinx/MyST) with API reference (Documenter.jl).
 
 ## Building Documentation
 
@@ -67,22 +67,77 @@ Output: `docs/build/html/`
 docs/
 ├── src/                    # Narrative documentation (Sphinx/MyST)
 │   ├── conf.py            # Sphinx configuration
-│   ├── index.md           # Main landing page
-│   ├── getting-started.md # Installation and basic usage
-│   ├── user-guide/        # Detailed usage guides
-│   ├── examples/          # Practical examples
-│   ├── developer-guide/   # Contributing guidelines
-│   ├── _static/           # CSS, images, and other static files
-│   └── _templates/        # Custom HTML templates
+│   ├── index.md           # GENERATED landing page (README + toctree.md), gitignored
+│   ├── installation.md    # Installing Julia and SciBmad
+│   ├── quickstart.md      # Runnable tour of the package
+│   ├── contents.md        # Whole-site tree, built by the `{sitetoc}` directive
+│   ├── element.md         # Defining a LineElement (incl. parameter groups)
+│   ├── beamline.md        # Defining a Beamline
+│   ├── defexpr.md         # Deferred expressions and Contexts
+│   ├── track.md           # Tracking, callbacks, CPU/GPU parallelization
+│   ├── twiss.md           # The twiss docstring
+│   ├── tracking-methods.md
+│   ├── co.md              # (GPU-)batched closed orbit finder
+│   ├── batch.md           # BatchParams / parameter scans
+│   ├── timedependent.md   # Time-dependent parameters and ramping
+│   ├── parametric-nf.md   # Parametric normal form
+│   ├── optimize.md        # Optimization with autodiff
+│   ├── dynamic-aperture.md, fma.md, collective.md
+│   ├── coordinates.md, sagancavity-physics.md, sagancavity-tracking.md  # physics
+│   ├── governance.md      # symlink to ../../GOVERNANCE.md
+│   ├── examples/          # symlink to ../../examples (Jupyter notebooks)
+│   └── _static/           # CSS, images, and other static files
+├── _ext/                   # Sphinx extensions written for this site
+│   ├── juliadocstrings.py # the `{docstring}`, `{notebook}` and `{sitetoc}` directives
+│   └── docstring_server.jl# Julia side of `{docstring}`
+├── toctree.md              # Site navigation, appended to the README
 ├── api/                    # API reference (Documenter.jl)
 │   ├── src/
 │   │   ├── index.md       # API reference landing page
 │   │   └── main-docs.md   # Redirect to main docs
 │   └── make.jl            # Documenter build script
 ├── requirements.txt        # Python dependencies (Sphinx)
-├── Project.toml           # Julia dependencies (Documenter)
+├── Project.toml           # Julia dependencies (Documenter, NonlinearSolve, IJulia)
 └── README.md              # This file
 ```
+
+### The landing page and the navigation
+
+`src/index.md` is **generated** and gitignored: `src/conf.py` writes it on every build by
+concatenating the repository `README.md` with `docs/toctree.md`, so the home page of the
+site is always a verbatim copy of the README. Add or reorder pages by editing
+`docs/toctree.md` — every page must appear in one of its `{toctree}` blocks, or Sphinx will
+warn that it is not included in any toctree.
+
+### Page table of contents
+
+Furo shows the sections of the current page in the right-hand sidebar, so pages do not carry
+a contents box of their own. The left sidebar shows the same sections too: `conf.py` rebuilds
+Furo's navigation tree with the section headings included.
+
+### The Table of Contents page
+
+`src/contents.md` shows the whole site as one fully expanded tree, every page with its
+sections and subsections. It is a single directive:
+
+````markdown
+```{sitetoc}
+```
+````
+
+Sphinx's own `{toctree}` cannot do this: it lists only documents no other toctree has claimed,
+and it obeys the `:maxdepth:` of the navigation. `{sitetoc}` (in `_ext/juliadocstrings.py`)
+instead asks the environment for the global toctree with no depth limit, at
+`doctree-resolved` time. It needs no maintenance - new pages appear as soon as they are added
+to `docs/toctree.md`.
+
+### Stream outputs from executed pages
+
+`conf.py` replaces myst-nb's `coalesce_streams`. A kernel may split one `println` across two
+stream messages (the text and its newline are separate writes); myst-nb merges the pieces as
+if each were whole lines, which turns the split into a blank line in the output. The
+replacement concatenates the pieces, which is what a byte stream chopped at arbitrary points
+requires. The symptom is a race, so it appears in some builds and not others.
 
 ## Contributing to Documentation
 
@@ -90,11 +145,11 @@ docs/
 
 | Type of Content | Location | Format |
 |----------------|----------|--------|
-| Installation guide | `src/getting-started.md` | Markdown (MyST) |
-| Usage tutorials | `src/user-guide/*.md` | Markdown (MyST) |
-| Examples | `src/examples/*.md` | Markdown (MyST) |
+| Installation guide | `src/installation.md` | Markdown (MyST) |
+| Usage tutorials | a new `src/*.md`, added to a toctree in `src/index.md` | Markdown (MyST) |
 | Tutorial with live output | `src/*.md` with a `kernelspec` header | Runnable MyST (see below) |
-| Contributing guide | `src/developer-guide/*.md` | Markdown (MyST) |
+| Example notebooks | `examples/**.ipynb` (repo root), listed in `src/examples-index.md` | Jupyter |
+| Element parameter reference | Julia docstrings for the parameter group, surfaced by `{docstring}` in `src/element.md` | Julia docstrings |
 | API docstrings | Source code (`src/*.jl`) | Julia docstrings |
 | API organization | `api/src/index.md` | Markdown |
 
@@ -188,6 +243,45 @@ just displayed, never run — use those for snippets that shouldn't execute
 | ```` ```@repl ```` | one `{code-cell}` per expression |
 | an example that should throw | `:tags: [raises-exception]` |
 
+**Converting a whole Documenter page to MyST.** Pages written for Documenter.jl (for
+example, drafts that came from a `make.jl`-based build) need these translations as well:
+
+| Documenter | MyST |
+|---|---|
+| `# [Title](@id label)` | a line `(label)=` immediately *before* `# Title` |
+| `[text](@ref label)` | `[text](#label)` — resolves project-wide, across pages |
+| `[text](@ref)` to a page | `[text](page.md)` |
+| ```` ```math ```` block | `$$ … $$` (the `dollarmath` extension is enabled) |
+| ``` ``x`` ``` inline math | `$x$` |
+| `!!! note` / `!!! warning` | `:::{note}` … `:::` / `:::{warning}` … `:::` |
+| ```` ```@docs ```` block | see below — docstrings are **not** rendered by Sphinx |
+
+Sphinx cannot read Julia docstrings on its own, so ```` ```@docs ```` becomes the
+`{docstring}` directive provided by `docs/_ext/juliadocstrings.py`:
+
+````markdown
+```{docstring} twiss
+```
+
+```{docstring}
+track
+TrackingResult
+```
+````
+
+This works for anything reachable from `using SciBmad`, which includes the re-exported
+`Beamlines`, `BeamTracking`, `NonlinearNormalForm`, `GTPSA` and `FundamentalFrequencies`
+names — so `Beamline`, `DefExpr`, `Bunch`, `naff`, and the parameter groups all render
+here without being duplicated into this site's Documenter build.
+
+**How it works.** One long-lived `julia --project=docs` process serves the whole build
+(`docs/_ext/docstring_server.jl`). It hands back the *raw* docstring text, which the
+extension translates from Documenter-flavoured Markdown to MyST (```` ```jldoctest ````
+→ ```` ```julia ````, ```` ```math ```` → `$$`, `` ``x`` `` → `$x$`, `!!! note` →
+`:::{note}`, `[text](@ref)` → plain text, and `#` headings → rubrics so they stay out of
+the page's table of contents). Successful lookups are cached in the doctree directory;
+`SCIBMAD_DOCS_NO_JULIA=1` builds from that cache without starting Julia.
+
 Tags go on the first line of the cell:
 
 ```markdown
@@ -227,6 +321,22 @@ notebooks are added to a `{toctree}` like any other page (see `src/examples-inde
     ```
 ```
 
+**Embedding a notebook inside another page.** A `{toctree}` entry makes a notebook a page
+of its own. To splice one into the middle of an existing page instead — as
+`dynamic-aperture.md` does — use the `{notebook}` directive, also from
+`docs/_ext/juliadocstrings.py`:
+
+````markdown
+```{notebook} examples/julia/dynamic-aperture.ipynb
+:skip-heading:
+```
+````
+
+It renders the notebook's cells and their **stored** outputs (figures included; these are
+written to `src/_nbimages/`, which is gitignored) without ever starting a kernel.
+`:skip-heading:` drops the notebook's own title, and `:heading-offset: N` demotes its
+headings by `N` levels so they nest under the host page.
+
 Notes:
 - Notebooks are committed **already executed** and rendered with their stored outputs
   (`nb_execution_mode = "off"` in `conf.py`) — the build never starts a kernel, so no
@@ -239,9 +349,12 @@ Notes:
 ### Beamlines.jl docstrings
 
 SciBmad is built on [Beamlines.jl](https://github.com/bmad-sim/Beamlines.jl). Its
-docstrings live on the Beamlines.jl site and are **not** re-rendered here — we only
-cross-reference into them (via `DocumenterInterLinks` in `api/make.jl` and intersphinx
-in `conf.py`). Don't add `@autodocs Modules = [Beamlines]` back to `api/src/index.md`.
+docstrings are **not** re-rendered in this site's *Documenter* build — that only
+cross-references into the Beamlines.jl site (via `DocumenterInterLinks` in `api/make.jl`
+and intersphinx in `conf.py`), so don't add `@autodocs Modules = [Beamlines]` back to
+`api/src/index.md`. The narrative pages are a different matter: `{docstring}` reads
+whatever `using SciBmad` can see, so `Beamline`, `DefExpr`, `Context` and the parameter
+groups are shown in full where they are being explained.
 
 ### Writing API Documentation
 

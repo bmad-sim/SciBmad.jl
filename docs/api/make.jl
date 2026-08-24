@@ -17,7 +17,7 @@ DocMeta.setdocmeta!(SciBmad, :DocTestSetup, :(using SciBmad); recursive=true)
 makedocs(;
     modules=[SciBmad],
     authors="mattsignorelli <mgs255@cornell.edu> and contributors",
-    sitename="SciBmad.jl API Reference",
+    sitename="SciBmad API Reference",
     format=Documenter.HTML(;
         canonical="https://bmad-sim.github.io/Beamlines.jl",
         edit_link="main",

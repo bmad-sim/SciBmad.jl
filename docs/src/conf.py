@@ -3,10 +3,14 @@
 import os
 import sys
 
+# `docs/_ext` holds the Sphinx extensions written for this site.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(_HERE), '_ext'))
+
 # -- Project information -----------------------------------------------------
-project = 'SciBmad.jl'
-copyright = '2025, SciBmad.jl Contributors'
-author = 'SciBmad.jl Contributors'
+project = 'SciBmad'
+copyright = '2025, SciBmad Contributors'
+author = 'SciBmad Contributors'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -16,6 +20,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinxcontrib.bibtex',
     'sphinx_copybutton',
+    'juliadocstrings',  # docs/_ext/juliadocstrings.py -- the `{docstring}` directive
 ]
 
 # -- Copy button on code blocks ----------------------------------------------
@@ -146,6 +151,11 @@ class _JuliaDomain(Domain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         return None  # intersphinx handles external references
 
+    def resolve_any_xref(self, env, fromdocname, builder, target, node, contnode):
+        # Needed so MyST's "any"-style links (e.g. `[text](#label)`) don't warn about
+        # this domain; the domain holds no objects of its own.
+        return []
+
     def get_objects(self):
         return iter([])
 
@@ -168,10 +178,128 @@ def _fail_on_execution_error(app, exception):
         report.append(exec_data.get('traceback') or str(exec_data.get('error')))
     raise SphinxError('\n'.join(report))
 
+# -- Home page: a verbatim copy of the repository README ----------------------
+# The landing page is the README, so the two can never drift apart. Sphinx also
+# needs the site's `{toctree}` blocks to live in the root document, so they are
+# kept in `docs/toctree.md` and appended here; they are `:hidden:`, which puts
+# them in the sidebar without adding anything to the rendered page.
+_REPO_ROOT = os.path.dirname(os.path.dirname(_HERE))
+
+def _generate_index_page():
+    readme = os.path.join(_REPO_ROOT, 'README.md')
+    toctree = os.path.join(os.path.dirname(_HERE), 'toctree.md')
+    target = os.path.join(_HERE, 'index.md')
+
+    with open(readme, encoding='utf-8') as f:
+        content = f.read()
+    with open(toctree, encoding='utf-8') as f:
+        content = content.rstrip() + '\n\n' + f.read()
+
+    # Only rewrite when something actually changed, so Sphinx does not consider
+    # the landing page outdated on every build.
+    try:
+        with open(target, encoding='utf-8') as f:
+            if f.read() == content:
+                return
+    except FileNotFoundError:
+        pass
+    with open(target, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+_generate_index_page()
+
+# -- Left sidebar: expand the current page's own sections ---------------------
+# Furo builds its navigation tree with `titles_only=True`, so the sidebar lists
+# page titles and nothing else. Rebuild it with the section headings included, so
+# a reader can jump straight to a section of the page they are on. `collapse` has
+# to stay False: Sphinx prunes sub-entries before it knows which page is current,
+# so collapsing here would drop the very sections we want. Furo's own CSS folds
+# the other pages' sections away and leaves the current page's expanded.
+def _expand_navigation_tree(app, pagename, templatename, context, doctree):
+    if 'toctree' not in context:
+        return
+    try:
+        from furo.navigation import get_navigation_tree
+    except ImportError:
+        return
+    context['furo_navigation_tree'] = get_navigation_tree(
+        context['toctree'](
+            collapse=False,
+            titles_only=False,
+            maxdepth=2,
+            includehidden=True,
+        )
+    )
+
+
+# -- Stream outputs split mid-line by the kernel ------------------------------
+# `println("Before: ", x)` writes the text and the newline as two separate
+# writes. If IJulia's stdout watcher happens to flush between them, the kernel
+# sends two stream messages: "Before: -0.36" and "\nAfter: -0.1\n". myst-nb's
+# `coalesce_streams` merges stream messages as if each were a whole number of
+# lines - it rstrips the first and appends a newline - so the leading newline of
+# the second message becomes a blank line in the rendered output. It is a race,
+# which is why it shows up in CI builds and not always locally.
+#
+# A stream is just a byte stream that the kernel chopped into messages at
+# arbitrary points, so the pieces should simply be concatenated.
+def _coalesce_streams(outputs):
+    from myst_nb.core.utils import _RGX_CARRIAGERETURN
+
+    if not outputs:
+        return []
+
+    new_outputs = []
+    streams = {}
+    for output in outputs:
+        if output['output_type'] == 'stream':
+            name = output['name']
+            if name in streams:
+                streams[name]['text'] += output['text']
+            else:
+                new_outputs.append(output)
+                streams[name] = output
+        else:
+            new_outputs.append(output)
+
+    for output in streams.values():
+        # Drop carriage returns that are not followed by a newline (progress
+        # bars overwriting a line). Upstream also has a backspace pass, but its
+        # loop condition is never true, so it never runs - and the pattern uses
+        # `\b`, a word boundary rather than a backspace, so running it would
+        # eat ordinary characters. Keep the behaviour that upstream actually has.
+        text = _RGX_CARRIAGERETURN.sub('', output['text'])
+        output['text'] = text.rstrip('\n') + '\n' if text.strip() else text
+
+    # stdout and stderr are asynchronous, so keep a deterministic order.
+    for i, output in enumerate(new_outputs):
+        if output['output_type'] == 'stream' and output['name'] == 'stderr':
+            if (
+                len(new_outputs) >= i + 2
+                and new_outputs[i + 1]['output_type'] == 'stream'
+                and new_outputs[i + 1]['name'] == 'stdout'
+            ):
+                new_outputs.insert(i, new_outputs.pop(i + 1))
+
+    return new_outputs
+
+
+def _patch_coalesce_streams():
+    from myst_nb.core import render, utils
+
+    utils.coalesce_streams = _coalesce_streams
+    render.coalesce_streams = _coalesce_streams
+
+_patch_coalesce_streams()
+
 def setup(app):
     app.add_domain(_JuliaDomain)
     app.connect('doctree-resolved', _fix_intersphinx_refs)
     app.connect('build-finished', _fail_on_execution_error)
+    # Furo is loaded as a theme, i.e. after conf.py's setup(), so its own
+    # html-page-context handler is registered last. A higher priority is what
+    # makes this one run after it and win.
+    app.connect('html-page-context', _expand_navigation_tree, priority=900)
 
 # MyST Parser configuration
 myst_enable_extensions = [
@@ -182,9 +310,7 @@ myst_enable_extensions = [
     "linkify",
 ]
 
-templates_path = ['_templates']
 exclude_patterns = [
-    'parameters',              # included via other pages, not as standalone docs
     '**/.ipynb_checkpoints',   # Jupyter scratch copies under examples/
 ]
 
@@ -202,22 +328,11 @@ html_theme_options = {
     'dark_logo': 'SciBmad-Logo-dark.png',
 }
 
-html_title = 'SciBmad.jl Documentation'
+html_title = 'SciBmad Documentation'
 html_static_path = ['_static']
 html_css_files = ['custom.css']
 html_js_files = ['topbar-github.js']
 
-# Sidebar settings with custom external links
-html_sidebars = {
-    "**": [
-        "sidebar/brand.html",
-        "sidebar/search.html",
-        "sidebar/scroll-start.html",
-        "sidebar/navigation.html",
-        "sidebar-external-links.html",
-        "sidebar/scroll-end.html",
-    ]
-}
 
 # -- Options for MyST --------------------------------------------------------
 myst_heading_anchors = 3
