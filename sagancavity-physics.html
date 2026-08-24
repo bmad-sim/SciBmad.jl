@@ -3,18 +3,18 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Coordinates" href="coordinates.html"><link rel="prev" title="Miscellaneous" href="miscellaneous.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Miscellaneous" href="miscellaneous.html"><link rel="prev" title="SaganCavity Tracking" href="sagancavity-tracking.html">
         <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
         <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>SaganCavity Physics - SciBmad.jl Documentation</title>
+        <title>SaganCavity Physics - SciBmad Documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=3473b490" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0d90b94b" />
     
     
 
@@ -166,7 +166,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">SciBmad.jl Documentation</div></a>
+      <a href="index.html"><div class="brand">SciBmad Documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -198,10 +198,89 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">Table of Contents</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="installation.html">Installation</a><input aria-label="Toggle navigation of Installation" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-julia">Installing Julia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-scibmad">Installing SciBmad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-scibmad-from-python">Using SciBmad from Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#a-simple-copy-paste-example">A Simple Copy-Paste Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-by-step-description">Step-By-Step Description</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-lineelements-in-a-beamline">Finding LineElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-lineelements-in-multiple-beamline">Multiple LineElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-lineelement-parameters">Beamline-Dependent LineElement Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#deferred-expressions">Deferred Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a><input aria-label="Toggle navigation of Dynamic Aperture" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#gpu-parallelization">GPU-Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#the-dynamic-aperture-function">The <code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> function</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="twiss.html">Twiss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimization with Autodiff</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture.html">Dynamic aperture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
@@ -213,24 +292,58 @@
 </ul>
 </li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">SciBmad</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a></li>
-</ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul class="current">
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">SaganCavity Physics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coordinates.html">Coordinates</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#reflection-patch">Reflection Patch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#floor-coordinates">Floor Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" checked="" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#justification">Justification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edge-kick">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#energy-kick">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rf-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
+</ul>
+</li>
 </ul>
 
-</div><div class="sidebar-tree">
-  <ul>
-    <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference →</a></li>
-    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
-  </ul>
-</div></div>
+</div>
+</div>
+
       </div>
       
     </div>
@@ -277,8 +390,8 @@ uses a symplectic kick-drift-kick model and
 has both longitudinal energy gain and transverse focusing effects.
 DC solenoid and multipole fields can be superimposed on the RF fields.
 For a listing of parameters used in the tracking, see the
-<a class="reference internal" href="tracking-methods.html#sagancavity-tracking"><span class="std std-ref">SaganCavity Tracking Method</span></a> and
-<a class="reference internal" href="element-parameters.html#id5"><span class="std std-ref">RF parameter group</span></a> documentation .</p>
+<a class="reference internal" href="sagancavity-tracking.html#sagancavity-tracking"><span class="std std-ref">SaganCavity Tracking Method</span></a> and
+<a class="reference internal" href="element.html#id5"><span class="std std-ref">RF parameter group</span></a> documentation .</p>
 </section>
 <section id="justification">
 <h2>Justification<a class="headerlink" href="#justification" title="Link to this heading">¶</a></h2>
@@ -321,7 +434,7 @@ field produces a transverse kick. Following R&amp;S <span class="bibtex-citation
 (their Eq. (12)), the appropriate fringe Hamiltonian to reproduce this, in energy coordinates, is:</p>
 <div class="math-wrapper docutils container" id="equation-eq-hf">
 <div class="math notranslate nohighlight" id="equation-eq-hf">
-<span class="eqno">(1)<a class="headerlink" href="#equation-eq-hf" title="Link to this equation">¶</a></span>\[H_f = \mp \frac{q}{2 P_0 c} \, G \, \cos(\phi_{RF})\,(x^2 + y^2),\]</div>
+<span class="eqno">(14)<a class="headerlink" href="#equation-eq-hf" title="Link to this equation">¶</a></span>\[H_f = \mp \frac{q}{2 P_0 c} \, G \, \cos(\phi_{RF})\,(x^2 + y^2),\]</div>
 </div>
 <p>where <span class="math notranslate nohighlight">\(q\)</span> is the particle charge, and <span class="math notranslate nohighlight">\(G\)</span> is the gradient which is equal to <span class="math notranslate nohighlight">\(V/L_\text{active}\)</span>
 with <span class="math notranslate nohighlight">\(V\)</span> being the voltage.
@@ -333,7 +446,7 @@ If <code class="docutils literal notranslate"><span class="pre">L_active</span><
 yields the fringe kicks</p>
 <div class="math-wrapper docutils container" id="equation-eq-edgekick">
 <div class="math notranslate nohighlight" id="equation-eq-edgekick">
-<span class="eqno">(2)<a class="headerlink" href="#equation-eq-edgekick" title="Link to this equation">¶</a></span>\[\begin{split}\begin{aligned}
+<span class="eqno">(15)<a class="headerlink" href="#equation-eq-edgekick" title="Link to this equation">¶</a></span>\[\begin{split}\begin{aligned}
   \Delta p_x &amp;= \mp \frac{q}{P_0 c} \, G \cos(\phi_{RF})\, x, \\
   \Delta p_y &amp;= \mp \frac{q}{P_0 c} \, G \cos(\phi_{RF})\, y, \\
   \Delta p_E &amp;= \mp \frac{\pi f_\text{rf} q}{P_0 c^2} \, G
@@ -355,7 +468,7 @@ the exit kick will be focusing for accelerated particles.</p>
 The energy kick at the <span class="math notranslate nohighlight">\(n^{th}\)</span> kick point is</p>
 <div class="math-wrapper docutils container" id="equation-eq-vk">
 <div class="math notranslate nohighlight" id="equation-eq-vk">
-<span class="eqno">(3)<a class="headerlink" href="#equation-eq-vk" title="Link to this equation">¶</a></span>\[dE(n) = \frac{q \, \kappa_n \, V }{N_c} \cos( \phi_{RF}(n) ),\]</div>
+<span class="eqno">(16)<a class="headerlink" href="#equation-eq-vk" title="Link to this equation">¶</a></span>\[dE(n) = \frac{q \, \kappa_n \, V }{N_c} \cos( \phi_{RF}(n) ),\]</div>
 </div>
 <p>where <span class="math notranslate nohighlight">\(V\)</span> is the voltage set by the <code class="docutils literal notranslate"><span class="pre">voltage</span></code> parameter, and <span class="math notranslate nohighlight">\(\kappa_n = 0.5\)</span> at the
 two end kick points and <span class="math notranslate nohighlight">\(\kappa_n = 1\)</span> at interior kick points.</p>
@@ -416,7 +529,7 @@ which give a time-averaged force.
 The appropriate Hamiltonian corresponding to R&amp;S Eq. (4) with <span class="math notranslate nohighlight">\(\eta(\phi) = 1\)</span> (no harmonics) is:</p>
 <div class="math-wrapper docutils container" id="equation-eq-hp">
 <div class="math notranslate nohighlight" id="equation-eq-hp">
-<span class="eqno">(4)<a class="headerlink" href="#equation-eq-hp" title="Link to this equation">¶</a></span>\[H_p = -\frac{\kappa_n \, L \, q^2 G^2}{16 N_s P_0^2 c^2 (1 + p_z)}
+<span class="eqno">(17)<a class="headerlink" href="#equation-eq-hp" title="Link to this equation">¶</a></span>\[H_p = -\frac{\kappa_n \, L \, q^2 G^2}{16 N_s P_0^2 c^2 (1 + p_z)}
       (x^2 + y^2),\]</div>
 </div>
 <p>The pondermotive kick is applied at each kick point.
@@ -425,7 +538,7 @@ give an infinite <span class="math notranslate nohighlight">\(G\)</span>, the po
 <p>The resulting phase-space kicks are</p>
 <div class="math-wrapper docutils container" id="equation-eq-pond">
 <div class="math notranslate nohighlight" id="equation-eq-pond">
-<span class="eqno">(5)<a class="headerlink" href="#equation-eq-pond" title="Link to this equation">¶</a></span>\[\begin{split}\begin{aligned}
+<span class="eqno">(18)<a class="headerlink" href="#equation-eq-pond" title="Link to this equation">¶</a></span>\[\begin{split}\begin{aligned}
   \Delta p_x &amp;= -\frac{\kappa_n \, L \, q^2 G^2}
                       {8 N_s P_0^2 c^2 (1 + p_z)} \, x, \\
   \Delta p_y &amp;= -\frac{\kappa_n \, L \, q^2 G^2}
@@ -470,23 +583,23 @@ and at the kick points at the cell ends alongside the RF kicks.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="coordinates.html">
+          <a class="next-page" href="miscellaneous.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Coordinates</div>
+                <div class="title">Miscellaneous</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="miscellaneous.html">
+          <a class="prev-page" href="sagancavity-tracking.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Miscellaneous</div>
+                <div class="title">SaganCavity Tracking</div>
                 
               </div>
             </a>
@@ -494,7 +607,7 @@ and at the kick points at the cell ends alongside the RF kicks.</p>
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2025, SciBmad.jl Contributors
+                Copyright &#169; 2025, SciBmad Contributors
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
