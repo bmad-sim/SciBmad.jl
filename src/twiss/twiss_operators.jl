@@ -203,8 +203,8 @@ end
     Ek = zeros(eltype(Bk), nhv, nhv)
     nd = div(nhv, 2)
     for l in 1:nd
-      Ek[:,(2*l-1)] = -view(Bk, :, (2*l))
-      Ek[:,(2*l)] = view(Bk, :, (2*l-1))
+      Ek[:,(2*l-1)] = view(Bk, :, (2*l))
+      Ek[:,(2*l)] = -view(Bk, :, (2*l-1))
     end
     return Ek # No need to store in cache, not used anywhere
   elseif haskey(cache.map, osym)
@@ -214,11 +214,11 @@ end
     end
     tmp1 = cache.persistent_map[:tmp1]
     NNF.clear!(tmp1)
-    if !haskey(cache.persistent_matrix, j_mat)
-      cache.persistent_matrix[:j] = NNF.j_mat(tmp1s)
+    if !haskey(cache.persistent_matrix, nj_mat)
+      cache.persistent_matrix[:nj] = -NNF.j_mat(tmp1s)
     end
-    j_mat = cache.persistent_matrix[:j]
-    NNF.setray!(tmp1.v, v_matrix=j_mat)
+    nj_mat = cache.persistent_matrix[:nj]
+    NNF.setray!(tmp1.v, v_matrix=nj_mat)
     Ek = Bk ∘ tmp1
     return as_tps ? Ek : NNF.jacobian(Ek, NNF.HVARS)
   else
