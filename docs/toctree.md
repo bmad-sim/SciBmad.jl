@@ -10,6 +10,7 @@ README while Sphinx still gets the navigation structure it requires here.
 :maxdepth: 1
 
 Overview <self>
+Table of Contents <contents>
 ```
 
 ```{toctree}

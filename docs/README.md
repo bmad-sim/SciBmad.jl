@@ -70,6 +70,7 @@ docs/
 │   ├── index.md           # GENERATED landing page (README + toctree.md), gitignored
 │   ├── installation.md    # Installing Julia and SciBmad
 │   ├── quickstart.md      # Runnable tour of the package
+│   ├── contents.md        # Whole-site tree, built by the `{sitetoc}` directive
 │   ├── element.md         # Defining a LineElement (incl. parameter groups)
 │   ├── beamline.md        # Defining a Beamline
 │   ├── defexpr.md         # Deferred expressions and Contexts
@@ -82,14 +83,12 @@ docs/
 │   ├── parametric-nf.md   # Parametric normal form
 │   ├── optimize.md        # Optimization with autodiff
 │   ├── dynamic-aperture.md, fma.md, collective.md
-│   ├── parameters/        # element parameter reference, included from element.md
 │   ├── coordinates.md, sagancavity-physics.md, sagancavity-tracking.md  # physics
 │   ├── governance.md      # symlink to ../../GOVERNANCE.md
 │   ├── examples/          # symlink to ../../examples (Jupyter notebooks)
-│   ├── _static/           # CSS, images, and other static files
-│   └── _templates/        # Custom HTML templates
+│   └── _static/           # CSS, images, and other static files
 ├── _ext/                   # Sphinx extensions written for this site
-│   ├── juliadocstrings.py # the `{docstring}` and `{notebook}` directives
+│   ├── juliadocstrings.py # the `{docstring}`, `{notebook}` and `{sitetoc}` directives
 │   └── docstring_server.jl# Julia side of `{docstring}`
 ├── toctree.md              # Site navigation, appended to the README
 ├── api/                    # API reference (Documenter.jl)
@@ -116,6 +115,30 @@ Furo shows the sections of the current page in the right-hand sidebar, so pages 
 a contents box of their own. The left sidebar shows the same sections too: `conf.py` rebuilds
 Furo's navigation tree with the section headings included.
 
+### The Table of Contents page
+
+`src/contents.md` shows the whole site as one fully expanded tree, every page with its
+sections and subsections. It is a single directive:
+
+````markdown
+```{sitetoc}
+```
+````
+
+Sphinx's own `{toctree}` cannot do this: it lists only documents no other toctree has claimed,
+and it obeys the `:maxdepth:` of the navigation. `{sitetoc}` (in `_ext/juliadocstrings.py`)
+instead asks the environment for the global toctree with no depth limit, at
+`doctree-resolved` time. It needs no maintenance - new pages appear as soon as they are added
+to `docs/toctree.md`.
+
+### Stream outputs from executed pages
+
+`conf.py` replaces myst-nb's `coalesce_streams`. A kernel may split one `println` across two
+stream messages (the text and its newline are separate writes); myst-nb merges the pieces as
+if each were whole lines, which turns the split into a blank line in the output. The
+replacement concatenates the pieces, which is what a byte stream chopped at arbitrary points
+requires. The symptom is a race, so it appears in some builds and not others.
+
 ## Contributing to Documentation
 
 ### Where to Add Content
@@ -126,7 +149,7 @@ Furo's navigation tree with the section headings included.
 | Usage tutorials | a new `src/*.md`, added to a toctree in `src/index.md` | Markdown (MyST) |
 | Tutorial with live output | `src/*.md` with a `kernelspec` header | Runnable MyST (see below) |
 | Example notebooks | `examples/**.ipynb` (repo root), listed in `src/examples-index.md` | Jupyter |
-| Element parameter reference | `src/parameters/*.md`, included from `src/element-parameters.md` | Markdown (MyST) |
+| Element parameter reference | Julia docstrings for the parameter group, surfaced by `{docstring}` in `src/element.md` | Julia docstrings |
 | API docstrings | Source code (`src/*.jl`) | Julia docstrings |
 | API organization | `api/src/index.md` | Markdown |
 

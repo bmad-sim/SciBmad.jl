@@ -487,6 +487,62 @@ class NotebookDirective(SphinxDirective):
         return "../" * depth + f"_nbimages/{name}"
 
 
+
+# --------------------------------------------------------------------------------------
+# `{sitetoc}` - the whole site as one fully expanded tree
+# --------------------------------------------------------------------------------------
+# Sphinx's own `{toctree}` can only list documents that are not already claimed by
+# another toctree, and it renders page titles only. This directive instead asks the
+# environment for the *global* toctree with every level expanded, so one page can show
+# every section and subsection of the site at once.
+class SiteTocNode(nodes.General, nodes.Element):
+    pass
+
+
+class SiteTocDirective(SphinxDirective):
+    has_content = False
+    option_spec = {"maxdepth": directives.nonnegative_int}
+
+    def run(self):
+        node = SiteTocNode()
+        # -1 means "no limit". Sphinx treats 0 as "fall back to the `:maxdepth:`
+        # of each navigation toctree", which would cut the tree off at the same
+        # depth as the sidebar - the opposite of what this page is for.
+        node["maxdepth"] = self.options.get("maxdepth", -1)
+        node["docname"] = self.env.docname
+        return [node]
+
+
+def _resolve_sitetoc(app, doctree, docname):
+    from sphinx.environment.adapters.toctree import global_toctree_for_doc
+
+    for node in list(doctree.findall(SiteTocNode)):
+        toc = global_toctree_for_doc(
+            app.env,
+            node["docname"],
+            app.builder,
+            collapse=False,
+            includehidden=True,
+            maxdepth=node["maxdepth"],
+            titles_only=False,
+        )
+        if toc is None:
+            node.parent.remove(node)
+            continue
+        # A `compact_paragraph` is rendered without an element of its own, so a
+        # class set on it would never reach the HTML. Wrap it instead - and wrap
+        # the node itself rather than re-parenting its children, since a toctree
+        # caption is a `title` whose rendering depends on its parent carrying
+        # the `toctree` attribute.
+        wrapper = nodes.container(classes=["site-toc"])
+        wrapper += toc
+        node.replace_self(wrapper)
+
+
+def _skip_sitetoc(self, node):
+    raise nodes.SkipNode
+
+
 # --------------------------------------------------------------------------------------
 # Wiring
 # --------------------------------------------------------------------------------------
@@ -505,6 +561,9 @@ def _finish(app, exception):
 def setup(app):
     app.add_directive("docstring", DocstringDirective)
     app.add_directive("notebook", NotebookDirective)
+    app.add_directive("sitetoc", SiteTocDirective)
+    app.add_node(SiteTocNode, html=(_skip_sitetoc, None))
+    app.connect("doctree-resolved", _resolve_sitetoc)
     app.connect("builder-inited", _init)
     app.connect("build-finished", _finish)
     return {

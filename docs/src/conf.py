@@ -231,6 +231,67 @@ def _expand_navigation_tree(app, pagename, templatename, context, doctree):
         )
     )
 
+
+# -- Stream outputs split mid-line by the kernel ------------------------------
+# `println("Before: ", x)` writes the text and the newline as two separate
+# writes. If IJulia's stdout watcher happens to flush between them, the kernel
+# sends two stream messages: "Before: -0.36" and "\nAfter: -0.1\n". myst-nb's
+# `coalesce_streams` merges stream messages as if each were a whole number of
+# lines - it rstrips the first and appends a newline - so the leading newline of
+# the second message becomes a blank line in the rendered output. It is a race,
+# which is why it shows up in CI builds and not always locally.
+#
+# A stream is just a byte stream that the kernel chopped into messages at
+# arbitrary points, so the pieces should simply be concatenated.
+def _coalesce_streams(outputs):
+    from myst_nb.core.utils import _RGX_CARRIAGERETURN
+
+    if not outputs:
+        return []
+
+    new_outputs = []
+    streams = {}
+    for output in outputs:
+        if output['output_type'] == 'stream':
+            name = output['name']
+            if name in streams:
+                streams[name]['text'] += output['text']
+            else:
+                new_outputs.append(output)
+                streams[name] = output
+        else:
+            new_outputs.append(output)
+
+    for output in streams.values():
+        # Drop carriage returns that are not followed by a newline (progress
+        # bars overwriting a line). Upstream also has a backspace pass, but its
+        # loop condition is never true, so it never runs - and the pattern uses
+        # `\b`, a word boundary rather than a backspace, so running it would
+        # eat ordinary characters. Keep the behaviour that upstream actually has.
+        text = _RGX_CARRIAGERETURN.sub('', output['text'])
+        output['text'] = text.rstrip('\n') + '\n' if text.strip() else text
+
+    # stdout and stderr are asynchronous, so keep a deterministic order.
+    for i, output in enumerate(new_outputs):
+        if output['output_type'] == 'stream' and output['name'] == 'stderr':
+            if (
+                len(new_outputs) >= i + 2
+                and new_outputs[i + 1]['output_type'] == 'stream'
+                and new_outputs[i + 1]['name'] == 'stdout'
+            ):
+                new_outputs.insert(i, new_outputs.pop(i + 1))
+
+    return new_outputs
+
+
+def _patch_coalesce_streams():
+    from myst_nb.core import render, utils
+
+    utils.coalesce_streams = _coalesce_streams
+    render.coalesce_streams = _coalesce_streams
+
+_patch_coalesce_streams()
+
 def setup(app):
     app.add_domain(_JuliaDomain)
     app.connect('doctree-resolved', _fix_intersphinx_refs)
@@ -249,9 +310,7 @@ myst_enable_extensions = [
     "linkify",
 ]
 
-templates_path = ['_templates']
 exclude_patterns = [
-    'parameters',              # included via other pages, not as standalone docs
     '**/.ipynb_checkpoints',   # Jupyter scratch copies under examples/
 ]
 
@@ -274,17 +333,6 @@ html_static_path = ['_static']
 html_css_files = ['custom.css']
 html_js_files = ['topbar-github.js']
 
-# Sidebar settings with custom external links
-html_sidebars = {
-    "**": [
-        "sidebar/brand.html",
-        "sidebar/search.html",
-        "sidebar/scroll-start.html",
-        "sidebar/navigation.html",
-        "sidebar-external-links.html",
-        "sidebar/scroll-end.html",
-    ]
-}
 
 # -- Options for MyST --------------------------------------------------------
 myst_heading_anchors = 3

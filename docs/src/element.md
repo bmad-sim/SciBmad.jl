@@ -114,31 +114,25 @@ They are all documented below.
 (pgs)=
 ## Parameter Groups
 
+(alignment.params)=
+(alignment:params)=
 ### AlignmentParams
 
 ```{docstring} AlignmentParams
 ```
 
-(alignment.params)=
-```{include} parameters/alignment-params.md
-```
-
+(aperture.params)=
+(aperture:params)=
 ### ApertureParams
 
 ```{docstring} ApertureParams
 ```
 
-(aperture.params)=
-```{include} parameters/aperture-params.md
-```
-
+(multipole.sol.params)=
+(multipole.solenoid:params)=
 ### BMultipoleParams
 
 ```{docstring} BMultipoleParams
-```
-
-(multipole.sol.params)=
-```{include} parameters/multipole-sol-params.md
 ```
 
 ### BeamlineParams
@@ -146,13 +140,11 @@ They are all documented below.
 ```{docstring} BeamlineParams
 ```
 
+(bend.params)=
+(bend:params)=
 ### BendParams
 
 ```{docstring} BendParams
-```
-
-(bend.params)=
-```{include} parameters/bend-params.md
 ```
 
 ### FourPotentialParams
@@ -175,22 +167,23 @@ They are all documented below.
 ```{docstring} MetaParams
 ```
 
+(patch.params)=
+(patch:params)=
 ### PatchParams
 
 ```{docstring} PatchParams
 ```
 
-(patch.params)=
-```{include} parameters/patch-params.md
-```
-
+(rf.params)=
+(rf:params)=
 ### RFParams
 
 ```{docstring} RFParams
 ```
 
-(rf.params)=
-```{include} parameters/rf-params.md
+The `zero_phase` parameter takes a `PhaseRef`:
+
+```{docstring} PhaseRef
 ```
 
 ### UniversalParams
