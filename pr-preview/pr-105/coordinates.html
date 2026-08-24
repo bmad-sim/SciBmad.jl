@@ -3,18 +3,18 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="prev" title="SaganCavity Physics" href="sagancavity-physics.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="SaganCavity Tracking" href="sagancavity-tracking.html"><link rel="prev" title="Ramping through a spin-orbit resonance with SciBmad (Python example compatible with SciBmad version &lt; 0.5.0)" href="examples/python/ags-spin-ramp.html">
         <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
         <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>Coordinates - SciBmad.jl Documentation</title>
+        <title>Coordinates - SciBmad Documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=3473b490" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0d90b94b" />
     
     
 
@@ -166,7 +166,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">SciBmad.jl Documentation</div></a>
+      <a href="index.html"><div class="brand">SciBmad Documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -198,10 +198,89 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">Table of Contents</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="installation.html">Installation</a><input aria-label="Toggle navigation of Installation" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-julia">Installing Julia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-scibmad">Installing SciBmad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-scibmad-from-python">Using SciBmad from Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#a-simple-copy-paste-example">A Simple Copy-Paste Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-by-step-description">Step-By-Step Description</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-lineelements-in-a-beamline">Finding LineElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-lineelements-in-multiple-beamline">Multiple LineElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-lineelement-parameters">Beamline-Dependent LineElement Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#deferred-expressions">Deferred Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a><input aria-label="Toggle navigation of Dynamic Aperture" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#gpu-parallelization">GPU-Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#the-dynamic-aperture-function">The <code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> function</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="twiss.html">Twiss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimization with Autodiff</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture.html">Dynamic aperture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
@@ -213,24 +292,58 @@
 </ul>
 </li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">SciBmad</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a></li>
-</ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Coordinates</a></li>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Coordinates</a><input aria-label="Toggle navigation of Coordinates" checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nomenclature">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#branch-coordinate-construction">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reflection-patch">Reflection Patch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#floor-coordinates">Floor Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lattice-element-positioning">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#particle-position-transformation">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#edge-kick">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#energy-kick">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#rf-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
+</ul>
+</li>
 </ul>
 
-</div><div class="sidebar-tree">
-  <ul>
-    <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference →</a></li>
-    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
-  </ul>
-</div></div>
+</div>
+</div>
+
       </div>
       
     </div>
@@ -312,7 +425,7 @@ most machines are essentially horizontal, the <span class="math notranslate nohi
 “horizontal” coordinate and the <span class="math notranslate nohighlight">\(y\)</span> coordinate is typically thought of as the “vertical”
 coordinate.</p>
 <p>The “nominal” position of a lattice element is the position of the element without any
-<a class="reference internal" href="element-parameters.html#id1"><span class="std std-ref">alignment shifts</span></a>
+<a class="reference internal" href="element.html#id1"><span class="std std-ref">alignment shifts</span></a>
 (these position and orientation shifts which are sometimes referred to as “misalignments”).
 Each lattice element has “<code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code>”
 coordinates which are attached to the physical element, and the electric and magnetic
@@ -353,16 +466,16 @@ are not included in any branch.</p>
 <p>Most element kinds have a “straight” geometry as shown in
 <a class="reference internal" href="#f-ele-coord-frame"><span class="std std-numref">Fig. 2</span></a>A. That is, the reference curve through the element is a straight line
 segment with the <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> axes always pointing in the same direction.
-For an element with <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref">BendParams</span></a> parameters,
+For an element with <a class="reference internal" href="element.html#id3"><span class="std std-ref">BendParams</span></a> parameters,
 the reference curve is a segment of a circular arc as shown in
 <a class="reference internal" href="#f-ele-coord-frame"><span class="std std-numref">Fig. 2</span></a>B. With the <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> parameter set to zero, the rotation axis
 between the entrance and exit frames is parallel to the <span class="math notranslate nohighlight">\(y\)</span>-axis (<a class="reference internal" href="#s-floor">xxx</a>).
-For <a class="reference internal" href="element-parameters.html#id4"><span class="std std-ref">Patch</span></a> and <a class="reference internal" href="#s:floorshift"><span class="xref myst">floor_shift</span></a>
+For <a class="reference internal" href="element.html#id4"><span class="std std-ref">Patch</span></a> and <a class="reference internal" href="#s:floorshift"><span class="xref myst">floor_shift</span></a>
 elements (<a class="reference internal" href="#f-ele-coord-frame"><span class="std std-numref">Fig. 2</span></a>C), the exit face can be
 arbitrarily oriented with respect to the entrance end.
 For elements with a <code class="docutils literal notranslate"><span class="pre">FloorParams</span></code> group, the interior reference curve between the
 entrance and exit faces is not defined. For elements with a <code class="docutils literal notranslate"><span class="pre">PatchParams</span></code> group, the interior reference curve
-is dependent upon the patch parameter settings (<a class="reference internal" href="element-parameters.html#id4"><span class="std std-ref">xxx</span></a>) and, in general,
+is dependent upon the patch parameter settings (<a class="reference internal" href="element.html#id4"><span class="std std-ref">xxx</span></a>) and, in general,
 will have a discontinuity.</p>
 </section>
 <section id="branch-coordinate-construction">
@@ -427,7 +540,7 @@ with an normal (unreversed) orientation drift named <code class="docutils litera
 This gives an unphysical situation since a
 particle traveling through <code class="docutils literal notranslate"><span class="pre">dft1</span></code> will “fall off” when it gets to the drift’s end.
 <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>D shows the same line as in <a class="reference internal" href="#f-patch-between"><span class="std std-numref">Fig. 3</span></a>C with the addition
-of an element <code class="docutils literal notranslate"><span class="pre">P</span></code> containing a <a class="reference internal" href="element-parameters.html#id4"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">reflection</span> <span class="pre">patch</span></code></span></a> between <code class="docutils literal notranslate"><span class="pre">dft1</span></code> and <code class="docutils literal notranslate"><span class="pre">bnd1</span></code> to give a plausible geometry.
+of an element <code class="docutils literal notranslate"><span class="pre">P</span></code> containing a <a class="reference internal" href="element.html#id4"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">reflection</span> <span class="pre">patch</span></code></span></a> between <code class="docutils literal notranslate"><span class="pre">dft1</span></code> and <code class="docutils literal notranslate"><span class="pre">bnd1</span></code> to give a plausible geometry.
 In this case, <code class="docutils literal notranslate"><span class="pre">P</span></code> rotates the coordinate system around the <span class="math notranslate nohighlight">\(y\)</span>-axis by 180<span class="math notranslate nohighlight">\(^o\)</span>
 (this leaves the <span class="math notranslate nohighlight">\(y\)</span>-axis invariant). This illustrates why
 an element containing a reflection patch is always needed between normal and reversed elements.</p>
@@ -458,18 +571,18 @@ By “reflected direction” it is meant that the dot product
 <span class="math notranslate nohighlight">\({\bf z}_1 \cdot {\bf z}_2\)</span> is negative where <span class="math notranslate nohighlight">\({\bf z}_1\)</span> is the <span class="math notranslate nohighlight">\(z\)</span>-axis
 vector at the <code class="docutils literal notranslate"><span class="pre">entrance</span></code> face and <span class="math notranslate nohighlight">\({\bf z}_2\)</span> is the <span class="math notranslate nohighlight">\(z\)</span>-axis vector at the <code class="docutils literal notranslate"><span class="pre">exit</span></code> face.
 This condition is equivalent to the condition
-that the associated <span class="math notranslate nohighlight">\(\bf S\)</span> matrix (Eq. <a class="reference internal" href="#equation-wws">(10)</a>) satisfy:</p>
+that the associated <span class="math notranslate nohighlight">\(\bf S\)</span> matrix (Eq. <a class="reference internal" href="#equation-wws">(5)</a>) satisfy:</p>
 <div class="math-wrapper docutils container" id="equation-s330">
 <div class="math notranslate nohighlight" id="equation-s330">
-<span class="eqno">(6)<a class="headerlink" href="#equation-s330" title="Link to this equation">¶</a></span>\[  S(3,3) &lt; 0\]</div>
+<span class="eqno">(1)<a class="headerlink" href="#equation-s330" title="Link to this equation">¶</a></span>\[  S(3,3) &lt; 0\]</div>
 </div>
-<p>Using Eq. <a class="reference internal" href="#equation-wws">(10)</a> gives, after some simple algebra, this condition is equivalent to</p>
+<p>Using Eq. <a class="reference internal" href="#equation-wws">(5)</a> gives, after some simple algebra, this condition is equivalent to</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[  \cos(\text{x_rot}) \, \cos(\text{y_rot}) &lt; 0\]</div>
 </div>
 <p>When there are a series of patches, The transformations of all the patches are concatenated together
-to form an effective <span class="math notranslate nohighlight">\(\bf S\)</span> which can then be used with Eq. <a class="reference internal" href="#equation-s330">(6)</a>.</p>
+to form an effective <span class="math notranslate nohighlight">\(\bf S\)</span> which can then be used with Eq. <a class="reference internal" href="#equation-s330">(1)</a>.</p>
 </section>
 <section id="floor-coordinates">
 <span id="s-floor"></span><h2>Floor Coordinates<a class="headerlink" href="#floor-coordinates" title="Link to this heading">¶</a></h2>
@@ -513,7 +626,7 @@ A positive <span class="math notranslate nohighlight">\(\psi\)</span> forms a ri
 <p>By default, at <span class="math notranslate nohighlight">\(s = 0\)</span>, the branch reference curve’s origin coincides with the <span class="math notranslate nohighlight">\((X, Y, Z)\)</span>
 origin and the <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span>, and <span class="math notranslate nohighlight">\(z\)</span> axes correspond to the
 <span class="math notranslate nohighlight">\(X\)</span>, <span class="math notranslate nohighlight">\(Y\)</span>, and <span class="math notranslate nohighlight">\(Z\)</span> axes respectively. If the lattice has no
-vertical bends (the bend <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref">tilt_ref</span></a> parameter is always zero), the <span class="math notranslate nohighlight">\(y\)</span>–axis
+vertical bends (the bend <a class="reference internal" href="element.html#id3"><span class="std std-ref">tilt_ref</span></a> parameter is always zero), the <span class="math notranslate nohighlight">\(y\)</span>–axis
 will always be in the vertical <span class="math notranslate nohighlight">\(Y\)</span> direction and the <span class="math notranslate nohighlight">\(x\)</span>–axis will lie in the
 horizontal <span class="math notranslate nohighlight">\((X,Z)\)</span> plane.
 In this case, <span class="math notranslate nohighlight">\(\theta\)</span> decreases as one follows the branch reference curve when going through a
@@ -535,7 +648,7 @@ the order <span class="math notranslate nohighlight">\((x, y, z)\)</span>. <span
 orientation angles <span class="math notranslate nohighlight">\(\theta\)</span>, <span class="math notranslate nohighlight">\(\phi\)</span>, and <span class="math notranslate nohighlight">\(\psi\)</span> via the formula</p>
 <div class="math-wrapper docutils container" id="equation-www">
 <div class="math notranslate nohighlight" id="equation-www">
-<span class="eqno">(7)<a class="headerlink" href="#equation-www" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf W} &amp;= {\bf R}_{y}(\theta) \; {\bf R}_{x}(\phi) \; {\bf R}_{z}(\psi) \\
+<span class="eqno">(2)<a class="headerlink" href="#equation-www" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf W} &amp;= {\bf R}_{y}(\theta) \; {\bf R}_{x}(\phi) \; {\bf R}_{z}(\psi) \\
   &amp;= \begin{pmatrix}
     \cos\theta \cos\psi + \sin\theta \sin\phi \sin\psi &amp; 
         -\cos\theta \sin\psi + \sin\theta \sin\phi \cos\psi &amp; 
@@ -549,7 +662,7 @@ orientation angles <span class="math notranslate nohighlight">\(\theta\)</span>,
 <p>where</p>
 <div class="math-wrapper docutils container" id="equation-wtt0t">
 <div class="math notranslate nohighlight" id="equation-wtt0t">
-<span class="eqno">(8)<a class="headerlink" href="#equation-wtt0t" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf R}_{y}(\theta) &amp;= 
+<span class="eqno">(3)<a class="headerlink" href="#equation-wtt0t" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf R}_{y}(\theta) &amp;= 
   \begin{pmatrix}
     \cos\theta  &amp; 0 &amp; \sin\theta \\
     0           &amp; 1 &amp; 0          \\
@@ -573,7 +686,7 @@ orientation angles <span class="math notranslate nohighlight">\(\theta\)</span>,
 axis <span class="math notranslate nohighlight">\(\bf u\)</span> (normalized to 1) and angle of rotation <span class="math notranslate nohighlight">\(\beta\)</span></p>
 <div class="math-wrapper docutils container" id="equation-wctux2">
 <div class="math notranslate nohighlight" id="equation-wctux2">
-<span class="eqno">(9)<a class="headerlink" href="#equation-wctux2" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf W} = \begin{pmatrix}
+<span class="eqno">(4)<a class="headerlink" href="#equation-wctux2" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf W} = \begin{pmatrix}
     \cos \beta + u_x^2 \left(1 - \cos \beta \right) &amp; 
     u_x \, u_y \left(1 - \cos \beta \right) - u_z \sin \beta &amp; 
     u_x \, u_z \left(1 - \cos \beta \right) + u_y \sin \beta \\ 
@@ -592,7 +705,7 @@ axis <span class="math notranslate nohighlight">\(\bf u\)</span> (normalized to 
 by starting at the first element of the lattice and iteratively using the equations</p>
 <div class="math-wrapper docutils container" id="equation-wws">
 <div class="math notranslate nohighlight" id="equation-wws">
-<span class="eqno">(10)<a class="headerlink" href="#equation-wws" title="Link to this equation">¶</a></span>\[\begin{split}\begin{align}
+<span class="eqno">(5)<a class="headerlink" href="#equation-wws" title="Link to this equation">¶</a></span>\[\begin{split}\begin{align}
   {\bf V}_1 &amp;= {\bf W}_0 \; {\bf L} + {\bf V}_0, 
     \\
   {\bf W}_1 &amp;= {\bf W}_0 \; {\bf S}
@@ -608,7 +721,7 @@ For all elements whose reference curve
 through them is a straight line, the corresponding <span class="math notranslate nohighlight">\(\bf L\)</span> and <span class="math notranslate nohighlight">\(\bf S\)</span> are</p>
 <div class="math-wrapper docutils container" id="equation-l00l">
 <div class="math notranslate nohighlight" id="equation-l00l">
-<span class="eqno">(11)<a class="headerlink" href="#equation-l00l" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf L} = 
+<span class="eqno">(6)<a class="headerlink" href="#equation-l00l" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf L} = 
   \begin{pmatrix}
       0 \\ 0 \\ L
   \end{pmatrix},
@@ -633,7 +746,7 @@ the bend radius <code class="docutils literal notranslate"><span class="pre">rho
 for the same four <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> angles. In this case the bend angle is taken to be <span class="math notranslate nohighlight">\(\pi/2\)</span>.</span><a class="headerlink" href="#f-tilt-bend" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
-<p>For a <code class="docutils literal notranslate"><span class="pre">bend</span></code>, the axis of rotation is dependent upon the bend’s <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code></span></a> angle
+<p>For a <code class="docutils literal notranslate"><span class="pre">bend</span></code>, the axis of rotation is dependent upon the bend’s <a class="reference internal" href="element.html#id3"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code></span></a> angle
 as shown in <a class="reference internal" href="#f-tilt-bend"><span class="std std-numref">Fig. 5</span></a>A. The axis of rotation points in the negative <span class="math notranslate nohighlight">\(y_0\)</span>
 direction for <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> = 0 and is offset by the bend radius <code class="docutils literal notranslate"><span class="pre">rho</span></code>. Here <span class="math notranslate nohighlight">\((x_0, y_0, z_0)\)</span>
 are the branch coordinates at the entrance end of the bend with the <span class="math notranslate nohighlight">\(z_0\)</span> axis being directed into
@@ -642,10 +755,10 @@ the page in the figure.  For a non-zero <code class="docutils literal notranslat
 different values of <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> and for a bend angle <code class="docutils literal notranslate"><span class="pre">angle</span></code> of <span class="math notranslate nohighlight">\(\pi/2\)</span>.  Notice that for a
 bend in the horizontal <span class="math notranslate nohighlight">\(X-Z\)</span> plane, a positive bend <code class="docutils literal notranslate"><span class="pre">angle</span></code> will result in a decreasing azimuth
 angle <span class="math notranslate nohighlight">\(\theta\)</span>.</p>
-<p>For a bend, <span class="math notranslate nohighlight">\(\bf S\)</span> is given using Eq. <a class="reference internal" href="#equation-wctux2">(9)</a> with</p>
+<p>For a bend, <span class="math notranslate nohighlight">\(\bf S\)</span> is given using Eq. <a class="reference internal" href="#equation-wctux2">(4)</a> with</p>
 <div class="math-wrapper docutils container" id="equation-ustt">
 <div class="math notranslate nohighlight" id="equation-ustt">
-<span class="eqno">(12)<a class="headerlink" href="#equation-ustt" title="Link to this equation">¶</a></span>\[\begin{split}\begin{align}
+<span class="eqno">(7)<a class="headerlink" href="#equation-ustt" title="Link to this equation">¶</a></span>\[\begin{split}\begin{align}
   {\bf u} &amp;= (\sin\theta_{tr}, -\cos\theta_{tr}, 0) \\
   \beta &amp;= \alpha_b
 \end{align}\end{split}\]</div>
@@ -653,13 +766,13 @@ angle <span class="math notranslate nohighlight">\(\theta\)</span>.</p>
 <p>where <span class="math notranslate nohighlight">\(\theta_{tr}\)</span> is the <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> angle. The <span class="math notranslate nohighlight">\(\bf L\)</span> vector for a <code class="docutils literal notranslate"><span class="pre">bend</span></code> is given by</p>
 <div class="math-wrapper docutils container" id="equation-lrztt">
 <div class="math notranslate nohighlight" id="equation-lrztt">
-<span class="eqno">(13)<a class="headerlink" href="#equation-lrztt" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf L} = {\bf R}_{z}(\theta_{tr}) \; {\bf \tilde L}, \quad
+<span class="eqno">(8)<a class="headerlink" href="#equation-lrztt" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf L} = {\bf R}_{z}(\theta_{tr}) \; {\bf \tilde L}, \quad
   {\bf \tilde L} = 
   \begin{pmatrix}
     \rho (\cos\alpha_b - 1) \\ 0 \\ \rho \, \sin\alpha_b
   \end{pmatrix}\end{split}\]</div>
 </div>
-<p>where <span class="math notranslate nohighlight">\(\alpha_b\)</span> is the bend <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref">angle</span></a> and <span class="math notranslate nohighlight">\(\rho\)</span> being the bend radius
+<p>where <span class="math notranslate nohighlight">\(\alpha_b\)</span> is the bend <a class="reference internal" href="element.html#id3"><span class="std std-ref">angle</span></a> and <span class="math notranslate nohighlight">\(\rho\)</span> being the bend radius
 (<span class="math notranslate nohighlight">\(\rho\)</span>). Notice that since <span class="math notranslate nohighlight">\(\bf u\)</span> is perpendicular to <span class="math notranslate nohighlight">\(z\)</span>, the curvilinear reference coordinate
 system has no “torsion”. Note: The branch coordinate system can be related to a Frenet-Serret coordinate system, but
 the two coordinate systems do not coincide.
@@ -668,7 +781,7 @@ with branch coordinates the radial direction can point anywhere in the <span cla
 <p>Note: An alternative equation for <span class="math notranslate nohighlight">\(\bf S\)</span> for a bend is</p>
 <div class="math-wrapper docutils container" id="equation-srrr">
 <div class="math notranslate nohighlight" id="equation-srrr">
-<span class="eqno">(14)<a class="headerlink" href="#equation-srrr" title="Link to this equation">¶</a></span>\[  {\bf S} = {\bf R}_{z}(\theta_{tr}) \; {\bf R}_{y}(-\alpha_b) \; {\bf R}_{z}(-\theta_{tr})\]</div>
+<span class="eqno">(9)<a class="headerlink" href="#equation-srrr" title="Link to this equation">¶</a></span>\[  {\bf S} = {\bf R}_{z}(\theta_{tr}) \; {\bf R}_{y}(-\alpha_b) \; {\bf R}_{z}(-\theta_{tr})\]</div>
 </div>
 <p>The bend transformation above is so constructed that the transformation is equivalent to rotating
 the branch coordinate system around an axis that is perpendicular to the plane of the bend. This
@@ -688,17 +801,17 @@ A value of <span class="math notranslate nohighlight">\(\theta_{tr} = +\pi/2\)</
 coordinate system defined by <span class="math notranslate nohighlight">\(({\bf V}, {\bf W})\)</span> is</p>
 <div class="math-wrapper docutils container" id="equation-rwrv">
 <div class="math notranslate nohighlight" id="equation-rwrv">
-<span class="eqno">(15)<a class="headerlink" href="#equation-rwrv" title="Link to this equation">¶</a></span>\[  {\bf Q}_{VW} = {\bf W}^{-1} \left( {\bf Q}_g - {\bf V} \right)\]</div>
+<span class="eqno">(10)<a class="headerlink" href="#equation-rwrv" title="Link to this equation">¶</a></span>\[  {\bf Q}_{VW} = {\bf W}^{-1} \left( {\bf Q}_g - {\bf V} \right)\]</div>
 </div>
-<p>This is essentially the inverse of Eq. <a class="reference internal" href="#equation-wws">(10)</a>. That is, position vectors transform inversely to the
+<p>This is essentially the inverse of Eq. <a class="reference internal" href="#equation-wws">(5)</a>. That is, position vectors transform inversely to the
 transformation of the coordinate system.</p>
-<p>Using Eq. <a class="reference internal" href="#equation-rwrv">(15)</a> with Eqs. <a class="reference internal" href="#equation-wws">(10)</a>, the transformation of a
+<p>Using Eq. <a class="reference internal" href="#equation-rwrv">(10)</a> with Eqs. <a class="reference internal" href="#equation-wws">(5)</a>, the transformation of a
 particle’s position <span class="math notranslate nohighlight">\({\bf q} = (x,y,z)\)</span> and momentum <span class="math notranslate nohighlight">\({\bf P} = (P_x, P_y, P_z)\)</span>
 when the coordinate frame is transformed from frame
 <span class="math notranslate nohighlight">\(({\bf V}_{i-1}, {\bf W}_{i-1})\)</span> to frame <span class="math notranslate nohighlight">\(({\bf V}_i, {\bf W}_i)\)</span> is</p>
-<div class="math-wrapper amsmath docutils container" id="equation-47f01d3a-bac7-4408-8ed6-9a9770803881">
-<div class="amsmath math notranslate nohighlight" id="equation-47f01d3a-bac7-4408-8ed6-9a9770803881">
-<span class="eqno">(16)<a class="headerlink" href="#equation-47f01d3a-bac7-4408-8ed6-9a9770803881" title="Permalink to this equation">¶</a></span>\[\begin{align}
+<div class="math-wrapper amsmath docutils container" id="equation-f72d0894-8961-4b62-b71a-b005edcdeaf8">
+<div class="amsmath math notranslate nohighlight" id="equation-f72d0894-8961-4b62-b71a-b005edcdeaf8">
+<span class="eqno">(11)<a class="headerlink" href="#equation-f72d0894-8961-4b62-b71a-b005edcdeaf8" title="Permalink to this equation">¶</a></span>\[\begin{align}
 {\bf q}_i &amp;= {\bf S}_i^{-1} \, \left( {\bf q}_{i-1} - {\bf L}_i \right),
 \label{rwlr} \\
 {\bf P}_i &amp;= {\bf S}_i^{-1} \, {\bf P}_{i-1}
@@ -737,11 +850,11 @@ frame denoted <span class="math notranslate nohighlight">\(E_s\)</span>. Since m
 transformation from <span class="math notranslate nohighlight">\(\Lambda_s\)</span> and <span class="math notranslate nohighlight">\(E_s\)</span> can be accomplished using a three step process:</p>
 <div class="math-wrapper docutils container" id="equation-llee">
 <div class="math notranslate nohighlight" id="equation-llee">
-<span class="eqno">(17)<a class="headerlink" href="#equation-llee" title="Link to this equation">¶</a></span>\[  \Lambda_s \longrightarrow \Lambda_\text{mid} 
+<span class="eqno">(12)<a class="headerlink" href="#equation-llee" title="Link to this equation">¶</a></span>\[  \Lambda_s \longrightarrow \Lambda_\text{mid} 
   \longrightarrow E_\text{mid} \longrightarrow E_s\]</div>
 </div>
 <p>where <span class="math notranslate nohighlight">\(\Lambda_\text{mid}\)</span> and <span class="math notranslate nohighlight">\(E_\text{mid}\)</span> are the branch and element reference frames at the
-center of the element. All transformations use Eqs. <a class="reference internal" href="#equation-wws">(10)</a>.</p>
+center of the element. All transformations use Eqs. <a class="reference internal" href="#equation-wws">(5)</a>.</p>
 <p>The transformations are:</p>
 <ol class="arabic simple">
 <li><p><span class="math notranslate nohighlight">\(\Lambda_s \longrightarrow \Lambda_\text{mid} \)</span>: Translation to the element midpoint.
@@ -750,7 +863,7 @@ For this transformation, <span class="math notranslate nohighlight">\(\bf S\)</s
 </ol>
 <div class="math-wrapper docutils container" id="equation-swww2">
 <div class="math notranslate nohighlight" id="equation-swww2">
-<span class="eqno">(18)<a class="headerlink" href="#equation-swww2" title="Link to this equation">¶</a></span>\[\begin{split}
+<span class="eqno">(13)<a class="headerlink" href="#equation-swww2" title="Link to this equation">¶</a></span>\[\begin{split}
 \bf L =
 \begin{pmatrix}
 \text{x_offset} \\ \text{y_offset} \\ \text{z_offset}
@@ -768,34 +881,34 @@ non-bend misaligned element depends only on the offsets, and is independent of t
 <section id="bend-element-misalignment-transformation">
 <span id="s-bend-mis"></span><h3>Bend Element Misalignment Transformation<a class="headerlink" href="#bend-element-misalignment-transformation" title="Link to this heading">¶</a></h3>
 <p>For <code class="docutils literal notranslate"><span class="pre">Bend</span></code> element positioning, besides the standard <code class="docutils literal notranslate"><span class="pre">BodyShiftP</span></code> parameters, there is the
-<code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> (<span class="math notranslate nohighlight">\(\theta_{tr}\)</span>) parameter (see <a class="reference internal" href="element-parameters.html#id3"><span class="std std-ref">Bend Parameters</span></a>).
+<code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> (<span class="math notranslate nohighlight">\(\theta_{tr}\)</span>) parameter (see <a class="reference internal" href="element.html#id3"><span class="std std-ref">BendParams</span></a>).
 The latter affects both the reference orbit and the bend position.
 Furthermore, <code class="docutils literal notranslate"><span class="pre">ref_tilt</span></code> is calculated with respect to
 the coordinates at the beginning of the bend while, like straight elements, <code class="docutils literal notranslate"><span class="pre">roll</span></code>, offsets, and
 pitches are calculated with respect to the center of the bend. The different reference frame used
 for <code class="docutils literal notranslate"><span class="pre">ref_tilt</span></code> versus everything else means that five transformations are needed to get from the
-branch frame to the element body frame (see Eq. Eq. <a class="reference internal" href="#equation-llee">(17)</a>). Symbolically:</p>
+branch frame to the element body frame (see Eq. Eq. <a class="reference internal" href="#equation-llee">(12)</a>). Symbolically:</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[  \Lambda_s \longrightarrow \Lambda_\text{mid-arc} \longrightarrow
   \Omega_\text{mid-chord} \longrightarrow \Omega_\text{offset} \longrightarrow \Omega_\text{tilt_ref}
   \longrightarrow E_\text{mid-arc} \longrightarrow E_s\]</div>
 </div>
-<p>All transformations use Eqs. <a class="reference internal" href="#equation-wws">(10)</a>.</p>
+<p>All transformations use Eqs. <a class="reference internal" href="#equation-wws">(5)</a>.</p>
 <p>The transformations are:</p>
 <ol class="arabic simple">
 <li><p><span class="math notranslate nohighlight">\(\Lambda_s \longrightarrow \Lambda_\text{mid-arc}\)</span>: Transformation from the starting
 branch coordinate system at a longitudinal position along the bend arc of <span class="math notranslate nohighlight">\(s\)</span> from the upstream
 end of the bend to the branch coordinates at the center point of the arc.
 This is a rotation around the center of curvature of the bend and is given by
-Eq. <a class="reference internal" href="#equation-ustt">(12)</a> and Eq. <a class="reference internal" href="#equation-lrztt">(13)</a> with the substitution <span class="math notranslate nohighlight">\(\alpha_b \rightarrow (L/2 - s)/\rho\)</span>.</p></li>
+Eq. <a class="reference internal" href="#equation-ustt">(7)</a> and Eq. <a class="reference internal" href="#equation-lrztt">(8)</a> with the substitution <span class="math notranslate nohighlight">\(\alpha_b \rightarrow (L/2 - s)/\rho\)</span>.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\Lambda_\text{mid-arc} \longrightarrow \Omega_\text{mid-chord}\)</span>:
 This translates (no rotation) the origin of <span class="math notranslate nohighlight">\(\Lambda_\text{mid-arc}\)</span>
 to the center of the bend chord.
 For this transformation, <span class="math notranslate nohighlight">\(\bf S\)</span> is the unit matrix and
 <span class="math notranslate nohighlight">\({\bf L} = \rho(\cos(\alpha_b/2) - 1) \, (\cos\theta_{tr}, \sin\theta_{tr}, 0)\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(\Omega_\text{mid-chord} \longrightarrow \Omega_\text{offset}\)</span>: Element misalignment.
-This transformation uses Eqs. <a class="reference internal" href="#equation-swww2">(18)</a>.</p></li>
+This transformation uses Eqs. <a class="reference internal" href="#equation-swww2">(13)</a>.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\Omega_\text{offset} \longrightarrow \Omega_\text{tilt_ref}\)</span>: Rotation by <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code>
 to get the coordinate system aligned with body coordinates. This transformation uses
 <span class="math notranslate nohighlight">\({\bf L} = 0\)</span> and <span class="math notranslate nohighlight">\({\bf S} = {\bf R}_z(\theta_{tr})\)</span>.</p></li>
@@ -804,7 +917,7 @@ on the arc. For this transformation, <span class="math notranslate nohighlight">
 <span class="math notranslate nohighlight">\({\bf L} = \rho(\cos(\alpha_b/2) - 1) \, (1, 0, 0)\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\( E_\text{mid-arc} \longrightarrow E_s\)</span>: Transformation along the bend arc to <span class="math notranslate nohighlight">\(E_s\)</span>.
 This is a rotation around the center of curvature of the bend and is given by
-Eq. <a class="reference internal" href="#equation-ustt">(12)</a> and Eq. <a class="reference internal" href="#equation-lrztt">(13)</a> with the substitution <span class="math notranslate nohighlight">\(\alpha_b = (s - L/2)/\rho\)</span>
+Eq. <a class="reference internal" href="#equation-ustt">(7)</a> and Eq. <a class="reference internal" href="#equation-lrztt">(8)</a> with the substitution <span class="math notranslate nohighlight">\(\alpha_b = (s - L/2)/\rho\)</span>
 and <span class="math notranslate nohighlight">\(\theta_{tr} = 0\)</span>.</p></li>
 </ol>
 <p>Notice that with this definition of how elements are misaligned, the position of the center of a
@@ -818,15 +931,23 @@ misaligned element depends only on the offsets and is independent of the rotatio
       <footer>
         
         <div class="related-pages">
-          
-          <a class="prev-page" href="sagancavity-physics.html">
+          <a class="next-page" href="sagancavity-tracking.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">SaganCavity Tracking</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="examples/python/ags-spin-ramp.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">SaganCavity Physics</div>
+                <div class="title">Ramping through a spin-orbit resonance with SciBmad (Python example compatible with SciBmad version &lt; 0.5.0)</div>
                 
               </div>
             </a>
@@ -834,7 +955,7 @@ misaligned element depends only on the offsets and is independent of the rotatio
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2025, SciBmad.jl Contributors
+                Copyright &#169; 2025, SciBmad Contributors
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
