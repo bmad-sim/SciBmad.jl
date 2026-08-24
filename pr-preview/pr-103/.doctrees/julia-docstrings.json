@@ -90,6 +90,12 @@
    "    PatchParams\n\nDefines properties for patches, which change the reference coordinate system.\nRotations are applied in order: `dz_rot`, `dx_rot`, `dy_rot`.\n\n## Properties\n- `dt`: Reference time shift [s]\n- `dx`: New coordinate system offset in the x-direction [m]\n- `dy`: New coordinate system offset in the y-direction [m]\n- `dz`: New coordinate system offset in the z-direction [m]\n- `dx_rot`: Rotation of coordinate system around the initial x-axis [rad]\n- `dy_rot`: Rotation of coordinate system around the initial y-axis [rad]\n- `dz_rot`: Rotation of coordinate system around the initial z-axis [rad]\n\n"
   ]
  ],
+ "PhaseRef": [
+  "Module",
+  [
+   "    @enumx PhaseRef::UInt8 Accelerating BelowTransition AboveTransition\n\nSets what zero `phi0` RF phase means\n- `Accelerating`:      Zero phase is the maximum accelerating phase.\n- `BelowTransition`:   Zero phase is at the stable zero crossing for particles below transition.\n- `AboveTransition`:   Zero phase is at the stable zero crossing for particles above transition.\n"
+  ]
+ ],
  "RFParams": [
   "Type",
   [

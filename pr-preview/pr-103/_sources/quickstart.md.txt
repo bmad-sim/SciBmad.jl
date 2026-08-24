@@ -12,7 +12,7 @@ kernelspec:
 
 # Quickstart Guide
 
-The following is a tour of SciBmad in one block — build a FODO cell, retune it, compute linear, 
+The following is a tour of SciBmad in one block - build a FODO cell, retune it, compute linear, 
 nonlinear, chromatic and spin Twiss parameters, and track particles with spin. 
 The rest of this page walks through it step by step.
 
@@ -25,7 +25,7 @@ ENV["LINES"] = 30
 
 ## A Simple Copy-Paste Example
 
-```{code-cell} julia
+```julia
 using SciBmad
 
 # Define lattice elements using @elements

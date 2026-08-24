@@ -14,7 +14,7 @@
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=53336f2f" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0d90b94b" />
     
     
 
@@ -200,6 +200,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">Table of Contents</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
@@ -340,12 +341,9 @@
 </li>
 </ul>
 
-</div><div class="sidebar-tree">
-  <ul>
-    <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference →</a></li>
-    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
-  </ul>
-</div></div>
+</div>
+</div>
+
       </div>
       
     </div>
@@ -595,7 +593,7 @@ They are all documented below.</p>
 <section id="parameter-groups">
 <span id="pgs"></span><h2>Parameter Groups<a class="headerlink" href="#parameter-groups" title="Link to this heading">¶</a></h2>
 <section id="alignmentparams">
-<h3>AlignmentParams<a class="headerlink" href="#alignmentparams" title="Link to this heading">¶</a></h3>
+<span id="id1"></span><span id="alignment-params"></span><h3>AlignmentParams<a class="headerlink" href="#alignmentparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">AlignmentParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">AlignmentParams</span>
@@ -613,13 +611,9 @@ Rotations are applied in order: <code class="docutils literal notranslate"><span
 <li><p><code class="docutils literal notranslate"><span class="pre">tilt</span></code>: Rotation around the z-axis [rad]</p></li>
 </ul>
 </div>
-<section id="alignment-parameters">
-<span id="id1"></span><span id="alignment-params"></span><h4>Alignment Parameters<a class="headerlink" href="#alignment-parameters" title="Link to this heading">¶</a></h4>
-<p>In construction…</p>
-</section>
 </section>
 <section id="apertureparams">
-<h3>ApertureParams<a class="headerlink" href="#apertureparams" title="Link to this heading">¶</a></h3>
+<span id="id2"></span><span id="aperture-params"></span><h3>ApertureParams<a class="headerlink" href="#apertureparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">ApertureParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ApertureParams</span>
@@ -638,13 +632,9 @@ Rotations are applied in order: <code class="docutils literal notranslate"><span
 <li><p><code class="docutils literal notranslate"><span class="pre">aperture_active</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if particles are collimated by aperture, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
 </ul>
 </div>
-<section id="aperture-parameters">
-<span id="id2"></span><span id="aperture-params"></span><h4>Aperture Parameters<a class="headerlink" href="#aperture-parameters" title="Link to this heading">¶</a></h4>
-<p>In construction…</p>
-</section>
 </section>
 <section id="bmultipoleparams">
-<h3>BMultipoleParams<a class="headerlink" href="#bmultipoleparams" title="Link to this heading">¶</a></h3>
+<span id="multipole-solenoid-params"></span><span id="multipole-sol-params"></span><h3>BMultipoleParams<a class="headerlink" href="#bmultipoleparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">BMultipoleParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BMultipoleParams</span>
@@ -678,10 +668,6 @@ for a given multipole order are normalized and integrated. E.g.</p>
 </div>
 </div>
 </div>
-<section id="multipole-and-solenoid-parameters">
-<span id="multipole-solenoid-params"></span><span id="multipole-sol-params"></span><h4>Multipole and Solenoid Parameters<a class="headerlink" href="#multipole-and-solenoid-parameters" title="Link to this heading">¶</a></h4>
-<p>In construction…</p>
-</section>
 </section>
 <section id="beamlineparams">
 <h3>BeamlineParams<a class="headerlink" href="#beamlineparams" title="Link to this heading">¶</a></h3>
@@ -705,7 +691,7 @@ for a given multipole order are normalized and integrated. E.g.</p>
 </div>
 </section>
 <section id="bendparams">
-<h3>BendParams<a class="headerlink" href="#bendparams" title="Link to this heading">¶</a></h3>
+<span id="id3"></span><span id="bend-params"></span><h3>BendParams<a class="headerlink" href="#bendparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">BendParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BendParams</span>
@@ -724,10 +710,6 @@ element. Does not specify any magnetic field.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">edge2_int</span></code>: Pole face field integral at the exit [T * m]</p></li>
 </ul>
 </div>
-<section id="bend-parameters">
-<span id="id3"></span><span id="bend-params"></span><h4>Bend Parameters<a class="headerlink" href="#bend-parameters" title="Link to this heading">¶</a></h4>
-<p>In construction…</p>
-</section>
 </section>
 <section id="fourpotentialparams">
 <h3>FourPotentialParams<a class="headerlink" href="#fourpotentialparams" title="Link to this heading">¶</a></h3>
@@ -839,7 +821,7 @@ or storing extra information about a given element.</p>
 </div>
 </section>
 <section id="patchparams">
-<h3>PatchParams<a class="headerlink" href="#patchparams" title="Link to this heading">¶</a></h3>
+<span id="id4"></span><span id="patch-params"></span><h3>PatchParams<a class="headerlink" href="#patchparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">PatchParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">PatchParams</span>
@@ -858,13 +840,9 @@ Rotations are applied in order: <code class="docutils literal notranslate"><span
 <li><p><code class="docutils literal notranslate"><span class="pre">dz_rot</span></code>: Rotation of coordinate system around the initial z-axis [rad]</p></li>
 </ul>
 </div>
-<section id="patch-parameters">
-<span id="id4"></span><span id="patch-params"></span><h4>Patch Parameters<a class="headerlink" href="#patch-parameters" title="Link to this heading">¶</a></h4>
-<p>In construction…</p>
-</section>
 </section>
 <section id="rfparams">
-<h3>RFParams<a class="headerlink" href="#rfparams" title="Link to this heading">¶</a></h3>
+<span id="id5"></span><span id="rf-params"></span><h3>RFParams<a class="headerlink" href="#rfparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">RFParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">RFParams</span>
@@ -885,47 +863,19 @@ entire containing <code class="docutils literal notranslate"><span class="pre">B
 <li><p><code class="docutils literal notranslate"><span class="pre">is_crabcavity</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if this is a crab cavity, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise</p></li>
 </ul>
 </div>
-<section id="rf-parameter-group">
-<span id="id5"></span><span id="rf-params"></span><h4>RF Parameter Group<a class="headerlink" href="#rf-parameter-group" title="Link to this heading">¶</a></h4>
-<p>The <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> parameter group defines values that characterize an oscillating electromagnetic field.
-User settable RF parameters are:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">voltage</span><span class="w">        </span><span class="o">::</span><span class="kt">T</span><span class="w">                 </span><span class="c"># Voltage in Volts</span>
-<span class="n">rf_frequency</span><span class="w">   </span><span class="o">::</span><span class="kt">T</span><span class="w">                 </span><span class="c"># RF frequency in Hz</span>
-<span class="n">harmon</span><span class="w">         </span><span class="o">::</span><span class="kt">T</span><span class="w">                 </span><span class="c"># Harmonic number</span>
-<span class="n">phi0</span><span class="w">           </span><span class="o">::</span><span class="kt">T</span><span class="w">                 </span><span class="c"># RF phase relative to the zero phase.</span>
-<span class="n">zero_phase</span><span class="w">     </span><span class="o">::</span><span class="kt">PhaseReference</span><span class="o">.</span><span class="n">T</span><span class="w">  </span><span class="c"># RF phase at phi0 = 0.</span>
-<span class="n">traveling_wave</span><span class="w"> </span><span class="o">::</span><span class="kt">Bool</span><span class="w">              </span><span class="c"># Traveling wave or standing wave?</span>
-<span class="n">is_crabcavity</span><span class="w">  </span><span class="o">::</span><span class="kt">Bool</span><span class="w">              </span><span class="c"># Is this a crab cavity?</span>
+<p>The <code class="docutils literal notranslate"><span class="pre">zero_phase</span></code> parameter takes a <code class="docutils literal notranslate"><span class="pre">PhaseRef</span></code>:</p>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">PhaseRef</span></code> — <em>Module</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@enumx</span><span class="w"> </span><span class="n">PhaseRef</span><span class="o">::</span><span class="kt">UInt8</span><span class="w"> </span><span class="n">Accelerating</span><span class="w"> </span><span class="n">BelowTransition</span><span class="w"> </span><span class="n">AboveTransition</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">T</span></code> is some type like a float or Taylor series. The <code class="docutils literal notranslate"><span class="pre">zero_phase</span></code> enum sets what the
-RF phase is at zero <code class="docutils literal notranslate"><span class="pre">phi0</span></code>. Possible settings for <code class="docutils literal notranslate"><span class="pre">zero_phase</span></code>
-are:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">PhaseReference</span><span class="o">.</span><span class="n">Accelerating</span><span class="w">      </span><span class="c"># phi0 = 0 is the maximum accelerating phase.</span>
-<span class="n">PhaseReference</span><span class="o">.</span><span class="n">BelowTransition</span><span class="w">   </span><span class="c"># phi0 = 0 is at the stable zero crossing for particles below transition.</span>
-<span class="n">PhaseReference</span><span class="o">.</span><span class="n">AboveTransition</span><span class="w">   </span><span class="c"># phi0 = 0 is at the stable zero crossing for particles above transition.</span>
-</pre></div>
+<p>Sets what zero <code class="docutils literal notranslate"><span class="pre">phi0</span></code> RF phase means</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Accelerating</span></code>:      Zero phase is the maximum accelerating phase.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BelowTransition</span></code>:   Zero phase is at the stable zero crossing for particles below transition.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AboveTransition</span></code>:   Zero phase is at the stable zero crossing for particles above transition.</p></li>
+</ul>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> parameter group structure has the following components:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">mutable</span><span class="w"> </span><span class="k">struct</span> <span class="kt">RFParams</span><span class="p">{</span><span class="kt">T</span><span class="p">}</span><span class="w"> </span><span class="o">&lt;:</span><span class="w"> </span><span class="kt">AbstractParams</span>
-<span class="w">  </span><span class="n">rate</span><span class="w">               </span><span class="o">::</span><span class="kt">T</span><span class="w">                </span><span class="c"># RF frequency in Hz or Harmonic number</span>
-<span class="w">  </span><span class="n">voltage</span><span class="w">            </span><span class="o">::</span><span class="kt">T</span><span class="w">                </span><span class="c"># Voltage in Volts</span>
-<span class="w">  </span><span class="n">phi0</span><span class="w">               </span><span class="o">::</span><span class="kt">T</span><span class="w">                </span><span class="c"># Phase at reference energy</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">rate_meaning</span><span class="w"> </span><span class="o">::</span><span class="kt">RateMeaning</span><span class="o">.</span><span class="n">T</span><span class="w">    </span><span class="c"># false = frequency in Hz, true = harmonic number, -1 = Not set</span>
-<span class="w">  </span><span class="n">zero_phase</span><span class="w">         </span><span class="o">::</span><span class="kt">PhaseReference</span><span class="o">.</span><span class="n">T</span><span class="w"> </span><span class="c"># Determines the RF phase at phi0 = 0</span>
-<span class="w">  </span><span class="n">traveling_wave</span><span class="w">     </span><span class="o">::</span><span class="kt">Bool</span><span class="w">             </span><span class="c"># Traveling wave or standing wave cavity?</span>
-<span class="w">  </span><span class="n">is_crabcavity</span><span class="w">      </span><span class="o">::</span><span class="kt">Bool</span><span class="w">             </span><span class="c"># Is this a crab cavity?</span>
-<span class="k">end</span>
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">rate_meaning</span></code> parameter records whether <code class="docutils literal notranslate"><span class="pre">rf_frequency</span></code> or <code class="docutils literal notranslate"><span class="pre">harmon</span></code> has been set by the User.
-Possible enum settings for <code class="docutils literal notranslate"><span class="pre">rate_meaning</span></code> are:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">RateMeaning</span><span class="o">.</span><span class="n">RFFrequency</span><span class="w">       </span><span class="c"># rf_frequency has been set.</span>
-<span class="n">RateMeaning</span><span class="o">.</span><span class="n">Harmon</span><span class="w">            </span><span class="c"># harmon has been set.</span>
-<span class="n">RateMeaning</span><span class="o">.</span><span class="n">Indeterminate</span><span class="w">     </span><span class="c"># Neither rf_frequency nor harmon has been set.</span>
-</pre></div>
-</div>
-</section>
 </section>
 <section id="universalparams">
 <h3>UniversalParams<a class="headerlink" href="#universalparams" title="Link to this heading">¶</a></h3>
@@ -1005,35 +955,17 @@ Possible enum settings for <code class="docutils literal notranslate"><span clas
 <li><a class="reference internal" href="#">Defining a LineElement</a><ul>
 <li><a class="reference internal" href="#parameters">Parameters</a></li>
 <li><a class="reference internal" href="#parameter-groups">Parameter Groups</a><ul>
-<li><a class="reference internal" href="#alignmentparams">AlignmentParams</a><ul>
-<li><a class="reference internal" href="#alignment-parameters">Alignment Parameters</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#apertureparams">ApertureParams</a><ul>
-<li><a class="reference internal" href="#aperture-parameters">Aperture Parameters</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#bmultipoleparams">BMultipoleParams</a><ul>
-<li><a class="reference internal" href="#multipole-and-solenoid-parameters">Multipole and Solenoid Parameters</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#alignmentparams">AlignmentParams</a></li>
+<li><a class="reference internal" href="#apertureparams">ApertureParams</a></li>
+<li><a class="reference internal" href="#bmultipoleparams">BMultipoleParams</a></li>
 <li><a class="reference internal" href="#beamlineparams">BeamlineParams</a></li>
-<li><a class="reference internal" href="#bendparams">BendParams</a><ul>
-<li><a class="reference internal" href="#bend-parameters">Bend Parameters</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#bendparams">BendParams</a></li>
 <li><a class="reference internal" href="#fourpotentialparams">FourPotentialParams</a></li>
 <li><a class="reference internal" href="#initialbeamlineparams">InitialBeamlineParams</a></li>
 <li><a class="reference internal" href="#mapparams">MapParams</a></li>
 <li><a class="reference internal" href="#metaparams">MetaParams</a></li>
-<li><a class="reference internal" href="#patchparams">PatchParams</a><ul>
-<li><a class="reference internal" href="#patch-parameters">Patch Parameters</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#rfparams">RFParams</a><ul>
-<li><a class="reference internal" href="#rf-parameter-group">RF Parameter Group</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#patchparams">PatchParams</a></li>
+<li><a class="reference internal" href="#rfparams">RFParams</a></li>
 <li><a class="reference internal" href="#universalparams">UniversalParams</a></li>
 </ul>
 </li>

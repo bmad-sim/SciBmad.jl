@@ -14,7 +14,7 @@
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=53336f2f" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0d90b94b" />
     
     
 
@@ -200,6 +200,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">Table of Contents</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
@@ -340,12 +341,9 @@
 </li>
 </ul>
 
-</div><div class="sidebar-tree">
-  <ul>
-    <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference →</a></li>
-    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
-  </ul>
-</div></div>
+</div>
+</div>
+
       </div>
       
     </div>
@@ -385,13 +383,11 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="quickstart-guide">
 <h1>Quickstart Guide<a class="headerlink" href="#quickstart-guide" title="Link to this heading">¶</a></h1>
-<p>The following is a tour of SciBmad in one block — build a FODO cell, retune it, compute linear,
+<p>The following is a tour of SciBmad in one block - build a FODO cell, retune it, compute linear,
 nonlinear, chromatic and spin Twiss parameters, and track particles with spin.
 The rest of this page walks through it step by step.</p>
 <section id="a-simple-copy-paste-example">
 <h2>A Simple Copy-Paste Example<a class="headerlink" href="#a-simple-copy-paste-example" title="Link to this heading">¶</a></h2>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">SciBmad</span>
 
 <span class="c"># Define lattice elements using @elements</span>
@@ -478,39 +474,6 @@ The rest of this page walks through it step by step.</p>
 <span class="n">n_particles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
 <span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">rand</span><span class="p">(</span><span class="n">n_particles</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span><span class="o">.*</span><span class="mf">1e-5</span><span class="p">,</span><span class="w"> </span><span class="n">n_turns</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">spin</span><span class="o">=</span><span class="nb">true</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
- 0.05401330001000886 - 0.008643791481511048 δ
-AmplitudeDependentValue:
- -0.3094612779434054 - 0.3094612776236826 δ - 7.680774092601614e-10 J₁ + 28.127501689597292 J₂ - 4.385295785557206e-10 δ²
-</pre></div>
-</div>
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TrackingResult{Matrix{UInt8}, Array{Float64, 3}, Array{Float64, 3}}:
-config:
- n_turns                         = 10
- save_every_n_turns              = 1
- scalar_params                   = false
- rf_on                           = true
- ramp_particle_energy_without_rf = false
- ramp_update_each_particle       = false
- verbose                         = false
- groupsize                       = 0
- use_cpu_multithreading          = false
- use_KA                          = false
- use_explicit_SIMD               = true
-
-elapsed_time = 0.001405873 seconds
-
-state[1:10, 1:11]:	States indexable as		 state[particle, turn+1]
-v[1:10, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
-q[1:10, 1:4, 1:11]:	Quaternions indexable as	 q[particle, quat_coordinate, turn+1]
-
-bunch:	Bunch at the end of tracking
-</pre></div>
-</div>
-</div>
 </div>
 </section>
 <section id="step-by-step-description">
@@ -995,7 +958,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.001228976 seconds
+elapsed_time = 0.001512742 seconds
 
 state[1:10, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:10, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]

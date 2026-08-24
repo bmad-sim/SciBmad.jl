@@ -14,7 +14,7 @@
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=53336f2f" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0d90b94b" />
     
     
 
@@ -200,6 +200,7 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">Table of Contents</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
@@ -340,12 +341,9 @@
 </li>
 </ul>
 
-</div><div class="sidebar-tree">
-  <ul>
-    <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference →</a></li>
-    <li class="toctree-l1"><a class="reference external" href="https://bmad-sim.github.io/Beamlines.jl/stable/">Beamlines.jl Docs →</a></li>
-  </ul>
-</div></div>
+</div>
+</div>
+
       </div>
       
     </div>
@@ -811,9 +809,9 @@ transformation of the coordinate system.</p>
 particle’s position <span class="math notranslate nohighlight">\({\bf q} = (x,y,z)\)</span> and momentum <span class="math notranslate nohighlight">\({\bf P} = (P_x, P_y, P_z)\)</span>
 when the coordinate frame is transformed from frame
 <span class="math notranslate nohighlight">\(({\bf V}_{i-1}, {\bf W}_{i-1})\)</span> to frame <span class="math notranslate nohighlight">\(({\bf V}_i, {\bf W}_i)\)</span> is</p>
-<div class="math-wrapper amsmath docutils container" id="equation-a3a63a95-a3c5-4137-8ec5-a8763177e59c">
-<div class="amsmath math notranslate nohighlight" id="equation-a3a63a95-a3c5-4137-8ec5-a8763177e59c">
-<span class="eqno">(11)<a class="headerlink" href="#equation-a3a63a95-a3c5-4137-8ec5-a8763177e59c" title="Permalink to this equation">¶</a></span>\[\begin{align}
+<div class="math-wrapper amsmath docutils container" id="equation-b28829b6-86a9-4161-a1d7-fa2f38071d25">
+<div class="amsmath math notranslate nohighlight" id="equation-b28829b6-86a9-4161-a1d7-fa2f38071d25">
+<span class="eqno">(11)<a class="headerlink" href="#equation-b28829b6-86a9-4161-a1d7-fa2f38071d25" title="Permalink to this equation">¶</a></span>\[\begin{align}
 {\bf q}_i &amp;= {\bf S}_i^{-1} \, \left( {\bf q}_{i-1} - {\bf L}_i \right),
 \label{rwlr} \\
 {\bf P}_i &amp;= {\bf S}_i^{-1} \, {\bf P}_{i-1}
@@ -883,7 +881,7 @@ non-bend misaligned element depends only on the offsets, and is independent of t
 <section id="bend-element-misalignment-transformation">
 <span id="s-bend-mis"></span><h3>Bend Element Misalignment Transformation<a class="headerlink" href="#bend-element-misalignment-transformation" title="Link to this heading">¶</a></h3>
 <p>For <code class="docutils literal notranslate"><span class="pre">Bend</span></code> element positioning, besides the standard <code class="docutils literal notranslate"><span class="pre">BodyShiftP</span></code> parameters, there is the
-<code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> (<span class="math notranslate nohighlight">\(\theta_{tr}\)</span>) parameter (see <a class="reference internal" href="element.html#id3"><span class="std std-ref">Bend Parameters</span></a>).
+<code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> (<span class="math notranslate nohighlight">\(\theta_{tr}\)</span>) parameter (see <a class="reference internal" href="element.html#id3"><span class="std std-ref">BendParams</span></a>).
 The latter affects both the reference orbit and the bend position.
 Furthermore, <code class="docutils literal notranslate"><span class="pre">ref_tilt</span></code> is calculated with respect to
 the coordinates at the beginning of the bend while, like straight elements, <code class="docutils literal notranslate"><span class="pre">roll</span></code>, offsets, and
