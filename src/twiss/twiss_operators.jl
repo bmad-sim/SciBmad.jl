@@ -198,7 +198,7 @@ end
   end
 
   if haskey(cache.matrix, osym)
-    Bk = cache.map[osym]
+    Bk = cache.matrix[osym]
     nhv = nhvars(twi)
     Ek = zeros(eltype(Bk), nhv, nhv)
     nd = div(nhv, 2)
