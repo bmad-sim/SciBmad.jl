@@ -87,10 +87,10 @@ function dynamic_aperture(
     end
 
     # Now compute sigmas at first element, just first order:
-    sig_x = t.E1[1][1,1]*emit_1 + t.E2[1][1,1]*emit_2 
-    sig_y = t.E1[1][3,3]*emit_1 + t.E2[1][3,3]*emit_2 
-    sig_x += (t.dx[1]*sig_pz)^2
-    sig_y += (t.dy[1]*sig_pz)^2
+    sig_x = tw.E1[1][1,1]*emit_1 + tw.E2[1][1,1]*emit_2 
+    sig_y = tw.E1[1][3,3]*emit_1 + tw.E2[1][3,3]*emit_2 
+    sig_x += (tw.dx[1]*sig_pz)^2
+    sig_y += (tw.dy[1]*sig_pz)^2
     sig_x = sqrt(sig_x)
     sig_y = sqrt(sig_y)
 
@@ -105,10 +105,10 @@ function dynamic_aperture(
       )
     end
   else
-    t = twiss(bl, at=[1], cols=["E1", "E2", "E3"])
+    tw = twiss(bl, at=[1], cols=["E1", "E2", "E3"])
     # Now compute sigmas at first element, just first order:
-    sig_x = t.E1[1][1,1]*emit_1 + t.E2[1][1,1]*emit_2 + t.E3[1][1,1]*emit_3
-    sig_y = t.E1[1][3,3]*emit_1 + t.E2[1][3,3]*emit_2 + t.E3[1][3,3]*emit_3
+    sig_x = tw.E1[1][1,1]*emit_1 + tw.E2[1][1,1]*emit_2 + tw.E3[1][1,1]*emit_3
+    sig_y = tw.E1[1][3,3]*emit_1 + tw.E2[1][3,3]*emit_2 + tw.E3[1][3,3]*emit_3
     sig_x = sqrt(sig_x)
     sig_y = sqrt(sig_y)
     sol = find_closed_orbit(bl)
