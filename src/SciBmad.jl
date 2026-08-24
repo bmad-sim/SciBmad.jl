@@ -44,7 +44,8 @@ export  twiss,
         AmplitudeDependentValue,
         grad,
         val,
-        jac
+        jac,
+        phase_trombone!
         
 include("closed_orbit.jl") 
 include("track.jl")
@@ -57,6 +58,7 @@ include("twiss/twiss_map.jl")
 include("dynamic_aperture.jl")
 include("experimental/Experimental.jl")
 include("utils.jl")
+include("trombone.jl")
 
 # Only precompile when not processing code coverage
 if Base.JLOptions().code_coverage == 0
