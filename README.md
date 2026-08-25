@@ -16,7 +16,7 @@ SciBmad is a new open source, high-performance, CPU/GPU compatible, polymorphic,
 
 SciBmad development is progressing rapidly. Features included in the current state of the project (0.5.0) and currently being planned for later releases are:
 
-### Current Release 0.5.0
+### Current Release 0.5
 - CPU/GPU parallelized 6D symplectic particle tracking including spin and radiation
 - Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything
 - Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
