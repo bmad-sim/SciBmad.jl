@@ -299,7 +299,7 @@ and the amplitude-dependent spin tune:
 =#
 tw = twiss(fodo, cols=["nx", "ny", "nz"], spin=true,
       as_taylor_series=true, order=2)
-n = [tw.nx, tw.ny, tw.nz] # ISF
+n = [tw.nx[1], tw.ny[1], tw.nz[1]] # ISF at first element
 ```
 
 With `as_taylor_series=true`, the components of the ISF are returned as full Taylor series in
