@@ -68,10 +68,7 @@ function dynamic_aperture(
   elseif !delta_dependent_orbits && sig_pz != 0
     error("delta_dependent_orbits = true, but a nonzero emit_3 was provided. Instead specify sig_pz")
   end
-
-  if !issorted(deltas)
-    deltas = sort(deltas)
-  end
+  
   n_deltas = length(deltas)
   co = zeros(n_deltas, 6)
   co[:,6] .= deltas
