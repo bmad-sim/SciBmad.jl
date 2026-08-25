@@ -3,12 +3,12 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Time-Dependent Parameters and Ramping" href="timedependent.html"><link rel="prev" title="Tracking Methods" href="tracking-methods.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Track" href="track.html"><link rel="prev" title="Deferred Expressions and Contexts" href="defexpr.html">
         <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
         <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>Collective Effects - SciBmad Documentation</title>
+        <title>Definition Tools - SciBmad Documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -177,7 +177,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
       </label>
     </div>
@@ -219,7 +219,7 @@
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
@@ -236,13 +236,13 @@
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="def-tools.html#phase-trombone">Phase Trombone</a></li>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="#phase-trombone">Phase Trombone</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
@@ -253,7 +253,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Collective Effects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
@@ -363,12 +363,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/collective.md?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/def-tools.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/collective.md" rel="edit" title="Edit this page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/def-tools.md" rel="edit" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -380,14 +380,36 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="collective-effects">
-<h1>Collective Effects<a class="headerlink" href="#collective-effects" title="Link to this heading">¶</a></h1>
-<p>(Documentation in development)</p>
+          <section class="tex2jax_ignore mathjax_ignore" id="definition-tools">
+<span id="def-tools"></span><h1>Definition Tools<a class="headerlink" href="#definition-tools" title="Link to this heading">¶</a></h1>
+<section id="phase-trombone">
+<h2>Phase Trombone<a class="headerlink" href="#phase-trombone" title="Link to this heading">¶</a></h2>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">phase_trombone!</span></code> — <em>Function</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">phase_trombone!</span><span class="p">(</span><span class="n">ele</span><span class="o">::</span><span class="kt">LineElement</span><span class="p">;</span><span class="w"> </span><span class="n">phi1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">phi2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">phi3</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Makes <code class="docutils literal notranslate"><span class="pre">ele</span></code> into a phase trombone - a matrix expanded around the <em>current</em> closed orbit
+(at the time of calling this function) which applies a linear rotation in normal form
+coordinates (which are also computed at the time of calling this function). Useful for
+creating zero-length elements where the phase advance can be tuned without impacting the
+Twiss parameters/linear optics. The <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> must be in a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> in order to
+use this function.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> property <code class="docutils literal notranslate"><span class="pre">transport_map</span></code> is filled with the corresponding phase trombone
+transport map, and the property <code class="docutils literal notranslate"><span class="pre">transport_map_params</span></code> is set to <code class="docutils literal notranslate"><span class="pre">(phi1,</span> <span class="pre">phi2,</span> <span class="pre">phi3)</span></code>.</p>
+<p>Spin tracking is NOT currently compatible with phase trombones.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the closed orbit and/or Twiss parameters at <code class="docutils literal notranslate"><span class="pre">ele</span></code> are changed <em>after</em> calling
+this function, then the phase trombone map is no longer valid.</p>
+</div>
+</div>
+</section>
 </section>
 
         </article>
@@ -395,23 +417,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="timedependent.html">
+          <a class="next-page" href="track.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Time-Dependent Parameters and Ramping</div>
+                <div class="title">Track</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="tracking-methods.html">
+          <a class="prev-page" href="defexpr.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Tracking Methods</div>
+                <div class="title">Deferred Expressions and Contexts</div>
                 
               </div>
             </a>
@@ -433,8 +455,27 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Definition Tools</a><ul>
+<li><a class="reference internal" href="#phase-trombone">Phase Trombone</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

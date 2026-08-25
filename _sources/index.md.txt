@@ -1,5 +1,5 @@
 # SciBmad
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bmad-sim.github.io/SciBmad.jl)
+Click here for the documentation and installation instructions: [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bmad-sim.github.io/SciBmad.jl)
 <!---
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bmad-sim.github.io/SciBmad.jl/dev/)
 [![Build Status](https://github.com/bmad-sim/SciBmad.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bmad-sim/SciBmad.jl/actions/workflows/CI.yml?query=branch%3Amain)
@@ -16,7 +16,7 @@ SciBmad is a new open source, high-performance, CPU/GPU compatible, polymorphic,
 
 SciBmad development is progressing rapidly. Features included in the current state of the project (0.5.0) and currently being planned for later releases are:
 
-### Current Release 0.5.0
+### Current Release 0.5
 - CPU/GPU parallelized 6D symplectic particle tracking including spin and radiation
 - Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything
 - Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
@@ -119,6 +119,7 @@ Quickstart <quickstart>
 element
 beamline
 defexpr
+def-tools
 ```
 
 ```{toctree}
