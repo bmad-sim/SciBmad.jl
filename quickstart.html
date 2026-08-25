@@ -514,6 +514,11 @@ be set independently using <code class="docutils literal notranslate"><span clas
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU name (from build time).
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:71
+</pre></div>
+</div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Beamline:
  species_ref = electron
  pc_ref = 1.8e10
@@ -907,7 +912,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.001460452 seconds
+elapsed_time = 0.001394393 seconds
 
 state[1:10, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:10, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
