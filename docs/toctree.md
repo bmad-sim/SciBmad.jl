@@ -30,7 +30,7 @@ Quickstart <quickstart>
 element
 beamline
 defexpr
-ele-tools
+def-tools
 ```
 
 ```{toctree}

@@ -10,7 +10,8 @@ kernelspec:
   name: julia
 ---
 
-(ele.tools)=
-# LineElement Definition Tools
+(def.tools)=
+# Definition Tools
+## Phase Trombone
 ```{docstring} phase_trombone!
 ```
