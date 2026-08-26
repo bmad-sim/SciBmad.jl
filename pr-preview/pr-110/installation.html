@@ -414,11 +414,11 @@ they become available. <strong>We highly recommend using the long term support (
 <h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading">¶</a></h2>
 <p>Julia has various plotting packages you may add as well, including
 <a class="reference external" href="https://docs.makie.org/stable/">Makie</a> and <a class="reference external" href="https://docs.juliaplots.org/stable/">Plots</a>.
-Our personal preference is <code class="docutils literal notranslate"><span class="pre">Makie</span></code>.</p>
+Our personal preference is Makie.</p>
 </section>
 <section id="julia-jupyter-kernel">
 <h2>Julia Jupyter Kernel<a class="headerlink" href="#julia-jupyter-kernel" title="Link to this heading">¶</a></h2>
-<p>A Jupyter kernel for Julia can be installed using the <a class="reference external" href="https://ijulia.org/stable/"><code class="docutils literal notranslate"><span class="pre">IJulia</span></code></a> package. We recommend running this kernel installation command in Julia, which will enable multithreading and automatically use the global project environment:</p>
+<p>A Jupyter kernel for Julia can be installed using the <a class="reference external" href="https://ijulia.org/stable/">IJulia</a> package. We recommend running this kernel installation command in Julia, which will enable multithreading and automatically use the global project environment:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">"IJulia"</span><span class="p">)</span>
 <span class="k">using</span><span class="w"> </span><span class="n">IJulia</span>
 <span class="n">IJulia</span><span class="o">.</span><span class="n">installkernel</span><span class="p">(</span><span class="s">"Julia Global"</span><span class="p">,</span><span class="w"> </span><span class="n">env</span><span class="o">=</span><span class="kt">Dict</span><span class="p">(</span><span class="s">"JULIA_NUM_THREADS"</span><span class="o">=&gt;</span><span class="s">"auto"</span><span class="p">),</span><span class="w"> </span><span class="s">"--project=</span><span class="si">$</span><span class="p">(</span><span class="n">Base</span><span class="o">.</span><span class="n">active_project</span><span class="p">())</span><span class="s">"</span><span class="p">)</span>
