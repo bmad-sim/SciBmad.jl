@@ -1,4 +1,7 @@
 # Installation
+:::{note}
+SciBmad runs on Windows, macOS, and Linux.
+:::
 
 SciBmad is written in the [Julia programming language](https://julialang.org/), and we
 generally recommend using Julia for the best experience. If you are new to Julia, these
@@ -8,26 +11,23 @@ resources might be helpful:
 - [Julia wikibook](https://en.wikibooks.org/wiki/Introducing_Julia)
 - [ThinkJulia (for those new to programming)](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html)
 
-## Installing Julia
+## Install Julia
 
-To install Julia, follow the platform-dependent
+First, Julia must be installed. To do so, follow the platform-dependent
 [installation instructions here](https://github.com/JuliaLang/juliaup). `juliaup` is a
 Julia version manager that makes it easy to install and use new stable Julia versions as
-they become available.
+they become available. **We highly recommend using the long term support (LTS) channel of Julia with SciBmad. This can be set in the terminal after installing `juliaup` using the command:**
 
-## Installing SciBmad
+```
+juliaup default lts
+```
 
-After installation, the `SciBmad` package can be added in Julia by running:
-
+After the Julia installation, run `julia` and add the `SciBmad` package with the command:
 ```julia
 import Pkg; Pkg.add("SciBmad")
 ```
 
 This may take around 10-20 minutes to compile and install.
-
-:::{note}
-SciBmad runs on Windows, macOS, and Linux.
-:::
 
 ## Plotting
 
@@ -43,6 +43,10 @@ from Python using the [`juliacall` package](https://juliapy.github.io/PythonCall
 
 The [Examples](examples-index.md) section includes notebooks written in both Julia and
 Python.
+
+:::{warning}
+The Python interface to SciBmad is early in development.
+:::
 
 ## Next steps
 
