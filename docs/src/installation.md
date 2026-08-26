@@ -31,7 +31,18 @@ This may take around 10-20 minutes to compile and install.
 
 Julia has various plotting packages you may add as well, including
 [Makie](https://docs.makie.org/stable/) and [Plots](https://docs.juliaplots.org/stable/).
-Our personal preference is `Makie`.
+Our personal preference is Makie.
+
+## Julia Jupyter Kernel
+
+A Jupyter kernel for Julia can be installed using the [IJulia](https://ijulia.org/stable/) package. We recommend running this kernel installation command in Julia, which will enable multithreading and automatically use the global project environment:
+
+```julia
+import Pkg; Pkg.add("IJulia")
+using IJulia
+IJulia.installkernel("Julia Global", env=Dict("JULIA_NUM_THREADS"=>"auto"), "--project=$(Base.active_project())")
+```
+Then when Jupyter is opened, the Julia kernel will appear as an option.
 
 ## Using SciBmad from Python
 
