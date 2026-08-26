@@ -76,7 +76,7 @@ tw = twiss(fodo, cols=["w1", "w2", "dx_2", "dy_2"], chrom=2)
 print(tw.q2)
 #= Prints:
   AmplitudeDependentValue:
-   0.05253999423230923 - 0.00471066037657978 δ
+    0.054013300010008765 - 0.00864379148151119 δ
 =#
 # Get the y-chromaticity
 chromy = getterm(tw.q2, delta=1)
@@ -93,8 +93,8 @@ tw = twiss(fodo, cols=["nx", "ny", "nz"], spin=true,
 print(tw.qspin)
 #= Prints:
   AmplitudeDependentValue:
-   -0.3094612779434053 - 0.309461277627552 δ - 7.243608429370996e-10 J₁
-    + 27.379264609438568 J₂ - 4.343783185854744e-10 δ²
+    -0.3094612779434054 - 0.3094612776236819 δ - 7.680773026144916e-10 J₁ 
+    + 28.12750168959732 J₂ - 4.385285890498197e-10 δ²
 =#
 
 #=
