@@ -205,8 +205,6 @@
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Installation</a><input aria-label="Toggle navigation of Installation" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="#installing-julia">Installing Julia</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installing-scibmad">Installing SciBmad</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plotting">Plotting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#using-scibmad-from-python">Using SciBmad from Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a></li>
@@ -387,6 +385,10 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>SciBmad runs on Windows, macOS, and Linux.</p>
+</div>
 <p>SciBmad is written in the <a class="reference external" href="https://julialang.org/">Julia programming language</a>, and we
 generally recommend using Julia for the best experience. If you are new to Julia, these
 resources might be helpful:</p>
@@ -395,25 +397,18 @@ resources might be helpful:</p>
 <li><p><a class="reference external" href="https://en.wikibooks.org/wiki/Introducing_Julia">Julia wikibook</a></p></li>
 <li><p><a class="reference external" href="https://benlauwens.github.io/ThinkJulia.jl/latest/book.html">ThinkJulia (for those new to programming)</a></p></li>
 </ul>
-<section id="installing-julia">
-<h2>Installing Julia<a class="headerlink" href="#installing-julia" title="Link to this heading">¶</a></h2>
-<p>To install Julia, follow the platform-dependent
+<p>First, Julia must be installed. To do so, follow the platform-dependent
 <a class="reference external" href="https://github.com/JuliaLang/juliaup">installation instructions here</a>. <code class="docutils literal notranslate"><span class="pre">juliaup</span></code> is a
 Julia version manager that makes it easy to install and use new stable Julia versions as
-they become available.</p>
-</section>
-<section id="installing-scibmad">
-<h2>Installing SciBmad<a class="headerlink" href="#installing-scibmad" title="Link to this heading">¶</a></h2>
-<p>After installation, the <code class="docutils literal notranslate"><span class="pre">SciBmad</span></code> package can be added in Julia by running:</p>
+they become available. <strong>We highly recommend using the long term support (LTS) channel of Julia with SciBmad. This can be set in the terminal after installing <code class="docutils literal notranslate"><span class="pre">juliaup</span></code> using the command:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">juliaup</span> <span class="n">default</span> <span class="n">lts</span>
+</pre></div>
+</div>
+<p>After the Julia installation, run <code class="docutils literal notranslate"><span class="pre">julia</span></code> and add the <code class="docutils literal notranslate"><span class="pre">SciBmad</span></code> package with the command:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">"SciBmad"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This may take around 10-20 minutes to compile and install.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>SciBmad runs on Windows, macOS, and Linux.</p>
-</div>
-</section>
 <section id="plotting">
 <h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading">¶</a></h2>
 <p>Julia has various plotting packages you may add as well, including
@@ -426,7 +421,11 @@ Our personal preference is <code class="docutils literal notranslate"><span clas
 Python interface package, currently in development. Julia can also be called directly
 from Python using the <a class="reference external" href="https://juliapy.github.io/PythonCall.jl/stable/juliacall/"><code class="docutils literal notranslate"><span class="pre">juliacall</span></code> package</a>.</p>
 <p>The <a class="reference internal" href="examples-index.html"><span class="std std-doc">Examples</span></a> section includes notebooks written in both Julia and
-Python.</p>
+Python using <code class="docutils literal notranslate"><span class="pre">juliacall</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The Python interface to SciBmad is early in development.</p>
+</div>
 </section>
 <section id="next-steps">
 <h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading">¶</a></h2>
@@ -490,8 +489,6 @@ Python.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#installing-julia">Installing Julia</a></li>
-<li><a class="reference internal" href="#installing-scibmad">Installing SciBmad</a></li>
 <li><a class="reference internal" href="#plotting">Plotting</a></li>
 <li><a class="reference internal" href="#using-scibmad-from-python">Using SciBmad from Python</a></li>
 <li><a class="reference internal" href="#next-steps">Next steps</a></li>
