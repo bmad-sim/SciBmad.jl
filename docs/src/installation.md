@@ -17,17 +17,31 @@ they become available.
 
 ## Installing SciBmad
 
-After installation, the `SciBmad` package can be added in Julia by running:
+After the Julia installation, the `SciBmad` package can be installed and used in Julia.
+There are two ways to do this.
 
+:::{note}
+SciBmad runs on Windows, macOS, and Linux.
+:::
+
+### Fast Way
+
+The fast way is to use a [SciBmad-Distribution](https://github.com/bmad-sim/SciBmad-Distribution)
+Distribution. A Distribution contains `SciBmad` and related packages all precompiled for
+fast loading. This is good for users who just want to run `SciBmad` without modifications. 
+The drawback is that by bundling everything in one Distribution, updating packages is difficult.
+Distributions therefore should not be used when developing `SciBmad`. 
+Instructions for using the Distribution are on the 
+[https://github.com/bmad-sim/SciBmad-Distribution](https://github.com/bmad-sim/SciBmad-Distribution) page.
+
+### Flexible Way
+
+Run:
 ```julia
 import Pkg; Pkg.add("SciBmad")
 ```
 
 This may take around 10-20 minutes to compile and install.
-
-:::{note}
-SciBmad runs on Windows, macOS, and Linux.
-:::
 
 ## Plotting
 
