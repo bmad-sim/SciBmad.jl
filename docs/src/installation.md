@@ -20,8 +20,8 @@ If you are not using the GPU, then for most users we recommend installing a SciB
 ### macOS
 First, download one of the `dmg` files linked below to your `~/Downloads/` directory, depending on your computer architecture. You can check what architecture you have in a terminal with the command `uname -m`
 
-- [macOS `x86_64` SciBmad Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-x86_64.dmg)
-- [macOS `arm64` SciBmad Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-aarch64.dmg)
+- [macOS `x86_64` SciBmad 0.5.2 Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-x86_64.dmg)
+- [macOS `arm64` SciBmad 0.5.2 Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-aarch64.dmg)
 
 The released bundles are signed with a self-signed certificate, so macOS does not trust them out of the box. To enable trust in SciBmad, run the following commands
 
@@ -39,8 +39,8 @@ After installation, run the `SciBmadDistribution` app, and a Julia window will o
 ### Linux
 First, download one of the `snap` files linked below, depending on your computer architecture. You can check what architecture you have in a terminal with the command `uname -m`
 
-- [Linux `x86_64` SciBmad Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-x86_64.snap)
-- [Linux `arm64` SciBmad Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-aarch64.snap)
+- [Linux `x86_64` SciBmad 0.5.2 Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-x86_64.snap)
+- [Linux `arm64` SciBmad 0.5.2 Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-aarch64.snap)
 
 In the directory with the `snap` file, in a terminal run the command
 ```
@@ -49,7 +49,7 @@ snap install --classic --dangerous SciBmadDistribution.snap
 
 ### Windows
 First download the `msix` file here:
-- [Windows `msix` SciBmad Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-x86_64.msix)
+- [Windows `msix` SciBmad 0.5.2 Distribution](https://github.com/bmad-sim/SciBmad-Distribution/releases/download/SciBmad-0.5.2/scibmaddistribution-26.8.26-x86_64.msix)
 
 The released bundle is signed with a self-signed certificate, so Windows will not trust them out of the box. To enable trust in SciBmad, open the MSIX bundle properties and add its certificate to the trusted certificate authorities first (see https://www.advancedinstaller.com/install-test-certificate-from-msix.html). Then double-click the installer and install the app.
 
