@@ -17,6 +17,7 @@ Julia version manager that makes it easy to install and use new stable Julia ver
 they become available. **We highly recommend using the long term support (LTS) channel of Julia with SciBmad. This can be set in the terminal after installing `juliaup` using the command:**
 
 ```
+juliaup add lts
 juliaup default lts
 ```
 
