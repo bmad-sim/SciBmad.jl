@@ -28,6 +28,14 @@ import Pkg; Pkg.add("SciBmad")
 
 This may take around 10-20 minutes to compile and install.
 
+## Updating SciBmad
+
+To update SciBmad, and any other Julia packages you have, in Julia run
+
+```julia
+import Pkg; Pkg.update()
+```
+
 ## Plotting
 
 Julia has various plotting packages you may add as well, including
