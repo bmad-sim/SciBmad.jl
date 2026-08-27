@@ -205,6 +205,7 @@
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Installation</a><input aria-label="Toggle navigation of Installation" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="#updating-scibmad">Updating SciBmad</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plotting">Plotting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#julia-jupyter-kernel">Julia Jupyter Kernel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#using-scibmad-from-python">Using SciBmad from Python</a></li>
@@ -411,6 +412,13 @@ they become available. <strong>We highly recommend using the long term support (
 </pre></div>
 </div>
 <p>This may take around 10-20 minutes to compile and install.</p>
+<section id="updating-scibmad">
+<h2>Updating SciBmad<a class="headerlink" href="#updating-scibmad" title="Link to this heading">¶</a></h2>
+<p>To update SciBmad, and any other Julia packages you have, in Julia run</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 <section id="plotting">
 <h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading">¶</a></h2>
 <p>Julia has various plotting packages you may add as well, including
@@ -501,6 +509,7 @@ Python using <code class="docutils literal notranslate"><span class="pre">juliac
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#updating-scibmad">Updating SciBmad</a></li>
 <li><a class="reference internal" href="#plotting">Plotting</a></li>
 <li><a class="reference internal" href="#julia-jupyter-kernel">Julia Jupyter Kernel</a></li>
 <li><a class="reference internal" href="#using-scibmad-from-python">Using SciBmad from Python</a></li>
