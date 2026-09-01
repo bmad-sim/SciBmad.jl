@@ -48,6 +48,8 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Electric multipoles
 - Space charge
 - Coherent synchrotron radiation
+- Superposition of elements
+- Fork elements and connecting lattice branches together.
 
 ## SciBmad Family
 
