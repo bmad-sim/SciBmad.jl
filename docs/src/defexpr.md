@@ -114,7 +114,7 @@ println(d(c1))
 
 Contexts can be pushed on/popped from a global stack of contexts `GLOBAL_CONTEXTS`. In this
 case, when referencing a variable from a context, if it does not exist in that given
-context, then the first instance of that variable from the top of the `GLOBAL_CONTEXTS`
+context, then the first instance of that variable from the top (last in) of the `GLOBAL_CONTEXTS`
 stack will be used:
 
 ```{code-cell} julia
