@@ -331,7 +331,7 @@ html_theme_options = {
 html_title = 'SciBmad Documentation'
 html_static_path = ['_static']
 html_css_files = ['custom.css']
-html_js_files = ['topbar-github.js']
+html_js_files = ['topbar-github.js', 'sidebar-current.js']
 
 
 # -- Options for MyST --------------------------------------------------------
