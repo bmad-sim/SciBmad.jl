@@ -199,6 +199,21 @@ function mycallback(i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_ste
 end
 ```
 
+## Coordinates Number Type
+By default, particle phase space (and quaternion) coordinates are 64-bit floats. However, there may be cases where the often-significant performance gains of using 32-bit floats outweigh the cost of lower precision. For example, almost every neural network implementation in major machine learning libraries defaults to 32-bit precision, because it is "good enough". Furthermore, some GPUs (such as Apple Metal) _only_ support 32-bit floats. 
+
+SciBmad tracking is also fully compatible with end-to-end 32-bit float tracking. To use this, simply initialize the particle phase space coordinates (and optionally spin quaternions) using 32-bit floats,
+
+```{code-cell} julia
+v0 = zeros(Float32, 1, 6) # 1 32-bit particle
+res = track(fodo, v0=v0)
+```
+
+:::{note}
+When lower-precision floats are used for the particle coordinates, _all_ element parameters (e.g. magnet strengths, lengths, etc) are converted to 32-bit floats prior to tracking through.
+:::
+
+
 (cpuparallel)=
 ## CPU Parallelization
 
@@ -265,6 +280,10 @@ tracking kernels in SciBmad) are only compiled once they are called with specifi
 (e.g., a `GPUArray`). We try to precompile for as many cases as possible, but precompilation
 for `GPUArray`s is not possible. As such, the first "turn" in tracking will have a latency
 in order for the JIT compiler to compile SciBmad's GPU tracking kernels.
+:::
+
+:::{note}
+Apple Metal GPUs only support 32-bit floats. Therefore, 
 :::
 
 ### Multiple GPUs
