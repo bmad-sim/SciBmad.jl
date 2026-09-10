@@ -92,6 +92,12 @@ jobs:
           using Pkg
           Pkg.precompile()
           @time using SciBmad
+      - name: Clear locks left by the precompile
+        # The same sweep again, and this is the one that protects the pages: the
+        # lock that broke PR #119 was created by a process dying during the big
+        # precompile, which is the step immediately above. Clearing only at the
+        # start of the job would leave that window open.
+        run: find ~/.julia/compiled -name '*.pidfile' -print -delete || true
       - name: Build documentation
         run: python docs/build.py
       - name: Deploy PR preview
