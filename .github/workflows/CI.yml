@@ -5,6 +5,16 @@ on:
       - main
     tags: ['*']
   pull_request:
+  # Keep main's Julia depot cache warm. A branch can read its own caches and
+  # main's, never another PR's, so a stale cache on main is paid for again by
+  # every new branch: the docs job spends ~13 minutes recompiling on its first
+  # run and ~6 minutes on every run after. Main's cache only refreshes when CI
+  # runs on main, which is why a floating `version: '1'` moving to a new Julia
+  # leaves every PR slow until someone next merges. Rebuild it on a schedule
+  # instead. Twice a week, comfortably inside the 7 days after which GitHub
+  # evicts a cache nothing has touched.
+  schedule:
+    - cron: '17 6 * * 1,4'
   workflow_dispatch:
 concurrency:
   # Skip intermediate builds: always.
@@ -14,6 +24,9 @@ concurrency:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    # The scheduled run exists to refresh the docs cache; the test matrix keeps
+    # its own cache warm through ordinary pushes and PRs.
+    if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
