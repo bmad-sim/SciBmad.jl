@@ -47,6 +47,7 @@ jobs:
   docs:
     name: Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       actions: write # needed to allow julia-actions/cache to proactively delete old caches that it has created
       contents: write
@@ -58,6 +59,15 @@ jobs:
         with:
           version: '1'
       - uses: julia-actions/cache@v3
+      - name: Clear stale precompilation locks
+        # A precompile process that dies leaves a `.ji.pidfile` behind in the
+        # depot, and `julia-actions/cache` then saves it and restores it into
+        # every later run. Loading a package whose lock is held blocks until the
+        # lock is finally declared stale, which costs ten minutes per Julia
+        # process -- see the two-hour build in PR #119. This runner is
+        # single-purpose and nothing is precompiling yet, so any lock sitting
+        # here is by definition left over from a run that is long gone.
+        run: find ~/.julia/compiled -name '*.pidfile' -print -delete || true
       - name: Configure doc environment
         shell: julia --project=docs --color=yes {0}
         run: |
@@ -70,6 +80,18 @@ jobs:
           python-version: '3.x'
       - name: Install Sphinx dependencies
         run: pip install -r docs/requirements.txt
+      - name: Precompile docs environment
+        # Every runnable page is executed by its own fresh IJulia kernel whose
+        # first cell is `using SciBmad`. Precompile the environment once here,
+        # where a failure is immediate and says what broke, instead of leaving
+        # each of those kernels to discover it and spend a 600 s
+        # `nb_execution_timeout` finding out -- ten pages of that is a two-hour
+        # red build whose log says only that a cell timed out.
+        shell: julia --project=docs --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.precompile()
+          @time using SciBmad
       - name: Build documentation
         run: python docs/build.py
       - name: Deploy PR preview
