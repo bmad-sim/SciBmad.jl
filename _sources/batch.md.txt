@@ -82,6 +82,13 @@ res = track(fodo, v0=v0)
 res.v[:,1,end] # output x-coordinates
 ```
 
+## Limitations
+The type of tracking kernel selection for `SciBmadStandard` or `Symplectic` must be the same for all particles. So, for example, if an element has `BatchParam`s where some are nonzero quadrupoles and some are nonzero sextupoles, the entire bunch will default to a drift-kick integration split, as the quadrupole-kick kernel cannot be called simultaneously with the drift-kick kernel. See [Tracking Methods](tracking-methods.md) for more details on the available splits.
+
+Currently, any parameter in a `LineElement` or `Beamline` may be specified as a `BatchParam`. However, there are a few caveats to keep in mind, which you would only encounter if explicitly passing a `Bunch` to `track` (else, this is handled internally for you):
+- If any element length `L` is a `BatchParam`, the bunch `t_ref` must also be a `BatchParam` of the same size
+- If the `Beamline` reference energy is a `BatchParam`, then the bunch `p_over_q_ref` AND bunch `t_ref` must also be `BatchParam`s of the same size
+
 ## GPU Batch Parameter Simulation
 
 In the same way that a GPU enables parallelization over a huge number of particles, we can
