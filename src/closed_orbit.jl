@@ -111,7 +111,7 @@ function coast_check(bl, autodiff=AutoForwardDiff(), rf_on::Bool=true)
   set_kernel! = set_v!(KA.get_backend(v))
   sub_kernel! = sub_v!(KA.get_backend(v))
   DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache), DI.Constant(rf_on))
-  return view(jac, 6, :) ≈ SA[0, 0, 0, 0, 0, 0]
+  return all(x-> abs(x) < 1e-13, view(jac, 6, :))
 end
 
 # v0 is the array of initial particles
