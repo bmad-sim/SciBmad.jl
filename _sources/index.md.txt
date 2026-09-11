@@ -37,7 +37,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Context-switching for evalution of deferred expressions for accelerator parameters
 - Open lattice Twiss functions given initial normalizing transformation
 
-### Future Releases
+### Features in Future Releases
 - Easy optimization interface
 - Generalized gradient field description
 - Wakefields
@@ -50,6 +50,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Coherent synchrotron radiation
 - Superposition of elements
 - Fork elements and connecting lattice branches together.
+- [Other projects](https://github.com/bmad-sim/SciBmad.jl/issues/54)
 
 ## SciBmad Family
 
