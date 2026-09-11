@@ -453,6 +453,8 @@ columns.</p></li>
 returned as Taylor series types - this will be necessary if doiong parametric normal form. Default
 is <code class="docutils literal notranslate"><span class="pre">nothing</span></code>, which autoselects to <code class="docutils literal notranslate"><span class="pre">false</span></code> if there are no parameters in the GTPSA, and <code class="docutils literal notranslate"><span class="pre">true</span></code> if
 there are parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coast_tol</span></code>: Tolerance for the first-order delta dependences on each of the phase space variables below
+which coasting beam is assumed, passed to <code class="docutils literal notranslate"><span class="pre">find_closed_orbit</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">1e-14</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">symplectic_tol::Float64</span></code>: Tolerance of symplectic condition violation, above which radiation damping
 is assumed. Default is <code class="docutils literal notranslate"><span class="pre">1e-8</span></code>.</p></li>
 </ul>
