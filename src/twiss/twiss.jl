@@ -121,6 +121,8 @@ keyword arguments:
     returned as Taylor series types - this will be necessary if doiong parametric normal form. Default 
     is `nothing`, which autoselects to `false` if there are no parameters in the GTPSA, and `true` if 
     there are parameters.
+- `coast_tol`: Tolerance for the first-order delta dependences on each of the phase space variables below 
+    which coasting beam is assumed, passed to `find_closed_orbit`. Default is `1e-14`.
 - `symplectic_tol::Float64`: Tolerance of symplectic condition violation, above which radiation damping 
     is assumed. Default is `1e-8`.
 
@@ -228,11 +230,12 @@ function twiss(
   cols            = nothing, # (de_moivre ? DE_MOIVRE : TENG_EDWARDS)..., (spin ? SPIN : Function[])...],\
   as_taylor_series::Union{Nothing,Bool} = nothing, # nothing = auto-select (if nn > 6, true, else false)
 
+  coast_tol = 1e-14, 
   symplectic_tol = 1e-8, # Tolerance below which to include damping
   )
 
   if isnothing(a_initial)
-    v0_and_coast = co_and_coast(bl, v0, rf_on)
+    v0_and_coast = co_and_coast(bl, v0, rf_on, coast_tol)
   else
     v0_and_coast = (v0, isodd(NNF.nvars(a_initial))) 
   end
@@ -347,8 +350,8 @@ function twiss(
   return Twiss(summ, df)
 end
 
-function co_and_coast(bl, v0, rf_on)
-  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on)
+function co_and_coast(bl, v0, rf_on, coast_tol)
+  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on, coast_tol)
   if co_sol.sol.retcode != RETCODE_SUCCESS
     error("Closed orbit finder did not converge.")
   end

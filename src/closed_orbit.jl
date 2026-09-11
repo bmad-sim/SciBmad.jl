@@ -100,7 +100,7 @@ function _co_res_coast!(
   return v_res
 end
 
-function coast_check(bl, autodiff=AutoForwardDiff(), rf_on::Bool=true)
+function coast_check(bl, autodiff=AutoForwardDiff(), rf_on::Bool=true, tol=1e-14)
   if isnothing(autodiff)
     autodiff=AutoForwardDiff()
   end
@@ -111,7 +111,7 @@ function coast_check(bl, autodiff=AutoForwardDiff(), rf_on::Bool=true)
   set_kernel! = set_v!(KA.get_backend(v))
   sub_kernel! = sub_v!(KA.get_backend(v))
   DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache), DI.Constant(rf_on))
-  return all(x-> abs(x) < 1e-13, view(jac, 6, :))
+  return all(x-> abs(x) < tol, view(jac, 6, :))
 end
 
 # v0 is the array of initial particles
@@ -145,6 +145,8 @@ will use CUBLAS's batched linear system solvers for the Newton solve.
 - `autodiff`: Automatic-differentiation backend to use (e.g. `AutoForwardDiff()`, `AutoEnzyme()`, 
     `AutoGTPSA()`, etc.). Default is `AutoForwardDiff`. See `ADTypes.jl` for all supported backends.
 - `warn`: If `true`, warnings about the result will be printed. Default is `true`
+- `coast_tol`: Tolerance for the first-order delta dependences on each of the phase space variables below 
+    which coasting beam is assumed. Default is `1e-14`.
 - `coasting_beam`: Bool that can be optionally specified as `true` or `false` to bypass the coasting-
     beam check and save some computation time.
 - `batch`: Optionally specify if batched-solution is used as `Val{true}()` or `Val{false}()` to improve 
@@ -193,7 +195,8 @@ function find_closed_orbit(
     # Closed orbit finder kwargs
     rf_on::Bool=true,
     v0=zeros(1,6), 
-    coasting_beam=coast_check(bl, autodiff, rf_on),
+    coast_tol=1e-14,
+    coasting_beam=coast_check(bl, autodiff, rf_on, coast_tol),
     batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
     warn=true,
   ) where {_batch}
