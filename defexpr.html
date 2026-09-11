@@ -604,7 +604,7 @@ used when evaluating <code class="docutils literal notranslate"><span class="pre
 </div>
 <p>Contexts can be pushed on/popped from a global stack of contexts <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code>. In this
 case, when referencing a variable from a context, if it does not exist in that given
-context, then the first instance of that variable from the top of the <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code>
+context, then the first instance of that variable from the top (last in) of the <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code>
 stack will be used:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -792,5 +792,6 @@ from <code class="docutils literal notranslate"><span class="pre">LineElement</s
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=552d2a3d"></script>
     <script src="_static/topbar-github.js?v=c13617d6"></script>
+    <script src="_static/sidebar-current.js?v=23c44312"></script>
     </body>
 </html>
