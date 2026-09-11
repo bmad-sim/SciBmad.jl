@@ -174,6 +174,21 @@ function track(
       weight=(!isnothing(weight) ? copy.(weight) : nothing), 
       species=bl.species_ref, 
       p_over_q_ref=(_p_over_q_ref = bl.p_over_q_ref; _p_over_q_ref isa TimeDependentParam ? _p_over_q_ref(0) : _p_over_q_ref),
+      t_ref=begin
+        if bl.p_over_q_ref isa BatchParam
+          p = bl.p_over_q_ref.batch
+          b = similar(p, length(p))
+          b .= 0
+          BatchParam(b) 
+        elseif bl.line[end].s_downstream isa BatchParam 
+          s = bl.line[end].s_downstream.batch
+          b = similar(s, length(s))
+          b .= 0
+          BatchParam(b) 
+        else
+          zero(bl.line[end].s_downstream)
+        end
+      end, 
       callbacks=callbacks,
     ),
 

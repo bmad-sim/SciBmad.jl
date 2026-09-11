@@ -106,3 +106,7 @@ are GPU compatible.
 
 Once again, we can now track using the same (GPU-compatible) tracking function described in
 [Track](track.md).
+
+## Limitations
+
+Currently, any parameter **except for element length `L` and element curvature `g_ref`** may be made time-dependent.
