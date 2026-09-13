@@ -259,6 +259,17 @@ function twiss(
     end
   end
 
+  if !isnothing(a_initial) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
+    error("Specified `GTPSA_descriptor` disagrees with that of `a_initial`")
+  elseif !isnothing(a_initial)
+    if spin && isnothing(a_initial.q)
+      error("Unable to propagate spin: `a_initial` does not include spin")
+    elseif !spin && !isnothing(a_initial)
+      a_initial = DAMap(v0=a_initial.v0, v=a_initial.v, nv=NNF.nvars(a_initial), np=NNF.nparams(a_initial), s=a_initial.s)
+    end
+    GTPSA_descriptor = GTPSA.getdesc(first(a_initial.v))
+  end
+
   if isnothing(GTPSA_descriptor)
     storedesc = GTPSA.desc_current
     GTPSA_descriptor = Descriptor([order, order, order, order, order, chrom], max(order,chrom))
@@ -272,17 +283,6 @@ function twiss(
     You specified `chrom`, but this beamline has synchrotron motion. Please turn off RF 
     cavities to get delta-dependent Twiss functions.
     """)
-  end
-
-  if !isnothing(a_initial) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
-    error("Specified `GTPSA_descriptor` disagrees with that of `a_initial`")
-  elseif !isnothing(a_initial)
-    if spin && isnothing(a_initial.q)
-      error("Unable to propagate spin: `a_initial` does not include spin")
-    elseif !spin && !isnothing(a_initial)
-      a_initial = DAMap(v0=a_initial.v0, v=a_initial.v, nv=NNF.nvars(a_initial), np=NNF.nparams(a_initial), s=a_initial.s)
-    end
-    GTPSA_descriptor = GTPSA.getdesc(first(a_initial.v))
   end
 
   init = TI.InitGTPSA{GTPSA.Dynamic,Descriptor}(; dynamic_descriptor=GTPSA_descriptor)
