@@ -221,6 +221,7 @@ function twiss(
       else
         t .= a_initial.v0
       end
+      t
     end
   ), 
 
@@ -747,7 +748,7 @@ function _twiss_summ(twi, cache)
   summ[:etac] = oper(etac)
   summ[:alphac] = oper(alphac)
 
-  if length(twi.r_and_tunes[2]) == 4
+  if !isnothing(twi.r_and_tunes) && length(twi.r_and_tunes[2]) == 4
     qspin = twi.r_and_tunes[2][end]
     if !(TI.is_tps_type(typeof(q1)) isa TI.IsTPSType) && !coast
       qspin = scalar(qspin)
