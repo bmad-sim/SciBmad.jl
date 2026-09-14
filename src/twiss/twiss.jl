@@ -259,9 +259,10 @@ function twiss(
     end
   end
 
-  if !isnothing(a_initial) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
-    error("Specified `GTPSA_descriptor` disagrees with that of `a_initial`")
-  elseif !isnothing(a_initial)
+  if !isnothing(a_initial)
+    if !isnothing(GTPSA_descriptor) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
+      error("Specified `GTPSA_descriptor` disagrees with that of `a_initial`")
+    end
     if spin && isnothing(a_initial.q)
       error("Unable to propagate spin: `a_initial` does not include spin")
     elseif !spin && !isnothing(a_initial)
