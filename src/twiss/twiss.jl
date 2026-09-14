@@ -219,7 +219,7 @@ function twiss(
         t[1:5] .= a_initial.v0
         t[6] = delta0
       else
-        t .= a_initial.v0
+        t[:] .= a_initial.v0
       end
       t
     end
