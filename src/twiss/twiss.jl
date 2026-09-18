@@ -125,6 +125,8 @@ keyword arguments:
     which coasting beam is assumed, passed to `find_closed_orbit`. Default is `1e-14`.
 - `symplectic_tol::Float64`: Tolerance of symplectic condition violation, above which radiation damping 
     is assumed. Default is `1e-8`.
+- `batch_index::Int`: If any element parameters are `BatchParam`, sets which index in the batch the `twiss`
+    should be evaluated at. Default is `1`.
 
 To see a description of all quantities available to include in `cols`, see the extended help 
 section using `??twiss`
@@ -233,10 +235,11 @@ function twiss(
 
   coast_tol = 1e-14, 
   symplectic_tol = 1e-8, # Tolerance below which to include damping
+  batch_index::Int=1,
   )
 
   if isnothing(a_initial)
-    v0_and_coast = co_and_coast(bl, v0, rf_on, coast_tol)
+    v0_and_coast = co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
   else
     v0_and_coast = (v0, isodd(NNF.nvars(a_initial))) 
   end
@@ -317,9 +320,9 @@ function twiss(
     # Determine:
     if _check_cachable(GTPSA_descriptor)
       # also fills beta_gamma_ref, t_ref
-      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0_and_coast[1], init, rf_on, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
+      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
     else
-      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, rf_on, Val{coast}(), Val{spin}())
+      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}())
     end
   end
 
@@ -334,7 +337,7 @@ function twiss(
 
   # Now we push 
   if isnothing(maps)
-    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a!(bl, rf_on, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
+    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a!(bl, rf_on, batch_index, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
   else
     fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
   end
@@ -352,8 +355,8 @@ function twiss(
   return Twiss(summ, df)
 end
 
-function co_and_coast(bl, v0, rf_on, coast_tol)
-  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on, coast_tol)
+function co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
+  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on, batch_start=batch_index, coast_tol)
   if co_sol.sol.retcode != RETCODE_SUCCESS
     error("Closed orbit finder did not converge.")
   end
@@ -493,7 +496,7 @@ function _twiss_setmap!(map, coords)
   return map
 end
 
-function _twiss_track!(eye, cbs, bl, rf_on)
+function _twiss_track!(eye, cbs, bl, rf_on, batch_index)
   if NNF.nvars(eye) == 5
     v = reshape([(i < 5 ? eye.v0[i]+copy(eye.v[i]) : copy(eye.v[i])) for i in 1:6], 1, 6)
   else
@@ -502,7 +505,7 @@ function _twiss_track!(eye, cbs, bl, rf_on)
   q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
   b0 = Bunch(v=v, q=q, callbacks=cbs)
   BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
-  track!(b0, bl; rf_on)
+  track!(b0, bl; rf_on, batch_start=batch_index)
   return b0
 end
 
@@ -528,9 +531,9 @@ function _a_r_tunes(m::DAMap)
   end
 end
 
-function _compute_periodic_a(bl::Beamline, v0, init, rf_on, ::Val{coast}, ::Val{spin}) where {coast, spin}
+function _compute_periodic_a(bl::Beamline, v0, init, rf_on, batch_index, ::Val{coast}, ::Val{spin}) where {coast, spin}
   eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
-  b0 = _twiss_track!(eye, (), bl, rf_on)
+  b0 = _twiss_track!(eye, (), bl, rf_on, batch_index)
   _twiss_setmap!(eye, b0.coords)
   a, r, tunes = _a_r_tunes(eye)
   return a, (r, tunes)
@@ -576,11 +579,11 @@ function _twiss_cache_make_callback(_step_save, _beta_gamma_ref, _t_ref, _in_bod
   end
 end
 
-function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, rf_on, ::Val{coast}, ::Val{spin}, step_save, beta_gamma_ref, t_ref, in_body_coordinates) where {coast, spin}
+function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, rf_on, batch_index, ::Val{coast}, ::Val{spin}, step_save, beta_gamma_ref, t_ref, in_body_coordinates) where {coast, spin}
   eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
   maps = _twiss_cache_preallocate(step_save, eye)
   cb = _twiss_cache_make_callback(step_save, beta_gamma_ref, t_ref, in_body_coordinates, maps)
-  _twiss_track!(eye, (cb,), bl, rf_on)
+  _twiss_track!(eye, (cb,), bl, rf_on, batch_index)
   m_turn = eye
   for map in maps
     m_turn = map ∘ m_turn
@@ -688,7 +691,7 @@ function _twiss_make_base_columns(n, a::T, phase, damp) where {T}
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 
-function _twiss_push_a!(bl, rf_on, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
+function _twiss_push_a!(bl, rf_on, batch_index, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
   fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
   # Have to treat 0 specially:
   if first(step_save) == 0
@@ -703,7 +706,7 @@ function _twiss_push_a!(bl, rf_on, step_save, a_initial, canonise, phase, damp, 
     initial_step_save_idx = 1
   end
   cb = _twiss_make_callback(step_save, initial_step_save_idx, in_body_coordinates, a_initial, fac, canonise, phase, phi1, phi2, phi3_or_slip, damp, damp1, damp2, damp3, beta_gamma_ref, t_ref)
-  _twiss_track!(a_initial, (cb,), bl, rf_on)
+  _twiss_track!(a_initial, (cb,), bl, rf_on, batch_index)
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 
