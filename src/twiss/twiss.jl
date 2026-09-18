@@ -125,6 +125,8 @@ keyword arguments:
     which coasting beam is assumed, passed to `find_closed_orbit`. Default is `1e-14`.
 - `symplectic_tol::Float64`: Tolerance of symplectic condition violation, above which radiation damping 
     is assumed. Default is `1e-8`.
+- `batch_index::Int`: If any element parameters are `BatchParam`, sets which index in the batch the `twiss`
+    should be evaluated at. Default is `1`.
 
 To see a description of all quantities available to include in `cols`, see the extended help 
 section using `??twiss`
@@ -233,10 +235,11 @@ function twiss(
 
   coast_tol = 1e-14, 
   symplectic_tol = 1e-8, # Tolerance below which to include damping
+  batch_index::Int=1,
   )
 
   if isnothing(a_initial)
-    v0_and_coast = co_and_coast(bl, v0, rf_on, coast_tol)
+    v0_and_coast = co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
   else
     v0_and_coast = (v0, isodd(NNF.nvars(a_initial))) 
   end
@@ -352,8 +355,8 @@ function twiss(
   return Twiss(summ, df)
 end
 
-function co_and_coast(bl, v0, rf_on, coast_tol)
-  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on, coast_tol)
+function co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
+  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on, batch_start=batch_index, coast_tol)
   if co_sol.sol.retcode != RETCODE_SUCCESS
     error("Closed orbit finder did not converge.")
   end
