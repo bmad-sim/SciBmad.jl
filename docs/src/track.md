@@ -117,6 +117,10 @@ dimension is the spin 3-vector index (between 1 and 3). If you'd like to initial
 different initial spin directions for each particle (perhaps along the invariant spin
 field), give the initial spins as a matrix of size `n_particles x 3`.
 
+To track as if some of an element's parameter groups were not present (e.g. to switch
+misalignments or apertures off), without removing them from the element, use the element's
+[`do_not_use`](#do.not.use) list.
+
 ```{docstring} track
 ```
 
