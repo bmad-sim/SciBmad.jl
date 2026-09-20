@@ -118,4 +118,65 @@ using Test
         @test isapprox(co.v0[1,5], 0.0; atol=1e-12)
         @test isapprox(co.v0[1,6], 0.0; atol=1e-12)
     end
+
+    @testset "dynamic_aperture grid resolution" begin
+        # A symmetric FODO cell with a known, hard rectangular aperture in x. The cell is
+        # mirror-symmetric, so alpha_1 = 0 at element 1: a particle started at (x0, px=0)
+        # never exceeds |x0| there on later turns, and the aperture in terms of the
+        # starting x0 is exactly the physical limit. That makes the expected answer exact
+        # and independent of the tune, so a handful of turns suffices.
+        a = 0.01
+        function fodo()
+            qf1 = Quadrupole(L=0.25, Kn1= 0.6)
+            d1  = Drift(L=1.0)
+            qd  = Quadrupole(L=0.5,  Kn1=-0.6)
+            d2  = Drift(L=1.0)
+            qf2 = Quadrupole(L=0.25, Kn1= 0.6)
+            qf1.x1_limit = -a
+            qf1.x2_limit =  a
+            qf1.aperture_shape = ApertureShape.Rectangular
+            Beamline([qf1,d1,qd,d2,qf2]; pc_ref=1e9, species_ref=Species("electron"))
+        end
+
+        emit = 1e-8
+        bl = fodo()
+        sig_x = sqrt(twiss(bl, at=[1], cols=["E1"]).E1[1][1,1]*emit)
+
+        # Grid step = a/3.5, so the aperture falls between samples 3 and 4: sample 3
+        # survives, sample 4 is lost.
+        n_r = 12
+        max_sig = (a/3.5)*(n_r-1)/sig_x
+        x, _ = dynamic_aperture(bl; n_r=n_r, n_theta=1, theta_lims=(0,0), deltas=[0.0],
+                                max_sig_x=max_sig, max_sig_y=max_sig,
+                                emit_1=emit, emit_2=emit, n_turns=8)
+
+        # The reported acceptance must be the last SURVIVING sample, and must never exceed
+        # the physical aperture. Reporting the first LOST sample would give 4a/3.5 > a.
+        @test x[1]*sig_x ≈ 3*(a/3.5)
+        @test x[1]*sig_x < a
+
+        # Grid too coarse to resolve the aperture: even the innermost sample is lost, so
+        # the result is NaN rather than a spurious "aperture" of one grid step (issue #115).
+        max_sig_coarse = (2*a)*(n_r-1)/sig_x
+        x_coarse, y_coarse = @test_logs (:warn,) match_mode=:any dynamic_aperture(
+            bl; n_r=n_r, n_theta=1, theta_lims=(0,0), deltas=[0.0],
+            max_sig_x=max_sig_coarse, max_sig_y=max_sig_coarse,
+            emit_1=emit, emit_2=emit, n_turns=8)
+        @test isnan(x_coarse[1])
+        @test isnan(y_coarse[1])
+
+        # Grid entirely inside the aperture: nothing is lost, so the answer is Inf.
+        # Here it is the OUTER radius (max_sig*sig_x), not the step, that must stay below a.
+        max_sig_small = (a/2)/sig_x
+        x_small, y_small = @test_logs (:warn,) match_mode=:any dynamic_aperture(
+            bl; n_r=n_r, n_theta=1, theta_lims=(0,0), deltas=[0.0],
+            max_sig_x=max_sig_small, max_sig_y=max_sig_small,
+            emit_1=emit, emit_2=emit, n_turns=8)
+        @test isinf(x_small[1])
+        @test isinf(y_small[1])
+
+        @test_throws ErrorException dynamic_aperture(
+            bl; n_r=1, n_theta=1, deltas=[0.0], max_sig_x=1.0, max_sig_y=1.0,
+            emit_1=emit, emit_2=emit, n_turns=1)
+    end
 end
