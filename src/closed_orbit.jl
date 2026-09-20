@@ -102,14 +102,15 @@ function _co_res_coast!(
   return v_res
 end
 
-function coast_check(bl, autodiff=AutoForwardDiff(), rf_on::Bool=true, batch_start=1, tol=1e-14)
+function coast_check(bl, v0t=zeros(1,6), autodiff=AutoForwardDiff(), rf_on::Bool=true, batch_start=1, tol=1e-14)
   if isnothing(autodiff)
     autodiff=AutoForwardDiff()
   end
-  v0 = zeros(1,6)
-  v = zeros(1,6)
+  v0 = similar(v0t, 1, 6)
+  v0 .= 0
+  v = zero(v0)
   v_cache = copy(v0)
-  jac = zeros(6,6)
+  jac = similar(v0, 6, 6)
   set_kernel! = set_v!(KA.get_backend(v))
   sub_kernel! = sub_v!(KA.get_backend(v))
   DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache), DI.Constant(rf_on), DI.Constant(batch_start))
@@ -208,7 +209,7 @@ function find_closed_orbit(
     batch_start::Int=1,
     v0=zeros(1,6), 
     coast_tol=1e-14,
-    coasting_beam=coast_check(bl, autodiff, rf_on, batch_start, coast_tol),
+    coasting_beam=coast_check(bl, v0, autodiff, rf_on, batch_start, coast_tol),
     batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
     warn=true,
   ) where {_batch}
