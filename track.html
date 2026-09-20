@@ -420,13 +420,14 @@ config:
  rf_on                           = true
  ramp_particle_energy_without_rf = false
  ramp_update_each_particle       = false
+ batch_start                     = 1
  verbose                         = false
  groupsize                       = 0
  use_cpu_multithreading          = false
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.003816687 seconds
+elapsed_time = 0.003428605 seconds
 
 state[1:1, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -483,13 +484,14 @@ config:
  rf_on                           = true
  ramp_particle_energy_without_rf = false
  ramp_update_each_particle       = false
+ batch_start                     = 1
  verbose                         = false
  groupsize                       = 0
  use_cpu_multithreading          = false
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000348778 seconds
+elapsed_time = 0.000305433 seconds
 
 state[1:1, 1:6]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:6]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -520,13 +522,14 @@ config:
  rf_on                           = true
  ramp_particle_energy_without_rf = false
  ramp_update_each_particle       = false
+ batch_start                     = 1
  verbose                         = false
  groupsize                       = 0
  use_cpu_multithreading          = false
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000921298 seconds
+elapsed_time = 0.000759235 seconds
 
 state[1:1, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -612,6 +615,13 @@ of each individual particle at the element entrances is taken into account when
 tracking particles through the time-dependent element parameters. Usually only needed
 if ramping is fast compared to the time scale of bunch passage through elements.
 Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_start::Int</span></code>: Specifies the starting index for <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s that particles in a
+bunch will see. E.g., if <code class="docutils literal notranslate"><span class="pre">batch_start=3</span></code>, then particle 1 sees index 3 in all
+<code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s, particle 2 sees index 4, etc. Indexing of <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s will loop
+around to the start if the particle index exceeds the length of the <code class="docutils literal notranslate"><span class="pre">BatchParams</span></code>.
+Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>. WARNING: setting this argument will caused unaligned memory access on
+the GPU, which may reduce performance. In this case, consider <code class="docutils literal notranslate"><span class="pre">circshift</span></code>-ing all
+<code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s instead.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">verbose::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, print the the status of tracking. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">groupsize::Int</span></code>: Designates a group of threads acting in parallel, preferably in
 lockstep. If tracking on a CUDA GPU, this is equal to the “block” size. On the CPU,
@@ -678,6 +688,13 @@ of each individual particle at the element entrances is taken into account when
 tracking particles through the time-dependent element parameters. Usually only needed
 if ramping is fast compared to the time scale of bunch passage through elements.
 Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_start::Int</span></code>: Specifies the starting index for <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s that particles in a
+bunch will see. E.g., if <code class="docutils literal notranslate"><span class="pre">batch_start=3</span></code>, then particle 1 sees index 3 in all
+<code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s, particle 2 sees index 4, etc. Indexing of <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s will loop
+around to the start if the particle index exceeds the length of the <code class="docutils literal notranslate"><span class="pre">BatchParams</span></code>.
+Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>. WARNING: setting this argument will caused unaligned memory access on
+the GPU, which may reduce performance. In this case, consider <code class="docutils literal notranslate"><span class="pre">circshift</span></code>-ing all
+<code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s instead.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">verbose::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, print the the status of tracking. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">groupsize::Int</span></code>: Designates a group of threads acting in parallel, preferably in
 lockstep. If tracking on a CUDA GPU, this is equal to the “block” size. On the CPU,
@@ -820,13 +837,14 @@ config:
  rf_on                           = true
  ramp_particle_energy_without_rf = false
  ramp_update_each_particle       = false
+ batch_start                     = 1
  verbose                         = false
  groupsize                       = 0
  use_cpu_multithreading          = false
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 18.188922102 seconds
+elapsed_time = 16.924684454 seconds
 
 state[1:1, 1:2]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:2]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]

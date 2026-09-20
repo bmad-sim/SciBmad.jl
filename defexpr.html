@@ -702,14 +702,25 @@ environment.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Beamline</span></code>s also store a context, which is passed to all <code class="docutils literal notranslate"><span class="pre">DefExpr</span></code>s when getting parameters
 from <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s that are in a beamline:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">);</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">);</span>
 
 <span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">);</span>
 
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">],</span><span class="w"> </span><span class="n">context</span><span class="o">=</span><span class="n">c1</span><span class="p">);</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">],</span><span class="w"> </span><span class="n">context</span><span class="o">=</span><span class="n">c3</span><span class="p">);</span>
 
 <span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bl</span><span class="p">[</span><span class="n">qf</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Kn1</span>
 <span class="mf">0.36</span>
+</pre></div>
+</div>
+<p>Notice that trying to access the value of <code class="docutils literal notranslate"><span class="pre">Kn1</span></code> directly from <code class="docutils literal notranslate"><span class="pre">qf</span></code> does not work since <code class="docutils literal notranslate"><span class="pre">c3</span></code>
+is not stored where it can be found:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>julia&gt; qf.Kn1
+ERROR: Variable Kn1 is not defined in the local Context nor in GLOBAL_CONTEXTS
+
+julia&gt; push!(GLOBAL_CONTEXTS, c3)    # Make c3 available globally
+
+julia&gt; qf.Kn1                        # Now this works
+0.36
 </pre></div>
 </div>
 </div>

@@ -457,6 +457,8 @@ there are parameters.</p></li>
 which coasting beam is assumed, passed to <code class="docutils literal notranslate"><span class="pre">find_closed_orbit</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">1e-14</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">symplectic_tol::Float64</span></code>: Tolerance of symplectic condition violation, above which radiation damping
 is assumed. Default is <code class="docutils literal notranslate"><span class="pre">1e-8</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_index::Int</span></code>: If any element parameters are <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>, sets which index in the batch the <code class="docutils literal notranslate"><span class="pre">twiss</span></code>
+should be evaluated at. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
 </ul>
 <p>To see a description of all quantities available to include in <code class="docutils literal notranslate"><span class="pre">cols</span></code>, see the extended help
 section using <code class="docutils literal notranslate"><span class="pre">??twiss</span></code></p>
