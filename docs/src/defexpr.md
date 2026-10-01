@@ -72,6 +72,22 @@ qf.Kn1 = 0.7
 qd.Kn1
 ```
 
+If Julia cannot infer the return type of a deferred expression (for example,
+because it reads untyped global variables) `DefExpr(f)` may produce
+`DefExpr{Any}`, significantly slowing parameter access. There are two ways
+to provide a concrete return type:
+
+```{code-cell} julia
+# Inferred return type
+qd.Kn1 = DefExpr(() -> -qf.Kn1::Float64)
+
+# Explicit return type
+qd.Kn1 = DefExpr{Float64}(() -> -qf.Kn1)
+```
+
+Both produce `DefExpr{Float64}` and require the result to
+have the specified type.
+
 Deferred expressions can also be manipulated like any other number:
 
 ```{code-cell} julia
