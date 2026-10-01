@@ -103,7 +103,7 @@ keyword arguments:
 - `a_initial::Union{DAMap,Nothing}`: A `DAMap` of the initial transformation from normal form 
     coordinates to laboratory coordinates, to compute "open" lattice Twiss functions. Default is 
     `nothing`, to compute the periodic ("closed") lattice Twiss functions
-- `damping::Union{Bool,Nothing}`: Specifies if radiation damping is included. Default is `nothing`,
+- `damping::Union{Bool,Nothing}`: Specifies if damping is detected. Default is `nothing`,
     which will auto-detect from `a_initial` or the periodic `a`.
 - `delta0`: If the beam is coasting (no longitudinal oscillations), then the Twiss parameters will 
     be computed around this delta-dependent orbit. Else, this will be an initial guess for the 
@@ -214,10 +214,9 @@ The summary properties, all evaluated for the full lattice, are:
 - `alphac` : Momentum compaction factor α_c, the relative change of the closed orbit path length 
     per unit δ
 - `qspin`  : Spin tune in units of [2π]. Only present if `spin=true`
-- `damp1`  : Damping decrement of mode 1 per turn, i.e. the natural logarithm of the mode 1 
-    amplitude reduction factor per turn. Only present if radiation damping is included
-- `damp2`  : Damping decrement of mode 2 per turn. Only present if radiation damping is included
-- `damp3`  : Damping decrement of mode 3 per turn. Only present if radiation damping is included
+- `damp1`  : Damping decrement of mode 1 per turn. Only present if damping is detected
+- `damp2`  : Damping decrement of mode 2 per turn. Only present if damping is detected
+- `damp3`  : Damping decrement of mode 3 per turn. Only present if damping is detected
 
 Summary quantities which are amplitude- and/or parameter-dependent (e.g. with `order > 1`, or with 
 parameters in the GTPSA `Descriptor`) are returned as `AmplitudeDependentValue`s, from which the 
