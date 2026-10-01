@@ -248,6 +248,7 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
 </ul>
@@ -257,10 +258,12 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
 </ul>
 </li>
@@ -269,11 +272,7 @@
 <li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a><input aria-label="Toggle navigation of Dynamic Aperture" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#gpu-parallelization">GPU-Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#the-dynamic-aperture-function">The <code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> function</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
 <ul>
@@ -284,9 +283,8 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture.html">Dynamic aperture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/orbit-response.html">Orbit response</a></li>
@@ -298,7 +296,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
@@ -311,14 +309,14 @@
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
@@ -330,14 +328,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">About</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
@@ -411,15 +409,15 @@ optionally specify the reference species as <code class="docutils literal notran
  species_ref = electron
  pc_ref = 1.8e10
 
- <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> s [m]              </span> <span class=" -Color -Color-Bold"> L [m] </span>
-  1       qf     Quadrupole   0                    0.5
-  2       sf     Sextupole    0.5                  0.2
-  3       b      SBend        0.7                  1.2
-  4       d      Drift        1.9                  0.1
-  5       qd     Quadrupole   2.0                  0.5
-  6       sd     Sextupole    2.5                  0.2
-  7       b      SBend        2.7                  1.2
-  8       d      Drift        3.9000000000000004   0.1
+ <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> L [m] </span> <span class=" -Color -Color-Bold"> s [m]              </span> <span class=" -Color -Color-Bold"> s_downstream [m]   </span>
+  1       qf     Quadrupole   0.5     0.0f0                0.5
+  2       sf     Sextupole    0.2     0.5                  0.7
+  3       b      SBend        1.2     0.7                  1.9
+  4       d      Drift        0.1     1.9                  2.0
+  5       qd     Quadrupole   0.5     2.0                  2.5
+  6       sd     Sextupole    0.2     2.5                  2.7
+  7       b      SBend        1.2     2.7                  3.9000000000000004
+  8       d      Drift        0.1     3.9000000000000004   4.0
 </pre></div>
 </div>
 </div>
@@ -447,105 +445,22 @@ optionally specify the reference species as <code class="docutils literal notran
  species_ref = electron
  pc_ref = 1.8e10
 
- <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> s [m]              </span> <span class=" -Color -Color-Bold"> L [m] </span>
-  1       beg    Marker       0                    0.0f0
-  2       qf     Quadrupole   0.0f0                0.5
-  3       sf     Sextupole    0.5                  0.2
-  4       b      SBend        0.7                  1.2
-  5       d      Drift        1.9                  0.1
-  6       qd     Quadrupole   2.0                  0.5
-  7       sd     Sextupole    2.5                  0.2
-  8       b      SBend        2.7                  1.2
-  9       d      Drift        3.9000000000000004   0.1
+ <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> L [m] </span> <span class=" -Color -Color-Bold"> s [m]              </span> <span class=" -Color -Color-Bold"> s_downstream [m]   </span>
+  1       beg    Marker       0.0f0   0.0f0                0.0f0
+  2       qf     Quadrupole   0.5     0.0f0                0.5
+  3       sf     Sextupole    0.2     0.5                  0.7
+  4       b      SBend        1.2     0.7                  1.9
+  5       d      Drift        0.1     1.9                  2.0
+  6       qd     Quadrupole   0.5     2.0                  2.5
+  7       sd     Sextupole    0.2     2.5                  2.7
+  8       b      SBend        1.2     2.7                  3.9000000000000004
+  9       d      Drift        0.1     3.9000000000000004   4.0
 </pre></div>
 </div>
 </div>
 </div>
 <div class="julia-docstring docutils container">
-<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">Beamline</span></code> — <em>Type</em>.</p>
-<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Beamline</span><span class="p">(</span><span class="n">line</span><span class="p">;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Constructs a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> out of the <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s in the vector <code class="docutils literal notranslate"><span class="pre">line</span></code>. The <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s
-in the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> will be automatically constructed as children of those <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s in
-<code class="docutils literal notranslate"><span class="pre">line</span></code>, inheriting all of their properties.</p>
-<p>The reference energy of the beamline may be optionally specified using one of the keyword
-arguments: <code class="docutils literal notranslate"><span class="pre">E_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">pc_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">dE_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">dpc_ref</span></code>, or <code class="docutils literal notranslate"><span class="pre">dp_over_q_ref</span></code>.
-Whichever of these is specified will be the independent variable. The species of
-the beamline may be optionally specified using the <code class="docutils literal notranslate"><span class="pre">species_ref</span></code> keyword argument.
-Specifying either of these keyword arguments will permanently override both the reference
-species and energy defined in the first <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> – see the warning below.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">qd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-
-<span class="n">fodo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Alternatively, one can specify the reference species/energy in the first element:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
-<span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">qd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-
-<span class="n">fodo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">])</span>
-</pre></div>
-</div>
-<p class="rubric">Keyword arguments</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: A <code class="docutils literal notranslate"><span class="pre">Context</span></code> struct containing variables that can be stored in the beamline
-for convenience</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">species_ref</span></code>: Reference species of the beamline.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">E_ref</span></code>: Total reference energy [eV]</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pc_ref</span></code>: Reference momentum [eV/c]</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span></code>: A <em>signed</em> reference magnetic rigidity [T * m]</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dE_ref</span></code>: Change in total reference energy w.r.t. the directly-upstream beamline in
-units [eV]</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dpc_ref</span></code>: Change in reference momentum w.r.t. the directly-upstream beamline in
-units [eV/c]</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dp_over_q_ref</span></code>: Change in <em>signed</em> reference magnetic rigidty w.r.t. the directly
-upstream beamline [T * m]</p></li>
-</ul>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Keyword arguments specified to the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> constructor will permanently override any
-corresponding properties specified in the first <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> of the beamline. E.g.,</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">beg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Marker</span><span class="p">(</span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
-
-<span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">beg</span><span class="p">])</span>
-<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">beg</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"proton"</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">1e9</span><span class="p">)</span>
-
-<span class="n">a</span><span class="o">.</span><span class="n">E_ref</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">beg</span><span class="o">.</span><span class="n">E_ref</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">18e9</span><span class="w"> </span><span class="c"># true</span>
-<span class="n">b</span><span class="o">.</span><span class="n">E_ref</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1e9</span><span class="w">               </span><span class="c"># true</span>
-<span class="n">b</span><span class="o">.</span><span class="n">E_ref</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">beg</span><span class="o">.</span><span class="n">E_ref</span><span class="w">         </span><span class="c"># true</span>
-
-<span class="c"># If `beg` is reset:</span>
-<span class="n">beg</span><span class="o">.</span><span class="n">species_ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Species</span><span class="p">(</span><span class="s">"positron"</span><span class="p">)</span>
-
-<span class="c"># `a` will still inherit it, but `b` will not:</span>
-<span class="n">a</span><span class="o">.</span><span class="n">species_ref</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">beg</span><span class="o">.</span><span class="n">species_ref</span><span class="w">   </span><span class="c"># true</span>
-<span class="n">b</span><span class="o">.</span><span class="n">species_ref</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">Species</span><span class="p">(</span><span class="s">"proton"</span><span class="p">)</span><span class="w"> </span><span class="c"># true</span>
-<span class="n">b</span><span class="o">.</span><span class="n">species_ref</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">beg</span><span class="o">.</span><span class="n">species_ref</span><span class="w">   </span><span class="c"># true</span>
-</pre></div>
-</div>
-</div>
-<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Beamline</span>
-</pre></div>
-</div>
-<p>Structure containing a vector of <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s in an ordered sequence, and optionally
-a <code class="docutils literal notranslate"><span class="pre">Context</span></code> struct containing conrol variables associated with the beamline for
-convenience. The reference species (specified as <code class="docutils literal notranslate"><span class="pre">species_ref</span></code> and reference energy
-(specified as one of <code class="docutils literal notranslate"><span class="pre">E_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">pc_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">dE_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">dpc_ref</span></code>, or
-<code class="docutils literal notranslate"><span class="pre">dp_over_q_ref</span></code>) is uniform over the entire beamline. The most-recently specified of
-these reference energy quantites will be stored as the independent variable, in the
-first <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> of the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>.</p>
-<p class="rubric">Properties</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">line</span></code>: A read-only array of <code class="docutils literal notranslate"><span class="pre">LineElements</span></code> in the beamline, in order</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: <code class="docutils literal notranslate"><span class="pre">Context</span></code> struct containing control variables associated with the beamline</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">branch</span></code>: <code class="docutils literal notranslate"><span class="pre">Branch</span></code> that the beamline is placed in, if any</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">branch_index</span></code>: Index of the beamline in the <code class="docutils literal notranslate"><span class="pre">Branch</span></code>, if in a <code class="docutils literal notranslate"><span class="pre">Branch</span></code></p></li>
-</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Beamline</span></code>  (docstring unavailable in this build)</p>
 </div>
 <section id="finding-lineelements-in-a-beamline">
 <h2>Finding LineElements in a Beamline<a class="headerlink" href="#finding-lineelements-in-a-beamline" title="Link to this heading">¶</a></h2>
@@ -820,5 +735,6 @@ set the unnormalized quadrupole strength <code class="docutils literal notransla
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=552d2a3d"></script>
     <script src="_static/topbar-github.js?v=c13617d6"></script>
+    <script src="_static/sidebar-current.js?v=23c44312"></script>
     </body>
 </html>

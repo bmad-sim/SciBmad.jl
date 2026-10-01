@@ -248,6 +248,7 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
 </ul>
@@ -257,10 +258,12 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
 </ul>
 </li>
@@ -269,11 +272,7 @@
 <li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a><input aria-label="Toggle navigation of Dynamic Aperture" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#gpu-parallelization">GPU-Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture.html#the-dynamic-aperture-function">The <code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> function</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
 <ul>
@@ -284,9 +283,8 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture.html">Dynamic aperture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/orbit-response.html">Orbit response</a></li>
@@ -298,7 +296,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
@@ -311,14 +309,14 @@
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
@@ -330,14 +328,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">About</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
@@ -408,11 +406,11 @@
  species_ref = electron
  E_ref = 1.8e10
 
- <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> s [m] </span> <span class=" -Color -Color-Bold"> L [m] </span>
-  1       qf     Quadrupole   0       0.5
-  2       d      Drift        0.5     1.2
-  3       qd     Quadrupole   1.7     0.5
-  4       d      Drift        2.2     1.2
+ <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> L [m] </span> <span class=" -Color -Color-Bold"> s [m] </span> <span class=" -Color -Color-Bold"> s_downstream [m]   </span>
+  1       qf     Quadrupole   0.5     0.0f0   0.5
+  2       d      Drift        1.2     0.5     1.7
+  3       qd     Quadrupole   0.5     1.7     2.2
+  4       d      Drift        1.2     2.2     3.4000000000000004
 </pre></div>
 </div>
 </div>
@@ -502,79 +500,7 @@ parameter to be such a deferred expression:</p>
 nested, and you can write any function that the programming language allows, for example
 file I/O, or even control system gets/puts with a real accelerator for a digital twin.</p>
 <div class="julia-docstring docutils container">
-<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">DefExpr</span></code> — <em>Type</em>.</p>
-<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="kt">DefExpr</span><span class="p">{</span><span class="kt">T</span><span class="p">}</span>
-</pre></div>
-</div>
-<p>A lazily-evaluated deferred expression returning type <code class="docutils literal notranslate"><span class="pre">T</span></code>. Deferred expressions
-are lambda functions that “close” over a variable in the current scope. They can
-be used to specify inter-dependent parameters in an accelerator and guarantee that
-no parameter ever becomes “stale”.</p>
-<p>Also see <code class="docutils literal notranslate"><span class="pre">Context</span></code>.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.36</span><span class="p">;</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1L</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(()</span><span class="o">-&gt;</span><span class="n">a</span><span class="p">));</span><span class="w"> </span><span class="c"># captures variable a</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1L</span>
-<span class="mf">0.36</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.7</span>
-<span class="mf">0.7</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1L</span>
-<span class="mf">0.7</span>
-</pre></div>
-</div>
-<p>Slightly better performance may be achieved by explicitly typing the captured variable:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="o">::</span><span class="kt">Float64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.2</span><span class="p">;</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1L</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(()</span><span class="o">-&gt;</span><span class="n">b</span><span class="p">));</span><span class="w"> </span><span class="c"># captures variable b with known type</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1L</span>
-<span class="mf">0.2</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4</span>
-<span class="mf">0.4</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1L</span>
-<span class="mf">0.4</span>
-</pre></div>
-</div>
-<p>Deferred expressions can be treated and operated with as regular numbers, even outside
-the context of <code class="docutils literal notranslate"><span class="pre">Beamlines</span></code>, and can be evaluated by calling it like a function with no
-arguments (with <code class="docutils literal notranslate"><span class="pre">()</span></code>):</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="p">;</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(()</span><span class="o">-&gt;</span><span class="n">sin</span><span class="p">(</span><span class="n">c</span><span class="p">));</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">pi</span><span class="p">;</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(()</span><span class="o">-&gt;</span><span class="n">sin</span><span class="p">(</span><span class="n">c</span><span class="p">));</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cd</span><span class="p">()</span>
-<span class="mf">0.0</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cd</span><span class="p">()</span>
-<span class="mf">1.0</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dd</span><span class="p">()</span>
-<span class="mf">6.0</span>
-</pre></div>
-</div>
-<p>An optional <code class="docutils literal notranslate"><span class="pre">Context</span></code> argument can be provided:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">b</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span>
-<span class="mi">3</span>
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">DefExpr</span></code>  (docstring unavailable in this build)</p>
 </div>
 </section>
 <section id="contexts">
@@ -606,7 +532,7 @@ used when evaluating <code class="docutils literal notranslate"><span class="pre
 </div>
 <p>Contexts can be pushed on/popped from a global stack of contexts <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code>. In this
 case, when referencing a variable from a context, if it does not exist in that given
-context, then the first instance of that variable from the top of the <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code>
+context, then the first instance of that variable from the top (last in) of the <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code>
 stack will be used:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -662,58 +588,7 @@ will be used:</p>
 </div>
 </div>
 <div class="julia-docstring docutils container">
-<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">Context</span></code> — <em>Type</em>.</p>
-<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="kt">Context</span><span class="p">{</span><span class="kt">T</span><span class="p">}</span>
-</pre></div>
-</div>
-<p>A “scope” of variables that can be used when evaluating <code class="docutils literal notranslate"><span class="pre">DefExpr</span></code>s. Contexts serve as a
-single structure that stores all (control) variables associated with beamline parameters.
-Contexts essentially act as structures with arbitrary field names. The type parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>
-can be specified as the variables’ return type, or <code class="docutils literal notranslate"><span class="pre">Union</span></code> of return types, to improve
-performance.</p>
-<p>If a “get” is made of a variable not included in a given <code class="docutils literal notranslate"><span class="pre">Context</span></code>, then the “get” will
-fall-back to the global stack of contexts <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code>. The first instance from the
-top of the <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code> stack of the variable will be used as the variable value. This
-makes it easy to “push” and “pop” parameter settings one may be testing in an interactive
-environment.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">push!</span><span class="p">(</span><span class="n">GLOBAL_CONTEXTS</span><span class="p">,</span><span class="w"> </span><span class="n">c1</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">b</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">()</span><span class="w"> </span><span class="c"># Uses c1.a and c1.b from the GLOBAL_CONTEXTS</span>
-<span class="mi">3</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span><span class="w"> </span><span class="c"># Uses c2.a, but falls-back to c1.b from GLOBAL_CONTEXTS</span>
-<span class="mi">6</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">push!</span><span class="p">(</span><span class="n">GLOBAL_CONTEXTS</span><span class="p">,</span><span class="w"> </span><span class="n">c2</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">()</span><span class="w"> </span><span class="c"># Now uses c2.a and c1.b both from GLOBAL_CONTEXTS</span>
-<span class="mi">6</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">pop!</span><span class="p">(</span><span class="n">GLOBAL_CONTEXTS</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">()</span><span class="w"> </span>
-<span class="mi">3</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">Beamline</span></code>s also store a context, which is passed to all <code class="docutils literal notranslate"><span class="pre">DefExpr</span></code>s when getting parameters
-from <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s that are in a beamline:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">],</span><span class="w"> </span><span class="n">context</span><span class="o">=</span><span class="n">c1</span><span class="p">);</span>
-
-<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bl</span><span class="p">[</span><span class="n">qf</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Kn1</span>
-<span class="mf">0.36</span>
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">Context</span></code>  (docstring unavailable in this build)</p>
 </div>
 </section>
 </section>
@@ -794,5 +669,6 @@ from <code class="docutils literal notranslate"><span class="pre">LineElement</s
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=552d2a3d"></script>
     <script src="_static/topbar-github.js?v=c13617d6"></script>
+    <script src="_static/sidebar-current.js?v=23c44312"></script>
     </body>
 </html>
