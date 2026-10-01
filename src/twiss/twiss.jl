@@ -218,7 +218,7 @@ The summary properties, all evaluated for the full lattice, are:
 - `damp2`  : Damping decrement of mode 2 per turn. Only present if damping is detected
 - `damp3`  : Damping decrement of mode 3 per turn. Only present if damping is detected
 
-Summary quantities which are amplitude- and/or parameter-dependent (e.g. with `order > 1`, or with 
+Summary quantities that are amplitude- and/or parameter-dependent (e.g. with `order > 1`, or with 
 parameters in the GTPSA `Descriptor`) are returned as `AmplitudeDependentValue`s, from which the 
 individual terms may be obtained using the actions `J1`, `J2`, `J3` (or `delta` in place of `J3` for 
 a coasting beam) as keyword arguments. E.g. `tw.q1[J1=1]` gives the coefficient of J₁ in the 
