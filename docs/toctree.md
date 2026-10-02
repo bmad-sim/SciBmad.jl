@@ -80,6 +80,14 @@ miscellaneous
 ```{toctree}
 :hidden:
 :maxdepth: 2
+:caption: Developer's Guide
+
+lineelement-internals
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 2
 :caption: About
 
 governance
