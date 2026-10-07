@@ -48,7 +48,8 @@ A `FloorCoords` is the position and orientation of a coordinate frame in floor c
 | `theta`, `phi`, `psi` | [Floor orientation angles](#s:floor) [rad] |
 
 Rotating a vector expressed in the frame by `q` gives the vector in floor coordinates. The
-orientation in terms of the angles is `Ry(theta) * Rx(phi) * Rz(psi)`.
+orientation in terms of the angles is `Ry(theta) * Rx(-phi) * Rz(psi)`, the same convention as
+Bmad, so a positive `phi` tilts the `z`-axis toward `+Y`.
 A `FloorCoords` can be constructed with `FloorCoords(r, q)` or `FloorCoords(r, theta, phi, psi)`.
 `FloorCoords()` is at the origin with the frame axes along the floor axes.
 
