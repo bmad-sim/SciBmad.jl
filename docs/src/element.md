@@ -98,105 +98,84 @@ How an element is tracked through ultimately depends on the parameters defined w
 `LineElement`. For details, see the [Tracking Methods](tracking-methods.md) section of the
 documentation.
 
-(ignore.parameters)=
-## Ignoring Parameter Groups with `ignore_parameters`
+(ignore.params)=
+## Ignoring Parameter Groups with `ignore_params`
 
 It is often useful to track through an element as if some of its parameter groups were not
 there, e.g. to compare tracking with and without misalignments, or with and without
-apertures. Instead of removing the parameter groups and later restoring them, put the names
-of the parameter groups to ignore in the element's `ignore_parameters` list, which is a
-property of its `UniversalParams`:
+apertures. Instead of removing the parameter groups and later restoring them, list the
+parameter groups to ignore in the element's `ignore_params` property, which belongs to the
+[`IgnoreParams`](#ignore.params.group) parameter group:
 
 ```{code-cell} julia
 qf = Quadrupole(L=0.5, Kn1=0.36, x_offset=1e-3,
                 x1_limit=-0.02, x2_limit=0.02, y1_limit=-0.01, y2_limit=0.01)
-qf.ignore_parameters = [:AlignmentParams, :ApertureParams]
+qf.ignore_params = [AlignmentParams, ApertureParams]
 qf
 ```
 
-When the `ignore_parameters` list is not empty, it is printed with the element's
-`UniversalParams` as above. The parameter groups themselves are left untouched, so to
-switch a parameter group back in, just remove it from the list:
+The entries of `ignore_params` are the parameter group types themselves (e.g.
+`AlignmentParams`, not the symbol `:AlignmentParams`). The parameter groups are left
+untouched, so to switch a parameter group back in, just remove it from the list:
 
 ```{code-cell} julia
-filter!(!=(:ApertureParams), qf.ignore_parameters) # Use the ApertureParams again
-qf.ignore_parameters
+filter!(!=(ApertureParams), qf.ignore_params) # Use the ApertureParams again
+qf.ignore_params
 ```
 
-Some other ways of setting `ignore_parameters`:
+Some other ways of setting `ignore_params`:
 
 ```{code-cell} julia
-push!(qf.ignore_parameters, :BMultipoleParams) # Add to the list
-qf.ignore_parameters = :AlignmentParams        # A single parameter group
-qf.ignore_parameters = []                      # Use all parameter groups again
-sf = Sextupole(L=0.2, Kn2=10, ignore_parameters=[:BMultipoleParams]) # As a keyword argument
-sf.ignore_parameters
+push!(qf.ignore_params, BMultipoleParams) # Add to the list
+qf.ignore_params = AlignmentParams        # A single parameter group
+qf.ignore_params = []                     # Use all parameter groups again
+sf = Sextupole(L=0.2, Kn2=10, ignore_params=[BMultipoleParams]) # As a keyword argument
+sf.ignore_params
 ```
 
-`ignore_parameters` is used by tracking, so it affects everything in SciBmad that is
-computed by tracking, e.g. `track`, `twiss`, and `find_closed_orbit`. Other properties of
-the element (e.g. its length or bend angle, and the `s` positions in a `Beamline`) are
-unaffected.
+An element without `IgnoreParams` ignores nothing. Reading `ignore_params` from such an
+element adds an `IgnoreParams` with an empty list, so `push!` works on any element. An
+`IgnoreParams` with an empty list has no effect and is not printed with the element.
 
-A parameter group in `ignore_parameters` is treated as if it were absent from the element.
-For example, a `Quadrupole` with `:BMultipoleParams` in `ignore_parameters` is tracked as a
-drift, and an `SBend` with `:BendParams` in `ignore_parameters` is tracked as a straight
-element with the same multipoles.
+`ignore_params` is used by tracking, so it affects everything in SciBmad that is computed by
+tracking, e.g. `track`, `twiss`, and `find_closed_orbit`. Other properties of the element
+(e.g. its length or bend angle, and the `s` positions in a `Beamline`) are unaffected.
 
-### `ignore_parameters` in a Beamline
+A parameter group in `ignore_params` is treated as if it were absent from the element. For
+example, a `Quadrupole` with `BMultipoleParams` in `ignore_params` is tracked as a drift,
+and an `SBend` with `BendParams` in `ignore_params` is tracked as a straight element with
+the same multipoles.
+
+### `ignore_params` in a Beamline
 
 When an element is placed in a `Beamline`, every instance of that element in the `Beamline`
-shares the `UniversalParams` of the original element, and therefore also its
-`ignore_parameters` list. So setting `ignore_parameters` on the original element, or on any
-of its instances in a `Beamline`, switches the parameter groups in or out for all
-instances:
+shares the parameter groups of the original element, including its `IgnoreParams`. So
+setting `ignore_params` on the original element, or on any of its instances in a
+`Beamline`, switches the parameter groups in or out for all instances:
 
 ```{code-cell} julia
-qf.ignore_parameters = [:AlignmentParams]
+qf.ignore_params = [AlignmentParams]
 bl = Beamline([qf, Drift(L=1.0), qf], species_ref=Species("electron"), E_ref=18e9)
-bl.line[3].ignore_parameters
+bl.line[3].ignore_params
 ```
 
-### Allowed symbols
+### Allowed entries
 
-To catch misspellings, only symbols in the set `Beamlines.IGNORE_PARAMETERS_SYMBOLS` are
-allowed in `ignore_parameters`. By default these are the parameter groups used in tracking:
-
-```{code-cell} julia
-Beamlines.IGNORE_PARAMETERS_SYMBOLS
-```
-
-Any other symbol throws an error, both when `ignore_parameters` is set, and when tracking
-through the element (which catches invalid symbols added with e.g. `push!`):
+Any parameter group can be ignored, except `BeamlineParams`, `InitialBeamlineParams`, and
+`IgnoreParams` itself, which are always needed. Anything else throws an error, both when
+`ignore_params` is set, and when tracking through the element (which catches invalid
+entries added with e.g. `push!`):
 
 ```julia
-qf.ignore_parameters = [:AlignmentParam] # Error: Invalid symbol :AlignmentParam in `ignore_parameters`...
+qf.ignore_params = [:AlignmentParams] # Error: Invalid entry :AlignmentParams in `ignore_params`...
 ```
 
-If you define your own parameter group, e.g. `MyParams <: AbstractParams`, register it so
-that it can be switched off too:
+### Tracking code
 
-```julia
-push!(Beamlines.IGNORE_PARAMETERS_SYMBOLS, :MyParams)
-```
-
-A registered symbol does not need to be the name of a parameter group. Custom tracking code
-can check for any registered symbol with `:MySymbol in ele.ignore_parameters`.
-
-### Checking `ignore_parameters` in tracking code
-
-Tracking code decides whether to use a parameter group with `Beamlines.isactive`. Passing
-an element's `ignore_parameters` list as the second argument makes `isactive` return
-`false` for a parameter group whose name is in the list:
-
-```{code-cell} julia
-qf.ignore_parameters = [:AlignmentParams]
-ig = qf.ignore_parameters
-Beamlines.isactive(qf.AlignmentParams, ig), Beamlines.isactive(qf.BMultipoleParams, ig)
-```
-
-```{docstring} Beamlines.isactive
-```
+Tracking code handles `ignore_params` when unpacking an element: each ignored parameter
+group is replaced with `nothing` before tracking, exactly as if the element did not have
+it. `Beamlines.isactive`, which tracking code uses to decide whether to use a parameter
+group, does not itself check `ignore_params`.
 
 ## Parameters
 
@@ -250,6 +229,12 @@ They are all documented below.
 ### FourPotentialParams
 
 ```{docstring} FourPotentialParams
+```
+
+(ignore.params.group)=
+### IgnoreParams
+
+```{docstring} IgnoreParams
 ```
 
 ### InitialBeamlineParams
