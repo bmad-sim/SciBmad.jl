@@ -169,9 +169,10 @@ qf.ignore_params = AlignmentParams    # Error: use [AlignmentParams]
 qf.ignore_params = [:AlignmentParams] # Error: entries must be types, not symbols
 ```
 
-Any parameter group can be ignored, except `BeamlineParams`, `InitialBeamlineParams`, and
-`IgnoreParams` itself. Tracking checks the list before tracking through each element, and
-throws an error if it contains one of these.
+Any parameter group may be put in the list, and what is done with it is up to the tracking
+code. Tracking switches off the parameter groups that describe the physics of the element
+(e.g. `AlignmentParams`, `BMultipoleParams`, or `RFParams`). Other entries, e.g.
+`MetaParams` or `BeamlineParams`, have no effect.
 
 ### Tracking code
 
