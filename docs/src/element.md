@@ -127,7 +127,7 @@ Some other ways of setting `ignore_params`:
 
 ```{code-cell} julia
 push!(qf.ignore_params, BMultipoleParams) # Add to the list
-qf.ignore_params = AlignmentParams        # A single parameter group
+qf.ignore_params = [AlignmentParams]      # Replace the list
 qf.ignore_params = []                     # Use all parameter groups again
 sf = Sextupole(L=0.2, Kn2=10, ignore_params=[BMultipoleParams]) # As a keyword argument
 sf.ignore_params
@@ -161,14 +161,17 @@ bl.line[3].ignore_params
 
 ### Allowed entries
 
-Any parameter group can be ignored, except `BeamlineParams`, `InitialBeamlineParams`, and
-`IgnoreParams` itself, which are always needed. Anything else throws an error, both when
-`ignore_params` is set, and when tracking through the element (which catches invalid
-entries added with e.g. `push!`):
+`ignore_params` must be set to a vector of parameter group types, even for a single
+parameter group. Anything else, e.g. a single type or a symbol, throws an error:
 
 ```julia
-qf.ignore_params = [:AlignmentParams] # Error: Invalid entry :AlignmentParams in `ignore_params`...
+qf.ignore_params = AlignmentParams    # Error: use [AlignmentParams]
+qf.ignore_params = [:AlignmentParams] # Error: entries must be types, not symbols
 ```
+
+Any parameter group can be ignored, except `BeamlineParams`, `InitialBeamlineParams`, and
+`IgnoreParams` itself. Tracking checks the list before tracking through each element, and
+throws an error if it contains one of these.
 
 ### Tracking code
 
