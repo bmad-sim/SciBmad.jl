@@ -449,7 +449,8 @@ the branch and body coordinates at the entrance and exit ends of the element.</p
 </table>
 </div>
 <p>Rotating a vector expressed in the frame by <code class="docutils literal notranslate"><span class="pre">q</span></code> gives the vector in floor coordinates. The
-orientation in terms of the angles is <code class="docutils literal notranslate"><span class="pre">Ry(theta)</span> <span class="pre">*</span> <span class="pre">Rx(phi)</span> <span class="pre">*</span> <span class="pre">Rz(psi)</span></code>.
+orientation in terms of the angles is <code class="docutils literal notranslate"><span class="pre">Ry(theta)</span> <span class="pre">*</span> <span class="pre">Rx(-phi)</span> <span class="pre">*</span> <span class="pre">Rz(psi)</span></code>, the same convention as
+Bmad, so a positive <code class="docutils literal notranslate"><span class="pre">phi</span></code> tilts the <code class="docutils literal notranslate"><span class="pre">z</span></code>-axis toward <code class="docutils literal notranslate"><span class="pre">+Y</span></code>.
 A <code class="docutils literal notranslate"><span class="pre">FloorCoords</span></code> can be constructed with <code class="docutils literal notranslate"><span class="pre">FloorCoords(r,</span> <span class="pre">q)</span></code> or <code class="docutils literal notranslate"><span class="pre">FloorCoords(r,</span> <span class="pre">theta,</span> <span class="pre">phi,</span> <span class="pre">psi)</span></code>.
 <code class="docutils literal notranslate"><span class="pre">FloorCoords()</span></code> is at the origin with the frame axes along the floor axes.</p>
 </section>

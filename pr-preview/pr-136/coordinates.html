@@ -603,7 +603,7 @@ to form an effective <span class="math notranslate nohighlight">\(\bf S\)</span>
 <p><span class="caption-number">Fig. 4 </span><span class="caption-text">The branch coordinate system (purple), which is a function of <span class="math notranslate nohighlight">\(s\)</span> along the branch reference
 curve, is described in the floor coordinate system (black) by a position <span class="math notranslate nohighlight">\((X(s), Y(s), Z(s))\)</span> and
 and by angles <span class="math notranslate nohighlight">\(\theta(s)\)</span>, <span class="math notranslate nohighlight">\(\phi(s)\)</span>, and <span class="math notranslate nohighlight">\(\psi(s)\)</span>. The figure shows an
-orientation with positive <span class="math notranslate nohighlight">\(\theta(s)\)</span> and <span class="math notranslate nohighlight">\(\psi(s)\)</span> but with negative <span class="math notranslate nohighlight">\(\phi(s)\)</span>.</span><a class="headerlink" href="#f-floor-coords" title="Link to this image">¶</a></p>
+orientation with positive <span class="math notranslate nohighlight">\(\theta(s)\)</span>, <span class="math notranslate nohighlight">\(\phi(s)\)</span>, and <span class="math notranslate nohighlight">\(\psi(s)\)</span>.</span><a class="headerlink" href="#f-floor-coords" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>The Cartesian <code class="docutils literal notranslate"><span class="pre">floor</span></code> coordinate system is the
@@ -620,12 +620,12 @@ These three angles are defined as follows:</p>
 Angle in the <span class="math notranslate nohighlight">\((X, Z)\)</span> plane between the <span class="math notranslate nohighlight">\(Z\)</span>–axis and the projection of the
 <span class="math notranslate nohighlight">\(z\)</span>–axis onto the <span class="math notranslate nohighlight">\((X, Z)\)</span> plane.
 A positive angle of
-<span class="math notranslate nohighlight">\(\theta = \pi/2\)</span> corresponds to the projected <span class="math notranslate nohighlight">\(z\)</span>–axis pointing in the negative
+<span class="math notranslate nohighlight">\(\theta = \pi/2\)</span> corresponds to the projected <span class="math notranslate nohighlight">\(z\)</span>–axis pointing in the positive
 <span class="math notranslate nohighlight">\(X\)</span>-direction.</p></li>
 <li><p><strong><span class="math notranslate nohighlight">\(\phi(s)\)</span> Pitch (elevation) angle:</strong>
 Angle between the <span class="math notranslate nohighlight">\(z\)</span>-axis and the <span class="math notranslate nohighlight">\((X,Z)\)</span> plane.
 A positive angle of <span class="math notranslate nohighlight">\(\phi = \pi/2\)</span> corresponds to the <span class="math notranslate nohighlight">\(z\)</span>–axis pointing in the
-negative <span class="math notranslate nohighlight">\(Y\)</span> direction.</p></li>
+positive <span class="math notranslate nohighlight">\(Y\)</span> direction.</p></li>
 </ul>
 <ul class="simple">
 <li><p><strong><span class="math notranslate nohighlight">\(\psi(s)\)</span> Roll angle:</strong>
@@ -658,14 +658,14 @@ the order <span class="math notranslate nohighlight">\((x, y, z)\)</span>. <span
 orientation angles <span class="math notranslate nohighlight">\(\theta\)</span>, <span class="math notranslate nohighlight">\(\phi\)</span>, and <span class="math notranslate nohighlight">\(\psi\)</span> via the formula</p>
 <div class="math-wrapper docutils container" id="equation-www">
 <div class="math notranslate nohighlight" id="equation-www">
-<span class="eqno">(2)<a class="headerlink" href="#equation-www" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf W} &amp;= {\bf R}_{y}(\theta) \; {\bf R}_{x}(\phi) \; {\bf R}_{z}(\psi) \\
+<span class="eqno">(2)<a class="headerlink" href="#equation-www" title="Link to this equation">¶</a></span>\[\begin{split}  {\bf W} &amp;= {\bf R}_{y}(\theta) \; {\bf R}_{x}(-\phi) \; {\bf R}_{z}(\psi) \\
   &amp;= \begin{pmatrix}
-    \cos\theta \cos\psi + \sin\theta \sin\phi \sin\psi &amp; 
-        -\cos\theta \sin\psi + \sin\theta \sin\phi \cos\psi &amp; 
+    \cos\theta \cos\psi - \sin\theta \sin\phi \sin\psi &amp; 
+        -\cos\theta \sin\psi - \sin\theta \sin\phi \cos\psi &amp; 
          \sin\theta \cos\phi \\
-    \cos\phi \sin\psi &amp; \cos\phi \cos\psi &amp; -\sin\phi \\
-    \cos\theta \sin\phi \sin\psi - \sin\theta \cos\psi &amp; 
-         \sin\theta \sin\psi + \cos\theta \sin\phi \cos\psi &amp; 
+    \cos\phi \sin\psi &amp; \cos\phi \cos\psi &amp; \sin\phi \\
+    -\cos\theta \sin\phi \sin\psi - \sin\theta \cos\psi &amp; 
+         \sin\theta \sin\psi - \cos\theta \sin\phi \cos\psi &amp; 
          \cos\theta \cos\phi 
   \end{pmatrix}\end{split}\]</div>
 </div>
@@ -691,7 +691,9 @@ orientation angles <span class="math notranslate nohighlight">\(\theta\)</span>,
     0        &amp;  0        &amp; 1                
   \end{pmatrix}\end{split}\]</div>
 </div>
-<p>Notice that these are Tait-Bryan angles and not Euler angles.</p>
+<p>Notice that these are Tait-Bryan angles and not Euler angles. Also notice that, with
+<span class="math notranslate nohighlight">\(\phi\)</span> defined so that a positive <span class="math notranslate nohighlight">\(\phi\)</span> tilts the <span class="math notranslate nohighlight">\(z\)</span>-axis upward,
+the rotation about the <span class="math notranslate nohighlight">\(x\)</span>-axis in Eq. <a class="reference internal" href="#equation-www">(2)</a> is <span class="math notranslate nohighlight">\({\bf R}_{x}(-\phi)\)</span>.</p>
 <p>An alternative representation of the <span class="math notranslate nohighlight">\(\bf W\)</span> matrix (or any other rotation matrix) is to specify the
 axis <span class="math notranslate nohighlight">\(\bf u\)</span> (normalized to 1) and angle of rotation <span class="math notranslate nohighlight">\(\beta\)</span></p>
 <div class="math-wrapper docutils container" id="equation-wctux2">
@@ -819,9 +821,9 @@ transformation of the coordinate system.</p>
 particle’s position <span class="math notranslate nohighlight">\({\bf q} = (x,y,z)\)</span> and momentum <span class="math notranslate nohighlight">\({\bf P} = (P_x, P_y, P_z)\)</span>
 when the coordinate frame is transformed from frame
 <span class="math notranslate nohighlight">\(({\bf V}_{i-1}, {\bf W}_{i-1})\)</span> to frame <span class="math notranslate nohighlight">\(({\bf V}_i, {\bf W}_i)\)</span> is</p>
-<div class="math-wrapper amsmath docutils container" id="equation-bd4d41f1-2634-4394-8e5e-a600b4461b4c">
-<div class="amsmath math notranslate nohighlight" id="equation-bd4d41f1-2634-4394-8e5e-a600b4461b4c">
-<span class="eqno">(11)<a class="headerlink" href="#equation-bd4d41f1-2634-4394-8e5e-a600b4461b4c" title="Permalink to this equation">¶</a></span>\[\begin{align}
+<div class="math-wrapper amsmath docutils container" id="equation-63e050d8-94df-48e4-b822-e2f8a997ced3">
+<div class="amsmath math notranslate nohighlight" id="equation-63e050d8-94df-48e4-b822-e2f8a997ced3">
+<span class="eqno">(11)<a class="headerlink" href="#equation-63e050d8-94df-48e4-b822-e2f8a997ced3" title="Permalink to this equation">¶</a></span>\[\begin{align}
 {\bf q}_i &amp;= {\bf S}_i^{-1} \, \left( {\bf q}_{i-1} - {\bf L}_i \right),
 \label{rwlr} \\
 {\bf P}_i &amp;= {\bf S}_i^{-1} \, {\bf P}_{i-1}
