@@ -73,6 +73,7 @@ docs/
 │   ├── contents.md        # Whole-site tree, built by the `{sitetoc}` directive
 │   ├── element.md         # Defining a LineElement (incl. parameter groups)
 │   ├── beamline.md        # Defining a Beamline
+│   ├── survey.md          # Floor coordinates of branch and body frames
 │   ├── defexpr.md         # Deferred expressions and Contexts
 │   ├── track.md           # Tracking, callbacks, CPU/GPU parallelization
 │   ├── twiss.md           # The twiss docstring
