@@ -29,6 +29,7 @@ Quickstart <quickstart>
 
 element
 beamline
+survey
 defexpr
 def-tools
 ```
