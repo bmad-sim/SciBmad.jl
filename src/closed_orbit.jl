@@ -63,6 +63,7 @@ function _co_res!(
     sub_kernel!,
     v_cache,
     rf_on,
+    batch_start,
   )
   n_particles = size(v, 1)
   @assert length(v_res) == n_particles*6 "Incorrect size for residual vector"
@@ -70,7 +71,7 @@ function _co_res!(
   SciBmad.BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
   set_kernel!(v_res, v_cache, v, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
-  track!(b0, bl, scalar_params=true, rf_on=rf_on)
+  track!(b0, bl; scalar_params=true, rf_on, batch_start)
   sub_kernel!(v_res, v_cache, n_particles, Val{false}(); ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
   return v_res
@@ -85,6 +86,7 @@ function _co_res_coast!(
     v_cache,
     v_constant,
     rf_on,
+    batch_start,
   )
   n_particles = size(v_coast, 1)
   @assert length(v_res) == n_particles*4 "Incorrect size for residual vector"
@@ -94,23 +96,24 @@ function _co_res_coast!(
   SciBmad.BTBL.check_bl_bunch!(b0, bl, false) # Do not notify  
   set_kernel!(v_res, v_cache, v_constant, v_coast, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
-  track!(b0, bl, scalar_params=true, rf_on=rf_on)
+  track!(b0, bl; scalar_params=true, rf_on, batch_start)
   sub_kernel!(v_res, v_cache, n_particles, Val{true}(); ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
   return v_res
 end
 
-function coast_check(bl, autodiff=AutoForwardDiff(), rf_on::Bool=true, tol=1e-14)
+function coast_check(bl, v0t=zeros(1,6), autodiff=AutoForwardDiff(), rf_on::Bool=true, batch_start=1, tol=1e-14)
   if isnothing(autodiff)
     autodiff=AutoForwardDiff()
   end
-  v0 = zeros(1,6)
-  v = zeros(1,6)
+  v0 = similar(v0t, 1, 6)
+  v0 .= 0
+  v = zero(v0)
   v_cache = copy(v0)
-  jac = zeros(6,6)
+  jac = similar(v0, 6, 6)
   set_kernel! = set_v!(KA.get_backend(v))
   sub_kernel! = sub_v!(KA.get_backend(v))
-  DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache), DI.Constant(rf_on))
+  DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache), DI.Constant(rf_on), DI.Constant(batch_start))
   return all(x-> abs(x) < tol, view(jac, 6, :))
 end
 
@@ -142,6 +145,15 @@ will use CUBLAS's batched linear system solvers for the Newton solve.
 - `reltol`: Relative convergence tolerance of the Newton solver, default is `1e-13`
 - `abstol`: Absolute convergence tolerance of the residual norm, default is `1e-13`
 - `maxiter`: Maximum iterations for the Newton root finder before failure, default is `100`
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+    entirety of the tracking. Default is `true`.
+- `batch_start::Int`: Specifies the starting index for `BatchParam`s that particles in a 
+    bunch will see. E.g., if `batch_start=3`, then particle 1 sees index 3 in all 
+    `BatchParam`s, particle 2 sees index 4, etc. Indexing of `BatchParam`s will loop 
+    around to the start if the particle index exceeds the length of the `BatchParams`. 
+    Default is `1`. WARNING: setting this argument will caused unaligned memory access on 
+    the GPU, which may reduce performance. In this case, consider `circshift`-ing all 
+    `BatchParam`s instead.
 - `autodiff`: Automatic-differentiation backend to use (e.g. `AutoForwardDiff()`, `AutoEnzyme()`, 
     `AutoGTPSA()`, etc.). Default is `AutoForwardDiff`. See `ADTypes.jl` for all supported backends.
 - `warn`: If `true`, warnings about the result will be printed. Default is `true`
@@ -194,9 +206,10 @@ function find_closed_orbit(
 
     # Closed orbit finder kwargs
     rf_on::Bool=true,
+    batch_start::Int=1,
     v0=zeros(1,6), 
     coast_tol=1e-14,
-    coasting_beam=coast_check(bl, autodiff, rf_on, coast_tol),
+    coasting_beam=coast_check(bl, v0, autodiff, rf_on, batch_start, coast_tol),
     batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
     warn=true,
   ) where {_batch}
@@ -218,14 +231,14 @@ function find_closed_orbit(
     v_coast .= view(v0, :, 1:4) 
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0), DI.Constant(rf_on); newton_kwargs...)
+    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0), DI.Constant(rf_on), DI.Constant(batch_start); newton_kwargs...)
     set_v_coast_final!(device)(v0, v_coast; ndrange=n_particles)
     KA.synchronize(device)
   else
     v = similar(v0)
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(rf_on); newton_kwargs...)
+    sol = newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(rf_on), DI.Constant(batch_start); newton_kwargs...)
   end
 
   if warn

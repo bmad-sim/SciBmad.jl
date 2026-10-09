@@ -21,6 +21,13 @@ Defines configuration settings for a particles tracking run.
     tracking particles through the time-dependent element parameters. Usually only needed 
     if ramping is fast compared to the time scale of bunch passage through elements. 
     Default is `false`.
+- `batch_start::Int`: Specifies the starting index for `BatchParam`s that particles in a 
+    bunch will see. E.g., if `batch_start=3`, then particle 1 sees index 3 in all 
+    `BatchParam`s, particle 2 sees index 4, etc. Indexing of `BatchParam`s will loop 
+    around to the start if the particle index exceeds the length of the `BatchParams`. 
+    Default is `1`. WARNING: setting this argument will caused unaligned memory access on 
+    the GPU, which may reduce performance. In this case, consider `circshift`-ing all 
+    `BatchParam`s instead.
 - `verbose::Bool`: If `true`, print the the status of tracking. Default is `false`
 - `groupsize::Int`: Designates a group of threads acting in parallel, preferably in 
     lockstep. If tracking on a CUDA GPU, this is equal to the "block" size. On the CPU, 
@@ -41,6 +48,7 @@ Defines configuration settings for a particles tracking run.
   rf_on::Bool                           = true
   ramp_particle_energy_without_rf::Bool = false
   ramp_update_each_particle::Bool       = false
+  batch_start::Int                      = 1
   verbose::Bool                         = false
   groupsize::Int                        = 0 # autoselect
   use_cpu_multithreading::Bool          = false
@@ -139,6 +147,13 @@ settings specified by the keyword arguments `kwargs`.
     tracking particles through the time-dependent element parameters. Usually only needed 
     if ramping is fast compared to the time scale of bunch passage through elements. 
     Default is `false`.
+- `batch_start::Int`: Specifies the starting index for `BatchParam`s that particles in a 
+    bunch will see. E.g., if `batch_start=3`, then particle 1 sees index 3 in all 
+    `BatchParam`s, particle 2 sees index 4, etc. Indexing of `BatchParam`s will loop 
+    around to the start if the particle index exceeds the length of the `BatchParams`. 
+    Default is `1`. WARNING: setting this argument will caused unaligned memory access on 
+    the GPU, which may reduce performance. In this case, consider `circshift`-ing all 
+    `BatchParam`s instead.
 - `verbose::Bool`: If `true`, print the the status of tracking. Default is `false`
 - `groupsize::Int`: Designates a group of threads acting in parallel, preferably in 
     lockstep. If tracking on a CUDA GPU, this is equal to the "block" size. On the CPU, 
@@ -201,6 +216,7 @@ function track(
     rf_on                           = config.rf_on,
     ramp_particle_energy_without_rf = config.ramp_particle_energy_without_rf,
     ramp_update_each_particle       = config.ramp_update_each_particle,
+    batch_start                     = config.batch_start,
     verbose                         = config.verbose,
 
     # Low-level launch! kwargs (these are not considered stable API and may change):
@@ -217,6 +233,7 @@ function track(
     rf_on,
     ramp_particle_energy_without_rf,
     ramp_update_each_particle,
+    batch_start,
     verbose,
     groupsize,
     use_cpu_multithreading,
@@ -237,6 +254,7 @@ function _track(bl, bunch, config, groupsize)
   rf_on                           = config.rf_on
   ramp_particle_energy_without_rf = config.ramp_particle_energy_without_rf
   ramp_update_each_particle       = config.ramp_update_each_particle
+  batch_start                     = config.batch_start
   verbose                         = config.verbose
   use_cpu_multithreading          = config.use_cpu_multithreading
   use_KA                          = config.use_KA
@@ -257,7 +275,7 @@ function _track(bl, bunch, config, groupsize)
   end
 
   t = @elapsed for i in 1:n_turns
-    track!(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf, ramp_update_each_particle, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
+    track!(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf, ramp_update_each_particle, batch_start, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
     if mod(i, save_every_n_turns) == 0
       idx = div(i,save_every_n_turns)+1
       state_data[:,idx] .= state
