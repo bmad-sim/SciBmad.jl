@@ -103,9 +103,10 @@ documentation.
 
 It is often useful to track through an element as if some of its parameter groups were not
 there, e.g. to compare tracking with and without misalignments, or with and without
-apertures. Instead of removing the parameter groups and later restoring them, list the
-parameter groups to ignore in the element's `ignore_params` property, which belongs to the
-[`IgnoreParams`](#ignore.params.group) parameter group:
+apertures. Instead of removing the parameter groups and later restoring them, the
+element's `ignore_params` property, which belongs to the [`IgnoreParams`](#ignore.params.group) 
+parameter group can be used to designate parameter groups to ignore.
+An element without `IgnoreParams` or if `ignore_params` is am empty list, ignores nothing.
 
 ```{code-cell} julia
 qf = Quadrupole(L=0.5, Kn1=0.36, x_offset=1e-3,
@@ -115,8 +116,8 @@ qf
 ```
 
 The entries of `ignore_params` are the parameter group types themselves (e.g.
-`AlignmentParams`, not the symbol `:AlignmentParams`). The parameter groups are left
-untouched, so to switch a parameter group back in, just remove it from the list:
+`AlignmentParams`). The parameter groups are left
+untouched, so to activate a parameter group, just remove it from the list:
 
 ```{code-cell} julia
 filter!(!=(ApertureParams), qf.ignore_params) # Use the ApertureParams again
@@ -133,53 +134,8 @@ sf = Sextupole(L=0.2, Kn2=10, ignore_params=[BMultipoleParams]) # As a keyword a
 sf.ignore_params
 ```
 
-An element without `IgnoreParams` ignores nothing. Reading `ignore_params` from such an
-element adds an `IgnoreParams` with an empty list, so `push!` works on any element. An
-`IgnoreParams` with an empty list has no effect and is not printed with the element.
-
-`ignore_params` is used by tracking, so it affects everything in SciBmad that is computed by
-tracking, e.g. `track`, `twiss`, and `find_closed_orbit`. Other properties of the element
-(e.g. its length or bend angle, and the `s` positions in a `Beamline`) are unaffected.
-
-A parameter group in `ignore_params` is treated as if it were absent from the element. For
-example, a `Quadrupole` with `BMultipoleParams` in `ignore_params` is tracked as a drift,
-and an `SBend` with `BendParams` in `ignore_params` is tracked as a straight element with
-the same multipoles.
-
-### `ignore_params` in a Beamline
-
-When an element is placed in a `Beamline`, every instance of that element in the `Beamline`
-shares the parameter groups of the original element, including its `IgnoreParams`. So
-setting `ignore_params` on the original element, or on any of its instances in a
-`Beamline`, switches the parameter groups in or out for all instances:
-
-```{code-cell} julia
-qf.ignore_params = [AlignmentParams]
-bl = Beamline([qf, Drift(L=1.0), qf], species_ref=Species("electron"), E_ref=18e9)
-bl.line[3].ignore_params
-```
-
-### Allowed entries
-
-`ignore_params` must be set to a vector of parameter group types, even for a single
-parameter group. Anything else, e.g. a single type or a symbol, throws an error:
-
-```julia
-qf.ignore_params = AlignmentParams    # Error: use [AlignmentParams]
-qf.ignore_params = [:AlignmentParams] # Error: entries must be types, not symbols
-```
-
-Any parameter group may be put in the list, and what is done with it is up to the tracking
-code. Tracking switches off the parameter groups that describe the physics of the element
-(e.g. `AlignmentParams`, `BMultipoleParams`, or `RFParams`). Other entries, e.g.
-`MetaParams` or `BeamlineParams`, have no effect.
-
-### Tracking code
-
-Tracking code handles `ignore_params` when unpacking an element: each ignored parameter
-group is replaced with `nothing` before tracking, exactly as if the element did not have
-it. `Beamlines.isactive`, which tracking code uses to decide whether to use a parameter
-group, does not itself check `ignore_params`.
+Any parameter group may be put in the `ignore_params` list but the inclusion of some groups 
+will not affect tracking. For example, listing `MetaParams` or `BeamlineParams` will have no effect.
 
 ## Parameters
 
