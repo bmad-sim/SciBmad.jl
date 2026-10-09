@@ -55,7 +55,7 @@ most machines are essentially horizontal, the {math}`x` coordinate is typically 
 coordinate.
  
 The "nominal" position of a lattice element is the position of the element without any
-[alignment shifts](#alignment:params)
+[alignment shifts](#alignment.params)
 (these position and orientation shifts which are sometimes referred to as "misalignments"). 
 Each lattice element has "`element body`"
 coordinates which are attached to the physical element, and the electric and magnetic
@@ -102,16 +102,16 @@ are not included in any branch.
 Most element kinds have a "straight" geometry as shown in
 {numref}`f:ele.coord.frame`A. That is, the reference curve through the element is a straight line
 segment with the {math}`x` and {math}`y` axes always pointing in the same direction.
-For an element with [BendParams](#bend:params) parameters, 
+For an element with [BendParams](#bend.params) parameters, 
 the reference curve is a segment of a circular arc as shown in
 {numref}`f:ele.coord.frame`B. With the `tilt_ref` parameter set to zero, the rotation axis
 between the entrance and exit frames is parallel to the {math}`y`-axis ([xxx](#s:floor)).
-For [Patch](#patch:params) and [floor_shift](#s:floorshift)
+For [Patch](#patch.params) and [floor_shift](#s:floorshift)
 elements ({numref}`f:ele.coord.frame`C), the exit face can be
 arbitrarily oriented with respect to the entrance end.
 For elements with a `FloorParams` group, the interior reference curve between the
 entrance and exit faces is not defined. For elements with a `PatchParams` group, the interior reference curve 
-is dependent upon the patch parameter settings ([xxx](#patch:params)) and, in general,
+is dependent upon the patch parameter settings ([xxx](#patch.params)) and, in general,
 will have a discontinuity.
 
 %---------------------------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ with an normal (unreversed) orientation drift named `dft1` connected to a normal
 This gives an unphysical situation since a
 particle traveling through `dft1` will "fall off" when it gets to the drift's end.
 {numref}`f:patch.between`D shows the same line as in {numref}`f:patch.between`C with the addition
-of an element `P` containing a [`reflection patch`](#patch:params) between `dft1` and `bnd1` to give a plausible geometry. 
+of an element `P` containing a [`reflection patch`](#patch.params) between `dft1` and `bnd1` to give a plausible geometry. 
 In this case, `P` rotates the coordinate system around the {math}`y`-axis by 180{math}`^o` 
 (this leaves the {math}`y`-axis invariant). This illustrates why
 an element containing a reflection patch is always needed between normal and reversed elements.
@@ -281,7 +281,7 @@ A positive {math}`\psi` forms a right--handed screw with the {math}`z`--axis.
 By default, at {math}`s = 0`, the branch reference curve's origin coincides with the {math}`(X, Y, Z)` 
 origin and the {math}`x`, {math}`y`, and {math}`z` axes correspond to the 
 {math}`X`, {math}`Y`, and {math}`Z` axes respectively. If the lattice has no
-vertical bends (the bend [tilt_ref](#bend:params) parameter is always zero), the {math}`y`--axis
+vertical bends (the bend [tilt_ref](#bend.params) parameter is always zero), the {math}`y`--axis
 will always be in the vertical {math}`Y` direction and the {math}`x`--axis will lie in the 
 horizontal {math}`(X,Z)` plane.
 In this case, {math}`\theta` decreases as one follows the branch reference curve when going through a
@@ -411,7 +411,7 @@ for the same four `tilt_ref` angles. In this case the bend angle is taken to be 
 
 %---------------------------------------------------------------------------------------------------
 
-For a `bend`, the axis of rotation is dependent upon the bend's [`tilt_ref`](#bend:params) angle
+For a `bend`, the axis of rotation is dependent upon the bend's [`tilt_ref`](#bend.params) angle
 as shown in {numref}`f:tilt.bend`A. The axis of rotation points in the negative {math}`y_0`
 direction for `tilt_ref` = 0 and is offset by the bend radius `rho`. Here {math}`(x_0, y_0, z_0)`
 are the branch coordinates at the entrance end of the bend with the {math}`z_0` axis being directed into
@@ -438,7 +438,7 @@ where {math}`\theta_{tr}` is the `tilt_ref` angle. The {math}`\bf L` vector for 
     \rho (\cos\alpha_b - 1) \\ 0 \\ \rho \, \sin\alpha_b
   \end{pmatrix}
 ```
-where {math}`\alpha_b` is the bend [angle](#bend:params) and {math}`\rho` being the bend radius
+where {math}`\alpha_b` is the bend [angle](#bend.params) and {math}`\rho` being the bend radius
 ({math}`\rho`). Notice that since {math}`\bf u` is perpendicular to {math}`z`, the curvilinear reference coordinate
 system has no "torsion". Note: The branch coordinate system can be related to a Frenet-Serret coordinate system, but 
 the two coordinate systems do not coincide.
@@ -559,7 +559,7 @@ non-bend misaligned element depends only on the offsets, and is independent of t
 ### Bend Element Misalignment Transformation
 
 For `Bend` element positioning, besides the standard `BodyShiftP` parameters, there is the
-`tilt_ref` ({math}`\theta_{tr}`) parameter (see [](#bend:params)). 
+`tilt_ref` ({math}`\theta_{tr}`) parameter (see [](#bend.params)). 
 The latter affects both the reference orbit and the bend position. 
 Furthermore, `ref_tilt` is calculated with respect to
 the coordinates at the beginning of the bend while, like straight elements, `roll`, offsets, and
