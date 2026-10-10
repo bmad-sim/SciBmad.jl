@@ -98,6 +98,45 @@ How an element is tracked through ultimately depends on the parameters defined w
 `LineElement`. For details, see the [Tracking Methods](tracking-methods.md) section of the
 documentation.
 
+(ignore.params)=
+## Ignoring Parameter Groups with `ignore_params`
+
+It is often useful to track through an element as if some of its parameter groups were not
+there, e.g. to compare tracking with and without misalignments, or with and without
+apertures. Instead of removing the parameter groups and later restoring them, the
+element's `ignore_params` property, which belongs to the [`IgnoreParams`](#ignore.params.group) 
+parameter group can be used to designate parameter groups to ignore.
+An element without `IgnoreParams` or if `ignore_params` is am empty list, ignores nothing.
+
+```{code-cell} julia
+qf = Quadrupole(L=0.5, Kn1=0.36, x_offset=1e-3,
+                x1_limit=-0.02, x2_limit=0.02, y1_limit=-0.01, y2_limit=0.01)
+qf.ignore_params = [AlignmentParams, ApertureParams]
+qf
+```
+
+The entries of `ignore_params` are the parameter group types themselves (e.g.
+`AlignmentParams`). The parameter groups are left
+untouched, so to activate a parameter group, just remove it from the list:
+
+```{code-cell} julia
+filter!(!=(ApertureParams), qf.ignore_params) # Use the ApertureParams again
+qf.ignore_params
+```
+
+Some other ways of setting `ignore_params`:
+
+```{code-cell} julia
+push!(qf.ignore_params, BMultipoleParams) # Add to the list
+qf.ignore_params = [AlignmentParams]      # Replace the list
+qf.ignore_params = []                     # Use all parameter groups again
+sf = Sextupole(L=0.2, Kn2=10, ignore_params=[BMultipoleParams]) # As a keyword argument
+sf.ignore_params
+```
+
+Any parameter group may be put in the `ignore_params` list but the inclusion of some groups 
+will not affect tracking. For example, listing `MetaParams` or `BeamlineParams` will have no effect.
+
 ## Parameters
 
 SciBmad supports a continually-growing list of parameters to define accelerator elements.
@@ -150,6 +189,12 @@ They are all documented below.
 ### FourPotentialParams
 
 ```{docstring} FourPotentialParams
+```
+
+(ignore.params.group)=
+### IgnoreParams
+
+```{docstring} IgnoreParams
 ```
 
 ### InitialBeamlineParams
