@@ -28,6 +28,32 @@ import Pkg; Pkg.add("SciBmad")
 
 This may take around 10-20 minutes to compile and install.
 
+## SciBmad Distribution
+
+As an alternative to installing SciBmad with `Pkg`, SciBmad is also available as a
+**Distribution**: a single download that bundles its own Julia together with SciBmad and a
+set of commonly used packages (plotting, optimization, differentiation, Jupyter support,
+and others), all already compiled. Installing the Distribution does not require Julia to
+be installed separately, and `using SciBmad` loads without any installation or
+precompilation wait.
+
+The Distribution, together with its installation and usage instructions, is found at the
+[SciBmad-Distribution](https://github.com/bmad-sim/SciBmad-Distribution) repository. It
+can be installed with conda, or with an app installer from the repository's releases page.
+
+Reasons to use the Distribution:
+- Getting started quickly, without the 10-20 minute install and compile time.
+- Setting up SciBmad on many machines, or for a class or workshop, where everyone should
+  get the same tested set of package versions.
+
+Reasons not to use the Distribution:
+- The bundled package versions are fixed for each Distribution release, and new releases
+  of the Distribution may lag behind new releases of SciBmad. Users who want the newest
+  SciBmad as soon as it is released should install with `Pkg`.
+- Developers modifying SciBmad or its component packages should install with `Pkg`.
+- The Distribution is a large download, since it includes many packages a given user may
+  not need.
+
 ## Updating SciBmad
 
 To update SciBmad, and any other Julia packages you have, in Julia run

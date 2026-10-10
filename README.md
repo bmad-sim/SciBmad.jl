@@ -8,6 +8,12 @@
 
 [Quickstart Guide](https://bmad-sim.github.io/SciBmad.jl/quickstart.html)
 
+[SciBmad Distribution](https://github.com/bmad-sim/SciBmad-Distribution): A precompiled
+bundle of Julia, SciBmad and commonly used packages that works out of the box, with no
+install or compile wait. See the
+[installation guide](https://bmad-sim.github.io/SciBmad.jl/installation.html#scibmad-distribution)
+for when to use it.
+
 <!--
 , [Slides](https://github.com/user-attachments/files/25094046/scibmad-eic-02-02-2026.pdf),    [Examples](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples)
 !-->
