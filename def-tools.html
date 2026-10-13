@@ -339,6 +339,7 @@
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#ai-contribution-guidelines">AI Contribution Guidelines</a></li>
 </ul>
 </li>
 </ul>
@@ -388,24 +389,7 @@
 <section id="phase-trombone">
 <h2>Phase Trombone<a class="headerlink" href="#phase-trombone" title="Link to this heading">¶</a></h2>
 <div class="julia-docstring docutils container">
-<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">phase_trombone!</span></code> — <em>Function</em>.</p>
-<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">phase_trombone!</span><span class="p">(</span><span class="n">ele</span><span class="o">::</span><span class="kt">LineElement</span><span class="p">;</span><span class="w"> </span><span class="n">phi1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">phi2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">phi3</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Makes <code class="docutils literal notranslate"><span class="pre">ele</span></code> into a phase trombone - a matrix expanded around the <em>current</em> closed orbit
-(at the time of calling this function) which applies a linear rotation in normal form
-coordinates (which are also computed at the time of calling this function). Useful for
-creating zero-length elements where the phase advance can be tuned without impacting the
-Twiss parameters/linear optics. The <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> must be in a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> in order to
-use this function.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> property <code class="docutils literal notranslate"><span class="pre">transport_map</span></code> is filled with the corresponding phase trombone
-transport map, and the property <code class="docutils literal notranslate"><span class="pre">transport_map_params</span></code> is set to <code class="docutils literal notranslate"><span class="pre">(phi1,</span> <span class="pre">phi2,</span> <span class="pre">phi3)</span></code>.</p>
-<p>Spin tracking is NOT currently compatible with phase trombones.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If the closed orbit and/or Twiss parameters at <code class="docutils literal notranslate"><span class="pre">ele</span></code> are changed <em>after</em> calling
-this function, then the phase trombone map is no longer valid.</p>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">phase_trombone!</span></code>  (docstring unavailable in this build)</p>
 </div>
 </section>
 </section>

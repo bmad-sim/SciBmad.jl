@@ -339,6 +339,7 @@
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#ai-contribution-guidelines">AI Contribution Guidelines</a></li>
 </ul>
 </li>
 </ul>
@@ -411,11 +412,11 @@ cells in parallel. We first define our FODO cell, using a
  species_ref = electron
  E_ref = 1.8e10
 
- <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> s [m] </span> <span class=" -Color -Color-Bold"> L [m] </span>
-  1       qf     Quadrupole   0       0.4
-  2       d      Drift        0.4     0.5
-  3       qd     Quadrupole   0.9     0.4
-  4       d      Drift        1.3     0.5
+ <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> L [m] </span> <span class=" -Color -Color-Bold"> s [m] </span> <span class=" -Color -Color-Bold"> s_downstream [m] </span>
+  1       qf     Quadrupole   0.4     0.0f0   0.4
+  2       d      Drift        0.5     0.4     0.9
+  3       qd     Quadrupole   0.4     0.9     1.3
+  4       d      Drift        0.5     1.3     1.8
 </pre></div>
 </div>
 </div>
