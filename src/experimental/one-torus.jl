@@ -168,7 +168,8 @@ function max_one_torus(
   maxiter=10, 
   autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
   Q_guess = begin
-    tunes = twiss(bl; at=[]).tunes;
+    tw = twiss(bl; at=[]);
+    tunes = SA[tw.q1, tw.q2, tw.q3];
     n_particles = size(mode, 1);
     q = similar(stp, n_particles, 3);
     copyto!(q, -reshape(repeat(tunes, inner=n_particles), n_particles, 3));
@@ -300,11 +301,12 @@ function walk_one_torus(
   setter! = (p)->nothing, # Closure of beamline
   params...; # args to pass to setter
   verbose=true, 
-  as=nothing, 
+  ais=nothing,  # FROM NORMAL FORM to LAB coordinates so 6x6 matricies
   maxiter=10, 
   autodiff=AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))),
   Q_guess = begin
-    tunes = twiss(bl; at=[]).tunes;
+    tw = twiss(bl; at=[]);
+    tunes = SA[tw.q1, tw.q2, tw.q3];
     n_particles = size(mode, 1);
     q = similar(mode_coords, n_particles, 3);
     copyto!(q, -reshape(repeat(tunes, inner=n_particles), n_particles, 3));
@@ -331,11 +333,11 @@ function walk_one_torus(
   v = similar(mode_coords, n_particles, 4) # guess, will change for each delta
   v_cache = similar(v, n_particles, 6)
   co = similar(v, n_particles, 6, n_coord_pts)
-  if !isnothing(as)
-    if size(as) != (n_particles, 4, 4, n_coord_pts)
-      error("Invalid size for `as` keyword argument. Received $(size(as)), requires $((n_particles, 4, 4, n_coord_points))")
+  if !isnothing(ais)
+    if size(ais) != (n_particles, 6, 6, n_coord_pts)
+      error("Invalid size for `ais` keyword argument. Received $(size(ais)), requires $((n_particles, 6, 6, n_coord_pts))")
     else
-      as .= 0
+      ais .= 0
     end
   end
   co .= NaN
@@ -413,16 +415,54 @@ function walk_one_torus(
     @. co[:,5,i] = ifelse(m1, v3,  ifelse(m2, v1,  mc1))
     @. co[:,6,i] = ifelse(m1, v4,  ifelse(m2, v2,  mc2))
 
-    if !isnothing(as)
-      if delta == 0 # use twiss a for all inputs
-        tw = twiss(bl; at=[first(bl.line)], normalizing_map=true)
-        as[:,:,:,i] .= reshape(view(NNF.jacobian(tw.table.a[1]), 1:4, 1:4), 1, 4, 4)
+    if !isnothing(ais)
+      if coord == 0 # use twiss a for all inputs
+        tw = twiss(bl; at=[1], cols=["a"])
+        ais[:,:,:,i] .= reshape(view(NNF.jacobian(tw.table.a[1]), 1:6, 1:4), 1, 6, 4)
       else # compute from Fourier modes
         if n_particles > 1
-          error("Returning `as` for n_particles > 1 not implemented yet")
+          error("Returning `ais` for n_particles > 1 not implemented yet")
         end
-        ai = symplectify(reshape(findnz(sol.jac)[end], 4, 4))
-        as[1,:,:,i] = inv(ai) # transformation from Floquet variables to real space
+        # We also need to see how the transverse Fourier amplitudes depend on z and delta 
+        # at this point to properly compute a. We do not need to care about how the longitudinal 
+        # amplitude depends on z and delta, that part we don't want to travel along anyways
+        # (parallel to torus axis).
+        # For this, we need to do something special
+        # We can wrap freq_res in another function where we are actually differentiating mode_coords
+        # jacobian output should be 6 x 2 
+        yextra = similar(y,  n_particles, 6)
+        newjac = SciBmad.DI.jacobian(
+          freq_res!, 
+          yextra,       # Output, n_particles x 6
+          AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))), 
+          v,   # Input (coords of other mode!), n_particles x 2
+          Cache(v_cache), # DI.Cache, n_particles x 6
+          Cache(copy(Q_guess)),       # DI.Cache, n_particles x 3
+          Constant(bl),      # DI.Constant, Beamline
+          Constant(mode),    # DI.Constant, n_particles x 1
+          Constant(coord),       # DI.Constant, n_particles x 4
+          Constant(setter!),
+          (Constant.(params))...;
+        )
+        extrarows = SciBmad.DI.jacobian(
+          freq_res_other!, 
+          yextra,       # Output, n_particles x 6
+          AutoBatch(AutoFiniteDiff(fdjtype=Val(:central))), 
+          coord,   # Input (coords of other mode!), n_particles x 2
+          Cache(v_cache), # DI.Cache, n_particles x 6
+          Cache(copy(Q_guess)),       # DI.Cache, n_particles x 3
+          Constant(bl),      # DI.Constant, Beamline
+          Constant(mode),    # DI.Constant, n_particles x 1
+          Constant(v),       # DI.Constant, n_particles x 4
+          Constant(setter!),
+          (Constant.(params))...;
+        )
+        ai = hcat(reshape(findnz(newjac)[end], 6, 4), reshape(findnz(extrarows)[end], 6, 2))
+        #println("Symplectic error of 4x4: $(norm(SciBmad.NNF.checksymp(reshape(findnz(sol.jac)[end], 4, 4))))")
+        println("Symplectic error of 6x6: $(norm(SciBmad.NNF.checksymp(transpose(ai))))")
+        ai_symp = transpose(symplectify(transpose(ai)))
+        ais[1,:,:,i] = ai_symp #S(6) * transpose(ai_symp) * transpose(S(4)) 
+        # pinv(ai_symp) # transformation from Floquet variables to real space
       end
     end
     if verbose
@@ -432,6 +472,30 @@ function walk_one_torus(
     end
   end
   return co, Q_guess
+end
+
+function freq_res_6x6!(
+    y,       # Output, n_particles x 6
+    x,       # Input n_particles x 6
+    Q,       # DI.Cache, n_particles x 3
+    bl,      # DI.Constant, Beamline
+    setter! = (p)->nothing, # Closure of beamline, DI.Constant
+    params...; # DI.Contexts
+    n_frequencies=20,
+    n_turns=500,
+    order=3,
+    verbose=true,
+    window_order=5,
+    reltol=eltype(x) == Float64 ? 0.005 : 0.005,#,=0.01,
+    abstol=eltype(x) == Float64 ? 1e-5 : 1e-3, 
+  )
+  mode = similar(y, Int, (size(y, 1), 1))
+  mode .= 3
+  v = x[:,1:4]
+  coord = x[:,5:6]
+  v_cache = similar(x)
+  return freq_res!(y, v, v_cache, Q, bl, mode, coord, setter!, params...; 
+          n_frequencies, n_turns, order, verbose, window_order, reltol, abstol)
 end
 
 function freq_res!(
@@ -457,6 +521,8 @@ function freq_res!(
 
   n_particles = size(v, 1)
   v_cache .= 0
+
+  include_dom = (size(y, 2) == 6)
     
   #=
   Dominant mode: 1
@@ -535,6 +601,7 @@ function freq_res!(
   fdomtru, idxdomtru = findmin(fdom, dims=1)
   good = fdomtru ./ (1 .+ 1 ./ abs.(amplitudes[idxdom][idxdomtru])) .< reltol
   Qdom .= good .* frequencies[idxdom][idxdomtru] .+ .!good .* Qdom
+  ampdom =  good .* amplitudes[idxdom][idxdomtru] # amp is zero if not good
 
   # Update tunes
   @. Q1 = ifelse(mode == 1, Qdom, Q1)
@@ -654,13 +721,17 @@ function freq_res!(
   y[:,1:2] .= ifelse.(reshape(final .== a, n_particles, 1), reinterpret(real(eltype(ampfinal)), reshape(ampfinal, 1, n_particles))', view(y, :, 1:2))
   y[:,3:4] .= ifelse.(reshape(final .== b, n_particles, 1), reinterpret(real(eltype(ampfinal)), reshape(ampfinal, 1, n_particles))', view(y, :, 3:4))
 
+  if include_dom
+    y[:,5:6] .= reinterpret(real(eltype(ampdom)), reshape(ampdom, 1, n_particles))'
+  end
+
   return y
 end
 
 function symplectify(m)
-  @assert size(m, 1) == size(m, 2) "Matrix must be square"
+  #@assert size(m, 1) == size(m, 2) "Matrix must be square"
   @assert mod(size(m, 1), 2) == 0 "Matrix must have even number of rows"
-  nd = div(size(m, 1), 2)
+  nd = div(size(m, 2), 2)
 
   inner_prod(a, b) = dot(a, S * b)
 
