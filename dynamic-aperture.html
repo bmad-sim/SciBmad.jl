@@ -438,7 +438,49 @@ Tracking complete
 <img alt="_images/examples-julia-dynamic-aperture-gpu-5-98c9d9f1.png" class="notebook-output-image" src="_images/examples-julia-dynamic-aperture-gpu-5-98c9d9f1.png" />
 </div>
 <div class="julia-docstring docutils container">
-<p><code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code>  (docstring unavailable in this build)</p>
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> — <em>Function</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">dynamic_aperture</span><span class="p">(</span><span class="n">ring</span><span class="o">::</span><span class="kt">Beamline</span><span class="p">;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">NTuple</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>Computes the acceptance of the ring by pushing a polar grid in <code class="docutils literal notranslate"><span class="pre">x/sig_x</span></code> and <code class="docutils literal notranslate"><span class="pre">y/sig_y</span></code>
+space, for each of the provided <code class="docutils literal notranslate"><span class="pre">deltas</span></code>. Returns a tuple of two vectors defining the
+first particle loss along the radius for a given angle on the polar grid, where the
+first index corresponds to the line position in <code class="docutils literal notranslate"><span class="pre">x/sig_x</span></code> or <code class="docutils literal notranslate"><span class="pre">y/sig_y</span></code> space, and the
+second index corresponds to that in <code class="docutils literal notranslate"><span class="pre">deltas</span></code>.</p>
+<p class="rubric">Required Keyword arguments</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n_r::Int</span></code>: Number of radial points to sample per angle on the polar grid</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_theta::Int</span></code>: Number of angles to sample on the polar grid</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deltas::AbstractArray</span></code>: Array of each δ to compute the transverse acceptance</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_sig_x::Real</span></code>: Maximum sigma-x of the polar grid, in units of sigma (e.g.
+<code class="docutils literal notranslate"><span class="pre">max_sigma_x=20</span></code> to check up to 20 sigma)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_sig_y::Real</span></code>: Maximum sigma-y of the polar grid, in units of sigma (e.g.
+<code class="docutils literal notranslate"><span class="pre">max_sigma_y=20</span></code> to check up to 20 sigma)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">emit_1::Real</span></code>: Horizontal-like emittance to assume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">emit_2::Real</span></code>: Vertical-like emittance to assume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_turns::Int</span></code>: Number of turns to track</p></li>
+</ul>
+<p class="rubric">Optional Keyword Arguments</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">backend</span></code>: A CPU/GPU device backend to use, e.g. <code class="docutils literal notranslate"><span class="pre">CPU()</span></code>, or <code class="docutils literal notranslate"><span class="pre">CUDA.CUDABackend()</span></code> to
+use the GPU. Default is <code class="docutils literal notranslate"><span class="pre">CPU()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coordinates_number_type::Type</span></code>: The type of the phase space coordinates to use in
+tracking. Default is <code class="docutils literal notranslate"><span class="pre">Float64</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delta_dependent_orbits::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, then for each δ in <code class="docutils literal notranslate"><span class="pre">deltas</span></code>, the
+computed acceptance line will be centered around that δ-dependent closed orbit
+(computed with <code class="docutils literal notranslate"><span class="pre">rf_on=false</span></code>). Else, all acceptance lines are centered around the
+6D closed orbit. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code> if coasting beam is detected, <code class="docutils literal notranslate"><span class="pre">false</span></code> if
+longitudinal motion is detected.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">theta_lims</span></code>: A tuple specifying the range of thetas to scan on the polar grid. Default
+is <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">pi)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sig_pz::Real</span></code>: sigma-δ of the beam to assume, default is 0</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">emit_3::Real</span></code>: Longitudinal-like emittance to assume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_file</span></code>: If provided, then a file containing the initial particle coordinates (w.r.t.
+the closed orbit(s)) as rows, with the last column specifying the particle state at the
+end of tracking, will be written to the file. Default is <code class="docutils literal notranslate"><span class="pre">nothing</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">track_kwargs...</span></code>: Any of the settings in <code class="docutils literal notranslate"><span class="pre">TrackingConfig</span></code> except for <code class="docutils literal notranslate"><span class="pre">n_turns</span></code> and
+<code class="docutils literal notranslate"><span class="pre">save_every_n_turns</span></code> may be provided to configure the tracking.</p></li>
+</ul>
 </div>
 </section>
 

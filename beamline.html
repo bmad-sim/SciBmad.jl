@@ -461,7 +461,24 @@ optionally specify the reference species as <code class="docutils literal notran
 </div>
 </div>
 <div class="julia-docstring docutils container">
-<p><code class="docutils literal notranslate"><span class="pre">Beamline</span></code>  (docstring unavailable in this build)</p>
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">Beamline</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Beamline</span>
+</pre></div>
+</div>
+<p>Structure containing a vector of <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s in an ordered sequence, and optionally
+a <code class="docutils literal notranslate"><span class="pre">Context</span></code> struct containing conrol variables associated with the beamline for
+convenience. The reference species (specified as <code class="docutils literal notranslate"><span class="pre">species_ref</span></code> and reference energy
+(specified as one of <code class="docutils literal notranslate"><span class="pre">E_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">pc_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">dE_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">dpc_ref</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">dp_over_q_ref</span></code>) is uniform over the entire beamline. The most-recently specified of
+these reference energy quantites will be stored as the independent variable, in the
+first <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> of the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">line</span></code>: A read-only array of <code class="docutils literal notranslate"><span class="pre">LineElements</span></code> in the beamline, in order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: <code class="docutils literal notranslate"><span class="pre">Context</span></code> struct containing control variables associated with the beamline. If in a <code class="docutils literal notranslate"><span class="pre">Branch</span></code>, this is shared by the whole <code class="docutils literal notranslate"><span class="pre">Branch</span></code> (and <code class="docutils literal notranslate"><span class="pre">Lattice</span></code>, if any), and setting it sets it for all of them</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">branch</span></code>: <code class="docutils literal notranslate"><span class="pre">Branch</span></code> that the beamline is placed in, if any</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">branch_index</span></code>: Index of the beamline in the <code class="docutils literal notranslate"><span class="pre">Branch</span></code>, if in a <code class="docutils literal notranslate"><span class="pre">Branch</span></code></p></li>
+</ul>
 </div>
 <section id="finding-lineelements-in-a-beamline">
 <h2>Finding LineElements in a Beamline<a class="headerlink" href="#finding-lineelements-in-a-beamline" title="Link to this heading">¶</a></h2>

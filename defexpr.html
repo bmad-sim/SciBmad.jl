@@ -501,7 +501,79 @@ parameter to be such a deferred expression:</p>
 nested, and you can write any function that the programming language allows, for example
 file I/O, or even control system gets/puts with a real accelerator for a digital twin.</p>
 <div class="julia-docstring docutils container">
-<p><code class="docutils literal notranslate"><span class="pre">DefExpr</span></code>  (docstring unavailable in this build)</p>
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">DefExpr</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="kt">DefExpr</span><span class="p">{</span><span class="kt">T</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>A lazily-evaluated deferred expression returning type <code class="docutils literal notranslate"><span class="pre">T</span></code>. Deferred expressions
+are lambda functions that “close” over a variable in the current scope. They can
+be used to specify inter-dependent parameters in an accelerator and guarantee that
+no parameter ever becomes “stale”.</p>
+<p>Also see <code class="docutils literal notranslate"><span class="pre">Context</span></code>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.36</span><span class="p">;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1L</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(()</span><span class="o">-&gt;</span><span class="n">a</span><span class="p">));</span><span class="w"> </span><span class="c"># captures variable a</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1L</span>
+<span class="mf">0.36</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.7</span>
+<span class="mf">0.7</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1L</span>
+<span class="mf">0.7</span>
+</pre></div>
+</div>
+<p>Slightly better performance may be achieved by explicitly typing the captured variable:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="o">::</span><span class="kt">Float64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.2</span><span class="p">;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1L</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(()</span><span class="o">-&gt;</span><span class="n">b</span><span class="p">));</span><span class="w"> </span><span class="c"># captures variable b with known type</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1L</span>
+<span class="mf">0.2</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.4</span>
+<span class="mf">0.4</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1L</span>
+<span class="mf">0.4</span>
+</pre></div>
+</div>
+<p>Deferred expressions can be treated and operated with as regular numbers, even outside
+the context of <code class="docutils literal notranslate"><span class="pre">Beamlines</span></code>, and can be evaluated by calling it like a function with no
+arguments (with <code class="docutils literal notranslate"><span class="pre">()</span></code>):</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="p">;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(()</span><span class="o">-&gt;</span><span class="n">sin</span><span class="p">(</span><span class="n">c</span><span class="p">));</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">pi</span><span class="p">;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(()</span><span class="o">-&gt;</span><span class="n">sin</span><span class="p">(</span><span class="n">c</span><span class="p">));</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cd</span><span class="p">()</span>
+<span class="mf">0.0</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cd</span><span class="p">()</span>
+<span class="mf">1.0</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dd</span><span class="p">()</span>
+<span class="mf">6.0</span>
+</pre></div>
+</div>
+<p>An optional <code class="docutils literal notranslate"><span class="pre">Context</span></code> argument can be provided:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">b</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span>
+<span class="mi">3</span>
+</pre></div>
+</div>
 </div>
 </section>
 <section id="contexts">
@@ -589,7 +661,69 @@ will be used:</p>
 </div>
 </div>
 <div class="julia-docstring docutils container">
-<p><code class="docutils literal notranslate"><span class="pre">Context</span></code>  (docstring unavailable in this build)</p>
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">Context</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="kt">Context</span><span class="p">{</span><span class="kt">T</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>A “scope” of variables that can be used when evaluating <code class="docutils literal notranslate"><span class="pre">DefExpr</span></code>s. Contexts serve as a
+single structure that stores all (control) variables associated with beamline parameters.
+Contexts essentially act as structures with arbitrary field names. The type parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>
+can be specified as the variables’ return type, or <code class="docutils literal notranslate"><span class="pre">Union</span></code> of return types, to improve
+performance.</p>
+<p>If a “get” is made of a variable not included in a given <code class="docutils literal notranslate"><span class="pre">Context</span></code>, then the “get” will
+fall-back to the global stack of contexts <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code>. The first instance from the
+top of the <code class="docutils literal notranslate"><span class="pre">GLOBAL_CONTEXTS</span></code> stack of the variable will be used as the variable value. This
+makes it easy to “push” and “pop” parameter settings one may be testing in an interactive
+environment.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">push!</span><span class="p">(</span><span class="n">GLOBAL_CONTEXTS</span><span class="p">,</span><span class="w"> </span><span class="n">c1</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">b</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">()</span><span class="w"> </span><span class="c"># Uses c1.a and c1.b from the GLOBAL_CONTEXTS</span>
+<span class="mi">3</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span><span class="w"> </span><span class="c"># Uses c2.a, but falls-back to c1.b from GLOBAL_CONTEXTS</span>
+<span class="mi">6</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">push!</span><span class="p">(</span><span class="n">GLOBAL_CONTEXTS</span><span class="p">,</span><span class="w"> </span><span class="n">c2</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">()</span><span class="w"> </span><span class="c"># Now uses c2.a and c1.b both from GLOBAL_CONTEXTS</span>
+<span class="mi">6</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">pop!</span><span class="p">(</span><span class="n">GLOBAL_CONTEXTS</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">d</span><span class="p">()</span><span class="w"> </span>
+<span class="mi">3</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Beamline</span></code>s also store a context, which is passed to all <code class="docutils literal notranslate"><span class="pre">DefExpr</span></code>s when getting parameters
+from <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s that are in a beamline:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">],</span><span class="w"> </span><span class="n">context</span><span class="o">=</span><span class="n">c3</span><span class="p">);</span>
+
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">bl</span><span class="p">[</span><span class="n">qf</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Kn1</span>
+<span class="mf">0.36</span>
+</pre></div>
+</div>
+<p>Notice that trying to access the value of <code class="docutils literal notranslate"><span class="pre">Kn1</span></code> directly from <code class="docutils literal notranslate"><span class="pre">qf</span></code> does not work since <code class="docutils literal notranslate"><span class="pre">c3</span></code>
+is not stored where it can be found:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>julia&gt; qf.Kn1
+ERROR: Variable Kn1 is not defined in the local Context nor in GLOBAL_CONTEXTS
+
+julia&gt; push!(GLOBAL_CONTEXTS, c3)    # Make c3 available globally
+
+julia&gt; qf.Kn1                        # Now this works
+0.36
+</pre></div>
+</div>
 </div>
 </section>
 </section>

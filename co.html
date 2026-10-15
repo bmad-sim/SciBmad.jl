@@ -432,7 +432,7 @@ particle phase space coordinates to the keyword argument <code class="docutils l
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(v0 = [-0.0004989769642295866 -4.960423906455618e-5 … 5.709832641878865e-7 1.1804393141352333e-6], coasting_beam = true, sol = (u = [-0.0004989769642295866 -4.960423906455618e-5 -1.6306024728106062e-18 1.4566371932357012e-19], f = [-4.336808689942018e-19 -1.3552527156068805e-20 4.844016007801472e-26 1.9019620351188284e-26], jac = [0.3733741576277462 -3.7558297834010714 -1.5157375517294982e-16 -2.327832698024653e-16; 0.04967605591127967 -0.29810348485962224 -1.047445118670765e-16 -1.6174213701762093e-16; -8.123027042560898e-17 -2.1606748486080718e-16 -0.2384922848750748 -3.0215909241268775; -5.581787294763719e-17 -1.5011054949546543e-16 0.04967605418894974 0.3137629552517054], retcode = 0x00, iters = 2))
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(v0 = [-0.0004989802385159462 -4.9604532830196585e-5 … 4.583308716240812e-6 8.406006385666076e-6], coasting_beam = true, sol = (u = [-0.0004989802385159462 -4.9604532830196585e-5 -1.6306252251242128e-18 1.4566575444586607e-19], f = [1.0842021724855044e-19 6.776263578034403e-21 8.965365399607719e-26 3.501491335691906e-26], jac = [0.37337097355164184 -3.7558001572575597 -1.5157239861912034e-16 -2.327798444104809e-16; 0.04967569703361102 -0.29810138843978784 -1.0474433006960169e-16 -1.6174092557350328e-16; -8.122993052220827e-17 -2.1606442182496773e-16 -0.23849104982591207 -3.0215719061366064; -5.581804475769082e-17 -1.5010950615312332e-16 0.04967569531129392 0.3137606325463075], retcode = 0x00, iters = 2))
 </pre></div>
 </div>
 </div>
@@ -518,7 +518,79 @@ where <code class="docutils literal notranslate"><span class="pre">kick.Kn0L=2e-
 </pre></div>
 </div>
 <div class="julia-docstring docutils container">
-<p><code class="docutils literal notranslate"><span class="pre">find_closed_orbit</span></code>  (docstring unavailable in this build)</p>
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">find_closed_orbit</span></code> — <em>Function</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">find_closed_orbit</span><span class="p">(</span><span class="n">bl</span><span class="o">::</span><span class="kt">Beamline</span><span class="p">;</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">),</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finds the closed orbit of the beamline <code class="docutils literal notranslate"><span class="pre">bl</span></code> using the initial guess <code class="docutils literal notranslate"><span class="pre">v0</span></code>. Supports batched-
+closed orbit finding including <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s and/or different δ-dependent closed orbits in
+rings with coasting beam, simply by including more particles in the guess <code class="docutils literal notranslate"><span class="pre">v0</span></code>.</p>
+<p>A named tuple is returned containing the following fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">v0</span></code>: The initial matrix <code class="docutils literal notranslate"><span class="pre">v0</span></code>, mutated to contain the result</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coasting_beam</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if coasting beam, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sol</span></code>: Another named tuple containing Newton solver convergence information (see
+<code class="docutils literal notranslate"><span class="pre">SciBmad.BatchSolve.newton</span></code>), including the Jacobian(s) for the particle(s) at the last
+iteration.</p></li>
+</ul>
+<p>This function is GPU-parallelizable by specifying <code class="docutils literal notranslate"><span class="pre">v0</span></code> as a <code class="docutils literal notranslate"><span class="pre">GPUArray</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">CuArray</span></code>), and
+will use CUBLAS’s batched linear system solvers for the Newton solve.</p>
+<p class="rubric">Keyword arguments</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">v0</span></code>: Matrix of size <code class="docutils literal notranslate"><span class="pre">(n_particles,</span> <span class="pre">6)</span></code> as the initial guess. If <code class="docutils literal notranslate"><span class="pre">n_particles</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>, batched
+closed orbit finding will be used. <strong>NOTE:</strong> <code class="docutils literal notranslate"><span class="pre">v0</span></code> will be mutated in place with the result!
+Default is <code class="docutils literal notranslate"><span class="pre">zeros(1,</span> <span class="pre">6)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reltol</span></code>: Relative convergence tolerance of the Newton solver, default is <code class="docutils literal notranslate"><span class="pre">1e-13</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">abstol</span></code>: Absolute convergence tolerance of the residual norm, default is <code class="docutils literal notranslate"><span class="pre">1e-13</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxiter</span></code>: Maximum iterations for the Newton root finder before failure, default is <code class="docutils literal notranslate"><span class="pre">100</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rf_on::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">false</span></code>, then any <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> in any <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s are ignored for the
+entirety of the tracking. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_start::Int</span></code>: Specifies the starting index for <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s that particles in a
+bunch will see. E.g., if <code class="docutils literal notranslate"><span class="pre">batch_start=3</span></code>, then particle 1 sees index 3 in all
+<code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s, particle 2 sees index 4, etc. Indexing of <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s will loop
+around to the start if the particle index exceeds the length of the <code class="docutils literal notranslate"><span class="pre">BatchParams</span></code>.
+Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>. WARNING: setting this argument will caused unaligned memory access on
+the GPU, which may reduce performance. In this case, consider <code class="docutils literal notranslate"><span class="pre">circshift</span></code>-ing all
+<code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>s instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">autodiff</span></code>: Automatic-differentiation backend to use (e.g. <code class="docutils literal notranslate"><span class="pre">AutoForwardDiff()</span></code>, <code class="docutils literal notranslate"><span class="pre">AutoEnzyme()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">AutoGTPSA()</span></code>, etc.). Default is <code class="docutils literal notranslate"><span class="pre">AutoForwardDiff</span></code>. See <code class="docutils literal notranslate"><span class="pre">ADTypes.jl</span></code> for all supported backends.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warn</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, warnings about the result will be printed. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coast_tol</span></code>: Tolerance for the first-order delta dependences on each of the phase space variables below
+which coasting beam is assumed. Default is <code class="docutils literal notranslate"><span class="pre">1e-14</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coasting_beam</span></code>: Bool that can be optionally specified as <code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">false</span></code> to bypass the coasting-
+beam check and save some computation time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch</span></code>: Optionally specify if batched-solution is used as <code class="docutils literal notranslate"><span class="pre">Val{true}()</span></code> or <code class="docutils literal notranslate"><span class="pre">Val{false}()</span></code> to improve
+type-stability of this function.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prep</span></code>: A <code class="docutils literal notranslate"><span class="pre">DifferentiationInterface.JacobianPrep</span></code> object to use for the automatic-differentation backend.
+Default is <code class="docutils literal notranslate"><span class="pre">nothing</span></code> meaning to construct one automatically using the <code class="docutils literal notranslate"><span class="pre">autodiff</span></code> backend</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">qd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">kick</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(</span><span class="n">Kn0L</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
+
+<span class="n">fodo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">kick</span><span class="p">],</span><span class="w"> </span>
+<span class="w">        </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span><span class="w"> </span><span class="c"># some Beamline</span>
+<span class="n">co_sol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find_closed_orbit</span><span class="p">(</span><span class="n">fodo</span><span class="p">)</span>
+
+<span class="c"># To get delta-dependent closed orbits:</span>
+<span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.1e-2</span><span class="p">;</span><span class="w"> </span><span class="c"># δ = 0.1e-2</span>
+<span class="w">      </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.2e-2</span><span class="p">]</span><span class="w"> </span><span class="c"># δ = 0.2e-2</span>
+
+<span class="n">co_sol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find_closed_orbit</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">)</span>
+
+<span class="c"># With BatchParams</span>
+<span class="n">kick</span><span class="o">.</span><span class="n">Kn0L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">BatchParam</span><span class="p">([</span><span class="mf">1e-5</span><span class="p">,</span><span class="w"> </span><span class="mf">2e-5</span><span class="p">])</span>
+<span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span>
+<span class="n">co_sol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find_closed_orbit</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">)</span>
+
+<span class="c"># BatchParams + delta-dependent closed orbits:</span>
+<span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.1e-2</span><span class="p">;</span><span class="w"> </span><span class="c"># δ = 0.1e-2</span>
+<span class="w">      </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="mf">0.2e-2</span><span class="p">]</span><span class="w"> </span><span class="c"># δ = 0.2e-2</span>
+<span class="n">co_sol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find_closed_orbit</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </section>
 </section>

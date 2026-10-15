@@ -391,7 +391,30 @@ input array of <code class="docutils literal notranslate"><span class="pre">n_pa
 fully GPU-vectorizable, and so NAFF can be performed in parallel on the GPU if the input
 array is a <code class="docutils literal notranslate"><span class="pre">CUDA.CuArray</span></code>.</p>
 <div class="julia-docstring docutils container">
-<p><code class="docutils literal notranslate"><span class="pre">naff</span></code>  (docstring unavailable in this build)</p>
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">naff</span></code> — <em>Function</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">naff</span><span class="p">(</span><span class="n">data</span><span class="o">::</span><span class="kt">AbstractMatrix</span><span class="p">,</span><span class="w"> </span><span class="n">n_frequencies</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">window_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">frequencies</span><span class="p">,</span><span class="w"> </span><span class="n">amplitudes</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Performs a batched Numerical Analysis of Fundamental Frequencies (NAFF) method for
+the (complex) signals in each row of <code class="docutils literal notranslate"><span class="pre">data</span></code>, computing the first <code class="docutils literal notranslate"><span class="pre">n_frequencies</span></code>
+frequencies from the signal. A Hanning window with order <code class="docutils literal notranslate"><span class="pre">window_order</span></code> is applied
+to the signal in order to gain a more accurate computation of the frequencies.</p>
+<p class="rubric">Arguments</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">data::AbstractMatrix</span></code>: a matrix of size <code class="docutils literal notranslate"><span class="pre">num_signals</span> <span class="pre">x</span> <span class="pre">n_samples</span></code> to do NAFF on</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_frequencies</span> <span class="pre">=</span> <span class="pre">1</span></code>: number of frequencies to compute with NAFF</p></li>
+</ul>
+<p class="rubric">Keyword Arguments</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">window_order</span> <span class="pre">=</span> <span class="pre">1</span></code>: order of the Hanning window applied to the signal throughout NAFF</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warnings</span> <span class="pre">=</span> <span class="pre">true</span></code>: display warnings</p></li>
+</ul>
+<p class="rubric">Output</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">frequencies</span></code>: a matrix of size <code class="docutils literal notranslate"><span class="pre">num_signals</span> <span class="pre">x</span> <span class="pre">n_frequencies</span></code> containing the frequencies</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitudes</span></code>: a matrix of size <code class="docutils literal notranslate"><span class="pre">num_signals</span> <span class="pre">x</span> <span class="pre">n_frequencies</span></code> containing the complex
+amplitudes associated with each frequency</p></li>
+</ul>
 </div>
 </section>
 
