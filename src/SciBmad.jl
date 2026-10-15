@@ -60,8 +60,9 @@ include("experimental/Experimental.jl")
 include("utils.jl")
 include("trombone.jl")
 
-# Only precompile when not processing code coverage
-if Base.JLOptions().code_coverage == 0
+# Only precompile when not processing code coverage, and not during General registry
+# AutoMerge checks (the workload exceeds the memory of the AutoMerge CI runners).
+if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE", "false") != "true"
 @setup_workload begin
   
   @compile_workload begin   
