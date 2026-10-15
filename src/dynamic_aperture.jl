@@ -1,11 +1,25 @@
 """
-    dynamic_aperture(ring::Beamline; kwargs...) -> NTuple{2,Vector{Float64}}
+    dynamic_aperture(ring::Beamline; kwargs...) -> NTuple{2,Matrix{Float64}}
 
-Computes the acceptance of the ring by pushing a polar grid in `x/sig_x` and `y/sig_y` 
-space, for each of the provided `deltas`. Returns a tuple of two vectors defining the 
-first particle loss along the radius for a given angle on the polar grid, where the 
-first index corresponds to the line position in `x/sig_x` or `y/sig_y` space, and the 
-second index corresponds to that in `deltas`.
+Computes the acceptance of the ring by pushing a polar grid in `x/sig_x` and `y/sig_y`
+space, for each of the provided `deltas`. Returns a tuple of two matrices whose first
+index corresponds to the angle on the polar grid and whose second index corresponds to
+the entry in `deltas`.
+
+For each angle the returned value is the **largest sampled amplitude that survived** all
+`n_turns` turns, so the reported acceptance is never larger than the true one. The true
+boundary lies between that amplitude and the next radial sample, i.e. the result carries
+an uncertainty of one radial step: `max_sig_x/(n_r-1)` in `x/sig_x` and `max_sig_y/(n_r-1)`
+in `y/sig_y`. Choose `max_sig_x`, `max_sig_y` and `n_r` so that several radial samples fall
+inside the aperture; the radial step in metres is printed when the scan starts.
+
+Two sentinel values are returned when the grid fails to bracket the aperture, and each
+raises a warning:
+- `NaN` -- even the innermost sampled amplitude was lost, so the grid is too coarse to
+  resolve the aperture at that angle. Reduce `max_sig_x`/`max_sig_y`, or increase `n_r`.
+  `NaN` is also returned for a `delta` whose closed orbit could not survive the tracking.
+- `Inf` -- no sampled amplitude was lost, so the aperture lies beyond the grid. Increase
+  `max_sig_x`/`max_sig_y`.
 
 ## Required Keyword arguments
 - `n_r::Int`: Number of radial points to sample per angle on the polar grid
@@ -63,6 +77,9 @@ function dynamic_aperture(
     track_kwargs... # Get passed to track!
   )
   Base.require_one_based_indexing(deltas)
+  if n_r < 2
+    error("n_r must be at least 2 (got n_r = $n_r): the radial grid holds n_r-1 sampled amplitudes.")
+  end
   if delta_dependent_orbits && emit_3 != 0
     error("delta_dependent_orbits = true, but a nonzero emit_3 was provided. Instead specify sig_pz")
   elseif !delta_dependent_orbits && sig_pz != 0
@@ -121,8 +138,15 @@ function dynamic_aperture(
   thetas = range(theta_lims[1], theta_lims[2], length=n_theta)
   rs = range(0, 1, length=n_r)[2:end]
 
+  # Radial resolution of the scan. The result is only meaningful if several of these steps
+  # fit inside the aperture, so report it up front.
+  dr_x = max_sig_x*sig_x*first(rs)
+  dr_y = max_sig_y*sig_y*first(rs)
+
   n_particles = n_deltas*(1+length(rs)*length(thetas))
   println("Initializing dynamic_aperture with $n_particles particles")
+  println("  sig_x = $sig_x m, sig_y = $sig_y m")
+  println("  radial step = $dr_x m in x, $dr_y m in y")
   v0 = zeros(n_particles, 6)
   v = zeros(n_particles, 6)
   idx_particle = 1
@@ -172,9 +196,15 @@ function dynamic_aperture(
   y_norm_da = zeros(length(thetas), n_deltas)
 
   # Loop thru the thetas, find max for each along r
+  n_unresolved = 0   # innermost sampled amplitude already lost -> grid too coarse
+  n_unbounded  = 0   # nothing lost along the ray -> aperture lies beyond the grid
+  n_co_lost    = 0   # closed orbit itself did not survive
   idx_particle = 1
   for i in LinearIndices(deltas)
       if state[idx_particle] != 0x1
+          n_co_lost += 1
+          x_norm_da[:,i] .= NaN
+          y_norm_da[:,i] .= NaN
           idx_particle += length(thetas)*length(rs)+1
           continue
       end
@@ -194,25 +224,47 @@ function dynamic_aperture(
               end
               
           end
-          
-          if !isnothing(findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1]))
-            idx_da = idx_particle-1 + findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1])
 
-            # Sanity check:
-            
-            if idx_da-(idx_particle-1) != 1 && state[idx_da-1] != 0x1
-                error("Something went wrong")
-            end
-            
-            x_norm_da[j,i] = v0[idx_da,1]/sig_x
-            y_norm_da[j,i] = v0[idx_da,3]/sig_y
-            idx_particle += length(rs)
+          # The aperture is bracketed by the last surviving sample and the first lost one.
+          # Report the last SURVIVING amplitude: reporting the first LOST one overstates the
+          # acceptance by up to one radial step, and on a grid too coarse to resolve the
+          # aperture it degenerates into reporting the grid itself rather than the machine.
+          idx_first_lost = findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1])
+
+          if isnothing(idx_first_lost)
+              n_unbounded += 1
+              x_norm_da[j,i] = Inf
+              y_norm_da[j,i] = Inf
+          elseif idx_first_lost == 1
+              # Nothing survived, not even the innermost ring: the aperture lies somewhere
+              # inside the first radial step and this scan cannot say where.
+              n_unresolved += 1
+              x_norm_da[j,i] = NaN
+              y_norm_da[j,i] = NaN
           else
-            x_norm_da[j,i] = Inf
-            y_norm_da[j,i] = Inf
-            idx_particle += length(rs)
+              idx_da = idx_particle-1 + idx_first_lost - 1
+              x_norm_da[j,i] = v0[idx_da,1]/sig_x
+              y_norm_da[j,i] = v0[idx_da,3]/sig_y
           end
+          idx_particle += length(rs)
       end
+  end
+
+  n_points = length(thetas)*n_deltas
+  if n_co_lost > 0
+      @warn "dynamic_aperture: the closed orbit itself was lost for $n_co_lost of $n_deltas deltas; " *
+            "those columns are returned as NaN."
+  end
+  if n_unresolved > 0
+      @warn "dynamic_aperture: the innermost sampled amplitude was already lost at $n_unresolved of " *
+            "$n_points (angle, delta) points, so the aperture is unresolved there and is reported as NaN. " *
+            "The radial step is $dr_x m in x and $dr_y m in y. Reduce max_sig_x/max_sig_y, or increase " *
+            "n_r, so that several radial samples fall inside the aperture."
+  end
+  if n_unbounded > 0
+      @warn "dynamic_aperture: no sampled amplitude was lost at $n_unbounded of $n_points " *
+            "(angle, delta) points, so the aperture lies beyond the grid and is reported as Inf. " *
+            "Increase max_sig_x/max_sig_y to bracket it."
   end
 
   # output file will have first 6 columns as INITIAL coordinates wrt
