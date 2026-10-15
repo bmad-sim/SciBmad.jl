@@ -13,6 +13,9 @@
 #   \x04END\x04
 # On failure the first line is "\x04ERR\x04" and the body is the error message.
 
+# `Docs.doc` has no methods until the REPL stdlib is loaded, which a non-interactive
+# `julia script.jl` never does on its own.
+import REPL
 using SciBmad
 
 const SEP = "\x04SEP\x04"
