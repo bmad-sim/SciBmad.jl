@@ -206,10 +206,10 @@
 <ul class="current">
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Installation</a><input aria-label="Toggle navigation of Installation" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="#updating-scibmad">Updating SciBmad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jupyter-kernel-installation">Jupyter Kernel Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-other-packages">Adding Other Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-gpu-support">Adding GPU Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plotting">Plotting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#julia-jupyter-kernel">Julia Jupyter Kernel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#using-scibmad-from-python">Using SciBmad from Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -390,65 +390,75 @@
 <p class="admonition-title">Note</p>
 <p>SciBmad runs on Windows, macOS, and Linux.</p>
 </div>
-<p>SciBmad is written in the <a class="reference external" href="https://julialang.org/">Julia programming language</a>, and we
-generally recommend using Julia for the best experience. If you are new to Julia, these
+<p>SciBmad is written in the <a class="reference external" href="https://julialang.org/">Julia programming language</a>, and we recommend using Julia for the best experience. If you are new to Julia, these
 resources might be helpful:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://cheatsheets.quantecon.org/">MATLAB-Python-Julia Cheat Sheet</a></p></li>
 <li><p><a class="reference external" href="https://en.wikibooks.org/wiki/Introducing_Julia">Julia wikibook</a></p></li>
 <li><p><a class="reference external" href="https://benlauwens.github.io/ThinkJulia.jl/latest/book.html">ThinkJulia (for those new to programming)</a></p></li>
 </ul>
-<p>First, Julia must be installed. To do so, follow the platform-dependent
-<a class="reference external" href="https://github.com/JuliaLang/juliaup">installation instructions here</a>. <code class="docutils literal notranslate"><span class="pre">juliaup</span></code> is a
-Julia version manager that makes it easy to install and use new stable Julia versions as
-they become available. <strong>We highly recommend using the long term support (LTS) channel of Julia with SciBmad. This can be set in the terminal after installing <code class="docutils literal notranslate"><span class="pre">juliaup</span></code> using the command:</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">juliaup</span> <span class="n">add</span> <span class="n">lts</span>
-<span class="n">juliaup</span> <span class="n">default</span> <span class="n">lts</span>
+<p>A SciBmad distribution is a precompiled Julia executable that comes with SciBmad as well as a large number of other useful packages, including those for plotting, optimization, automatic differentiation, statistics, etc. Because it is precompiled, it is ready-to-go out of the box.</p>
+<p>The latest SciBmad distribution can be installed with <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html">Conda</a>, using the command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bmad</span><span class="o">-</span><span class="n">sim</span> <span class="n">scibmad</span> 
 </pre></div>
 </div>
-<p>After the Julia installation, run <code class="docutils literal notranslate"><span class="pre">julia</span></code> and add the <code class="docutils literal notranslate"><span class="pre">SciBmad</span></code> package with the command:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">"SciBmad"</span><span class="p">)</span>
+<p>Once installed, simply run <code class="docutils literal notranslate"><span class="pre">scibmad</span></code>, which will open the Julia executable:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>scibmad
+<span class="go">               _</span>
+<span class="go">   _       _ _(_)_     |  Documentation: https://docs.julialang.org</span>
+<span class="go">  (_)     | (_) (_)    |</span>
+<span class="go">   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.</span>
+<span class="go">  | | | | | | |/ _` |  |</span>
+<span class="go">  | | |_| | | | (_| |  |  Version 1.12.7 (2026-08-15)</span>
+<span class="go"> _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org release</span>
+<span class="go">|__/                   |</span>
+
+<span class="go">julia&gt; </span>
 </pre></div>
 </div>
-<p>This may take around 10-20 minutes to compile and install.</p>
+<p>To see the full list of packages included in the SciBmad distribution, run <code class="docutils literal notranslate"><span class="pre">versions(all=true);</span></code> in Julia.</p>
+<p>To exit, run <code class="docutils literal notranslate"><span class="pre">exit()</span></code>, or enter Ctrl + D.</p>
 <section id="updating-scibmad">
 <h2>Updating SciBmad<a class="headerlink" href="#updating-scibmad" title="Link to this heading">¶</a></h2>
-<p>To update SciBmad, and any other Julia packages you have, in Julia run</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<p>SciBmad can be updated using the usual machinery of <code class="docutils literal notranslate"><span class="pre">conda</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">update</span> <span class="o">-</span><span class="n">c</span> <span class="n">bmad</span><span class="o">-</span><span class="n">sim</span> <span class="n">scibmad</span>
+</pre></div>
+</div>
+</section>
+<section id="jupyter-kernel-installation">
+<h2>Jupyter Kernel Installation<a class="headerlink" href="#jupyter-kernel-installation" title="Link to this heading">¶</a></h2>
+<p>To install a Jupyter kernel for the SciBmad distribution, in Julia run</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">IJulia</span>
+<span class="n">installkernel</span><span class="p">(</span><span class="s">"SciBmad Distribution"</span><span class="p">,</span><span class="w"> </span><span class="s">"--threads=auto"</span><span class="p">,</span><span class="w"> </span><span class="n">displayname</span><span class="o">=</span><span class="s">"SciBmad Distribution"</span><span class="p">,</span><span class="w"> </span><span class="n">specname</span><span class="o">=</span><span class="s">"scibmad-distribution"</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>Then when Jupyter is opened, the SciBmad Distribution kernel will appear as an option.</p>
+</section>
+<section id="adding-other-packages">
+<h2>Adding Other Packages<a class="headerlink" href="#adding-other-packages" title="Link to this heading">¶</a></h2>
+<p>You may want to use a package that is not included in the SciBmad distribution. This can be done by adding packages within Julia. For example, to add the <code class="docutils literal notranslate"><span class="pre">Cxx.jl</span></code> package,</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">"Cxx"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can suggest packages to be included in the SciBmad distribution by submitting an issue on Github <a class="reference external" href="https://github.com/bmad-sim/SciBmad-Distribution/issues">here</a>.</p>
+</section>
+<section id="adding-gpu-support">
+<h2>Adding GPU Support<a class="headerlink" href="#adding-gpu-support" title="Link to this heading">¶</a></h2>
+<p>SciBmad supports GPU parallelization on the following hardwares:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/JuliaGPU/CUDA.jl">NVIDIA CUDA</a></p></li>
+<li><p><a class="reference external" href="https://github.com/JuliaGPU/AMDGPU.jl">AMD ROCm</a></p></li>
+<li><p><a class="reference external" href="https://github.com/JuliaGPU/oneAPI.jl">Intel oneAPI</a></p></li>
+<li><p><a class="reference external" href="https://github.com/JuliaGPU/Metal.jl">Apple Metal</a></p></li>
+</ul>
+<p>For GPU parallelization in SciBmad, the corresponding GPU package must be added. For example, to use SciBmad with NVIDIA CUDA, add the <code class="docutils literal notranslate"><span class="pre">CUDA</span></code> package:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">"CUDA"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="plotting">
 <h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading">¶</a></h2>
-<p>Julia has various plotting packages you may add as well, including
-<a class="reference external" href="https://docs.makie.org/stable/">Makie</a> and <a class="reference external" href="https://docs.juliaplots.org/stable/">Plots</a>.
-Our personal preference is Makie.</p>
-</section>
-<section id="julia-jupyter-kernel">
-<h2>Julia Jupyter Kernel<a class="headerlink" href="#julia-jupyter-kernel" title="Link to this heading">¶</a></h2>
-<p>A Jupyter kernel for Julia can be installed using the <a class="reference external" href="https://ijulia.org/stable/">IJulia</a> package. We recommend running this kernel installation command in Julia, which will enable multithreading and automatically use the global project environment:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">"IJulia"</span><span class="p">)</span>
-<span class="k">using</span><span class="w"> </span><span class="n">IJulia</span>
-<span class="n">IJulia</span><span class="o">.</span><span class="n">installkernel</span><span class="p">(</span><span class="s">"Julia Global"</span><span class="p">,</span><span class="w"> </span><span class="n">env</span><span class="o">=</span><span class="kt">Dict</span><span class="p">(</span><span class="s">"JULIA_NUM_THREADS"</span><span class="o">=&gt;</span><span class="s">"auto"</span><span class="p">),</span><span class="w"> </span><span class="s">"--project=</span><span class="si">$</span><span class="p">(</span><span class="n">Base</span><span class="o">.</span><span class="n">active_project</span><span class="p">())</span><span class="s">"</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Then when Jupyter is opened, the Julia kernel will appear as an option.</p>
-</section>
-<section id="using-scibmad-from-python">
-<h2>Using SciBmad from Python<a class="headerlink" href="#using-scibmad-from-python" title="Link to this heading">¶</a></h2>
-<p>Python users can use SciBmad via the <a class="reference external" href="https://github.com/bmad-sim/PySciBmad">PySciBmad</a>
-Python interface package, currently in development. Julia can also be called directly
-from Python using the <a class="reference external" href="https://juliapy.github.io/PythonCall.jl/stable/juliacall/"><code class="docutils literal notranslate"><span class="pre">juliacall</span></code> package</a>.</p>
-<p>The <a class="reference internal" href="examples-index.html"><span class="std std-doc">Examples</span></a> section includes notebooks written in both Julia and
-Python using <code class="docutils literal notranslate"><span class="pre">juliacall</span></code>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The Python interface to SciBmad is early in development.</p>
-</div>
-</section>
-<section id="next-steps">
-<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading">¶</a></h2>
-<p>Once SciBmad is installed, head to the <a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart</span></a>.</p>
+<p>The SciBmad distribution includes the CairoMakie and GLMakie packages from the <a class="reference external" href="https://docs.makie.org/stable/">Makie</a> ecosystem, and <a class="reference external" href="https://docs.juliaplots.org/stable/">Plots</a>. Our personal preference is Makie.</p>
 </section>
 </section>
 
@@ -509,10 +519,10 @@ Python using <code class="docutils literal notranslate"><span class="pre">juliac
             <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
 <li><a class="reference internal" href="#updating-scibmad">Updating SciBmad</a></li>
+<li><a class="reference internal" href="#jupyter-kernel-installation">Jupyter Kernel Installation</a></li>
+<li><a class="reference internal" href="#adding-other-packages">Adding Other Packages</a></li>
+<li><a class="reference internal" href="#adding-gpu-support">Adding GPU Support</a></li>
 <li><a class="reference internal" href="#plotting">Plotting</a></li>
-<li><a class="reference internal" href="#julia-jupyter-kernel">Julia Jupyter Kernel</a></li>
-<li><a class="reference internal" href="#using-scibmad-from-python">Using SciBmad from Python</a></li>
-<li><a class="reference internal" href="#next-steps">Next steps</a></li>
 </ul>
 </li>
 </ul>
