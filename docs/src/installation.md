@@ -35,7 +35,7 @@ julia>
 ```
 
 :::{note}
-If you already have Julia installed on your machine, note that the executable `scibmad` is its own Julia distribution, different from running your own `julia` executable. SciBmad can also be installed through the General registry in your own `julia` executable if you prefer, however in this case Julia will have to precompile SciBmad which takes some time.
+If you already have Julia installed on your machine: the executable `scibmad` is its own Julia distribution, different from running your own `julia` executable. SciBmad can also be installed through the General registry in your own `julia` executable if you prefer, however in this case Julia will have to precompile SciBmad which takes some time.
 :::
 
 To see the full list of packages included in the SciBmad distribution, run `versions(all=true);` in the `scibmad` Julia.
