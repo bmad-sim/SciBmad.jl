@@ -103,7 +103,7 @@ keyword arguments:
 - `a_initial::Union{DAMap,Nothing}`: A `DAMap` of the initial transformation from normal form 
     coordinates to laboratory coordinates, to compute "open" lattice Twiss functions. Default is 
     `nothing`, to compute the periodic ("closed") lattice Twiss functions
-- `damping::Union{Bool,Nothing}`: Specifies if radiation damping is included. Default is `nothing`,
+- `damping::Union{Bool,Nothing}`: Specifies if damping is detected. Default is `nothing`,
     which will auto-detect from `a_initial` or the periodic `a`.
 - `delta0`: If the beam is coasting (no longitudinal oscillations), then the Twiss parameters will 
     be computed around this delta-dependent orbit. Else, this will be an initial guess for the 
@@ -194,6 +194,40 @@ linear dispersion).
 - `as`     : (Nonlinear) spin normalizing map
 - `h<ijkl>`   : The "ijkl" resonance driving term/detune coefficient/Bengtsson monomial for the coasting beam case
 - `h<ijklmn>` : The "ijklmn" resonance driving term/detune coefficient/Bengtsson monomial including longitudinal oscillations
+
+## Properties of the returned `Twiss` struct
+
+The returned `Twiss` struct has two fields, each accessible as a property:
+
+- `summ` : A `TwissSummary` containing the lattice-wide (s-independent) quantities listed below
+- `df`   : The `DataFrame` of s-dependent quantities, with one row per saved location and one 
+    column for each entry of `base_cols` and `cols`
+
+As a convenience, every summary quantity and every dataframe column may also be accessed directly 
+as a property of the `Twiss` struct itself. E.g., for `tw = twiss(bl)`, `tw.q1` is equivalent to 
+`tw.summ.q1`, and `tw.beta1` is equivalent to `tw.df.beta1`. `propertynames(tw)` lists every 
+property available for that particular `twiss` call.
+
+The summary properties, all evaluated for the full lattice, are:
+
+- `q1`     : Horizontal-like tune, equal to the total `phi1` phase advance in units of [2π]
+- `q2`     : Vertical-like tune, equal to the total `phi2` phase advance in units of [2π]
+- `q3`     : Longitudinal-like (synchrotron) tune in units of [2π]. Only present if the beam is 
+    not coasting (e.g. `rf_on=true` with RF cavities in the lattice)
+- `etac`   : Phase slip factor η_c, the relative change of the revolution period per unit δ
+- `alphac` : Momentum compaction factor α_c, the relative change of the closed orbit path length 
+    per unit δ
+- `qspin`  : Spin tune in units of [2π]. Only present if `spin=true`
+- `damp1`  : Damping decrement of mode 1 per turn. Only present if damping is detected
+- `damp2`  : Damping decrement of mode 2 per turn. Only present if damping is detected
+- `damp3`  : Damping decrement of mode 3 per turn. Only present if damping is detected
+
+Summary quantities that are amplitude- and/or parameter-dependent (e.g. with `order > 1`, or with 
+parameters in the GTPSA `Descriptor`) are returned as `AmplitudeDependentValue`s, from which the 
+individual terms may be obtained using the actions `J1`, `J2`, `J3` (or `delta` in place of `J3` for 
+a coasting beam) as keyword arguments. E.g. `tw.q1[J1=1]` gives the coefficient of J₁ in the 
+amplitude expansion of the horizontal-like tune, and `tw.q1[delta=1]` gives the linear chromaticity 
+of a coasting beam.
 """
 function twiss(
   bl::Beamline; 
