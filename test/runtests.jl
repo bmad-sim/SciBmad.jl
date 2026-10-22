@@ -55,6 +55,44 @@ using Test
         @test isapprox(tw.alpha2[end], tw.alpha2[1]; atol=1e-8)
     end
 
+    @testset "Momentum compaction and slip factor" begin
+        # The on-axis closed orbit of a straight cell has length C for every δ, so every δ
+        # coefficient of alphac vanishes.
+        # The revolution time T = C/(βc) gives etac = d(β₀/β)/dδ = (-1 + (2 + β₀²)δ + ...)/γ².
+        pc = 1e9
+        bl = Beamline([Multipole(Kn1L=0.8), Drift(L=1.0), Multipole(Kn1L=-0.7), Drift(L=1.0)];
+                      species_ref=Species("proton"), pc_ref=pc)
+        bg2 = (pc/massof(Species("proton")))^2
+        inv_gamma2 = 1/(1 + bg2)
+        beta2 = bg2/(1 + bg2)
+
+        tw = twiss(bl; rf_on=false)
+        @test isapprox(tw.alphac, 0; atol=1e-14)
+        @test isapprox(tw.etac, -inv_gamma2; rtol=1e-14)
+
+        tw = twiss(bl; rf_on=false, order=2)
+        @test isapprox(getterm(tw.alphac), 0; atol=1e-14)
+        @test isapprox(getterm(tw.alphac; delta=1), 0; atol=1e-14)
+        @test isapprox(getterm(tw.etac), -inv_gamma2; rtol=1e-14)
+        @test isapprox(getterm(tw.etac; delta=1), (2 + beta2)*inv_gamma2; rtol=1e-14)
+
+        # A parameter at first order leaves the slip linear in δ
+        tw = twiss(bl; rf_on=false, GTPSA_descriptor=Descriptor(6, 1, 1, 1))
+        @test isapprox(tw.etac, -inv_gamma2; rtol=1e-14)
+
+        # A kicker gives the on-momentum closed orbit a z advance Δz, so its turn length is
+        # L = C - Δz. With T = L/(βc), etac = alphac - (1 - Δz/C)/γ².
+        b = SBend(L=1.0, angle=pi/16)
+        ring = Beamline([Multipole(Kn1L=0.8), b, Multipole(Kn1L=-0.7), b, Multipole(Kn0L=2e-4)];
+                        species_ref=Species("proton"), pc_ref=pc)
+        co = find_closed_orbit(ring; rf_on=false).v0
+        dz = track(ring; v0=copy(co), rf_on=false).v[1, 5, end] - co[1, 5]
+        tw = twiss(ring; rf_on=false)
+        @test isapprox(tw.etac, tw.alphac - (1 - dz/2)*inv_gamma2; rtol=1e-13)
+        tw = twiss(ring; rf_on=false, order=2)
+        @test isapprox(getterm(tw.etac), getterm(tw.alphac) - (1 - dz/2)*inv_gamma2; rtol=1e-13)
+    end
+
     @testset "ESR Coupling Matrix vs Tao/Bmad" begin
         # Generated with: show lat -pipe -beginning * -at cmat_11@e24.16 -at cmat_12@e24.16 -at cmat_21@e24.16 -at cmat_22@e24.16
         ref = readdlm(

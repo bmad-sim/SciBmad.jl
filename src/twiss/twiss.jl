@@ -741,13 +741,20 @@ function _twiss_summ(twi, cache)
     summ[:q3] = oper(_phi3(j, twi, cache, Val{true}()))
   end
 
+  # Bmad's z = -βc(t - t_ref), so at constant speed a turn of path length L = (β/β₀)C - Δz
+  # takes the time T = T₀ - Δz/(βc). etac = (1/T₀) dT/dδ and alphac = (1/C) dL/dδ; on
+  # momentum alphac = etac + (1 - Δz₀/C)/γ². With RF, z_slip keeps the approximation of Etienne.
+  tilde_m = 1/twi.beta_gamma_ref[j]
+  rel_p = _slip_rel_p(j, twi, cache, Val{true}())
+  e = sqrt(rel_p*rel_p + tilde_m*tilde_m) # E/(p₀c)
+  beta0 = 1/sqrt(1 + tilde_m*tilde_m)
+  z_slip = _z_slip(j, twi, cache, Val{true}())
   etac = -_slip(j, twi, cache, Val{true}()) / (C_LIGHT * twi.t_ref[end])
-  alphac = -_z_slip(j, twi, cache, Val{true}()) / twi.s[end]
-  if coast && TI.is_tps_type(typeof(etac)) isa TI.IsTPSType
+  if coast && TI.is_tps_type(typeof(z_slip)) isa TI.IsTPSType # Δz(δ)
     etac = TI.deriv(etac, 6)
-  end
-  if coast && TI.is_tps_type(typeof(alphac)) isa TI.IsTPSType
-    alphac = TI.deriv(alphac, 6)
+    alphac = TI.deriv(rel_p/(e*beta0) - z_slip/twi.s[end], 6)
+  else # dΔz/dδ, with dβ/dδ = tilde_m²/e³
+    alphac = tilde_m*tilde_m/(e*e*e*beta0) - z_slip/twi.s[end]
   end
   summ[:etac] = oper(etac)
   summ[:alphac] = oper(alphac)

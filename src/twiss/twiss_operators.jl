@@ -629,31 +629,51 @@ end
   end
 end
 
-@inline function _slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
-  # convert z (bmad) to tau (mad)
-  # Need to include parameter/delta dependence in Lorentz beta...
-  beta_gamma_ref = twi.beta_gamma_ref[j]
-  tilde_m = 1/beta_gamma_ref
+# 1 + pz for converting the slip in z to time or path length. For a coasting beam it
+# keeps the δ dependence (pz₀ + δ) exactly when the slip is a TPS in δ; a linear slip
+# is already the δ derivative, taken at pz₀.
+@inline function _slip_rel_p(j, twi, cache, ::Val{as_tps}) where {as_tps}
+  if iscoasting(twi)
+    pz = twi.fac[j].a0.v[6]
+    if as_tps && TI.is_tps_type(typeof(twi.phi3_or_slip[j])) isa TI.IsTPSType
+      return 1 + pz
+    else
+      return 1 + scalar(pz)
+    end
+  end
+
   if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)
-    _pz(j, twi, cache, Val{true}()) # Force (potentially TPSA) calculation of z
+    _pz(j, twi, cache, Val{true}()) # Force (potentially TPSA) calculation of pz
   end
 
   if haskey(cache.tps, :pz)
-    pz = cache.tps[:pz]
+    return 1 + cache.tps[:pz]
   elseif haskey(cache.float, :pz)
-    pz = cache.float[:pz]
+    return 1 + cache.float[:pz]
   else
     throwunreachable()
   end
+end
 
-  rel_p = 1 + pz
+@inline function _slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
+  # convert z (bmad) to tau (mad)
+  tilde_m = 1/twi.beta_gamma_ref[j]
+  rel_p = _slip_rel_p(j, twi, cache, Val{as_tps}())
   beta = rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)
 
   phi3 = _phi(j, twi, cache, Val{as_tps}(), 3)
 
   if iscoasting(twi)
-    return phi3 / beta
-  end 
+    # T = T₀ - Δz/(βc) with Δz = dz0 + phi3: the z advance dz0 of the orbit at pz₀ also
+    # changes the time through β(δ)
+    dz0 = scalar(twi.fac[j].a0.v[5]) - scalar(twi.fac[1].a0.v[5])
+    if TI.is_tps_type(typeof(phi3)) isa TI.IsTPSType
+      return (dz0 + phi3) / beta
+    else # phi3 = dΔz/dδ, with dβ/dδ = tilde_m²/e³
+      e = sqrt(rel_p*rel_p + tilde_m*tilde_m)
+      return phi3 / beta - dz0 * tilde_m*tilde_m / (e*e*e * beta*beta)
+    end
+  end
 
   # Else use the approximation of Etienne
   # B3[5,6]*sin(phi[3]*2*pi)
