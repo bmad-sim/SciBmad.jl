@@ -8,6 +8,11 @@ using Test
     # Those are where most of the functionalities are, hence
     # where most of the tests are.
 
+    @testset "getterm beyond the truncation order" begin
+        a = AmplitudeDependentValue(TPS64(use=Descriptor(6, 2)), true)
+        @test_throws ErrorException getterm(a; delta=3)
+    end
+
     # Here we have regression tests for SciBmad-level functionality.
     # Reference Twiss data was generated with Tao (Bmad) using:
     #   show lat -pipe -beginning * -at beta_a@e24.16 -at beta_b@e24.16 -at alpha_a@e24.16 -at alpha_b@e24.16

@@ -25,8 +25,13 @@ function _adv_get(a, delta, J1, J2, J3, ::Val{as_taylor_series}) where {as_taylo
     mono[5:6] .= J3
   end
 
-  if !GTPSA.mad_desc_isvalidm(GTPSA.getdesc(tps).desc, Cint(nn), mono)
-    error("Unable to get $s: GTPSA truncation order(s) must be higher")
+  desc = GTPSA.getdesc(tps).desc
+  if !GTPSA.mad_desc_isvalidm(desc, Cint(nn), mono)
+    no = zeros(UInt8, nn)
+    mo = GTPSA.mad_desc_maxord(desc, Cint(nn), no)
+    low = ["variable $i: $(no[i]) < $(mono[i])" for i in 1:6 if mono[i] > no[i]]
+    sum(mono) > mo && push!(low, "maximum: $mo < $(sum(mono))")
+    error("Unable to get term (delta=$delta, J1=$J1, J2=$J2, J3=$J3): GTPSA truncation order too low ($(join(low, ", ")))")
   end
 
   if !as_taylor_series
