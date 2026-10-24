@@ -24,6 +24,22 @@ using Test
     # Orbit attributes: orbit_x, orbit_px, orbit_y, orbit_py, orbit_z, orbit_pz (NOT orbit.vec.N)
     # Kicker: set element cv01_7 kick = <value>   (VKicker in Bmad ↔ Kicker.Ks0L in SciBmad)
 
+    @testset "Bengtsson h columns of thin multipoles" begin
+        # Thin octupole: h2200 = K3L β²/16. Thin sextupole: h3000 = K2L β^(3/2)/(12√2), h2100 = 3 h3000.
+        qf = Multipole(Kn1L=0.8); qd = Multipole(Kn1L=-0.7); d = Drift(L=1.0)
+        cell(e...) = Beamline([e..., qf, d, qd, d]; species_ref=Species("electron"), pc_ref=1e9)
+        h(bl, col, order, tps) = scalar(getproperty(twiss(bl; rf_on=false, order=order, at=[1],
+            cols=[col], as_taylor_series=tps), Symbol(col))[1])
+        β = twiss(cell(); rf_on=false, at=[1], cols=["beta1"]).beta1[1]
+        oct = cell(Multipole(Kn3L=1000.0)); sx = cell(Multipole(Kn2L=10.0))
+        for tps in (false, true)
+            # The bare cell's exact drifts also contribute to h2200
+            @test h(oct, "h2200", 3, tps) - h(cell(), "h2200", 3, tps) ≈ 1000 * β^2 / 16
+            @test h(sx, "h3000", 2, tps) ≈ 10 * β^1.5 / (12 * sqrt(2))
+            @test h(sx, "h2100", 2, tps) ≈ 10 * β^1.5 / (4 * sqrt(2))
+        end
+    end
+
     @testset "ESR (18 GeV EIC-ESR) Twiss vs Tao/Bmad" begin
         ref = readdlm(
             joinpath(@__DIR__, "reference", "esr-twiss-tao.csv"),
