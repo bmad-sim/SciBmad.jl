@@ -7,7 +7,7 @@
         <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
         <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
 
-    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
         <title>Installation - SciBmad Documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
@@ -210,6 +210,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#adding-other-packages">Adding Other Packages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#adding-gpu-support">Adding GPU Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -398,7 +399,7 @@ resources might be helpful:</p>
 <li><p><a class="reference external" href="https://benlauwens.github.io/ThinkJulia.jl/latest/book.html">ThinkJulia (for those new to programming)</a></p></li>
 </ul>
 <p>A SciBmad distribution is a precompiled Julia executable that comes with SciBmad as well as a large number of other useful packages, including those for plotting, optimization, automatic differentiation, statistics, etc. Because it is precompiled, it is ready-to-go out of the box.</p>
-<p>The latest SciBmad distribution can be installed with <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html">Conda</a>, using the command</p>
+<p>The latest SciBmad distribution can be installed with <a class="reference external" href="https://conda-forge.org/download/">Conda</a>, using the command</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bmad</span><span class="o">-</span><span class="n">sim</span> <span class="n">scibmad</span> 
 </pre></div>
 </div>
@@ -416,7 +417,11 @@ resources might be helpful:</p>
 <span class="go">julia&gt; </span>
 </pre></div>
 </div>
-<p>To see the full list of packages included in the SciBmad distribution, run <code class="docutils literal notranslate"><span class="pre">versions(all=true);</span></code> in Julia.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you already have Julia installed on your machine: the executable <code class="docutils literal notranslate"><span class="pre">scibmad</span></code> is its own Julia distribution, different from running your own <code class="docutils literal notranslate"><span class="pre">julia</span></code> executable. SciBmad can also be installed through the General registry in your own <code class="docutils literal notranslate"><span class="pre">julia</span></code> executable if you prefer, however in this case Julia will have to precompile SciBmad which takes some time.</p>
+</div>
+<p>To see the full list of packages included in the SciBmad distribution, run <code class="docutils literal notranslate"><span class="pre">versions(all=true);</span></code> in the <code class="docutils literal notranslate"><span class="pre">scibmad</span></code> Julia.</p>
 <p>To exit, run <code class="docutils literal notranslate"><span class="pre">exit()</span></code>, or enter Ctrl + D.</p>
 <section id="updating-scibmad">
 <h2>Updating SciBmad<a class="headerlink" href="#updating-scibmad" title="Link to this heading">¶</a></h2>
@@ -427,7 +432,8 @@ resources might be helpful:</p>
 </section>
 <section id="jupyter-kernel-installation">
 <h2>Jupyter Kernel Installation<a class="headerlink" href="#jupyter-kernel-installation" title="Link to this heading">¶</a></h2>
-<p>To install a Jupyter kernel for the SciBmad distribution, in Julia run</p>
+<p><a class="reference external" href="https://jupyterlab.readthedocs.io/en/stable/index.html">JupyterLab</a> is a widely used computational notebook authoring and editing environment, and may be a helpful companion when using SciBmad. Installation instructions for JupyterLab can be found <a class="reference external" href="https://jupyterlab.readthedocs.io/en/stable/getting_started/installation.html">here</a>.</p>
+<p>To install a Jupyter kernel for the SciBmad distribution, open Julia using <code class="docutils literal notranslate"><span class="pre">scibmad</span></code> and run</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">IJulia</span>
 <span class="n">installkernel</span><span class="p">(</span><span class="s">"SciBmad Distribution"</span><span class="p">,</span><span class="w"> </span><span class="s">"--threads=auto"</span><span class="p">,</span><span class="w"> </span><span class="n">displayname</span><span class="o">=</span><span class="s">"SciBmad Distribution"</span><span class="p">,</span><span class="w"> </span><span class="n">specname</span><span class="o">=</span><span class="s">"scibmad-distribution"</span><span class="p">,)</span>
 </pre></div>
@@ -436,7 +442,7 @@ resources might be helpful:</p>
 </section>
 <section id="adding-other-packages">
 <h2>Adding Other Packages<a class="headerlink" href="#adding-other-packages" title="Link to this heading">¶</a></h2>
-<p>You may want to use a package that is not included in the SciBmad distribution. This can be done by adding packages within Julia. For example, to add the <code class="docutils literal notranslate"><span class="pre">Cxx.jl</span></code> package,</p>
+<p>Initially you will not need this, but at some point you may want to use a package that is not included in the SciBmad distribution. This can be done by adding packages within Julia. For example, to add the <code class="docutils literal notranslate"><span class="pre">Cxx.jl</span></code> package,</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Pkg</span><span class="p">;</span><span class="w"> </span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">"Cxx"</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -459,6 +465,10 @@ resources might be helpful:</p>
 <section id="plotting">
 <h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading">¶</a></h2>
 <p>The SciBmad distribution includes the CairoMakie and GLMakie packages from the <a class="reference external" href="https://docs.makie.org/stable/">Makie</a> ecosystem, and <a class="reference external" href="https://docs.juliaplots.org/stable/">Plots</a>. Our personal preference is Makie.</p>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">¶</a></h2>
+<p>Once SciBmad is installed, head to the <a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart Guide</span></a>.</p>
 </section>
 </section>
 
@@ -523,6 +533,7 @@ resources might be helpful:</p>
 <li><a class="reference internal" href="#adding-other-packages">Adding Other Packages</a></li>
 <li><a class="reference internal" href="#adding-gpu-support">Adding GPU Support</a></li>
 <li><a class="reference internal" href="#plotting">Plotting</a></li>
+<li><a class="reference internal" href="#next-steps">Next Steps</a></li>
 </ul>
 </li>
 </ul>
