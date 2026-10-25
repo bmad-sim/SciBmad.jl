@@ -26,7 +26,7 @@ function _adv_get(a, delta, J1, J2, J3, ::Val{as_taylor_series}) where {as_taylo
   end
 
   if !GTPSA.mad_desc_isvalidm(GTPSA.getdesc(tps).desc, Cint(nn), mono)
-    error("Unable to get term (delta=$delta, J1=$J1, J2=$J2, J3=$J3):: GTPSA truncation order(s) must be higher")
+    error("Unable to get term (delta=$delta, J1=$J1, J2=$J2, J3=$J3): GTPSA truncation order(s) must be higher")
   end
 
   if !as_taylor_series
