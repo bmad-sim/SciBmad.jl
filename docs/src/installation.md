@@ -12,7 +12,7 @@ resources might be helpful:
 
 A SciBmad distribution is a precompiled Julia executable that comes with SciBmad as well as a large number of other useful packages, including those for plotting, optimization, automatic differentiation, statistics, etc. Because it is precompiled, it is ready-to-go out of the box.
 
-The latest SciBmad distribution can be installed with [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html), using the command
+The latest SciBmad distribution can be installed with [Conda](https://conda-forge.org/download/), using the command
 
 ```
 conda install -c bmad-sim scibmad 
@@ -34,7 +34,11 @@ $ scibmad
 julia> 
 ```
 
-To see the full list of packages included in the SciBmad distribution, run `versions(all=true);` in Julia.
+:::{note}
+If you already have Julia installed on your machine: the executable `scibmad` is its own Julia distribution, different from running your own `julia` executable. SciBmad can also be installed through the General registry in your own `julia` executable if you prefer, however in this case Julia will have to precompile SciBmad which takes some time.
+:::
+
+To see the full list of packages included in the SciBmad distribution, run `versions(all=true);` in the `scibmad` Julia.
 
 To exit, run `exit()`, or enter Ctrl + D.
 
@@ -48,7 +52,9 @@ conda update -c bmad-sim scibmad
 
 ## Jupyter Kernel Installation
 
-To install a Jupyter kernel for the SciBmad distribution, in Julia run
+[JupyterLab](https://jupyterlab.readthedocs.io/en/stable/index.html) is a widely used computational notebook authoring and editing environment, and may be a helpful companion when using SciBmad. Installation instructions for JupyterLab can be found [here](https://jupyterlab.readthedocs.io/en/stable/getting_started/installation.html). 
+
+To install a Jupyter kernel for the SciBmad distribution, open Julia using `scibmad` and run
 ```julia
 using IJulia
 installkernel("SciBmad Distribution", "--threads=auto", displayname="SciBmad Distribution", specname="scibmad-distribution",)
@@ -58,7 +64,7 @@ Then when Jupyter is opened, the SciBmad Distribution kernel will appear as an o
 
 ## Adding Other Packages
 
-You may want to use a package that is not included in the SciBmad distribution. This can be done by adding packages within Julia. For example, to add the `Cxx.jl` package,
+Initially you will not need this, but at some point you may want to use a package that is not included in the SciBmad distribution. This can be done by adding packages within Julia. For example, to add the `Cxx.jl` package,
 
 ```julia
 import Pkg; Pkg.add("Cxx")
@@ -84,3 +90,7 @@ import Pkg; Pkg.add("CUDA")
 ## Plotting
 
 The SciBmad distribution includes the CairoMakie and GLMakie packages from the [Makie](https://docs.makie.org/stable/) ecosystem, and [Plots](https://docs.juliaplots.org/stable/). Our personal preference is Makie.
+
+## Next Steps
+
+Once SciBmad is installed, head to the [Quickstart Guide](quickstart.md).
