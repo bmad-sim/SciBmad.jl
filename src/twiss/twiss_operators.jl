@@ -1040,9 +1040,7 @@ end
 
   # for TPSA we should do extra iteration assuming that there is a delta dependence IF COASTING
   v = Ref{TI.numtype(eltype(hvf.v))}() # monomial value 
-  # A monomial c*u^mono of h puts ±im*c*mono[k±1] into component k of :h:; by Euler's
-  # theorem these sum to d*c, with d the harmonic degree, so accumulate and divide by d.
-  d = sum(mono)
+  fac = 1 / sum(mono)
   for k in 1:nhv
     sgn = isodd(k) ? +1 : -1
     if mono[k + sgn] != 0
@@ -1052,7 +1050,7 @@ end
       while idx > 0
         if view(ords, 1:length(mono)) == mono
           view(ords, 1:length(mono)) .= 0
-          TI.setm!(hk, TI.getm(hk, ords) + s * v[] / d, ords)
+          TI.setm!(hk, TI.getm(hk, ords) + s * v[] * fac, ords)
         end
         idx = TI.cycle!(hvf.v[k], idx, mono=ords, val=v)
       end
@@ -1075,13 +1073,13 @@ end
 
   hvf = cache.vf[:h]
   hk = zero(Float64)
-  d = sum(mono) # harmonic degree, see the method above
+  fac = 1 / sum(mono)
   for k in 1:nhv
     sgn = isodd(k) ? +1 : -1
     if mono[k + sgn] != 0
       mono[k + sgn] -= 1
       s = sgn*im
-      hk += s * TI.getm(hvf.v[k], mono) / d
+      hk += s * TI.getm(hvf.v[k], mono) * fac
       mono[k + sgn] += 1
     end
   end
