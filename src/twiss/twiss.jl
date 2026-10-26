@@ -66,7 +66,7 @@ stored as columns in the returned dataframe. E.g.,
 tw = twiss(bl; cols=["beta1"])
 ```
 will compute only the horizontal-like beta function. We can also specify so-called 
-"resonance driving terms"/"detune coefficients" of the Bengtsson polynomial, similarly,
+"resonance driving terms"/"detune coefficients" of the nonlinear effective Hamiltonian,
 ```julia
 tw = twiss(bl; cols=["beta1", "h3000"], order=2)
 ```
@@ -192,8 +192,8 @@ linear dispersion).
 - `a1`     : Linear normalizing map around the parameter-dependent fixed point, including nonlinear parameter dependence
 - `a2`     : Nonlinear part of the normalizing map, around the parameter-dependent fixed point
 - `as`     : (Nonlinear) spin normalizing map
-- `h<ijkl>`   : The "ijkl" resonance driving term/detune coefficient/Bengtsson monomial for the coasting beam case
-- `h<ijklmn>` : The "ijklmn" resonance driving term/detune coefficient/Bengtsson monomial including longitudinal oscillations
+- `h<ijkl>`   : The "ijkl" resonance driving term/detune coefficient/nonlinear effective Hamiltonian monomial for the coasting beam case
+- `h<ijklmn>` : The "ijklmn" resonance driving term/detune coefficient/nonlinear effective Hamiltonian monomial including longitudinal oscillations
 """
 function twiss(
   bl::Beamline; 
