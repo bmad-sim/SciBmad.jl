@@ -924,7 +924,7 @@ end
   ords = zeros(UInt8, nn)
 
   if isnothing(twi.r_and_tunes)
-    error("Open lattice Bengtsson polynomial `h` calculation not implemented yet")
+    error("Open lattice nonlinear effective Hamiltonian polynomial `h` calculation not implemented yet")
   end
   if !haskey(cache.persistent_cmap, :c)
     cache.persistent_cmap[:c] = c_map(twi.fac[1].a)
@@ -980,7 +980,7 @@ end
   # exphc = ri_lin ∘ a1i_lin ∘ a1 ∘ a2 ∘ r ∘ a2i ∘ a1i ∘ a1_lin
   # note performance could definitely be improved here...
   if isnothing(twi.r_and_tunes)
-    error("Open lattice Bengtsson polynomial `h` calculation not implemented yet")
+    error("Open lattice nonlinear effective Hamiltonian polynomial `h` calculation not implemented yet")
   end
 
   # Take log of (in curly Dragt notation): inv(A2) R A2 inv(R_linear)
