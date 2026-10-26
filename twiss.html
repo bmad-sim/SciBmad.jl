@@ -403,7 +403,7 @@ stored as columns in the returned dataframe. E.g.,</p>
 </pre></div>
 </div>
 <p>will compute only the horizontal-like beta function. We can also specify so-called
-“resonance driving terms”/”detune coefficients” of the Bengtsson polynomial, similarly,</p>
+“resonance driving terms”/”detune coefficients” of the nonlinear effective Hamiltonian,</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">bl</span><span class="p">;</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"beta1"</span><span class="p">,</span><span class="w"> </span><span class="s">"h3000"</span><span class="p">],</span><span class="w"> </span><span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -524,8 +524,8 @@ linear dispersion).</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">a1</span></code>     : Linear normalizing map around the parameter-dependent fixed point, including nonlinear parameter dependence</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">a2</span></code>     : Nonlinear part of the normalizing map, around the parameter-dependent fixed point</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">as</span></code>     : (Nonlinear) spin normalizing map</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">h&lt;ijkl&gt;</span></code>   : The “ijkl” resonance driving term/detune coefficient/Bengtsson monomial for the coasting beam case</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">h&lt;ijklmn&gt;</span></code> : The “ijklmn” resonance driving term/detune coefficient/Bengtsson monomial including longitudinal oscillations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h&lt;ijkl&gt;</span></code>   : The “ijkl” resonance driving term/detune coefficient/nonlinear effective Hamiltonian monomial for the coasting beam case</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h&lt;ijklmn&gt;</span></code> : The “ijklmn” resonance driving term/detune coefficient/nonlinear effective Hamiltonian monomial including longitudinal oscillations</p></li>
 </ul>
 </div>
 </section>
