@@ -142,7 +142,7 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   else
     mono = zeros(UInt8, 6)
     mono[end] = order
-    return factorial(order-1)*TI.getm(x, mono)
+    return factorial(order)*TI.getm(x, mono)
   end
 end
 
