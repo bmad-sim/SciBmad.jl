@@ -265,7 +265,7 @@ The same mechanism extends naturally to purely amplitude-dependent tune shifts (
 is raised high enough to resolve them), using the `J1` and `J2` keyword arguments to extract
 coefficients of `J₁`/`J₂`.
 
-Using the operator notation, the Bengtsson polynomial is defined as the polynomial $h$ in
+Using the operator notation, the "nonlinear effective Hamiltonian" in linear action-angle variables is defined as the polynomial $h$ in
 
 $$
 \mathcal{M} = \mathcal{A}_{cs}^{-1}\exp{(: h : )} \mathcal{R} \mathcal{A}_{cs}
@@ -277,7 +277,7 @@ normalizing transformation. Monomials of $h$ are sometimes referred to as **reso
 driving terms** or **detune coefficients** depending on if they drive resonances or tune
 shifts with amplitude.
 
-We can extract any Bengtsson monomial by simply setting the `order` of `twiss` appropriately
+We can extract any monomial of the nonlinear effective Hamiltonian by simply setting the `order` of `twiss` appropriately
 (must be at least one less than the total order of the monomial). And, if the beam is
 coasting, we can take chromatic derivatives as described before.
 

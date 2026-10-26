@@ -91,6 +91,16 @@ using Test
         @test all(isapprox.(tw.c22[1:N], ref[:,4]; rtol=1e-5, atol=1e-8))
     end
 
+    @testset "Scalar chromatic derivatives match as_taylor_series" begin
+        qf = Multipole(Kn1L=0.8); qd = Multipole(Kn1L=-0.7); d = Drift(L=1.0)
+        bl = Beamline([qf, d, qd, d]; species_ref=Species("electron"), pc_ref=1e9)
+        cols = ["dbeta1_2", "dbeta1_3"]
+        ts = twiss(bl; rf_on=false, chrom=4, cols=cols)
+        tt = twiss(bl; rf_on=false, chrom=4, cols=cols, as_taylor_series=true)
+        @test ts.dbeta1_2 ≈ scalar.(tt.dbeta1_2)
+        @test ts.dbeta1_3 ≈ scalar.(tt.dbeta1_3)
+    end
+
     @testset "ESR Chromatic Functions vs Tao/Bmad" begin
         # Generated with: show lat -pipe -beginning * -at dbeta_dpz_a@e24.16 -at dbeta_dpz_b@e24.16 -at dalpha_dpz_a@e24.16 -at dalpha_dpz_b@e24.16
         # TODO: Tao's dbeta_dpz_a shows a non-physical jump between elements 1 and 2
