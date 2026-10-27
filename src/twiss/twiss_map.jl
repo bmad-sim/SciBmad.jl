@@ -62,6 +62,9 @@ const _TWISS_FCN_MAP = Dict{String,Function}(
   "a1"     => _a1     ,
   "a2"     => _a2     ,
   "as"     => _as     ,
+  "dampdec1" => _dampdec1,
+  "dampdec2" => _dampdec2,
+  "dampdec3" => _dampdec3,
 )
 
 const _INVERTED_TWISS_FCN_MAP = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
@@ -129,6 +132,9 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "a1"     =>  ""    ,
   "a2"     =>  ""    ,
   "as"     =>  ""    ,
+  "dampdec1" => ""   ,
+  "dampdec2" => ""   ,
+  "dampdec3" => ""   ,
 )
 
 @inline function _chrom_derivative(cfcn, order, j, twi, cache, ::Val{as_tps}) where {as_tps}
