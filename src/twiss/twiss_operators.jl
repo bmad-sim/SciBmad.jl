@@ -593,6 +593,33 @@ end
   return _phi(j, twi, cache, Val{as_tps}(), 3)
 end
 
+@inline function _dampdec(j, twi, cache, ::Val{as_tps}, k) where {as_tps}
+  if isnothing(twi.damp1)
+    return 0
+  end
+  
+  if k == 1
+    sym = :damp1
+  elseif k == 2
+    sym = :damp2
+  elseif k == 3
+    sym = :damp3
+  else
+    error("Damping decrement index must be between 1 and 3")
+  end
+  dampdec = getproperty(twi, sym)[j]
+
+  if as_tps
+    return dampdec
+  else
+    return scalar(dampdec)
+  end
+end
+
+@inline _dampdec1(j, twi, cache, ::Val{as_tps}) where {as_tps} = _dampdec(j, twi, cache, Val{as_tps}(), 1)
+@inline _dampdec2(j, twi, cache, ::Val{as_tps}) where {as_tps} = _dampdec(j, twi, cache, Val{as_tps}(), 2)
+@inline _dampdec3(j, twi, cache, ::Val{as_tps}) where {as_tps} = _dampdec(j, twi, cache, Val{as_tps}(), 3)
+
 @inline function _z_slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
   # Need to include parameter/delta dependence in Lorentz beta...
   if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)

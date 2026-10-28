@@ -47,6 +47,9 @@ const TENG_EDWARDS = [
   "c12"    ,
   "c21"    ,
   "c22"    ,
+  "dampdec1",
+  "dampdec2",
+  "dampdec3",
 ]
 
 base_cols::Vector{String} = ["index", "name", "kind", "s"]
@@ -148,6 +151,9 @@ linear dispersion).
 - `phi1`   : Horizontal-like phase advance in units of [2π]
 - `phi2`   : Vertical-like phase advance in units of [2π]
 - `phi3`   : Longitudinal-like phase advance in units of [2π]
+- `dampdec1`: Horizontal-like damping decrement
+- `dampdec2`: Vertical-like damping decrement
+- `dampdec3`: Longitudinal-like damping decrement
 - `slip`   : Slip factor in units cΔt [m]
 - `x`      : Orbit canonical x coordinate
 - `px`     : Orbit canonical px coordinate
