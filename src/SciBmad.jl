@@ -36,6 +36,7 @@ export  twiss,
         track,
         track_spin,
         track_spin!,
+        stroboscopic_average,
         TrackingResult,
         TrackingConfig,
         Twiss,
@@ -49,6 +50,7 @@ export  twiss,
         
 include("closed_orbit.jl") 
 include("track.jl")
+include("spin_stroboscope.jl")
 include("adv.jl")
 include("twiss/twiss_types.jl")
 include("twiss/twiss_operators.jl")
