@@ -115,21 +115,18 @@ They are all documented below.
 ## Parameter Groups
 
 (alignment.params)=
-(alignment:params)=
 ### AlignmentParams
 
 ```{docstring} AlignmentParams
 ```
 
 (aperture.params)=
-(aperture:params)=
 ### ApertureParams
 
 ```{docstring} ApertureParams
 ```
 
 (multipole.sol.params)=
-(multipole.solenoid:params)=
 ### BMultipoleParams
 
 ```{docstring} BMultipoleParams
@@ -141,7 +138,6 @@ They are all documented below.
 ```
 
 (bend.params)=
-(bend:params)=
 ### BendParams
 
 ```{docstring} BendParams
@@ -168,14 +164,12 @@ They are all documented below.
 ```
 
 (patch.params)=
-(patch:params)=
 ### PatchParams
 
 ```{docstring} PatchParams
 ```
 
 (rf.params)=
-(rf:params)=
 ### RFParams
 
 ```{docstring} RFParams

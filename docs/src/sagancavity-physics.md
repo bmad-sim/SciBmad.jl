@@ -9,7 +9,7 @@ has both longitudinal energy gain and transverse focusing effects.
 DC solenoid and multipole fields can be superimposed on the RF fields.
 For a listing of parameters used in the tracking, see the 
 [SaganCavity Tracking Method](#sagancavity.tracking) and 
-[RF parameter group](#rf:params) documentation .
+[RF parameter group](#rf.params) documentation .
 
 ## Justification
 
