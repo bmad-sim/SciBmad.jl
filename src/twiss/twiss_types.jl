@@ -60,13 +60,13 @@ function Base.show(io::IO, tw::Twiss)
   show(io, df; eltypes=true, column_labels = [names(df), units], reserved_display_lines = 2+count+4)
 end
 
-struct TwissInternal{F,P,D,R}
-  s::Vector{Float64}
+struct TwissInternal{T,F,P,D,R}
+  s::Vector{T}
   name::Vector{String}
   kind::Vector{String}
   index::Vector{Int}
   beta_gamma_ref::Vector{Float64}
-  t_ref::Vector{Float64}
+  t_ref::Vector{T}
   fac::F
   phi1::P
   phi2::P

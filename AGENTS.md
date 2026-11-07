@@ -154,7 +154,8 @@ decision before deviating.
    guarantees it: elements tracked in one step (patches, maps, SaganCavity) error for 
    `n_steps > 1` or `n_slices > 1`, and Beamlines forces `n_steps = n_slices = 1` for zero length. 
    Verified per element with a counting callback on mixed lines and ESR.
-3. `_compute_periodic_a_and_cache!` (uniform truncation orders): tracks the identity map once with 
+3. `_compute_periodic_a_and_cache!` (uniform truncation orders): tracks the identity map (Bunch 
+   `t_ref = zero(eltype(s))`, so it can hold parametric lengths) once with 
    a callback storing the map at each saved step; the one-turn map gives `a` (`normal`) and tunes. 
    Otherwise `_compute_periodic_a` and a second tracking pass.
 4. `factorise` (NNF) of `a`, then `_twiss_push_a_with_cache`: per saved step `a = map ∘ a` and 
@@ -218,7 +219,9 @@ Fixed on the way (with tests): rows after the first started with the previous ro
 exactly vertical `n0` (NNF `normal`); `twiss` failed for `DefExpr` element lengths (now evaluated 
 with the Beamline's context, as in tracking); `getterm(…; as_taylor_series=true)` with all orders 0 
 dropped the constant term (`TI.cycle!` started at 0 skips index 0: start at -1 to include it); 
-`twiss` mutated a user-supplied `v0`; `track` rejected a weight vector; `at=[last element]` also 
+`twiss` mutated a user-supplied `v0`; parametric (TPS) element lengths are supported (the Bunch 
+`t_ref`, `s` and `t_ref` storage have the type the lengths sum to, Float64 for ordinary lattices; 
+dq1/dL and dbeta1/dL agree with finite differences); `track` rejected a weight vector; `at=[last element]` also 
 returned the end row; selected elements had `s` one ulp off the full table.
 
 Open items:
@@ -232,8 +235,8 @@ Open items:
 - Closed orbit: `coast_check` and Newton compute the same Jacobian (~8 ms on ESR).
 - `Experimental.dynamic_aperture` sets `RFParams = nothing` on the cavities and restores them only 
   after steps that can throw (the main `dynamic_aperture` uses `rf_on=false` instead).
-- `twiss` with parametric (TPS/Dual) or `BatchParam` element lengths is not supported (Float64 
-  `t_ref`/`beta_gamma_ref`/`s` storage and `Bunch` in `_twiss_track!`).
+- `BatchParam` element lengths: `find_closed_orbit` fails (its Bunch `t_ref` is a Float64; `track` 
+  uses a `BatchParam` `t_ref`), and `twiss` would need each length's `batch_index` element for `s`.
 - Unknown entries of `at` are ignored silently; `_dampdec` returns an `Int` 0 without radiation; 
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.

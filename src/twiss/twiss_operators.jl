@@ -3,7 +3,7 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
 @inline _index(j, twi, cache, ::Val{as_tps}) where {as_tps} = twi.index[j]
 @inline _name(j, twi, cache, ::Val{as_tps})  where {as_tps} = twi.name[j]
 @inline _kind(j, twi, cache, ::Val{as_tps})  where {as_tps} = twi.kind[j]
-@inline _s(j, twi, cache, ::Val{as_tps})     where {as_tps} = twi.s[j]
+@inline _s(j, twi, cache, ::Val{as_tps})     where {as_tps} = as_tps ? twi.s[j] : scalar(twi.s[j]) # a TPS for parametric lengths
 
 @inline _a(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a, NNF.VARS_CPARAM)
 @inline _a(j, twi, cache, ::Val{true}) = twi.fac[j].a

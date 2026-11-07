@@ -163,6 +163,15 @@ using Test
         p.context.kqf = 0.36 + params(dnf)[1]
         tw = twiss(p; GTPSA_descriptor=dnf, at=[])
         @test scalar(getterm(tw.q1, as_taylor_series=true)) == scalar(tw.q1.taylor_series)
+        # Parametric element length: derivative of the tune and beta functions vs finite differences
+        mk(Ld) = Beamline([Quadrupole(Kn1=0.36, L=0.5), Drift(L=Ld, n_steps=2), Quadrupole(Kn1=-0.36, L=0.5),
+            Drift(L=1.2), SBend(L=1.0, angle=0.05)]; species_ref=e, pc_ref=1e9)
+        twp = twiss(mk(1.2 + params(dnf)[1]); GTPSA_descriptor=dnf, cols=["beta1"])
+        h = 1e-5
+        tp = twiss(mk(1.2 + h); cols=["beta1"]); tm = twiss(mk(1.2 - h); cols=["beta1"])
+        @test grad(twp.q1)[1] ≈ (tp.q1 - tm.q1)/(2h) rtol=1e-9
+        @test [grad(b)[1] for b in twp.beta1] ≈ (tp.beta1 .- tm.beta1)./(2h) rtol=1e-8
+        @test scalar.(twp.s) == twiss(mk(1.2); cols=["beta1"]).s
     end
 
     @testset "ESR Chromatic Functions vs Tao/Bmad" begin
