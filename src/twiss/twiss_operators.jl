@@ -1101,7 +1101,7 @@ end
   nhv = nhvars(twi)
 
   hvf = cache.vf[:h]
-  hk = zero(Float64)
+  hk = zero(ComplexF64)
   fac = 1 / sum(mono)
   for k in 1:nhv
     sgn = isodd(k) ? +1 : -1

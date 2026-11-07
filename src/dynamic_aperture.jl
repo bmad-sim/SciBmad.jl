@@ -1,8 +1,8 @@
 """
-    dynamic_aperture(ring::Beamline; kwargs...) -> NTuple{2,Vector{Float64}}
+    dynamic_aperture(ring::Beamline; kwargs...) -> NTuple{2,Matrix{Float64}}
 
 Computes the acceptance of the ring by pushing a polar grid in `x/sig_x` and `y/sig_y` 
-space, for each of the provided `deltas`. Returns a tuple of two vectors defining the 
+space, for each of the provided `deltas`. Returns a tuple of two matrices defining the 
 first particle loss along the radius for a given angle on the polar grid, where the 
 first index corresponds to the line position in `x/sig_x` or `y/sig_y` space, and the 
 second index corresponds to that in `deltas`.
@@ -12,9 +12,9 @@ second index corresponds to that in `deltas`.
 - `n_theta::Int`: Number of angles to sample on the polar grid
 - `deltas::AbstractArray`: Array of each δ to compute the transverse acceptance
 - `max_sig_x::Real`: Maximum sigma-x of the polar grid, in units of sigma (e.g. 
-    `max_sigma_x=20` to check up to 20 sigma)
+    `max_sig_x=20` to check up to 20 sigma)
 - `max_sig_y::Real`: Maximum sigma-y of the polar grid, in units of sigma (e.g. 
-    `max_sigma_y=20` to check up to 20 sigma)
+    `max_sig_y=20` to check up to 20 sigma)
 - `emit_1::Real`: Horizontal-like emittance to assume
 - `emit_2::Real`: Vertical-like emittance to assume
 - `n_turns::Int`: Number of turns to track
@@ -66,7 +66,7 @@ function dynamic_aperture(
   if delta_dependent_orbits && emit_3 != 0
     error("delta_dependent_orbits = true, but a nonzero emit_3 was provided. Instead specify sig_pz")
   elseif !delta_dependent_orbits && sig_pz != 0
-    error("delta_dependent_orbits = true, but a nonzero emit_3 was provided. Instead specify sig_pz")
+    error("delta_dependent_orbits = false, but a nonzero sig_pz was provided. Instead specify emit_3")
   end
   
   n_deltas = length(deltas)
@@ -187,8 +187,7 @@ function dynamic_aperture(
           for (xi, yi) in zip(x,y)
             
               if !(atan(yi,xi) ≈ thetas[j])
-                  writedlm("error.dlm", state)
-                  writedlm("error.dlm", v)
+                  writedlm("error.dlm", hcat(v, state))
                   println()
                   error("Something went wrong with the analysis. Submit an issue including output files.")
               end

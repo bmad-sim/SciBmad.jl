@@ -135,6 +135,36 @@ using Test
         end
     end
 
+    @testset "Regressions" begin
+        e = Species("electron")
+        cell(L=1.2) = Beamline([Quadrupole(L=0.5, Kn1=0.36, n_steps=2), Drift(L=L, n_steps=3), Quadrupole(L=0.5, Kn1=-0.33),
+            Drift(L=1.0), SBend(L=1.0, angle=0.05), Multipole(Kn0L=1e-4)]; species_ref=e, pc_ref=1e9, context=Context(Ld=1.2))
+        # A DefExpr element length is evaluated with the Beamline's context, as in tracking
+        cols = ["beta1", "alpha1", "phi1", "dx"]
+        t1 = twiss(cell(DefExpr(c -> c.Ld)); cols=cols)
+        t2 = twiss(cell(); cols=cols)
+        @test all(getproperty(t1, c) == getproperty(t2, c) for c in (:s, :beta1, :alpha1, :phi1, :dx))
+        # Selecting the last element gives only its entrance row, at the same s as in the full table
+        n = length(cell().line)
+        t3 = twiss(cell(); at=[n], cols=["beta1"])
+        @test t3.index == [n] && t3.s[1] == t2.s[findfirst(==(n), t2.index)]
+        # twiss does not mutate the user's initial guess
+        g = [1e-3 0 0 0 0 0.0]; g0 = copy(g)
+        twiss(cell(); v0=g, at=[])
+        @test g == g0
+        # track accepts a weight vector
+        @test track(cell(); v0=zeros(3, 6), weight=ones(3)) isa TrackingResult
+        # getterm with all orders 0 keeps the constant term
+        @elements begin
+            qf = Quadrupole(Kn1=DefExpr(c -> c.kqf), L=0.5); dd = Drift(L=1.2); qd = Quadrupole(Kn1=-0.36, L=0.5)
+        end
+        p = Beamline([qf, dd, qd, dd]; species_ref=e, pc_ref=1e9)
+        dnf = Descriptor([1, 1, 1, 1, 1, 1], 2, [1], 1)
+        p.context.kqf = 0.36 + params(dnf)[1]
+        tw = twiss(p; GTPSA_descriptor=dnf, at=[])
+        @test scalar(getterm(tw.q1, as_taylor_series=true)) == scalar(tw.q1.taylor_series)
+    end
+
     @testset "ESR Chromatic Functions vs Tao/Bmad" begin
         # Generated with: show lat -pipe -beginning * -at dbeta_dpz_a@e24.16 -at dbeta_dpz_b@e24.16 -at dalpha_dpz_a@e24.16 -at dalpha_dpz_b@e24.16
         # TODO: Tao's dbeta_dpz_a shows a non-physical jump between elements 1 and 2

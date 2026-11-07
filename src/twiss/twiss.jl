@@ -362,7 +362,7 @@ function twiss(
 end
 
 function co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
-  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on, batch_start=batch_index, coast_tol)
+  co_sol = find_closed_orbit(bl; v0=copy(v0), batch=Val{false}(), rf_on, batch_start=batch_index, coast_tol) # find_closed_orbit mutates v0
   if co_sol.sol.retcode != RETCODE_SUCCESS
     error("Closed orbit finder did not converge.")
   end
@@ -401,20 +401,20 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   for ele in bl.line
     idx = ((ele.BeamlineParams)::BeamlineParams).beamline_index
     up = (ele.UniversalParams)::UniversalParams
+    if up.L isa DefExpr # evaluate it (and n_steps from ds_step) with the Beamline's context, as in tracking
+      up = Beamlines.deval(up, bl.context)
+    end
     name = up.name
     kind = up.kind
     L = up.L
-    # Number of steps with a tracking callback: one per integrator step of each slice, or one if 
-    # the element body is not tracked by an integrator
-    if up.tracking_method isa SaganCavity || Beamlines.isactive(ele.PatchParams) || Beamlines.isactive(ele.MapParams)
-      n_steps = 1
-    else
-      n_steps = up.n_slices*up.n_steps
-    end
+    # Number of steps with a tracking callback: one per integrator step of each slice (tracking
+    # errors for elements tracked in fewer steps, e.g. a patch with n_steps > 1)
+    n_steps = up.n_slices*up.n_steps
     ds_step = L/n_steps
 
     # Check which steps are inside any of the ranges
     found = false
+    s_ele = scur # element entrance
     for _ in 1:n_steps
       if any(x -> x[1] <= scur < x[2], at_ranges)
         push!(stmp, scur)
@@ -434,7 +434,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
           x == ele || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(ele, :pdict)[InheritParams].parent) : false)
         end
         ))
-        push!(stmp, scur - ds_step*n_steps)
+        push!(stmp, s_ele)
         push!(names, name)
         push!(kinds, kind)
         push!(idxs, idx)
@@ -455,9 +455,9 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   include_start = any(x->x[1]<=0<=x[2], at_ranges) || any(x->x==1, at_idxs) || any(at_eles) do x
     x == bl.line[1] || (haskey(getfield(bl.line[1], :pdict), InheritParams) ? x == (getfield(bl.line[1], :pdict)[InheritParams].parent) : false)
   end
-  include_end = any(x->x[1]<=scur<=x[2], at_ranges) || any(x->x==length(bl.line), at_idxs) || any(at_eles) do x
-    x == bl.line[end] || (haskey(getfield(bl.line[end], :pdict), InheritParams) ? x == (getfield(bl.line[end], :pdict)[InheritParams].parent) : false)
-  end
+  # The end row is the exit of the last element, so only an s-range containing it includes it 
+  # (a selected element gives the row at its entrance)
+  include_end = any(x->x[1]<=scur<=x[2], at_ranges)
 
   return s, names, kinds, idxs, step_save, include_start, include_end
 end

@@ -149,11 +149,11 @@ decision before deviating.
 
 1. `co_and_coast`: closed orbit and coasting check (`find_closed_orbit`).
 2. `_twiss_assemble_locations`: the `s` of every tracking callback and which ones are saved 
-   (`step_save`). **The callback count per element must match BeamTracking exactly:** one per 
-   integrator step of each slice, `n_slices*n_steps` (`UniversalParams`, per slice), also for Exact 
-   elements with steps; exactly 1 for elements without an integrator (SaganCavity, active 
-   `PatchParams` or `MapParams`). Zero-length elements have `n_steps = n_slices = 1` (Beamlines 
-   enforces it). Verified per element with a counting callback on mixed lines and ESR.
+   (`step_save`). **The callback count per element must match BeamTracking exactly:** it is 
+   `n_slices*n_steps` (`UniversalParams`, `n_steps` per slice) for every element. BeamTracking 
+   guarantees it: elements tracked in one step (patches, maps, SaganCavity) error for 
+   `n_steps > 1` or `n_slices > 1`, and Beamlines forces `n_steps = n_slices = 1` for zero length. 
+   Verified per element with a counting callback on mixed lines and ESR.
 3. `_compute_periodic_a_and_cache!` (uniform truncation orders): tracks the identity map once with 
    a callback storing the map at each saved step; the one-turn map gives `a` (`normal`) and tunes. 
    Otherwise `_compute_periodic_a` and a second tracking pass.
@@ -213,9 +213,13 @@ buffers only for maxord > 1; bitwise); `chrom=2` case 891 → 839 → 685 ms (th
 not help at order 2). Phases of `twiss` at order 1: closed orbit 18 ms, tracking the maps 50 ms, 
 `push` ~120 ms (mostly `factorise`: 14 µs and ~300 allocations per row), table 56 ms.
 
-Fixed on the way: rows after the first started with the previous row's cache (with 
+Fixed on the way (with tests): rows after the first started with the previous row's cache (with 
 `base_cols=String[]` row 2 repeated row 1, 2.5% off in a FODO); `twiss(…; spin=true)` NaN for an 
-exactly vertical `n0` (NNF `normal`). Tests added for both and for `twiss` in sliced elements.
+exactly vertical `n0` (NNF `normal`); `twiss` failed for `DefExpr` element lengths (now evaluated 
+with the Beamline's context, as in tracking); `getterm(…; as_taylor_series=true)` with all orders 0 
+dropped the constant term (`TI.cycle!` started at 0 skips index 0: start at -1 to include it); 
+`twiss` mutated a user-supplied `v0`; `track` rejected a weight vector; `at=[last element]` also 
+returned the end row; selected elements had `s` one ulp off the full table.
 
 Open items:
 - `factorise` speed: the remaining cost is ~19 temporary maps per call (inversions, compositions, 
@@ -223,6 +227,16 @@ Open items:
   further gains need structural changes. A separate order-1 path based on Duals (GPU batchable) is 
   planned as its own implementation: don't build it as part of other work. The `chrom=2` case 
   (order 2) has not been profiled yet.
+- `twiss` table: one dynamic call per cell (~17 ms of ~42 ms on ESR). Specializing the row loop on 
+  the column set removes it but compiles per column set (5 s for the default set): rejected.
+- Closed orbit: `coast_check` and Newton compute the same Jacobian (~8 ms on ESR).
+- `Experimental.dynamic_aperture` sets `RFParams = nothing` on the cavities and restores them only 
+  after steps that can throw (the main `dynamic_aperture` uses `rf_on=false` instead).
+- `twiss` with parametric (TPS/Dual) or `BatchParam` element lengths is not supported (Float64 
+  `t_ref`/`beta_gamma_ref`/`s` storage and `Bunch` in `_twiss_track!`).
+- Unknown entries of `at` are ignored silently; `_dampdec` returns an `Int` 0 without radiation; 
+  `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
+  `H3[k,6]` without normalization by `H3[6,6]`.
 - Docs (`docs/`) describe the previous version; to update together with the maintainer at the end: 
   `LineElement` → `LatElement` everywhere; no default tracking method (`element.md`, `batch.md` 
   mention `SciBmadStandard`/`Symplectic`); empty `tracking-methods.md` and `collective.md`; 

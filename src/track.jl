@@ -73,7 +73,7 @@ Contains all information for a given particle tracking run.
 
 ## Properties
 - `config`: A `TrackingConfig` struct containing configuration settings
-- `elapsed_time`: The tracking execution time in minutes 
+- `elapsed_time`: The tracking execution time in seconds 
 - `state`: A matrix of particle states at each saved turn
 - `v`: A tensor of particle phase space coordinates at each saved turn
 - `q`: If spin tracking was enabled, a tensor of particle quaternions at each saved turn
@@ -81,7 +81,7 @@ Contains all information for a given particle tracking run.
 """
 struct TrackingResult{S,V,Q}
   config::TrackingConfig
-  elapsed_time::Float64 # in minutes
+  elapsed_time::Float64 # in seconds
   state::S
   v::V
   q::Q
@@ -179,7 +179,7 @@ function track(
     v0::AbstractMatrix=zeros(1, 6),
     spin::Bool=false,
     q0::Union{AbstractMatrix,Nothing}=spin ? (q = similar(v0, (size(v0, 1), 4)); q .= 0; q[:,1] .= 1; q) : nothing,
-    weight::Union{AbstractMatrix,Nothing}=nothing,
+    weight::Union{AbstractArray,Number,Nothing}=nothing,
     callbacks::Tuple=(),
 
     # Or explicitly provide a Bunch:
