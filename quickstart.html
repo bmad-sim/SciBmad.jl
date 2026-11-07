@@ -524,10 +524,16 @@ be set independently using <code class="docutils literal notranslate"><span clas
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vpopcntdq.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vp2intersect.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512cd.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +evex512.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avxvnni.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vl.
@@ -870,28 +876,28 @@ and the amplitude-dependent spin tune:</p>
 Descriptor(NV=6, MO=2)
 INDEX  COEFFICIENT             ORDER   EXPONENTS
 ----------------------------------------------------
-  1:  -2.5729811718970851E-15    1     1 0  0 0  0 0
-  1:  -5.7912105164170833E-16    1     0 1  0 0  0 0
+  1:  -2.5729811718970831E-15    1     1 0  0 0  0 0
+  1:  -5.7912105164172194E-16    1     0 1  0 0  0 0
   1:   2.8726619690311641E+00    1     0 0  1 0  0 0
   1:   7.1359575552105781E-01    1     0 0  0 1  0 0
-  1:  -8.1386438069900972E-16    2     2 0  0 0  0 0
-  1:   2.7709841195170625E-14    2     1 1  0 0  0 0
-  1:  -1.6599251993597225E-13    2     0 2  0 0  0 0
+  1:   7.6740389427510141E-15    1     0 0  0 0  0 1
+  1:  -8.1386438069903467E-16    2     2 0  0 0  0 0
+  1:   2.7709841195169542E-14    2     1 1  0 0  0 0
+  1:  -1.6599251993597007E-13    2     0 2  0 0  0 0
   1:  -9.8609301484051493E+00    2     1 0  1 0  0 0
   1:   2.5979472338669396E+00    2     0 1  1 0  0 0
-  1:  -1.9539926245237374E-15    2     0 0  2 0  0 0
+  1:  -1.9539926245237145E-15    2     0 0  2 0  0 0
   1:   4.6570660212420920E+00    2     1 0  0 1  0 0
   1:   5.5944457674647964E+01    2     0 1  0 1  0 0
-  1:   2.4868599294069794E-14    2     0 0  1 1  0 0
-  1:   8.4718971049771879E-14    2     0 0  0 2  0 0
-  1:  -2.6549090158051096E-16    2     1 0  0 0  0 1
-  1:   3.7496341825288590E-14    2     0 1  0 0  0 1
-  1:  -2.5617417384768348E-01    2     0 0  1 0  0 1
-  1:  -9.7932406085884516E-01    2     0 0  0 1  0 1
-  1:  -3.7980910871875830E-15    2     0 0  0 0  0 2
+  1:   2.4868599294070172E-14    2     0 0  1 1  0 0
+  1:   8.4718971049771917E-14    2     0 0  0 2  0 0
+  1:  -4.3128201306426705E-14    2     1 0  0 0  0 1
+  1:   2.0729409438533308E-14    2     0 1  0 0  0 1
+  1:  -1.6861654804791819E+01    2     0 0  1 0  0 1
+  1:   1.6098131882682811E+01    2     0 0  0 1  0 1
+  1:  -9.5621901981671428E-14    2     0 0  0 0  0 2
 ----------------------------------------------------
   2:  -9.9999999999999989E-01    0     0 0  0 0  0 0
-  2:   3.5986338361780927E-16    1     0 0  1 0  0 0
        ... (Output truncated)
 </pre></div>
 </div>
@@ -955,7 +961,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000928791 seconds
+elapsed_time = 0.000713986 seconds
 
 state[1:10, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:10, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
