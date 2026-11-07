@@ -101,6 +101,40 @@ using Test
         @test ts.dbeta1_3 ≈ scalar.(tt.dbeta1_3)
     end
 
+    @testset "Twiss at every step of sliced elements" begin
+        # twiss stores the maps at the tracking callbacks, which are called at every integrator step 
+        # of every slice (n_slices*n_steps per element, also for Exact elements with steps). An element 
+        # with n_slices = 2 tracks bitwise like two elements of half the length with the fringes at the 
+        # outer ends, so the Twiss rows must be equal
+        cell(q...) = Beamline([q..., Sextupole(L=0.2, Kn2=2.0, n_steps=2), Drift(L=1.2, tracking_method=Exact(), n_steps=3),
+            Quadrupole(L=0.5, Kn1=-0.36), Drift(L=1.2)]; species_ref=Species("electron"), pc_ref=1e9)
+        t1 = twiss(cell(Quadrupole(L=0.5, Kn1=0.36, n_slices=2, n_steps=2)))
+        t2 = twiss(cell(Quadrupole(L=0.25, Kn1=0.36, n_steps=2, fringe_at=Fringe.EntranceEnd),
+            Quadrupole(L=0.25, Kn1=0.36, n_steps=2, fringe_at=Fringe.ExitEnd)))
+        @test length(t1.s) == 12
+        for c in (:s, :beta1, :beta2, :alpha1, :alpha2, :phi1, :phi2, :dx)
+            @test getproperty(t1, c) == getproperty(t2, c)
+        end
+    end
+
+    @testset "Spin normal form with n0 exactly vertical" begin
+        # In a flat ring without anything tilting the spin, the closed-orbit spin axis n0 is 
+        # exactly -yhat, where the rotation of n0 to yhat in NonlinearNormalForm's normal had a 
+        # 0/0 axis (NaN). The result must be the limit of a ring with n0 tilted by a tiny rotation 
+        # (the differences scale linearly with the tilt)
+        cell() = [Quadrupole(L=0.5, Kn1=0.36), Sextupole(L=0.2, Kn2=3.0), Drift(L=1.2), Quadrupole(L=0.5, Kn1=-0.33),
+            Sextupole(L=0.2, Kn2=-3.0), Drift(L=1.0), SBend(L=1.0, angle=0.05)]
+        run(bl) = twiss(bl; spin=true, order=2, cols=["nx", "ny", "nz"], as_taylor_series=true, at=[1])
+        flat = run(Beamline(cell(); species_ref=Species("electron"), pc_ref=1e9))
+        tilted = run(Beamline([cell()..., Patch(dz_rot=1e-10)]; species_ref=Species("electron"), pc_ref=1e9))
+        coefs(t) = [t[i] for i in 0:GTPSA.numcoefs(t)-1]
+        @test all(isfinite, coefs(flat.qspin.taylor_series))
+        @test maximum(abs.(coefs(flat.qspin.taylor_series) .- coefs(tilted.qspin.taylor_series))) < 1e-8
+        for c in (:nx, :ny, :nz)
+            @test maximum(abs.(coefs(getproperty(flat, c)[1]) .- coefs(getproperty(tilted, c)[1]))) < 1e-5
+        end
+    end
+
     @testset "ESR Chromatic Functions vs Tao/Bmad" begin
         # Generated with: show lat -pipe -beginning * -at dbeta_dpz_a@e24.16 -at dbeta_dpz_b@e24.16 -at dalpha_dpz_a@e24.16 -at dalpha_dpz_b@e24.16
         # TODO: Tao's dbeta_dpz_a shows a non-physical jump between elements 1 and 2

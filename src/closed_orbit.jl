@@ -68,10 +68,9 @@ function _co_res!(
   n_particles = size(v, 1)
   @assert length(v_res) == n_particles*6 "Incorrect size for residual vector"
   b0 = Bunch(v_cache)
-  SciBmad.BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
   set_kernel!(v_res, v_cache, v, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
-  track!(b0, bl; scalar_params=true, rf_on, batch_start)
+  track!(b0, bl; scalar_params=true, rf_on, batch_start, notify=false)
   sub_kernel!(v_res, v_cache, n_particles, Val{false}(); ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
   return v_res
@@ -93,10 +92,9 @@ function _co_res_coast!(
   @assert n_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
   @assert n_particles == size(v_constant, 1) "Incorrect size for particle constant array given v_coast input"
   b0 = Bunch(v_cache)
-  SciBmad.BTBL.check_bl_bunch!(b0, bl, false) # Do not notify  
   set_kernel!(v_res, v_cache, v_constant, v_coast, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
-  track!(b0, bl; scalar_params=true, rf_on, batch_start)
+  track!(b0, bl; scalar_params=true, rf_on, batch_start, notify=false)
   sub_kernel!(v_res, v_cache, n_particles, Val{true}(); ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
   return v_res
@@ -145,7 +143,7 @@ will use CUBLAS's batched linear system solvers for the Newton solve.
 - `reltol`: Relative convergence tolerance of the Newton solver, default is `1e-13`
 - `abstol`: Absolute convergence tolerance of the residual norm, default is `1e-13`
 - `maxiter`: Maximum iterations for the Newton root finder before failure, default is `100`
-- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the tracking. Default is `true`.
 - `batch_start::Int`: Specifies the starting index for `BatchParam`s that particles in a 
     bunch will see. E.g., if `batch_start=3`, then particle 1 sees index 3 in all 
@@ -171,7 +169,7 @@ will use CUBLAS's batched linear system solvers for the Newton solve.
 qf = Quadrupole(Kn1=0.36, L=0.5)
 d = Drift(L=1.2)
 qd = Quadrupole(Kn1=-0.36, L=0.5)
-kick = LineElement(Kn0L=1e-5)
+kick = LatElement(Kn0L=1e-5)
 
 fodo = Beamline([qf, d, qd, d, kick], 
         species_ref=Species("electron"), E_ref=18e9) # some Beamline

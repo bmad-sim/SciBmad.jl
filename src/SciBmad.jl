@@ -73,12 +73,12 @@ if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE",
     qf1 = Quadrupole(Kn1=0.36, Kn20=1e-3, L=0.25) # Matrix kick, 2 multipoles
     sf = Sextupole(Kn2=0.1, L=0.2);   # Drift kick, 1 multipole
     d1 = Drift(L=0.3, Kn3=1e-4, Kn4=1e-5); # Drift kick, 2 multipoles
-    d2 = Drift(L=0.3, Ksol=1e-6); # Solenoid kick, 1 multipole
+    d2 = Drift(L=0.3, Ksol=1e-6, tracking_method=SolenoidKick()); # Solenoid kick, 1 multipole
     b1  = SBend(L=6.0/2, angle=pi/132/2); # Bend
     b2  = SBend(L=6.0/2, angle=pi/132/2, e1=1e-5, e2=1e-4); # Bend
     qd1 = Quadrupole(Kn1=-0.36, L=0.25); # matrix kick, 1 multipoles w/ rotation
     qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.25); # matrix kick w/ rotation, 2 multipoles
-    sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
+    sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2, tracking_method=SolenoidKick()); # solenoid-kick, 2 multipoles
     kicker = Sextupole(Kn0=1e-5, L=0.01)
     rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6, zero_phase=PhaseRef.AboveTransition);
     thin = Multipole(Kn1L=1e-9); # Thin quad

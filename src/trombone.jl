@@ -1,15 +1,15 @@
 
 """
-    phase_trombone!(ele::LineElement; phi1=0, phi2=0, phi3=0)
+    phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0)
 
 Makes `ele` into a phase trombone - a matrix expanded around the _current_ closed orbit 
 (at the time of calling this function) which applies a linear rotation in normal form 
 coordinates (which are also computed at the time of calling this function). Useful for 
 creating zero-length elements where the phase advance can be tuned without impacting the 
-Twiss parameters/linear optics. The `LineElement` must be in a `Beamline` in order to 
+Twiss parameters/linear optics. The `LatElement` must be in a `Beamline` in order to 
 use this function.
 
-The `LineElement` property `transport_map` is filled with the corresponding phase trombone 
+The `LatElement` property `transport_map` is filled with the corresponding phase trombone 
 transport map, and the property `transport_map_params` is set to `(phi1, phi2, phi3)`.
 
 Spin tracking is NOT currently compatible with phase trombones.
@@ -18,7 +18,7 @@ Spin tracking is NOT currently compatible with phase trombones.
     If the closed orbit and/or Twiss parameters at `ele` are changed *after* calling 
     this function, then the phase trombone map is no longer valid.
 """
-function phase_trombone!(ele::LineElement; phi1=0, phi2=0, phi3=0)
+function phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0)
   bl = ele.beamline
   tw = twiss(bl, base_cols=["index"], cols=["a", "x", "px", "y", "py", "z", "pz"], at=[ele])
   a = SMatrix{6,6}(tw.a[1])

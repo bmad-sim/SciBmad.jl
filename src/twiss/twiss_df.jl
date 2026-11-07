@@ -47,13 +47,14 @@ end
 function _twiss_df_loop(df, cols, twi, cache, shift, ::Val{as_taylor_series}) where {as_taylor_series}
   nrows, ncols = size(df)
   for row in 2:(nrows-shift)
+    # The caches hold the intermediate results of one row, shared by its columns
+    empty!(cache.map)
+    empty!(cache.tps)
+    empty!(cache.float)
+    empty!(cache.matrix)
+    empty!(cache.vf)
     for col in 1:ncols
       df[row+shift,col] = @noinline (cols[col])(row, twi, cache, Val{as_taylor_series}())
-      empty!(cache.map)
-      empty!(cache.tps)
-      empty!(cache.float)
-      empty!(cache.matrix)
-      empty!(cache.vf)
     end
   end
   return df

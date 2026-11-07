@@ -91,11 +91,11 @@ lattice functions/tune, amplitude-dependent tunes, and parametric quantities, se
 keyword arguments:
 
 ## Keyword arguments
-- `at::Union{Colon, AbstractVector}`: A vector containing `LineElement`s, element beamline 
+- `at::Union{Colon, AbstractVector}`: A vector containing `LatElement`s, element beamline 
     indexes, and/or tuples of s-ranges specifying where to compute the Twiss parameters.
 - `in_body_coordinates::Bool`: If `true` Twiss parameters inside misaligned elements are not
     transformed back to the reference curve coordinates. Default is `false`
-- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the Twiss tracking and calculation. Default is `true`
 - `order::Integer`: TPSA truncation order for all phase space coordinates used in the Twiss 
     calculation, default is 1
@@ -140,10 +140,10 @@ Columns to include in `cols` are detailed below. As a reminder, an arbitrary ord
 of *any* scalar-valued output can be computed using the syntax "d<column>_<order" (e.g. "dx_1" is the 
 linear dispersion).
 
-- `index`  : Beamline index of the containing `LineElement`
-- `name`   : Name of the containing `LineElement`
-- `kind`   : Kind of the containing `LineElement`
-- `s`      : s-position of the Twiss parameter calculation (may be inside of `LineElement`)
+- `index`  : Beamline index of the containing `LatElement`
+- `name`   : Name of the containing `LatElement`
+- `kind`   : Kind of the containing `LatElement`
+- `s`      : s-position of the Twiss parameter calculation (may be inside of `LatElement`)
 - `beta1`  : Horizontal-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism
 - `beta2`  : Vertical-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism
 - `alpha1` : Horizontal-like alpha function of the Sagan-Rubin/Edwards-Teng coupling formalism
@@ -213,7 +213,7 @@ function twiss(
   chrom::Integer = order,
   GTPSA_descriptor::Union{Descriptor,Nothing} = nothing,
 
-  #start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
+  #start::Union{Integer,LatElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
   a_initial::Union{Nothing,DAMap}   = nothing, 
   damping::Union{Nothing,Bool} = nothing, # nothing = auto-detect from a_initial
 
@@ -373,7 +373,7 @@ _twiss_assemble_locations(bl::Beamline, ::Colon) = _twiss_assemble_locations(bl,
 
 function _twiss_assemble_locations(bl::Beamline, at::Vector)
   at_idxs = filter(x->x isa Integer, at)
-  at_eles = filter(x->x isa LineElement, at)
+  at_eles = filter(x->x isa LatElement, at)
   at_ranges = filter(x->x isa Tuple, at)
 
   if any(x->x[1] > x[2], at_ranges)
@@ -403,9 +403,15 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
     up = (ele.UniversalParams)::UniversalParams
     name = up.name
     kind = up.kind
-    tm = up.tracking_method
     L = up.L
-    n_steps, ds_step = BeamTracking.find_steps(tm, L)
+    # Number of steps with a tracking callback: one per integrator step of each slice, or one if 
+    # the element body is not tracked by an integrator
+    if up.tracking_method isa SaganCavity || Beamlines.isactive(ele.PatchParams) || Beamlines.isactive(ele.MapParams)
+      n_steps = 1
+    else
+      n_steps = up.n_slices*up.n_steps
+    end
+    ds_step = L/n_steps
 
     # Check which steps are inside any of the ranges
     found = false
@@ -510,8 +516,7 @@ function _twiss_track!(eye, cbs, bl, rf_on, batch_index)
   end
   q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
   b0 = Bunch(v=v, q=q, callbacks=cbs)
-  BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
-  track!(b0, bl; rf_on, batch_start=batch_index)
+  track!(b0, bl; rf_on, batch_start=batch_index, notify=false)
   return b0
 end
 
@@ -597,8 +602,8 @@ function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, rf_on, batch_ind
   a, r, tunes = _a_r_tunes(m_turn)
   if first(step_save) == 0
     b0 = Bunch(v=zeros(0,6)) # empty bunch just to compute initial reference energy
-    BTBL.check_bl_bunch!(b0, bl, false)
-    beta_gamma_ref[1] = BeamTracking.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
+    BTBL.resolve_reference!(b0, Beamlines.trygetproperty(bl, :species_ref), Beamlines.trygetproperty(bl, :p_over_q_ref), false)
+    beta_gamma_ref[1] = Beamlines.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
     t_ref[1] = 0
   end
   return a, (r, tunes), maps
@@ -704,8 +709,8 @@ function _twiss_push_a!(bl, rf_on, batch_index, step_save, a_initial, canonise, 
     _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a_initial, canonise, phase, damp, 1) 
     a_initial = fac[1].a
     b0 = Bunch(v=zeros(0,6)) # empty bunch just to compute initial reference energy
-    BTBL.check_bl_bunch!(b0, bl, false)
-    beta_gamma_ref[1] = BeamTracking.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
+    BTBL.resolve_reference!(b0, Beamlines.trygetproperty(bl, :species_ref), Beamlines.trygetproperty(bl, :p_over_q_ref), false)
+    beta_gamma_ref[1] = Beamlines.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
     t_ref[1] = 0
     initial_step_save_idx = 2
   else

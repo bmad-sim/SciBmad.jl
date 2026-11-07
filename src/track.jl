@@ -7,11 +7,11 @@ Defines configuration settings for a particles tracking run.
 - `n_turns::Int`: Number of turns, defaults to `1`
 - `save_every_n_turns::Int`: Multiple of turn number which specifies the turns tracking 
     data is saved, defaults to `1`
-- `scalar_params::Bool`: If `true`, only uses the primal values of any `LineElement` 
+- `scalar_params::Bool`: If `true`, only uses the primal values of any `LatElement` 
     properties set as `GTPSA.TPS`, `ForwardDiff.Dual`, or `ReverseDiff.TrackedReal` 
     (ignores derivatives part, useful for closed orbit finding prior to parametric 
     normal form). Default is `false`
-- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the tracking. Default is `true`
 - `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
     energy is a `TimeFunction`), then particle energies will be artificially ramped with 
@@ -133,11 +133,11 @@ settings specified by the keyword arguments `kwargs`.
 - `n_turns::Int`: Number of turns, defaults to `1`
 - `save_every_n_turns::Int`: Multiple of turn number which specifies the turns tracking 
     data is saved, defaults to `1`
-- `scalar_params::Bool`: If `true`, only uses the primal values of any `LineElement` 
+- `scalar_params::Bool`: If `true`, only uses the primal values of any `LatElement` 
     properties set as `GTPSA.TPS`, `ForwardDiff.Dual`, or `ReverseDiff.TrackedReal` 
     (ignores derivatives part, useful for closed orbit finding prior to parametric 
     normal form). Default is `false`
-- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the tracking. Default is `true`
 - `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
     energy is a `TimeFunction`), then particle energies will be artificially ramped with 
