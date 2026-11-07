@@ -822,9 +822,11 @@ end
     end
 
     a = twi.fac[j].a
-    ai = inv(a)
+    a0 = twi.fac[j].a0
+    a_isf = inv(a0) ∘ a
+    ai_isf = inv(a_isf)
 
-    n = a ∘ i2 ∘ ai
+    n = a_isf ∘ i2 ∘ ai_isf
     cache.tps[:nx] = n.q.q1
     cache.tps[:ny] = n.q.q2
     cache.tps[:nz] = n.q.q3
