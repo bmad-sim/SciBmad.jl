@@ -1,0 +1,28 @@
+name: Benchmark
+# Runs benchmark/benchmarks.jl for this PR and its base branch on the same runner, so that the
+# timings are comparable (absolute timings depend on the hardware). The results table is written
+# to the job summary.
+on:
+  pull_request:
+    branches:
+      - main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      # Skips SciBmad's precompile workload (src/SciBmad.jl checks this variable), which would run
+      # for both revisions and take long. The benchmarks warm up before timing, so the workload
+      # does not change the measured timings.
+      JULIA_REGISTRYCI_AUTOMERGE: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MilesCranmer/AirspeedVelocity.jl@action-v1
+        with:
+          julia-version: '1'
+          job-summary: 'true'
+          # Benchmark both revisions with this PR's benchmark script
+          script: 'benchmark/benchmarks.jl'

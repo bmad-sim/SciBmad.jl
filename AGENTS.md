@@ -195,7 +195,11 @@ elements (unless `in_body_coordinates`).
   synchrotron tune, and the `zero_phase` must match the ring's side of transition (a ring without 
   bends is below transition).
 - Benchmarks: ESR `twiss(ring)` and `twiss(ring; rf_on=false, chrom=2, cols=["beta1", "dx", "dbeta1"])`, 
-  `find_closed_orbit(ring)`, with `ring = include("test/lattices/esr.jl")`.
+  `find_closed_orbit(ring)`, with `ring = include("test/lattices/esr.jl")`. `benchmark/benchmarks.jl` 
+  (`SUITE`) has these plus FODO cases (order 2, spin, parametric); `.github/workflows/Benchmark.yml` 
+  runs it with AirspeedVelocity.jl for a PR and its base branch on the same runner (results in the 
+  job summary). The script runs on both revisions, so it may only use API that exists in both 
+  (check it against the base branch's environment). Locally: `include("benchmark/benchmarks.jl"); run(SUITE)`.
 
 ### Status (Nov 2026)
 
