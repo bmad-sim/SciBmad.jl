@@ -126,6 +126,14 @@ decision before deviating.
   optimizing. In profiles, garbage collection is attributed to whichever line allocates, so per-line 
   shares of allocating code mislead: confirm with BenchmarkTools on the individual pieces, and 
   measure the GC share with `@timed`.
+- **Compile cost is performance too.** Users pay it on every first call and on every precompile 
+  (the SciBmad workload needed 12 GB of memory before the integrators of BeamTracking were 
+  restructured). For changes to inlining, `@generated` code, kernels or anything type-parametric, 
+  also measure the first-call time in a fresh process and, when it matters, the precompile 
+  workload (time, peak memory, size of the compiled binary; recipe in `BeamTracking/AGENTS.md`, 
+  "Verification"), in a separate environment so the other scratch environments keep the workload 
+  off. Keep runtime and compile cost in balance: prefer changes that reduce code size without 
+  slowing the default paths, and report both.
 
 ## SciBmad
 
@@ -228,6 +236,21 @@ dropped the constant term (`TI.cycle!` started at 0 skips index 0: start at -1 t
 dq1/dL and dbeta1/dL agree with finite differences); `track` rejected a weight vector; `at=[last element]` also 
 returned the end row; selected elements had `s` one ulp off the full table.
 
+Precompile workload (`src/SciBmad.jl`), Julia 1.10, Apple silicon, measured as in "Compile cost is 
+performance too" with each call in its own fresh process. It saves 15–20 s on the first call of 
+`twiss`/`track`/`dynamic_aperture`; what remains is compiled per element shape (kind, tracking 
+method and which parameter groups are set, e.g. `AlignmentParams` for a tilt, no 
+`BMultipoleParams` without strength) and per call path (`track!` of a Bunch has other keyword 
+argument methods than `track`). `--trace-compile` on a first call shows what is still compiled. 
+With BeamTracking `noinline2` and a tilted quadrupole, a quadrupole without strength, `track!` of a 
+Bunch and a small `dynamic_aperture` added to the workload: precompile 72 → 83 s, 8.6 → 8.5 GB, 
+binary 315 → 356 MB; first calls on ESR: `twiss` 1.5 → 0.30 s (its run time is 0.26 s), 
+`find_closed_orbit` 1.1 → 0.02 s, `track` 1.0 → 0.46 s, `track!` 1.6 → 0.40 s, `dynamic_aperture` 
+3.1 → 1.1 s; `twiss(…; order=2, spin=true)` 2.9 s is its run time. Without the workload these are 
+17–23 s. Each workload call compiles a distinct path (rf on/off, spin, orders, `chrom`, parametric), 
+calls that repeat compiled paths cost ~0.01 s. The SIMD and remainder loops of `launch!` are both 
+compiled whatever the number of particles.
+
 Open items:
 - `factorise` speed: the remaining cost is ~19 temporary maps per call (inversions, compositions, 
   `exp!` work maps; sharing the two `exp!` calls' work maps would save ~2) and GTPSA arithmetic; 
@@ -240,7 +263,9 @@ Open items:
 - `Experimental.dynamic_aperture` sets `RFParams = nothing` on the cavities and restores them only 
   after steps that can throw (the main `dynamic_aperture` uses `rf_on=false` instead).
 - `BatchParam` element lengths: `find_closed_orbit` fails (its Bunch `t_ref` is a Float64; `track` 
-  uses a `BatchParam` `t_ref`), and `twiss` would need each length's `batch_index` element for `s`.
+  uses a `BatchParam` `t_ref`), and `twiss` would need each length's `batch_index` element for `s`. 
+  A batched `dynamic_aperture` will be a separate function (its particles are initialized on a grid 
+  and pushed differently).
 - Unknown entries of `at` are ignored silently; `_dampdec` returns an `Int` 0 without radiation; 
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.
