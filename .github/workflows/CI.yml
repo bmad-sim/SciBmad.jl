@@ -5,16 +5,6 @@ on:
       - main
     tags: ['*']
   pull_request:
-  # Keep main's Julia depot cache warm. A branch can read its own caches and
-  # main's, never another PR's, so a stale cache on main is paid for again by
-  # every new branch: the docs job spends ~13 minutes recompiling on its first
-  # run and ~6 minutes on every run after. Main's cache only refreshes when CI
-  # runs on main, which is why a floating `version: '1'` moving to a new Julia
-  # leaves every PR slow until someone next merges. Rebuild it on a schedule
-  # instead. Twice a week, comfortably inside the 7 days after which GitHub
-  # evicts a cache nothing has touched.
-  schedule:
-    - cron: '17 6 * * 1,4'
   workflow_dispatch:
 concurrency:
   # Skip intermediate builds: always.
@@ -24,13 +14,9 @@ concurrency:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
-    # The scheduled run exists to refresh the docs cache; the test matrix keeps
-    # its own cache warm through ordinary pushes and PRs.
-    if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
-    permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
-      actions: write
+    permissions:
       contents: read
     strategy:
       fail-fast: false
@@ -48,7 +34,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
@@ -62,7 +47,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
-      actions: write # needed to allow julia-actions/cache to proactively delete old caches that it has created
       contents: write
       pull-requests: write # needed to comment the preview link on the PR
       statuses: write
@@ -71,16 +55,6 @@ jobs:
       - uses: julia-actions/setup-julia@v3
         with:
           version: '1'
-      - uses: julia-actions/cache@v3
-      - name: Clear stale precompilation locks
-        # A precompile process that dies leaves a `.ji.pidfile` behind in the
-        # depot, and `julia-actions/cache` then saves it and restores it into
-        # every later run. Loading a package whose lock is held blocks until the
-        # lock is finally declared stale, which costs ten minutes per Julia
-        # process -- see the two-hour build in PR #119. This runner is
-        # single-purpose and nothing is precompiling yet, so any lock sitting
-        # here is by definition left over from a run that is long gone.
-        run: find ~/.julia/compiled -name '*.pidfile' -print -delete || true
       - name: Configure doc environment
         shell: julia --project=docs --color=yes {0}
         run: |
@@ -99,17 +73,20 @@ jobs:
         # where a failure is immediate and says what broke, instead of leaving
         # each of those kernels to discover it and spend a 600 s
         # `nb_execution_timeout` finding out -- ten pages of that is a two-hour
-        # red build whose log says only that a cell timed out.
+        # red build whose log says only that a cell timed out. The depot is not
+        # cached between runs: a restored depot was compiled on another runner's
+        # CPU, and the pages then printed its warnings and recompiled. Loading
+        # every package the pages use also compiles their extensions here.
         shell: julia --project=docs --color=yes {0}
         run: |
           using Pkg
           Pkg.precompile()
-          @time using SciBmad
+          @time using SciBmad, NonlinearSolve, Statistics
       - name: Clear locks left by the precompile
-        # The same sweep again, and this is the one that protects the pages: the
-        # lock that broke PR #119 was created by a process dying during the big
-        # precompile, which is the step immediately above. Clearing only at the
-        # start of the job would leave that window open.
+        # A precompile process that dies leaves a `.ji.pidfile` behind in the
+        # depot, and loading a package whose lock is held blocks until the lock
+        # is declared stale: ten minutes per page (the two-hour build in PR #119
+        # came from a process dying during the precompile step above).
         run: find ~/.julia/compiled -name '*.pidfile' -print -delete || true
       - name: Build documentation
         run: python docs/build.py
