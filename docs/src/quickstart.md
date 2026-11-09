@@ -76,7 +76,7 @@ tw = twiss(fodo, cols=["w1", "w2", "dx_2", "dy_2"], chrom=2)
 print(tw.q2)
 #= Prints:
   AmplitudeDependentValue:
-    0.054013300010008765 - 0.00864379148151119 δ
+    0.054013300010008765 - 0.008253153240321371 δ
 =#
 # Get the y-chromaticity
 chromy = getterm(tw.q2, delta=1)
@@ -94,7 +94,7 @@ print(tw.qspin)
 #= Prints:
   AmplitudeDependentValue:
     -0.3094612779434054 - 0.3094612776236819 δ - 7.680773026144916e-10 J₁ 
-    + 28.12750168959732 J₂ - 4.385285890498197e-10 δ²
+    + 28.127501689589934 J₂ - 4.385285890498197e-10 δ²
 =#
 
 #=
@@ -119,7 +119,7 @@ res = track(fodo, v0=rand(n_particles, 6).*1e-5, n_turns=10, spin=true)
 
 Let's start by constructing a simple FODO cell `Beamline`.
 
-To do this, we will define six `LineElement`s corresponding to each of these objects. The
+To do this, we will define six `LatElement`s corresponding to each of these objects. The
 lengths of each object are specified by `L` (in meters), and the quadrupole strengths can be
 set using the property `Kn1`, where `n` means the "normal" multipole (`s` would be "skew")
 and `1` means 1st order multipole (quadrupole). The normal sextupole strength is thus `Kn2`.
@@ -147,9 +147,11 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
 ```
 
 Note that, under the hood, all element "kinds" (`Sextupole`, `Quadrupole`, etc.) are one
-single type `LineElement`. Therefore, there is nothing preventing you from writing e.g.
+single type `LatElement`. Therefore, there is nothing preventing you from writing e.g.
 `Drift(L=1.2, Ks8=123)`. This structure provides maximal flexibility for defining and
-modifying elements (see [Defining a LineElement](element.md) for more).
+modifying elements (see [Defining a LatElement](element.md) for more). A default tracking 
+method is chosen given an element kind, e.g. `MatrixKick` for a finite-length `Quadrupole`, 
+which you can change at any time (see [Tracking Methods](tracking-methods.md)).
 
 The [`AtomicAndPhysicalConstants`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl)
 package is used for specifying particle species, and so any species defined by that package
@@ -170,7 +172,7 @@ first_ele = fodo[1];
 quadrupoles = fodo[x -> x.kind == "Quadrupole"];
 ```
 
-Note that `LineElement`s in a beamline simply inherit all properties from the original
+Note that `LatElement`s in a beamline simply inherit all properties from the original
 element definition. For example, retuning the quadrupole strengths
 
 ```{code-cell} julia
@@ -347,6 +349,15 @@ array. For example:
 using CUDA
 n_particles = 100000 # 100,000 particles
 v0 = CUDA.rand(Float64, n_particles, 6) .* 1e-5
+res = track(fodo, v0=v0, n_turns=10, spin=true)
+```
+
+Apple Metal GPUs only support 32-bit floats, so on a Mac use `Float32` coordinates; all of
+the tracking will then be done in 32-bit:
+
+```julia
+using Metal
+v0 = MtlArray(rand(Float32, n_particles, 6) .* 1f-5)
 res = track(fodo, v0=v0, n_turns=10, spin=true)
 ```
 

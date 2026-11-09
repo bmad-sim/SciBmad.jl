@@ -145,11 +145,32 @@ docstring.
 ```{docstring} Bunch
 ```
 
+## Tracking a Different Species
+
+By default, the particles tracked are of the reference species of the beamline. To track a
+different species, give `track` a `Bunch` of that species. Just like in a real accelerator,
+the magnets keep the same fields, and each particle responds to them according to its own
+charge, mass, and energy. For example, muons with the same momentum as the design electrons
+follow the same orbit, but they are slower, so they fall behind (their `z` changes more):
+
+```{code-cell} julia
+b = Bunch(v=copy(v0), species=Species("muon"))
+res = track(fodo, bunch=b, n_turns=10)
+res.v[1,:,end]
+```
+
+A particle with the opposite charge, such as a positron in an electron ring, is bent the other
+way by the dipoles and is quickly lost, just as it would be in the real ring.
+
+
+(track.callbacks)=
 ## Callbacks
 
 The `Bunch` struct may also contain a tuple of functions `callbacks`. These functions are
 executed **every integration step**, and allow users to inject their own code into the
-tracking if desired. For example, `twiss` uses callbacks to compute the Twiss parameters at
+tracking if desired. An element with `n_slices` slices of `n_steps` steps each (see
+[Integration Steps and Slices](#track.steps)) executes them `n_slices*n_steps` times, and
+elements without integration steps (patches, maps, and `SaganCavity`) once. For example, `twiss` uses callbacks to compute the Twiss parameters at
 every integration step, inside of elements.
 
 Callbacks are required to have the function signature defined below
@@ -210,7 +231,7 @@ res = track(fodo, v0=v0)
 ```
 
 :::{note}
-When lower-precision floats are used for the particle coordinates, _all_ element parameters (e.g. magnet strengths, lengths, etc) are converted to 32-bit floats prior to tracking through.
+When 32-bit floats are used for the particle coordinates, _all_ numbers in the tracking (e.g. magnet strengths, lengths, and time-dependent parameters) are 32-bit floats too.
 :::
 
 
@@ -282,9 +303,14 @@ for `GPUArray`s is not possible. As such, the first "turn" in tracking will have
 in order for the JIT compiler to compile SciBmad's GPU tracking kernels.
 :::
 
-:::{note}
-Apple Metal GPUs only support 32-bit floats. Therefore, 
-:::
+Apple Metal GPUs only support 32-bit floats, so on a Mac use `Float32` coordinates; all of
+the tracking, including spin tracking, will then be done in 32-bit:
+
+```julia
+using Metal
+v0 = MtlArray(rand(Float32, n_particles, 6) .* 1f-5)
+res = track(fodo, v0=v0, spin=true, n_turns=100)
+```
 
 ### Multiple GPUs
 

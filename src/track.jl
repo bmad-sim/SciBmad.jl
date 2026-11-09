@@ -7,11 +7,11 @@ Defines configuration settings for a particles tracking run.
 - `n_turns::Int`: Number of turns, defaults to `1`
 - `save_every_n_turns::Int`: Multiple of turn number which specifies the turns tracking 
     data is saved, defaults to `1`
-- `scalar_params::Bool`: If `true`, only uses the primal values of any `LineElement` 
+- `scalar_params::Bool`: If `true`, only uses the primal values of any `LatElement` 
     properties set as `GTPSA.TPS`, `ForwardDiff.Dual`, or `ReverseDiff.TrackedReal` 
     (ignores derivatives part, useful for closed orbit finding prior to parametric 
     normal form). Default is `false`
-- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the tracking. Default is `true`
 - `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
     energy is a `TimeFunction`), then particle energies will be artificially ramped with 
@@ -73,7 +73,7 @@ Contains all information for a given particle tracking run.
 
 ## Properties
 - `config`: A `TrackingConfig` struct containing configuration settings
-- `elapsed_time`: The tracking execution time in minutes 
+- `elapsed_time`: The tracking execution time in seconds 
 - `state`: A matrix of particle states at each saved turn
 - `v`: A tensor of particle phase space coordinates at each saved turn
 - `q`: If spin tracking was enabled, a tensor of particle quaternions at each saved turn
@@ -81,7 +81,7 @@ Contains all information for a given particle tracking run.
 """
 struct TrackingResult{S,V,Q}
   config::TrackingConfig
-  elapsed_time::Float64 # in minutes
+  elapsed_time::Float64 # in seconds
   state::S
   v::V
   q::Q
@@ -133,11 +133,11 @@ settings specified by the keyword arguments `kwargs`.
 - `n_turns::Int`: Number of turns, defaults to `1`
 - `save_every_n_turns::Int`: Multiple of turn number which specifies the turns tracking 
     data is saved, defaults to `1`
-- `scalar_params::Bool`: If `true`, only uses the primal values of any `LineElement` 
+- `scalar_params::Bool`: If `true`, only uses the primal values of any `LatElement` 
     properties set as `GTPSA.TPS`, `ForwardDiff.Dual`, or `ReverseDiff.TrackedReal` 
     (ignores derivatives part, useful for closed orbit finding prior to parametric 
     normal form). Default is `false`
-- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the tracking. Default is `true`
 - `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
     energy is a `TimeFunction`), then particle energies will be artificially ramped with 
@@ -179,7 +179,7 @@ function track(
     v0::AbstractMatrix=zeros(1, 6),
     spin::Bool=false,
     q0::Union{AbstractMatrix,Nothing}=spin ? (q = similar(v0, (size(v0, 1), 4)); q .= 0; q[:,1] .= 1; q) : nothing,
-    weight::Union{AbstractMatrix,Nothing}=nothing,
+    weight::Union{AbstractArray,Number,Nothing}=nothing,
     callbacks::Tuple=(),
 
     # Or explicitly provide a Bunch:
@@ -275,7 +275,7 @@ function _track(bl, bunch, config, groupsize)
   end
 
   t = @elapsed for i in 1:n_turns
-    track!(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf, ramp_update_each_particle, batch_start, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
+    track!(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf, ramp_update_each_particle, batch_start, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading, notify=(i == 1))
     if mod(i, save_every_n_turns) == 0
       idx = div(i,save_every_n_turns)+1
       state_data[:,idx] .= state

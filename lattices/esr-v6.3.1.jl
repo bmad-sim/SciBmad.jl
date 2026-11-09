@@ -1,4 +1,4 @@
-using Beamlines
+using SciBmad
 @elements begin
 IP6 = Marker()
 DRIFT0 = Drift( L =  5.29999999999999982E+000)

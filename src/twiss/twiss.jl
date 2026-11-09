@@ -58,7 +58,7 @@ base_cols::Vector{String} = ["index", "name", "kind", "s"]
     twiss(bl::Beamline; kwargs...)
 
 General function to compute the (parametric and nonlinear) Twiss parameters of a `Beamline`. 
-Returns a `Twiss`struct that contains the (amplitude-dependent) (spin) tunes/slip, and a 
+Returns a `Twiss` struct that contains the (amplitude-dependent) (spin) tunes/slip, and a 
 dataframe of the Twiss parameters at each specified integration step. By default, lattice 
 functions of the Sagan-Rubin/Edwards-Teng coupling formalism are computed in the dataframe 
 at every integration step.
@@ -91,11 +91,11 @@ lattice functions/tune, amplitude-dependent tunes, and parametric quantities, se
 keyword arguments:
 
 ## Keyword arguments
-- `at::Union{Colon, AbstractVector}`: A vector containing `LineElement`s, element beamline 
+- `at::Union{Colon, AbstractVector}`: A vector containing `LatElement`s, element beamline 
     indexes, and/or tuples of s-ranges specifying where to compute the Twiss parameters.
 - `in_body_coordinates::Bool`: If `true` Twiss parameters inside misaligned elements are not
     transformed back to the reference curve coordinates. Default is `false`
-- `rf_on::Bool`: If `false`, then any `RFParams` in any `LineElement`s are ignored for the 
+- `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the Twiss tracking and calculation. Default is `true`
 - `order::Integer`: TPSA truncation order for all phase space coordinates used in the Twiss 
     calculation, default is 1
@@ -114,14 +114,15 @@ keyword arguments:
     UNLESS `a_initial` is coasting, in which case this will set the value for δ. 
 - `v0`: Initial guess for the closed orbit finder if `a_initial` is not provided, else setting this 
     will override the orbit expansion origin coordinates in `a_initial.v0`.
-- `spin::Bool`: If `true`, spin is included in the Twiss calculation. Default is `false`.
+- `spin::Bool`: If `true`, spin is included in the Twiss calculation. Default is `false`, or `true` if 
+    `a_initial` includes spin.
 - `base_cols`: A vector of "base columns", that will always be included in the Twiss dataframe regardless 
     of what is specified in `cols`. Defaults to the global variable `SciBmad.base_cols`, which defaults 
     to `["index", "name", "kind", "s"]`.
 - `cols`: A vector of columns to include in the Twiss dataframe. See the extended help for all possible 
     columns.
-- `as_taylor_series::Union{Bool,Nothing}`: If `true`, that the lattice functions in the dataframe are 
-    returned as Taylor series types - this will be necessary if doiong parametric normal form. Default 
+- `as_taylor_series::Union{Bool,Nothing}`: If `true`, the lattice functions in the dataframe are 
+    returned as Taylor series types - this will be necessary if doing parametric normal form. Default 
     is `nothing`, which autoselects to `false` if there are no parameters in the GTPSA, and `true` if 
     there are parameters.
 - `coast_tol`: Tolerance for the first-order delta dependences on each of the phase space variables below 
@@ -137,13 +138,13 @@ section using `??twiss`
 # Extended help
 
 Columns to include in `cols` are detailed below. As a reminder, an arbitrary order chromatic derivative 
-of *any* scalar-valued output can be computed using the syntax "d<column>_<order" (e.g. "dx_1" is the 
+of *any* scalar-valued output can be computed using the syntax "d<column>_<order>" (e.g. "dx_1" is the 
 linear dispersion).
 
-- `index`  : Beamline index of the containing `LineElement`
-- `name`   : Name of the containing `LineElement`
-- `kind`   : Kind of the containing `LineElement`
-- `s`      : s-position of the Twiss parameter calculation (may be inside of `LineElement`)
+- `index`  : Beamline index of the containing `LatElement`
+- `name`   : Name of the containing `LatElement`
+- `kind`   : Kind of the containing `LatElement`
+- `s`      : s-position of the Twiss parameter calculation (may be inside of `LatElement`)
 - `beta1`  : Horizontal-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism
 - `beta2`  : Vertical-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism
 - `alpha1` : Horizontal-like alpha function of the Sagan-Rubin/Edwards-Teng coupling formalism
@@ -160,7 +161,7 @@ linear dispersion).
 - `y`      : Orbit canonical y coordinate
 - `py`     : Orbit canonical py coordinate
 - `z`      : Orbit canonical z coordinate
-- `pz`     : Orbit canonize pz coordinate
+- `pz`     : Orbit canonical pz coordinate
 - `zx`     : Adiabatic dependence of x on initial longitudinal position/time (AKA "crab dispersion") 
 - `zpx`    : Adiabatic dependence of px on initial longitudinal position/time (AKA "crab dispersion")
 - `zy`     : Adiabatic dependence of y on initial longitudinal position/time (AKA "crab dispersion")
@@ -194,7 +195,7 @@ linear dispersion).
 - `E2`     : De Moivre-Ripken E² matrix (see E. Forest, _From Tracking Code to Analysis_)
 - `E3`     : De Moivre-Ripken E³ matrix (see E. Forest, _From Tracking Code to Analysis_)
 - `a`      : (Nonlinear) map to transform from Floquet variables to laboratory variables
-- `a0`     : (Nonlinear) map to transform from to the parameter-dependent fixed point
+- `a0`     : (Nonlinear) map to transform to the parameter-dependent fixed point
 - `a1`     : Linear normalizing map around the parameter-dependent fixed point, including nonlinear parameter dependence
 - `a2`     : Nonlinear part of the normalizing map, around the parameter-dependent fixed point
 - `as`     : (Nonlinear) spin normalizing map
@@ -213,7 +214,7 @@ function twiss(
   chrom::Integer = order,
   GTPSA_descriptor::Union{Descriptor,Nothing} = nothing,
 
-  #start::Union{Integer,LineElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
+  #start::Union{Integer,LatElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
   a_initial::Union{Nothing,DAMap}   = nothing, 
   damping::Union{Nothing,Bool} = nothing, # nothing = auto-detect from a_initial
 
@@ -309,7 +310,7 @@ function twiss(
   # Assemble locations. Note that start and end of the Beamline are ALWAYS included
   s, names, kinds, idxs, step_save, include_start, include_end = _twiss_assemble_locations(bl, at)
   beta_gamma_ref = Vector{Float64}(undef, length(s)) # Store the reference energy at each step
-  t_ref = Vector{Float64}(undef, length(s)) # Store the reference time at each step
+  t_ref = Vector{eltype(s)}(undef, length(s)) # Store the reference time at each step (type of the lengths, e.g. TPS for parametric lengths)
 
   # If the GTPSA truncation order is uniform, then we can 
   # cache the maps between saved points and concatenate them
@@ -328,7 +329,7 @@ function twiss(
       # also fills beta_gamma_ref, t_ref
       a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
     else
-      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}())
+      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}(), zero(s[1]))
     end
   end
 
@@ -362,7 +363,7 @@ function twiss(
 end
 
 function co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
-  co_sol = find_closed_orbit(bl; v0=v0, batch=Val{false}(), rf_on, batch_start=batch_index, coast_tol)
+  co_sol = find_closed_orbit(bl; v0=copy(v0), batch=Val{false}(), rf_on, batch_start=batch_index, coast_tol) # find_closed_orbit mutates v0
   if co_sol.sol.retcode != RETCODE_SUCCESS
     error("Closed orbit finder did not converge.")
   end
@@ -373,7 +374,7 @@ _twiss_assemble_locations(bl::Beamline, ::Colon) = _twiss_assemble_locations(bl,
 
 function _twiss_assemble_locations(bl::Beamline, at::Vector)
   at_idxs = filter(x->x isa Integer, at)
-  at_eles = filter(x->x isa LineElement, at)
+  at_eles = filter(x->x isa LatElement, at)
   at_ranges = filter(x->x isa Tuple, at)
 
   if any(x->x[1] > x[2], at_ranges)
@@ -401,14 +402,20 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   for ele in bl.line
     idx = ((ele.BeamlineParams)::BeamlineParams).beamline_index
     up = (ele.UniversalParams)::UniversalParams
+    if up.L isa DefExpr # evaluate it (and n_steps from ds_step) with the Beamline's context, as in tracking
+      up = Beamlines.deval(up, bl.context)
+    end
     name = up.name
     kind = up.kind
-    tm = up.tracking_method
     L = up.L
-    n_steps, ds_step = BeamTracking.find_steps(tm, L)
+    # Number of steps with a tracking callback: one per integrator step of each slice (tracking
+    # errors for elements tracked in fewer steps, e.g. a patch with n_steps > 1)
+    n_steps = up.n_slices*up.n_steps
+    ds_step = L/n_steps
 
     # Check which steps are inside any of the ranges
     found = false
+    s_ele = scur # element entrance
     for _ in 1:n_steps
       if any(x -> x[1] <= scur < x[2], at_ranges)
         push!(stmp, scur)
@@ -428,7 +435,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
           x == ele || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(ele, :pdict)[InheritParams].parent) : false)
         end
         ))
-        push!(stmp, scur - ds_step*n_steps)
+        push!(stmp, s_ele)
         push!(names, name)
         push!(kinds, kind)
         push!(idxs, idx)
@@ -449,9 +456,9 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   include_start = any(x->x[1]<=0<=x[2], at_ranges) || any(x->x==1, at_idxs) || any(at_eles) do x
     x == bl.line[1] || (haskey(getfield(bl.line[1], :pdict), InheritParams) ? x == (getfield(bl.line[1], :pdict)[InheritParams].parent) : false)
   end
-  include_end = any(x->x[1]<=scur<=x[2], at_ranges) || any(x->x==length(bl.line), at_idxs) || any(at_eles) do x
-    x == bl.line[end] || (haskey(getfield(bl.line[end], :pdict), InheritParams) ? x == (getfield(bl.line[end], :pdict)[InheritParams].parent) : false)
-  end
+  # The end row is the exit of the last element, so only an s-range containing it includes it 
+  # (a selected element gives the row at its entrance)
+  include_end = any(x->x[1]<=scur<=x[2], at_ranges)
 
   return s, names, kinds, idxs, step_save, include_start, include_end
 end
@@ -502,16 +509,15 @@ function _twiss_setmap!(map, coords)
   return map
 end
 
-function _twiss_track!(eye, cbs, bl, rf_on, batch_index)
+function _twiss_track!(eye, cbs, bl, rf_on, batch_index, t_ref0)
   if NNF.nvars(eye) == 5
     v = reshape([(i < 5 ? eye.v0[i]+copy(eye.v[i]) : copy(eye.v[i])) for i in 1:6], 1, 6)
   else
     v = reshape([eye.v0[i]+copy(eye.v[i]) for i in 1:6], 1, 6)
   end
   q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
-  b0 = Bunch(v=v, q=q, callbacks=cbs)
-  BTBL.check_bl_bunch!(b0, bl, false) # Do not notify
-  track!(b0, bl; rf_on, batch_start=batch_index)
+  b0 = Bunch(v=v, q=q, callbacks=cbs, t_ref=t_ref0) # t_ref must hold the type of the lengths
+  track!(b0, bl; rf_on, batch_start=batch_index, notify=false)
   return b0
 end
 
@@ -537,9 +543,9 @@ function _a_r_tunes(m::DAMap)
   end
 end
 
-function _compute_periodic_a(bl::Beamline, v0, init, rf_on, batch_index, ::Val{coast}, ::Val{spin}) where {coast, spin}
+function _compute_periodic_a(bl::Beamline, v0, init, rf_on, batch_index, ::Val{coast}, ::Val{spin}, t_ref0) where {coast, spin}
   eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
-  b0 = _twiss_track!(eye, (), bl, rf_on, batch_index)
+  b0 = _twiss_track!(eye, (), bl, rf_on, batch_index, t_ref0)
   _twiss_setmap!(eye, b0.coords)
   a, r, tunes = _a_r_tunes(eye)
   return a, (r, tunes)
@@ -589,7 +595,7 @@ function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, rf_on, batch_ind
   eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
   maps = _twiss_cache_preallocate(step_save, eye)
   cb = _twiss_cache_make_callback(step_save, beta_gamma_ref, t_ref, in_body_coordinates, maps)
-  _twiss_track!(eye, (cb,), bl, rf_on, batch_index)
+  _twiss_track!(eye, (cb,), bl, rf_on, batch_index, zero(t_ref[1]))
   m_turn = eye
   for map in maps
     m_turn = map ∘ m_turn
@@ -597,8 +603,8 @@ function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, rf_on, batch_ind
   a, r, tunes = _a_r_tunes(m_turn)
   if first(step_save) == 0
     b0 = Bunch(v=zeros(0,6)) # empty bunch just to compute initial reference energy
-    BTBL.check_bl_bunch!(b0, bl, false)
-    beta_gamma_ref[1] = BeamTracking.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
+    BTBL.resolve_reference!(b0, Beamlines.trygetproperty(bl, :species_ref), Beamlines.trygetproperty(bl, :p_over_q_ref), false)
+    beta_gamma_ref[1] = Beamlines.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
     t_ref[1] = 0
   end
   return a, (r, tunes), maps
@@ -704,15 +710,15 @@ function _twiss_push_a!(bl, rf_on, batch_index, step_save, a_initial, canonise, 
     _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a_initial, canonise, phase, damp, 1) 
     a_initial = fac[1].a
     b0 = Bunch(v=zeros(0,6)) # empty bunch just to compute initial reference energy
-    BTBL.check_bl_bunch!(b0, bl, false)
-    beta_gamma_ref[1] = BeamTracking.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
+    BTBL.resolve_reference!(b0, Beamlines.trygetproperty(bl, :species_ref), Beamlines.trygetproperty(bl, :p_over_q_ref), false)
+    beta_gamma_ref[1] = Beamlines.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
     t_ref[1] = 0
     initial_step_save_idx = 2
   else
     initial_step_save_idx = 1
   end
   cb = _twiss_make_callback(step_save, initial_step_save_idx, in_body_coordinates, a_initial, fac, canonise, phase, phi1, phi2, phi3_or_slip, damp, damp1, damp2, damp3, beta_gamma_ref, t_ref)
-  _twiss_track!(a_initial, (cb,), bl, rf_on, batch_index)
+  _twiss_track!(a_initial, (cb,), bl, rf_on, batch_index, zero(t_ref[1]))
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 
@@ -748,7 +754,8 @@ function _twiss_summ(twi, cache)
   end
 
   etac = -_slip(j, twi, cache, Val{true}()) / (C_LIGHT * twi.t_ref[end])
-  alphac = -_z_slip(j, twi, cache, Val{true}()) / twi.s[end]
+  alphac = -_z_slip(j, twi, cache, Val{true}()) / twi.s[end] +
+            _velocity_slip(j, twi, cache, Val{true}())
   if coast && TI.is_tps_type(typeof(etac)) isa TI.IsTPSType
     etac = TI.deriv(etac, 6)
   end

@@ -36,7 +36,7 @@ function _adv_get(a, delta, J1, J2, J3, ::Val{as_taylor_series}) where {as_taylo
     out = zero(tps)
     ords = similar(mono)
     v = Ref{TI.numtype(typeof(tps))}()
-    idx = TI.cycle!(tps, 0, mono=ords, val=v)
+    idx = TI.cycle!(tps, -1, mono=ords, val=v) # -1 to include the constant term (index 0)
     while idx > -1
       if view(ords, 1:6) == view(mono, 1:6)
         ords[1:6] .= 0
@@ -52,16 +52,16 @@ subscript(i) = join(Char(0x2080 + d) for d in reverse!(digits(i)))
 
 function superscript(i)
   if i < 0
-      c = [Char(0x207B)]
+    c = [Char(0x207B)]
   else
-      c = []
+    c = []
   end
   for d in reverse(digits(abs(i)))
-      if d == 0 push!(c, Char(0x2070)) end
-      if d == 1 push!(c, Char(0x00B9)) end
-      if d == 2 push!(c, Char(0x00B2)) end
-      if d == 3 push!(c, Char(0x00B3)) end
-      if d > 3 push!(c, Char(0x2070+d)) end
+    if d == 0 push!(c, Char(0x2070)) end
+    if d == 1 push!(c, Char(0x00B9)) end
+    if d == 2 push!(c, Char(0x00B2)) end
+    if d == 3 push!(c, Char(0x00B3)) end
+    if d > 3 push!(c, Char(0x2070+d)) end
   end
   return join(c)
 end

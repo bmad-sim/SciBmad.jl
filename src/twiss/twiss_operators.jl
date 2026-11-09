@@ -3,7 +3,7 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
 @inline _index(j, twi, cache, ::Val{as_tps}) where {as_tps} = twi.index[j]
 @inline _name(j, twi, cache, ::Val{as_tps})  where {as_tps} = twi.name[j]
 @inline _kind(j, twi, cache, ::Val{as_tps})  where {as_tps} = twi.kind[j]
-@inline _s(j, twi, cache, ::Val{as_tps})     where {as_tps} = twi.s[j]
+@inline _s(j, twi, cache, ::Val{as_tps})     where {as_tps} = as_tps ? twi.s[j] : scalar(twi.s[j]) # a TPS for parametric lengths
 
 @inline _a(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a, NNF.VARS_CPARAM)
 @inline _a(j, twi, cache, ::Val{true}) = twi.fac[j].a
@@ -656,15 +656,17 @@ end
   end
 end
 
-@inline function _slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
-  # convert z (bmad) to tau (mad)
-  # Need to include parameter/delta dependence in Lorentz beta...
-  beta_gamma_ref = twi.beta_gamma_ref[j]
-  tilde_m = 1/beta_gamma_ref
-  if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)
-    _pz(j, twi, cache, Val{true}()) # Force (potentially TPSA) calculation of z
+# 1 + pz of the orbit, for the change of z in a turn phi3 (= _phi(j, twi, cache, Val{as_tps}(), 3)).
+# For a coasting beam phi3 is either the whole change as a Taylor series in δ, then so is pz (the
+# cached pz column is only the value of δ), or the change per δ, then pz is its value on the orbit
+# (with parameters, the cached pz column is a Taylor series that also contains δ)
+@inline function _slip_rel_p(j, twi, cache, phi3)
+  if iscoasting(twi) && TI.is_tps_type(typeof(phi3)) isa TI.IsTPSType
+    return 1 + twi.fac[j].a0.v[6]
   end
-
+  if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)
+    _pz(j, twi, cache, Val{true}()) # Force (potentially TPSA) calculation of pz
+  end
   if haskey(cache.tps, :pz)
     pz = cache.tps[:pz]
   elseif haskey(cache.float, :pz)
@@ -672,11 +674,35 @@ end
   else
     throwunreachable()
   end
+  return 1 + (iscoasting(twi) ? scalar(pz) : pz)
+end
 
-  rel_p = 1 + pz
-  beta = rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)
+# The change of z in a turn is from the path length and from the velocity: -L(δ) + L0*β(δ)/β0.
+# Returns the velocity part over L0: β(δ)/β0 - 1 if _z_slip is the whole change (coasting, Taylor
+# series in δ), else its derivative in δ (_z_slip is then the change per δ), 1/γ0² on the 
+# reference orbit
+@inline function _velocity_slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
+  tilde_m = 1/twi.beta_gamma_ref[j]
+  beta_0 = 1/sqrt(1 + tilde_m*tilde_m)
+  phi3 = _phi(j, twi, cache, Val{as_tps}(), 3)
+  rel_p = _slip_rel_p(j, twi, cache, phi3)
+  if iscoasting(twi) && TI.is_tps_type(typeof(phi3)) isa TI.IsTPSType
+    return rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)/beta_0 - 1
+  else
+    return tilde_m*tilde_m/sqrt(rel_p*rel_p + tilde_m*tilde_m)^3/beta_0
+  end
+end
+
+@inline function _slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
+  # convert z (bmad) to tau (mad)
+  # Need to include parameter/delta dependence in Lorentz beta...
+  beta_gamma_ref = twi.beta_gamma_ref[j]
+  tilde_m = 1/beta_gamma_ref
 
   phi3 = _phi(j, twi, cache, Val{as_tps}(), 3)
+
+  rel_p = _slip_rel_p(j, twi, cache, phi3)
+  beta = rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)
 
   if iscoasting(twi)
     return phi3 / beta
@@ -1101,7 +1127,7 @@ end
   nhv = nhvars(twi)
 
   hvf = cache.vf[:h]
-  hk = zero(Float64)
+  hk = zero(ComplexF64)
   fac = 1 / sum(mono)
   for k in 1:nhv
     sgn = isodd(k) ? +1 : -1

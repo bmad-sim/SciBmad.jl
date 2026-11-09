@@ -112,7 +112,7 @@ function dynamic_aperture(
 
   # v0 has shape (1+length(rs)*length(thetas)) x 6
 
-  if backend isa KA.GPU
+  if !(backend isa KA.CPU)
     println("Initializing bunch on GPU")
     vt = KA.zeros(backend, coordinates_number_type, size(v))
     copy!(vt, v)
@@ -136,7 +136,7 @@ function dynamic_aperture(
     println()
   end
 
-  if backend isa KA.GPU
+  if !(backend isa KA.CPU)
     copy!(v, vt)
   end
 

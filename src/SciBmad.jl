@@ -68,28 +68,36 @@ if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE",
   @compile_workload begin   
     # We want to compile drift-kick-drift, matrix-kick-matrix
     # and solenoid kick for different numbers of multipoles
-    # Bend too, but that is not implemented yet.
+    # and bend-kick, for each kind of element
     qf = Quadrupole(Kn1=0.36, L=0.25); # Matrix kick, 1 multipole
     qf1 = Quadrupole(Kn1=0.36, Kn20=1e-3, L=0.25) # Matrix kick, 2 multipoles
     sf = Sextupole(Kn2=0.1, L=0.2);   # Drift kick, 1 multipole
     d1 = Drift(L=0.3, Kn3=1e-4, Kn4=1e-5); # Drift kick, 2 multipoles
-    d2 = Drift(L=0.3, Ksol=1e-6); # Solenoid kick, 1 multipole
+    d2 = Drift(L=0.3, Ksol=1e-6, tracking_method=SolenoidKick()); # Solenoid kick, 1 multipole
     b1  = SBend(L=6.0/2, angle=pi/132/2); # Bend
     b2  = SBend(L=6.0/2, angle=pi/132/2, e1=1e-5, e2=1e-4); # Bend
-    qd1 = Quadrupole(Kn1=-0.36, L=0.25); # matrix kick, 1 multipoles w/ rotation
+    qd1 = Quadrupole(Kn1=-0.36, L=0.25); # matrix kick, 1 multipole
     qd = Quadrupole(Kn1=-0.36, Ks20=1e-3,L=0.25); # matrix kick w/ rotation, 2 multipoles
-    sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2); # solenoid-kick, 2 multipoles
+    sd = Sextupole(Kn2=-0.1, Ksol=1e-6, L=0.2, tracking_method=SolenoidKick()); # solenoid-kick, 2 multipoles
     kicker = Sextupole(Kn0=1e-5, L=0.01)
     rf = RFCavity(L=1e-2, voltage=1e6, rf_frequency=1e6, zero_phase=PhaseRef.AboveTransition);
     thin = Multipole(Kn1L=1e-9); # Thin quad
     d3 = Drift(L=0.3);
     p = Patch(dx=1e-9, dy_rot=-1e-9, dz_rot=1e-9)
     marker = Marker(); # nothing
-    fodo_line = [qf, qf1, sf, d1, b1, b2, d2, qd1, qd, sd, d1, b1, b2, d2, rf, thin, marker, d3, kicker, p];
+    qt = Quadrupole(Kn1=0.01, L=0.25, tilt=0.1) # misaligned (tilted) element
+    q0 = Quadrupole(L=0.25) # element without strength
+    fodo_line = [qf, qf1, sf, d1, b1, b2, d2, qd1, qd, sd, d1, b1, b2, d2, rf, thin, marker, d3, kicker, p, qt, q0];
     fodo = Beamline(fodo_line, species_ref=Species("electron"), E_ref=18e9);
     # track
     res = track(fodo, v0=rand(4, 6) .* 1e-5)
     res = track(fodo, v0=rand(4, 6) .* 1e-5, spin=true)
+    # track! of a Bunch (BeamTracking) compiles other keyword argument methods than track
+    b = Bunch(rand(4, 6) .* 1e-5; species=fodo.species_ref, p_over_q_ref=fodo.p_over_q_ref)
+    track!(b, fodo)
+    redirect_stdout(devnull) do # dynamic_aperture prints its progress
+      dynamic_aperture(fodo; n_r=3, n_theta=3, deltas=[0.0], max_sig_x=1, max_sig_y=1, emit_1=1e-9, emit_2=1e-9, n_turns=1)
+    end
     # twiss
     # first order and second order
     tw = twiss(fodo)

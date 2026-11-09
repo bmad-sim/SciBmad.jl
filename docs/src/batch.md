@@ -74,6 +74,9 @@ n_particles = 2
 fodo.context.K1 = BatchParam(repeat(collect(0.1:0.05:0.55), inner=n_particles))
 ```
 
+If there are more particles than values in a `BatchParam`, the values start over: with the
+10 values above, particle 21 would see `K1=0.1` again.
+
 And `track` again:
 
 ```{code-cell} julia
@@ -83,17 +86,24 @@ res.v[:,1,end] # output x-coordinates
 ```
 
 ## Limitations
-The type of tracking kernel selection for `SciBmadStandard` or `Symplectic` must be the same for all particles. So, for example, if an element has `BatchParam`s where some are nonzero quadrupoles and some are nonzero sextupoles, the entire bunch will default to a drift-kick integration split, as the quadrupole-kick kernel cannot be called simultaneously with the drift-kick kernel. See [Tracking Methods](tracking-methods.md) for more details on the available splits.
 
-Currently, any parameter in a `LineElement` or `Beamline` may be specified as a `BatchParam`. However, there are a few caveats to keep in mind, which you would only encounter if explicitly passing a `Bunch` to `track` (else, this is handled internally for you):
-- If any element length `L` is a `BatchParam`, the bunch `t_ref` must also be a `BatchParam` of the same size
-- If the `Beamline` reference energy is a `BatchParam`, then the bunch `p_over_q_ref` AND bunch `t_ref` must also be `BatchParam`s of the same size
+Any parameter of a `LatElement` or `Beamline` may be a `BatchParam`, with a few limitations:
+
+- All particles go through an element with the same tracking method (see
+  [Tracking Methods](tracking-methods.md)), whatever their parameter values are.
+- A `BatchParam` cannot contain time-dependent values (see
+  [Time-Dependent Parameters](timedependent.md)).
+- If you pass your own `Bunch` to track (else this is handled for you): if any element length `L` is
+  a `BatchParam`, the `t_ref` of the `Bunch` must be a `BatchParam` of the same size, for
+  example `Bunch(v=v0, t_ref=BatchParam(zeros(10)))`. If the reference energy of the
+  `Beamline` is a `BatchParam`, both the `p_over_q_ref` and the `t_ref` of the `Bunch` must be
+  `BatchParam`s of the same size.
 
 ## GPU Batch Parameter Simulation
 
 In the same way that a GPU enables parallelization over a huge number of particles, we can
 GPU-parallelize over a huge number of parameters with `BatchParam`s. Simply set the
-parameter to be a `GPUArray`, just as we do with the particle phase space coordinates:
+parameter to be a `BatchParam` of a `GPUArray`, just as we do with the particle phase space coordinates:
 
 ```julia
 using CUDA
@@ -102,7 +112,8 @@ using CUDA
 n_particles_per_beamline = 1000
 n_quad_strengths = 100
 
-fodo.context.K1 = CuArray(range(start=0.1, stop=0.55, length=n_quad_strengths))
+K1 = repeat(range(start=0.1, stop=0.55, length=n_quad_strengths), inner=n_particles_per_beamline)
+fodo.context.K1 = BatchParam(CuArray(K1))
 
 # Random initial phase space coordinates:
 v0 = CUDA.rand(Float64, n_particles_per_beamline * n_quad_strengths, 6) .* 1e-5
