@@ -221,20 +221,22 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-lineelements-in-a-beamline">Finding LineElements in a Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-lineelements-in-multiple-beamline">Multiple LineElements in (multiple) Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-lineelement-parameters">Beamline-Dependent LineElement Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-latelements-in-multiple-beamline">Multiple LatElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#deferred-expressions">Deferred Expressions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -248,27 +250,38 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#sagan-cavity">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
 </ul>
@@ -277,14 +290,17 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="twiss.html">Twiss</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#open-lattices">Open lattices</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Optimization with Autodiff</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
@@ -297,27 +313,26 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#reflection-patch">Reflection Patch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#floor-coordinates">Floor Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
@@ -329,14 +344,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">About</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
@@ -410,7 +425,7 @@ various options available are:</p>
 <li><p><a class="reference external" href="https://docs.sciml.ai/NonlinearSolve/stable/"><code class="docutils literal notranslate"><span class="pre">NonlinearSolve</span></code></a>: For root-finding and solving (in a least squares sense) nonlinear systems</p></li>
 <li><p><a class="reference external" href="https://docs.sciml.ai/Optimization/stable/"><code class="docutils literal notranslate"><span class="pre">Optimization</span></code></a>: For minimizing scalar-valued functions, a unified interface to many optimizers in Julia (heavyweight package)</p></li>
 <li><p><a class="reference external" href="https://github.com/JuliaNLSolvers/Optim.jl"><code class="docutils literal notranslate"><span class="pre">Optim</span></code></a>: Lightweight package for finding local minima of scalar-valued functions</p></li>
-<li><p><a class="reference external" href="https://docs.sciml.ai/Optimization/stable/"><code class="docutils literal notranslate"><span class="pre">Metaheuristics</span></code></a>: Global, multi-objective optimization algorithms</p></li>
+<li><p><a class="reference external" href="https://github.com/jmejia8/Metaheuristics.jl"><code class="docutils literal notranslate"><span class="pre">Metaheuristics</span></code></a>: Global, multi-objective optimization algorithms</p></li>
 <li><p><a class="reference external" href="https://jump.dev/"><code class="docutils literal notranslate"><span class="pre">JuMP</span></code></a>: A modeling language/ecosystem for optimizing many different problem classes</p></li>
 <li><p><a class="reference external" href="https://github.com/mattsignorelli/BatchSolve.jl"><code class="docutils literal notranslate"><span class="pre">BatchSolve</span></code></a>: Lightweight package including a Newton root finder and Brent’s optimizer, optionally GPU-batchable with CUDA</p></li>
 </ul>
@@ -445,105 +460,6 @@ various options available are:</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU name (from build time).
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:71
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512ifma.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vpopcntdq.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vp2intersect.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512cd.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +evex512.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avxvnni.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vl.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +gfni.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512f.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512bf16.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vnni.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512bw.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512bitalg.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vbmi2.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vbmi.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512dq.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling NonlinearSolve [8913a72c-1f9b-4ce2-8d82-65094dcecaec] (caches not reused: 1 for different dependency version already loaded, 2 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   0.5 s<span class=" -Color -Color-Green">  ✓ </span>RecursiveArrayTools → RecursiveArrayToolsStatisticsExt
-   0.6 s<span class=" -Color -Color-Green">  ✓ </span>RecursiveArrayTools → RecursiveArrayToolsTablesExt
-   0.6 s<span class=" -Color -Color-Green">  ✓ </span>RecursiveArrayTools → RecursiveArrayToolsForwardDiffExt
-   0.7 s<span class=" -Color -Color-Green">  ✓ </span>RecursiveArrayTools → RecursiveArrayToolsSparseArraysExt
-   5.3 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase
-   0.7 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase → SciMLBaseReactantCoreExt
-   0.7 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase → SciMLBaseDifferentiationInterfaceExt
-   0.9 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase → SciMLBaseForwardDiffExt
-   1.2 s<span class=" -Color -Color-Green">  ✓ </span>SciMLJacobianOperators
-   4.3 s<span class=" -Color -Color-Green">  ✓ </span>LineSearch
-   5.4 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase
-   1.0 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseLineSearchExt
-   1.1 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseSparseArraysExt
-   1.9 s<span class=" -Color -Color-Green">  ✓ </span>BracketingNonlinearSolve
-   1.2 s<span class=" -Color -Color-Green">  ✓ </span>BracketingNonlinearSolve → BracketingNonlinearSolveForwardDiffExt
-   5.8 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseForwardDiffExt
-   9.3 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveSpectralMethods
-  17.7 s<span class=" -Color -Color-Green">  ✓ </span>LinearSolve
-   1.6 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveSpectralMethods → NonlinearSolveSpectralMethodsForwardDiffExt
-   1.6 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseLinearSolveExt
-   6.5 s<span class=" -Color -Color-Green">  ✓ </span>SimpleNonlinearSolve
-   2.0 s<span class=" -Color -Color-Green">  ✓ </span>LinearSolve → LinearSolveEnzymeExt
-   2.1 s<span class=" -Color -Color-Green">  ✓ </span>LinearSolve → LinearSolveForwardDiffExt
-  12.7 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveQuasiNewton
-   1.0 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveQuasiNewton → NonlinearSolveQuasiNewtonForwardDiffExt
-  31.7 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveFirstOrder
-  45.5 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolve
-  27 dependencies successfully precompiled in 103 seconds. 140 already precompiled.
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling RecursiveArrayToolsKernelAbstractionsExt [913ea305-dfae-5007-ada3-c9e96722e42c] (caches not reused: 2 for different dependency version already loaded, 3 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   0.6 s<span class=" -Color -Color-Green">  ✓ </span>RecursiveArrayTools → RecursiveArrayToolsKernelAbstractionsExt
-  1 dependency successfully precompiled in 1 seconds. 51 already precompiled.
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling SciMLBaseStaticArraysExt [48122e34-4194-5f4b-933d-012f106bf9d6] (caches not reused: 1 for different dependency version already loaded, 2 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   0.6 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase → SciMLBaseStaticArraysExt
-  1 dependency successfully precompiled in 1 seconds. 55 already precompiled.
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling NonlinearSolveBaseSparseMatrixColoringsExt [1b479212-cad0-5ec9-a3d5-a9b04584e81d] (caches not reused: 1 for different dependency version already loaded, 2 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   0.7 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseSparseMatrixColoringsExt
-  1 dependency successfully precompiled in 1 seconds. 101 already precompiled.
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling LinearSolveKernelAbstractionsExt [04391eab-734d-5a92-9278-9bf651c5eb72] (caches not reused: 2 for different dependency version already loaded, 3 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   1.3 s<span class=" -Color -Color-Green">  ✓ </span>LinearSolve → LinearSolveKernelAbstractionsExt
-  1 dependency successfully precompiled in 1 seconds. 113 already precompiled.
-</pre></div>
-</div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-1.2
 </pre></div>
 </div>
@@ -598,8 +514,8 @@ passing our initial guess, and then <code class="docutils literal notranslate"><
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>retcode: Success
 u: 2-element Vector{Float64}:
-  0.3804445782410782
- -0.38058870760512575
+  0.380444578241078
+ -0.3805887076051257
 </pre></div>
 </div>
 </div>
@@ -614,10 +530,10 @@ u: 2-element Vector{Float64}:
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
- q1     = 0.25000000000012534
- q2     = 0.25000000000012523
- etac   = 0.0010780794265294604
- alphac = 0.0010780794265294604
+ q1     = 0.2500000000001253
+ q2     = 0.2500000000001252
+ etac   = 0.001078079426529461
+ alphac = 0.001078080232455163
 
 df:
 <span class=" -Color -Color-Bold">11×26 DataFrame</span>
@@ -650,10 +566,10 @@ df:
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
- q1     = 0.2500000000001259 + 0.04777170573404565 δ
- q2     = 0.25000000000012546 - 0.247243066965951 δ
- etac   = 0.0010780794265294366 + 0.0015586179267811724 δ
- alphac = 0.0010780794265294364 + 0.0015586179267811722 δ
+ q1     = 0.25000000000012484 + 0.04777170573404752 δ
+ q2     = 0.2500000000001256 - 0.24724306696595028 δ
+ etac   = 0.0010780794265294366 + 0.001558617925043469 δ
+ alphac = 0.0010780802324552071 + 0.00155861550900386 δ
 
 df:
 <span class=" -Color -Color-Bold">11×26 DataFrame</span>
@@ -711,8 +627,8 @@ the same procedure,</p>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>retcode: Success
 u: 2-element Vector{Float64}:
-   5.982948287858372
- -16.207330174255148
+   5.982948287858351
+ -16.207330174255134
 </pre></div>
 </div>
 </div>
@@ -727,10 +643,10 @@ u: 2-element Vector{Float64}:
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
- q1     = 0.2500000000001252 + 0.9999999999999997 δ
- q2     = 0.2500000000001258 + 0.9999999999999991 δ
- etac   = 0.0010780794265294366 - 0.009165854040845182 δ
- alphac = 0.0010780794265294364 - 0.009165854040845182 δ
+ q1     = 0.2500000000001254 + 0.9999999999999982 δ
+ q2     = 0.25000000000012557 + 1.0000000000000013 δ
+ etac   = 0.0010780794265294366 - 0.009165854042582884 δ
+ alphac = 0.0010780802324552071 - 0.009165856458622494 δ
 
 df:
 <span class=" -Color -Color-Bold">11×26 DataFrame</span>

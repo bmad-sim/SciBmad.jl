@@ -221,20 +221,22 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-lineelements-in-a-beamline">Finding LineElements in a Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-lineelements-in-multiple-beamline">Multiple LineElements in (multiple) Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-lineelement-parameters">Beamline-Dependent LineElement Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-latelements-in-multiple-beamline">Multiple LatElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#deferred-expressions">Deferred Expressions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -248,27 +250,38 @@
 <li class="toctree-l2"><a class="reference internal" href="#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tracking-a-different-species">Tracking a Different Species</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#coordinates-number-type">Coordinates Number Type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cpu-parallelization">CPU Parallelization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#gpu-parallelization">GPU Parallelization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#sagan-cavity">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
 </ul>
@@ -277,14 +290,17 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="twiss.html">Twiss</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#open-lattices">Open lattices</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimization with Autodiff</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
@@ -297,27 +313,26 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#reflection-patch">Reflection Patch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#floor-coordinates">Floor Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
@@ -329,14 +344,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">About</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
@@ -429,7 +444,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.002258384 seconds
+elapsed_time = 0.002913478 seconds
 
 state[1:1, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -493,7 +508,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000270888 seconds
+elapsed_time = 0.000199423 seconds
 
 state[1:1, 1:6]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:6]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -531,7 +546,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000567315 seconds
+elapsed_time = 0.000521326 seconds
 
 state[1:1, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -603,11 +618,11 @@ is <code class="docutils literal notranslate"><span class="pre">nothing</span></
 <li><p><code class="docutils literal notranslate"><span class="pre">n_turns::Int</span></code>: Number of turns, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">save_every_n_turns::Int</span></code>: Multiple of turn number which specifies the turns tracking
 data is saved, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">scalar_params::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, only uses the primal values of any <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">scalar_params::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, only uses the primal values of any <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>
 properties set as <code class="docutils literal notranslate"><span class="pre">GTPSA.TPS</span></code>, <code class="docutils literal notranslate"><span class="pre">ForwardDiff.Dual</span></code>, or <code class="docutils literal notranslate"><span class="pre">ReverseDiff.TrackedReal</span></code>
 (ignores derivatives part, useful for closed orbit finding prior to parametric
 normal form). Default is <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">rf_on::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">false</span></code>, then any <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> in any <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s are ignored for the
+<li><p><code class="docutils literal notranslate"><span class="pre">rf_on::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">false</span></code>, then any <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> in any <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>s are ignored for the
 entirety of the tracking. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ramp_particle_energy_without_rf::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code> when ramping (<code class="docutils literal notranslate"><span class="pre">Beamline</span></code>’s reference
 energy is a <code class="docutils literal notranslate"><span class="pre">TimeFunction</span></code>), then particle energies will be artificially ramped with
@@ -652,7 +667,7 @@ that in <code class="docutils literal notranslate"><span class="pre">config</spa
 <p class="rubric">Properties</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">config</span></code>: A <code class="docutils literal notranslate"><span class="pre">TrackingConfig</span></code> struct containing configuration settings</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">elapsed_time</span></code>: The tracking execution time in minutes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">elapsed_time</span></code>: The tracking execution time in seconds</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">state</span></code>: A matrix of particle states at each saved turn</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">v</span></code>: A tensor of particle phase space coordinates at each saved turn</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">q</span></code>: If spin tracking was enabled, a tensor of particle quaternions at each saved turn</p></li>
@@ -676,11 +691,11 @@ these settings are described below in the docstring for <code class="docutils li
 <li><p><code class="docutils literal notranslate"><span class="pre">n_turns::Int</span></code>: Number of turns, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">save_every_n_turns::Int</span></code>: Multiple of turn number which specifies the turns tracking
 data is saved, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">scalar_params::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, only uses the primal values of any <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">scalar_params::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, only uses the primal values of any <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>
 properties set as <code class="docutils literal notranslate"><span class="pre">GTPSA.TPS</span></code>, <code class="docutils literal notranslate"><span class="pre">ForwardDiff.Dual</span></code>, or <code class="docutils literal notranslate"><span class="pre">ReverseDiff.TrackedReal</span></code>
 (ignores derivatives part, useful for closed orbit finding prior to parametric
 normal form). Default is <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">rf_on::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">false</span></code>, then any <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> in any <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s are ignored for the
+<li><p><code class="docutils literal notranslate"><span class="pre">rf_on::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">false</span></code>, then any <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> in any <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>s are ignored for the
 entirety of the tracking. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ramp_particle_energy_without_rf::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code> when ramping (<code class="docutils literal notranslate"><span class="pre">Beamline</span></code>’s reference
 energy is a <code class="docutils literal notranslate"><span class="pre">TimeFunction</span></code>), then particle energies will be artificially ramped with
@@ -743,14 +758,13 @@ particles alive.</p></li>
 unit quaternion <code class="docutils literal notranslate"><span class="pre">[q0</span> <span class="pre">q1</span> <span class="pre">q2</span> <span class="pre">q3]</span></code>. Element type must match that of <code class="docutils literal notranslate"><span class="pre">v</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">weight</span></code>: Array of particle weights with length <code class="docutils literal notranslate"><span class="pre">N</span></code>, or <code class="docutils literal notranslate"><span class="pre">nothing</span></code> if
 even weights for all particles. Defaults to <code class="docutils literal notranslate"><span class="pre">nothing</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">callbacks</span></code>: Tuple of functions to evaluate inside tracking kernels, which should
-be of the form <code class="docutils literal notranslate"><span class="pre">callback(coords::Coords,</span> <span class="pre">ds_step,</span> <span class="pre">g)</span></code> where <code class="docutils literal notranslate"><span class="pre">coords</span></code> is the structure
-storing particle coordinates AFTER taking an integration step of size <code class="docutils literal notranslate"><span class="pre">ds_step</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">g</span></code> is a tuple of the instantaneous coordinate system curvatures in x and y, i.e.
-<code class="docutils literal notranslate"><span class="pre">g</span> <span class="pre">=</span> <span class="pre">(gx,</span> <span class="pre">gy)</span></code>. Note that if more information is needed (e.g. previous step <code class="docutils literal notranslate"><span class="pre">coords</span></code>
-or perhaps <code class="docutils literal notranslate"><span class="pre">s</span></code> position), then the callback should be a <em>closure</em> that reads/writes
-to an outside mutable state each execution.
-Defaults to <code class="docutils literal notranslate"><span class="pre">()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">callbacks</span></code>: Tuple of functions to evaluate inside tracking kernels at each integration
+step (defaults to <code class="docutils literal notranslate"><span class="pre">()</span></code>), where each callback should be of the form</p></li>
+</ul>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">callback</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">coords</span><span class="p">,</span><span class="w"> </span><span class="n">cur_s</span><span class="p">,</span><span class="w"> </span><span class="n">cur_t_ref</span><span class="p">,</span><span class="w"> </span><span class="n">cur_beta_gamma_ref</span><span class="p">,</span><span class="w"> </span><span class="n">last_ds_step</span><span class="p">,</span><span class="w"> </span><span class="n">last_g</span><span class="p">,</span><span class="w"> </span><span class="n">transforms_out!</span><span class="p">,</span><span class="w"> </span><span class="n">transforms_in!</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span></code>: Reference momentum-over-charge defining the normalization
 of the phase space coordinates.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">t_ref=0.</span></code>: Reference time.</p></li>
@@ -767,11 +781,47 @@ of the phase space coordinates.</p></li>
 </div>
 </div>
 </section>
+<section id="tracking-a-different-species">
+<h2>Tracking a Different Species<a class="headerlink" href="#tracking-a-different-species" title="Link to this heading">¶</a></h2>
+<p>By default, the particles tracked are of the reference species of the beamline. To track a
+different species, give <code class="docutils literal notranslate"><span class="pre">track</span></code> a <code class="docutils literal notranslate"><span class="pre">Bunch</span></code> of that species. Just like in a real accelerator,
+the magnets keep the same fields, and each particle responds to them according to its own
+charge, mass, and energy. For example, muons with the same momentum as the design electrons
+follow the same orbit, but they are slower, so they fall behind (their <code class="docutils literal notranslate"><span class="pre">z</span></code> changes more):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Bunch</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="n">copy</span><span class="p">(</span><span class="n">v0</span><span class="p">),</span><span class="w"> </span><span class="n">species</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"muon"</span><span class="p">))</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">bunch</span><span class="o">=</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">n_turns</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">res</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="o">:</span><span class="p">,</span><span class="k">end</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Tracking Species("muon", -1.0, 1.056583755e8, 0.5, -2.00233184123, -2.80271738128469e-7, 0, AtomicAndPhysicalConstants.Kind.LEPTON) through a Beamline with reference species Species("electron", -1.0, 510998.95069, 0.5, -2.00231930436092, -5.795094307747843e-5, 0, AtomicAndPhysicalConstants.Kind.LEPTON): the fields of the Beamline are held fixed
+Setting bunch.p_over_q_ref = -60.04153713566737 (reference p_over_q_ref from the Beamline at t_ref = 0.0)
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6-element Vector{Float64}:
+  0.0028841216027158728
+  0.0003383657925571668
+  4.983269456867931e-18
+ -7.460755942673629e-20
+ -0.0011932726181699566
+  0.001
+</pre></div>
+</div>
+</div>
+</div>
+<p>A particle with the opposite charge, such as a positron in an electron ring, is bent the other
+way by the dipoles and is quickly lost, just as it would be in the real ring.</p>
+</section>
 <section id="callbacks">
-<h2>Callbacks<a class="headerlink" href="#callbacks" title="Link to this heading">¶</a></h2>
+<span id="track-callbacks"></span><h2>Callbacks<a class="headerlink" href="#callbacks" title="Link to this heading">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">Bunch</span></code> struct may also contain a tuple of functions <code class="docutils literal notranslate"><span class="pre">callbacks</span></code>. These functions are
 executed <strong>every integration step</strong>, and allow users to inject their own code into the
-tracking if desired. For example, <code class="docutils literal notranslate"><span class="pre">twiss</span></code> uses callbacks to compute the Twiss parameters at
+tracking if desired. An element with <code class="docutils literal notranslate"><span class="pre">n_slices</span></code> slices of <code class="docutils literal notranslate"><span class="pre">n_steps</span></code> steps each (see
+<a class="reference internal" href="tracking-methods.html#track-steps"><span class="std std-ref">Integration Steps and Slices</span></a>) executes them <code class="docutils literal notranslate"><span class="pre">n_slices*n_steps</span></code> times, and
+elements without integration steps (patches, maps, and <code class="docutils literal notranslate"><span class="pre">SaganCavity</span></code>) once. For example, <code class="docutils literal notranslate"><span class="pre">twiss</span></code> uses callbacks to compute the Twiss parameters at
 every integration step, inside of elements.</p>
 <p>Callbacks are required to have the function signature defined below</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">function</span><span class="w"> </span><span class="n">mycallback</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">coords</span><span class="p">,</span><span class="w"> </span><span class="n">cur_s</span><span class="p">,</span><span class="w"> </span><span class="n">cur_t_ref</span><span class="p">,</span><span class="w"> </span><span class="n">cur_beta_gamma_ref</span><span class="p">,</span><span class="w"> </span><span class="n">last_ds_step</span><span class="p">,</span><span class="w"> </span><span class="n">last_g</span><span class="p">,</span><span class="w"> </span><span class="n">transforms_out!</span><span class="p">,</span><span class="w"> </span><span class="n">transforms_in!</span><span class="p">)</span>
@@ -846,7 +896,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 8.837411699 seconds
+elapsed_time = 3.461215318 seconds
 
 state[1:1, 1:2]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:2]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -858,7 +908,7 @@ bunch:	Bunch at the end of tracking
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>When lower-precision floats are used for the particle coordinates, <em>all</em> element parameters (e.g. magnet strengths, lengths, etc) are converted to 32-bit floats prior to tracking through.</p>
+<p>When 32-bit floats are used for the particle coordinates, <em>all</em> numbers in the tracking (e.g. magnet strengths, lengths, and time-dependent parameters) are 32-bit floats too.</p>
 </div>
 </section>
 <section id="cpu-parallelization">
@@ -921,9 +971,12 @@ tracking kernels in SciBmad) are only compiled once they are called with specifi
 for <code class="docutils literal notranslate"><span class="pre">GPUArray</span></code>s is not possible. As such, the first “turn” in tracking will have a latency
 in order for the JIT compiler to compile SciBmad’s GPU tracking kernels.</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Apple Metal GPUs only support 32-bit floats. Therefore,</p>
+<p>Apple Metal GPUs only support 32-bit floats, so on a Mac use <code class="docutils literal notranslate"><span class="pre">Float32</span></code> coordinates; all of
+the tracking, including spin tracking, will then be done in 32-bit:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Metal</span>
+<span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MtlArray</span><span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="kt">Float32</span><span class="p">,</span><span class="w"> </span><span class="n">n_particles</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="mf">1f-5</span><span class="p">)</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">,</span><span class="w"> </span><span class="n">spin</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">n_turns</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
 </div>
 <section id="multiple-gpus">
 <h3>Multiple GPUs<a class="headerlink" href="#multiple-gpus" title="Link to this heading">¶</a></h3>
@@ -993,6 +1046,7 @@ meantime)</p>
 <li><a class="reference internal" href="#basics">Basics</a></li>
 <li><a class="reference internal" href="#configuration-settings">Configuration Settings</a></li>
 <li><a class="reference internal" href="#the-bunch-struct">The Bunch Struct</a></li>
+<li><a class="reference internal" href="#tracking-a-different-species">Tracking a Different Species</a></li>
 <li><a class="reference internal" href="#callbacks">Callbacks</a></li>
 <li><a class="reference internal" href="#coordinates-number-type">Coordinates Number Type</a></li>
 <li><a class="reference internal" href="#cpu-parallelization">CPU Parallelization</a><ul>

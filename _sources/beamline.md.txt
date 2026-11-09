@@ -20,7 +20,7 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
-To construct a `Beamline`, provide an array of `LineElement`s in the proper order, and
+To construct a `Beamline`, provide an array of `LatElement`s in the proper order, and
 optionally specify the reference species as `species_ref` and the reference energy as one of
 `E_ref`, `pc_ref`, or `p_over_q_ref`:
 
@@ -39,7 +39,7 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
 ```
 
 Alternatively, the reference species and energy may be provided in the beginning
-`LineElement`. So, we could have equivalently written this as:
+`LatElement`. So, we could have equivalently written this as:
 
 ```{code-cell} julia
 @elements begin
@@ -55,12 +55,20 @@ end
 fodo = Beamline([beg, qf, sf, b, d, qd, sd, b, d])
 ```
 
+The reference species and energy describe the particle the beamline is designed for, and
+normalized strengths such as `Kn1` are relative to them. However, you can still track any other
+species through the beamline, for example muons through an electron ring. This is just
+like sending a different particle through the same real accelerator: nothing about the
+machine changes (the magnets have the same fields, and the RF cavities the same frequency and
+phase), and each particle responds to it according to its own charge, mass, and energy (see
+[Track](track.md)).
+
 ```{docstring} Beamline
 ```
 
-## Finding LineElements in a Beamline
+## Finding LatElements in a Beamline
 
-Continuing with the above example, there are three ways to find `LineElement`s in a
+Continuing with the above example, there are several ways to find `LatElement`s in a
 `Beamline`, by indexing the beamline:
 
 ```{code-cell} julia
@@ -78,7 +86,53 @@ focusing_sextupoles = fodo[x -> x.Kn2 > 0];
 The anonymous function is applied to all elements in the beamline, and if `true` is
 returned, then that element is included in the search output.
 
-## Multiple LineElements in (multiple) Beamline
+A `Beamline` can also be looped over like a vector of its elements, for example
+`for ele in fodo ... end` or `foreach(x -> x.n_steps = 4, fodo)`.
+
+### Searching by Name
+
+Elements can also be found by their names, using a string pattern with the same syntax as in
+Bmad. `*` matches any number of characters, and `%` or `?` any single character. Putting an
+element kind and `::` in front matches only elements of that kind, `#N` at the end picks the
+`N`th match, and `name1:name2` gives all elements from `name1` through `name2`:
+
+```{code-cell} julia
+fodo["q*"];           # Names starting with "q": qf, qd
+fodo["?d"];           # Two character names ending with "d": qd, sd
+fodo["Sextupole::*"]; # All sextupoles: sf, sd
+fodo["d#2"];          # The second d (element 9)
+fodo["qf:qd"];        # Everything from qf through qd: qf, sf, b, d, qd
+fodo["5:9"];          # Elements 5 through 9: d, qd, sd, b, d
+```
+
+Patterns can be combined with `,` (either one matches) and `&` (both match):
+
+```{code-cell} julia
+fodo["qf, qd"];               # qf or qd: qf, qd
+fodo["Sextupole::* & qf:qd"]; # Sextupoles from qf through qd: sf
+```
+
+For anything more complicated, a Julia [regular expression](https://docs.julialang.org/en/v1/manual/strings/#man-regex-literals)
+`r"..."` can be used instead. It must match the whole name, and the `i` flag makes it case
+insensitive:
+
+```{code-cell} julia
+fodo[r"(q|s)d"]; # qd or sd: qd, sd
+fodo[r"Q.*"i];   # Names starting with "q" or "Q": qf, qd
+```
+
+The elements found are always in their order in the beamline, each at most once. If the end
+of a range comes before its start, as in `fodo["sd:sf"]`, the range wraps around the end of the
+beamline, which is convenient for rings. Each end of a range must be exactly one element, so
+`fodo["qf:b"]` is an error because `fodo` has two `b`s.
+
+`findelements(fodo, "q*")` is the same as `fodo["q*"]`. It can also search a whole `Lattice`
+with several branches, where `branch>>name` matches only in the branches named `branch`:
+
+```{docstring} findelements
+```
+
+## Multiple LatElements in (multiple) Beamline
 
 Again continuing with the FODO cell example above, note that `fodo` contains two instances
 of the line element `d` and two instances of `b`. If the length of `d` is changed, then both
@@ -141,7 +195,7 @@ The parent element can be retrieved using `parent`:
 drifts[1].parent
 ```
 
-## Beamline-Dependent LineElement Parameters
+## Beamline-Dependent LatElement Parameters
 
 Finally, elements in a beamline allow one to "get" parameters that may only be defined when
 said element is in a beamline. We showed the `s` and `s_downstream`, but another example

@@ -56,8 +56,13 @@ particle phase space coordinates to the keyword argument `v0`. By default, it is
 `zeros(1, 6)`.
 
 ```{code-cell} julia
-co_sol = find_closed_orbit(fodo; v0=rand(1, 6) .* 1e-5)
+co_sol = find_closed_orbit(fodo; v0=[1e-5 2e-6 -1e-5 -2e-6 0.0 1e-5])
+co_sol.v0
 ```
+
+This beamline has no RF, so the beam is coasting (`co_sol.coasting_beam` is `true`), and the
+last coordinate δ of the guess did not change: the result is the closed orbit for δ = 1e-5
+(see δ-Dependent Closed Orbits below).
 
 :::{note}
 When `v0` is provided, it **will be mutated in place with the result!**
@@ -84,7 +89,7 @@ solvers.
 ```julia
 using CUDA
 n_particles = 100000
-v0 = CUDA.zeros(n_particles, 6)
+v0 = CUDA.zeros(Float64, n_particles, 6)
 v0[:,6] .= CuArray(range(start=0, stop=1e-2, length=n_particles))
 
 co_sol = find_closed_orbit(fodo, v0=v0)
@@ -118,7 +123,7 @@ using CUDA
 n_kick_strengths = 100
 n_deltas = 1000
 n_particles = n_kick_strengths * n_deltas
-v0 = CUDA.zeros(n_particles, 6)
+v0 = CUDA.zeros(Float64, n_particles, 6)
 deltas = repeat(range(start=0, stop=1e-2, length=n_deltas), outer=n_kick_strengths)
 v0[:,6] .= CuArray(deltas)
 

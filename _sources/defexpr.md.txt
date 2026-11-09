@@ -57,7 +57,7 @@ Here `lambdafun` takes no arguments (specified by the empty tuple `()`) and retu
 "encloses" `qf`, and at the time of evaluation gets the `Kn1` of that enclosed `qf` and
 negates its sign.
 
-Now we just wrap this function in SciBmad's `DefExpr` type, and we can set any `LineElement`
+Now we just wrap this function in SciBmad's `DefExpr` type, and we can set any `LatElement`
 parameter to be such a deferred expression:
 
 ```{code-cell} julia
@@ -143,7 +143,7 @@ empty!(GLOBAL_CONTEXTS)
 ```
 
 All `Beamline`s have a `context` property to store a context, which all containing
-`LineElement` parameters defined use when getting properties at the element-level:
+`LatElement` parameters defined use when getting properties at the element-level:
 
 ```{code-cell} julia
 c1 = Context(Kn1=0.36);
@@ -153,4 +153,42 @@ bl[qf][1].Kn1 # Index the beamline with the `qf` to get all child `qf`s
 ```
 
 ```{docstring} Context
+```
+
+## Getting the Deferred Expression Itself
+
+Getting a parameter of an element always gives its current value: any deferred expression is
+evaluated first, as above. Sometimes you want the deferred expression itself instead, for
+example to build a new one from it. `rawget` gets a parameter exactly as it was set, and
+`deval` evaluates it in a context:
+
+```{code-cell} julia
+d = rawget(qf, :Kn1);
+println(d isa DefExpr)
+println(deval(d, bl.context)) # The same as bl[qf][1].Kn1
+```
+
+For example, to make `qf` 10% stronger while it keeps following `Kn1` in the context:
+
+```{code-cell} julia
+qf.Kn1 = 1.1*rawget(qf, :Kn1)
+println(bl[qf][1].Kn1)
+c1.Kn1 = 0.4
+println(bl[qf][1].Kn1)
+```
+
+Only the parameters that were actually set can be gotten this way. Others are computed from
+them: here `Kn1` was set, so e.g. the integrated strength `Kn1L` and the field gradient `Bn1`
+are computed from `Kn1` (and the length or the reference energy). `rawget` gives an error for
+these, saying which parameter to use instead:
+
+```{code-cell} julia
+:tags: [raises-exception]
+rawget(qf, :Kn1L)
+```
+
+```{docstring} rawget
+```
+
+```{docstring} deval
 ```

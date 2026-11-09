@@ -10,7 +10,6 @@ kernel runs during the documentation build. The source notebooks live in the
 :caption: Julia examples
 
 Nonlinear Twiss <examples/julia/nonlinear-twiss.ipynb>
-Dynamic aperture <examples/julia/dynamic-aperture.ipynb>
 Dynamic aperture (GPU) <examples/julia/dynamic-aperture-gpu.ipynb>
 Automatic differentiation <examples/julia/ad-examples.ipynb>
 Orbit response <examples/julia/orbit-response.ipynb>

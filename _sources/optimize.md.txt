@@ -45,7 +45,7 @@ various options available are:
 - [`NonlinearSolve`](https://docs.sciml.ai/NonlinearSolve/stable/): For root-finding and solving (in a least squares sense) nonlinear systems
 - [`Optimization`](https://docs.sciml.ai/Optimization/stable/): For minimizing scalar-valued functions, a unified interface to many optimizers in Julia (heavyweight package)
 - [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl): Lightweight package for finding local minima of scalar-valued functions
-- [`Metaheuristics`](https://docs.sciml.ai/Optimization/stable/): Global, multi-objective optimization algorithms
+- [`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl): Global, multi-objective optimization algorithms
 - [`JuMP`](https://jump.dev/): A modeling language/ecosystem for optimizing many different problem classes
 - [`BatchSolve`](https://github.com/mattsignorelli/BatchSolve.jl): Lightweight package including a Newton root finder and Brent's optimizer, optionally GPU-batchable with CUDA
 

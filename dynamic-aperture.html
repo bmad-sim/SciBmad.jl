@@ -221,20 +221,22 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-lineelements-in-a-beamline">Finding LineElements in a Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-lineelements-in-multiple-beamline">Multiple LineElements in (multiple) Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-lineelement-parameters">Beamline-Dependent LineElement Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-latelements-in-multiple-beamline">Multiple LatElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#deferred-expressions">Deferred Expressions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -248,27 +250,38 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#sagan-cavity">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
 </ul>
@@ -277,14 +290,17 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="twiss.html">Twiss</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#open-lattices">Open lattices</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimization with Autodiff</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
@@ -297,27 +313,26 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#reflection-patch">Reflection Patch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#floor-coordinates">Floor Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
@@ -329,14 +344,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">About</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
@@ -399,9 +414,10 @@
 <span class="n">include</span><span class="p">(</span><span class="s">"../../lattices/esr-v6.3.1-tapered.jl"</span><span class="p">);</span><span class="w"> </span>
 </pre></div>
 </div>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="c"># Turn on radiation, do 2nd order integration for speed</span>
-<span class="n">tm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Symplectic</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">radiation_damping_on</span><span class="o">=</span><span class="nb">true</span><span class="p">)</span>
-<span class="n">foreach</span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">t</span><span class="o">.</span><span class="n">tracking_method</span><span class="o">=</span><span class="n">tm</span><span class="p">,</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">line</span><span class="p">)</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="c"># Turn on radiation</span>
+<span class="k">for</span><span class="w"> </span><span class="n">ele</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">line</span>
+<span class="w">  </span><span class="n">ele</span><span class="o">.</span><span class="n">rad_damping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span>
+<span class="k">end</span>
 </pre></div>
 </div>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">x_norm_da</span><span class="p">,</span><span class="w"> </span><span class="n">y_norm_da</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dynamic_aperture</span><span class="p">(</span>
@@ -436,15 +452,15 @@ Tracking complete
 <span class="n">display</span><span class="p">(</span><span class="n">f2</span><span class="p">);</span>
 </pre></div>
 </div>
-<img alt="_images/examples-julia-dynamic-aperture-gpu-5-98c9d9f1.png" class="notebook-output-image" src="_images/examples-julia-dynamic-aperture-gpu-5-98c9d9f1.png" />
+<img alt="_images/examples-julia-dynamic-aperture-gpu-5-52ef34f9.png" class="notebook-output-image" src="_images/examples-julia-dynamic-aperture-gpu-5-52ef34f9.png" />
 </div>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> — <em>Function</em>.</p>
-<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">dynamic_aperture</span><span class="p">(</span><span class="n">ring</span><span class="o">::</span><span class="kt">Beamline</span><span class="p">;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">NTuple</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}}</span>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">dynamic_aperture</span><span class="p">(</span><span class="n">ring</span><span class="o">::</span><span class="kt">Beamline</span><span class="p">;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">NTuple</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Matrix</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}}</span>
 </pre></div>
 </div>
 <p>Computes the acceptance of the ring by pushing a polar grid in <code class="docutils literal notranslate"><span class="pre">x/sig_x</span></code> and <code class="docutils literal notranslate"><span class="pre">y/sig_y</span></code>
-space, for each of the provided <code class="docutils literal notranslate"><span class="pre">deltas</span></code>. Returns a tuple of two vectors defining the
+space, for each of the provided <code class="docutils literal notranslate"><span class="pre">deltas</span></code>. Returns a tuple of two matrices defining the
 first particle loss along the radius for a given angle on the polar grid, where the
 first index corresponds to the line position in <code class="docutils literal notranslate"><span class="pre">x/sig_x</span></code> or <code class="docutils literal notranslate"><span class="pre">y/sig_y</span></code> space, and the
 second index corresponds to that in <code class="docutils literal notranslate"><span class="pre">deltas</span></code>.</p>
@@ -454,9 +470,9 @@ second index corresponds to that in <code class="docutils literal notranslate"><
 <li><p><code class="docutils literal notranslate"><span class="pre">n_theta::Int</span></code>: Number of angles to sample on the polar grid</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">deltas::AbstractArray</span></code>: Array of each δ to compute the transverse acceptance</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_sig_x::Real</span></code>: Maximum sigma-x of the polar grid, in units of sigma (e.g.
-<code class="docutils literal notranslate"><span class="pre">max_sigma_x=20</span></code> to check up to 20 sigma)</p></li>
+<code class="docutils literal notranslate"><span class="pre">max_sig_x=20</span></code> to check up to 20 sigma)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_sig_y::Real</span></code>: Maximum sigma-y of the polar grid, in units of sigma (e.g.
-<code class="docutils literal notranslate"><span class="pre">max_sigma_y=20</span></code> to check up to 20 sigma)</p></li>
+<code class="docutils literal notranslate"><span class="pre">max_sig_y=20</span></code> to check up to 20 sigma)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">emit_1::Real</span></code>: Horizontal-like emittance to assume</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">emit_2::Real</span></code>: Vertical-like emittance to assume</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_turns::Int</span></code>: Number of turns to track</p></li>

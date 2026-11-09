@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Defining a LineElement" href="element.html"><link rel="prev" title="Installation" href="installation.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Defining a LatElement" href="element.html"><link rel="prev" title="Installation" href="installation.html">
         <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
         <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
 
@@ -221,20 +221,22 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-lineelements-in-a-beamline">Finding LineElements in a Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-lineelements-in-multiple-beamline">Multiple LineElements in (multiple) Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-lineelement-parameters">Beamline-Dependent LineElement Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-latelements-in-multiple-beamline">Multiple LatElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#deferred-expressions">Deferred Expressions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -248,27 +250,38 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#sagan-cavity">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
 </ul>
@@ -277,14 +290,17 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="twiss.html">Twiss</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#open-lattices">Open lattices</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimization with Autodiff</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
@@ -297,27 +313,26 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#reflection-patch">Reflection Patch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#floor-coordinates">Floor Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
@@ -329,14 +344,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">About</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
@@ -442,7 +457,7 @@ The rest of this page walks through it step by step.</p>
 <span class="n">print</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span><span class="p">)</span>
 <span class="cm">#= Prints:</span>
 <span class="cm">  AmplitudeDependentValue:</span>
-<span class="cm">    0.054013300010008765 - 0.00864379148151119 δ</span>
+<span class="cm">    0.054013300010008765 - 0.008253153240321371 δ</span>
 <span class="cm">=#</span>
 <span class="c"># Get the y-chromaticity</span>
 <span class="n">chromy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getterm</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span><span class="p">,</span><span class="w"> </span><span class="n">delta</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -460,7 +475,7 @@ The rest of this page walks through it step by step.</p>
 <span class="cm">#= Prints:</span>
 <span class="cm">  AmplitudeDependentValue:</span>
 <span class="cm">    -0.3094612779434054 - 0.3094612776236819 δ - 7.680773026144916e-10 J₁ </span>
-<span class="cm">    + 28.12750168959732 J₂ - 4.385285890498197e-10 δ²</span>
+<span class="cm">    + 28.127501689589934 J₂ - 4.385285890498197e-10 δ²</span>
 <span class="cm">=#</span>
 
 <span class="cm">#=</span>
@@ -485,7 +500,7 @@ The rest of this page walks through it step by step.</p>
 <section id="constructing-a-beamline">
 <h3>Constructing a Beamline<a class="headerlink" href="#constructing-a-beamline" title="Link to this heading">¶</a></h3>
 <p>Let’s start by constructing a simple FODO cell <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>.</p>
-<p>To do this, we will define six <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s corresponding to each of these objects. The
+<p>To do this, we will define six <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>s corresponding to each of these objects. The
 lengths of each object are specified by <code class="docutils literal notranslate"><span class="pre">L</span></code> (in meters), and the quadrupole strengths can be
 set using the property <code class="docutils literal notranslate"><span class="pre">Kn1</span></code>, where <code class="docutils literal notranslate"><span class="pre">n</span></code> means the “normal” multipole (<code class="docutils literal notranslate"><span class="pre">s</span></code> would be “skew”)
 and <code class="docutils literal notranslate"><span class="pre">1</span></code> means 1st order multipole (quadrupole). The normal sextupole strength is thus <code class="docutils literal notranslate"><span class="pre">Kn2</span></code>.
@@ -514,59 +529,6 @@ be set independently using <code class="docutils literal notranslate"><span clas
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU name (from build time).
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:71
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512ifma.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vpopcntdq.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vp2intersect.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512cd.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +evex512.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avxvnni.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vl.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +gfni.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512f.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512bf16.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vnni.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512bw.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512bitalg.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vbmi2.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vbmi.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512dq.
-<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-</pre></div>
-</div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Beamline:
  species_ref = electron
  pc_ref = 1.8e10
@@ -585,9 +547,11 @@ be set independently using <code class="docutils literal notranslate"><span clas
 </div>
 </div>
 <p>Note that, under the hood, all element “kinds” (<code class="docutils literal notranslate"><span class="pre">Sextupole</span></code>, <code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code>, etc.) are one
-single type <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>. Therefore, there is nothing preventing you from writing e.g.
+single type <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>. Therefore, there is nothing preventing you from writing e.g.
 <code class="docutils literal notranslate"><span class="pre">Drift(L=1.2,</span> <span class="pre">Ks8=123)</span></code>. This structure provides maximal flexibility for defining and
-modifying elements (see <a class="reference internal" href="element.html"><span class="std std-doc">Defining a LineElement</span></a> for more).</p>
+modifying elements (see <a class="reference internal" href="element.html"><span class="std std-doc">Defining a LatElement</span></a> for more). A default tracking
+method is chosen given an element kind, e.g. <code class="docutils literal notranslate"><span class="pre">MatrixKick</span></code> for a finite-length <code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code>,
+which you can change at any time (see <a class="reference internal" href="tracking-methods.html"><span class="std std-doc">Tracking Methods</span></a>).</p>
 <p>The <a class="reference external" href="https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl"><code class="docutils literal notranslate"><span class="pre">AtomicAndPhysicalConstants</span></code></a>
 package is used for specifying particle species, and so any species defined by that package
 may be provided. Also, instead of specifying the reference momentum <code class="docutils literal notranslate"><span class="pre">pc_ref</span></code>, we
@@ -608,7 +572,7 @@ magnetic rigidity <code class="docutils literal notranslate"><span class="pre">p
 </div>
 </div>
 </div>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s in a beamline simply inherit all properties from the original
+<p>Note that <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>s in a beamline simply inherit all properties from the original
 element definition. For example, retuning the quadrupole strengths</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -642,9 +606,9 @@ rebuild <code class="docutils literal notranslate"><span class="pre">fodo</span>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
  q1     = 0.05489859401259576
- q2     = 0.05401330001000886
+ q2     = 0.054013300010008904
  etac   = 0.019165878242797172
- alphac = 0.01916587824279717
+ alphac = 0.01916587904872287
 
 df:
 <span class=" -Color -Color-Bold">9×26 DataFrame</span>
@@ -687,9 +651,9 @@ the columns returned) to exactly what you ask for, which can save computation ti
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
  q1     = 0.05489859401259576
- q2     = 0.05401330001000886
+ q2     = 0.054013300010008904
  etac   = 0.019165878242797172
- alphac = 0.01916587824279717
+ alphac = 0.01916587904872287
 
 df:
 <span class=" -Color -Color-Bold">9×7 DataFrame</span>
@@ -748,9 +712,9 @@ is the second derivative w.r.t. δ.</p>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
  q1     = 0.054898594012595635 - 0.0723176764295375 δ
- q2     = 0.05401330001000884 - 0.00825315324032125 δ
- etac   = 0.019165878242797273 + 0.10369346697701293 δ
- alphac = 0.01916587824279727 + 0.10369346697701291 δ
+ q2     = 0.05401330001000886 - 0.008253153240321111 δ
+ etac   = 0.019165878242797273 + 0.10369346694612037 δ
+ alphac = 0.01916587904872304 + 0.1036934645592356 δ
 
 df:
 <span class=" -Color -Color-Bold">9×8 DataFrame</span>
@@ -781,7 +745,7 @@ variables <code class="docutils literal notranslate"><span class="pre">J₁</spa
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
- 0.05401330001000884 - 0.00825315324032125 δ
+ 0.05401330001000886 - 0.008253153240321111 δ
 </pre></div>
 </div>
 </div>
@@ -797,7 +761,7 @@ is the coefficient of <code class="docutils literal notranslate"><span class="pr
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-0.00825315324032125
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-0.008253153240321111
 </pre></div>
 </div>
 </div>
@@ -831,9 +795,9 @@ coasting, we can take chromatic derivatives as described before.</p>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
  q1     = 0.054898594012595725 + 0.07905747898014202 δ
- q2     = 0.05401330001000884 - 0.008253153240321364 δ
- etac   = 0.019165878242797172 - 0.03645782321619371 δ
- alphac = 0.01916587824279717 - 0.0364578232161937 δ
+ q2     = 0.05401330001000888 - 0.008253153240321238 δ
+ etac   = 0.019165878242797172 - 0.03645782324708626 δ
+ alphac = 0.01916587904872294 - 0.036457825633971014 δ
 
 df:
 <span class=" -Color -Color-Bold">9×6 DataFrame</span>
@@ -876,26 +840,26 @@ and the amplitude-dependent spin tune:</p>
 Descriptor(NV=6, MO=2)
 INDEX  COEFFICIENT             ORDER   EXPONENTS
 ----------------------------------------------------
-  1:  -2.5729811718970831E-15    1     1 0  0 0  0 0
-  1:  -5.7912105164172194E-16    1     0 1  0 0  0 0
+  1:  -2.5729811718970192E-15    1     1 0  0 0  0 0
+  1:  -5.7912105164160302E-16    1     0 1  0 0  0 0
   1:   2.8726619690311641E+00    1     0 0  1 0  0 0
-  1:   7.1359575552105781E-01    1     0 0  0 1  0 0
+  1:   7.1359575552105681E-01    1     0 0  0 1  0 0
   1:   7.6740389427510141E-15    1     0 0  0 0  0 1
-  1:  -8.1386438069903467E-16    2     2 0  0 0  0 0
-  1:   2.7709841195169542E-14    2     1 1  0 0  0 0
-  1:  -1.6599251993597007E-13    2     0 2  0 0  0 0
-  1:  -9.8609301484051493E+00    2     1 0  1 0  0 0
-  1:   2.5979472338669396E+00    2     0 1  1 0  0 0
-  1:  -1.9539926245237145E-15    2     0 0  2 0  0 0
-  1:   4.6570660212420920E+00    2     1 0  0 1  0 0
-  1:   5.5944457674647964E+01    2     0 1  0 1  0 0
-  1:   2.4868599294070172E-14    2     0 0  1 1  0 0
-  1:   8.4718971049771917E-14    2     0 0  0 2  0 0
-  1:  -4.3128201306426705E-14    2     1 0  0 0  0 1
-  1:   2.0729409438533308E-14    2     0 1  0 0  0 1
-  1:  -1.6861654804791819E+01    2     0 0  1 0  0 1
-  1:   1.6098131882682811E+01    2     0 0  0 1  0 1
-  1:  -9.5621901981671428E-14    2     0 0  0 0  0 2
+  1:  -8.1386438069829196E-16    2     2 0  0 0  0 0
+  1:   2.7709841195167283E-14    2     1 1  0 0  0 0
+  1:  -1.6599251993596687E-13    2     0 2  0 0  0 0
+  1:  -9.8609301484051510E+00    2     1 0  1 0  0 0
+  1:   2.5979472338669467E+00    2     0 1  1 0  0 0
+  1:  -1.9539926245238080E-15    2     0 0  2 0  0 0
+  1:   4.6570660212420885E+00    2     1 0  0 1  0 0
+  1:   5.5944457674648092E+01    2     0 1  0 1  0 0
+  1:   2.4868599294069415E-14    2     0 0  1 1  0 0
+  1:   8.4718971049770415E-14    2     0 0  0 2  0 0
+  1:  -4.3128201306421581E-14    2     1 0  0 0  0 1
+  1:   2.0729409438531794E-14    2     0 1  0 0  0 1
+  1:  -1.6861654804791822E+01    2     0 0  1 0  0 1
+  1:   1.6098131882682825E+01    2     0 0  0 1  0 1
+  1:  -9.5621901981671188E-14    2     0 0  0 0  0 2
 ----------------------------------------------------
   2:  -9.9999999999999989E-01    0     0 0  0 0  0 0
        ... (Output truncated)
@@ -914,7 +878,7 @@ spin tune, accessible as <code class="docutils literal notranslate"><span class=
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
- -0.3094612779434054 - 0.3094612776236826 δ - 7.680774092601614e-10 J₁ + 28.127501689589945 J₂ - 4.385295785557206e-10 δ²
+ -0.3094612779434054 - 0.3094612776236826 δ - 7.680774092601614e-10 J₁ + 28.127501689589913 J₂ - 4.385295785557206e-10 δ²
 </pre></div>
 </div>
 </div>
@@ -961,7 +925,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000713986 seconds
+elapsed_time = 0.000786183 seconds
 
 state[1:10, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:10, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -984,6 +948,13 @@ array. For example:</p>
 <span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">,</span><span class="w"> </span><span class="n">n_turns</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">spin</span><span class="o">=</span><span class="nb">true</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Apple Metal GPUs only support 32-bit floats, so on a Mac use <code class="docutils literal notranslate"><span class="pre">Float32</span></code> coordinates; all of
+the tracking will then be done in 32-bit:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Metal</span>
+<span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MtlArray</span><span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="kt">Float32</span><span class="p">,</span><span class="w"> </span><span class="n">n_particles</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="mf">1f-5</span><span class="p">)</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">,</span><span class="w"> </span><span class="n">n_turns</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">spin</span><span class="o">=</span><span class="nb">true</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>For more details, see the <a class="reference internal" href="track.html#gpuparallel"><span class="std std-ref">GPU Parallelization</span></a> section of the manual.</p>
 </section>
 </section>
@@ -999,7 +970,7 @@ array. For example:</p>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Defining a LineElement</div>
+                <div class="title">Defining a LatElement</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

@@ -8,7 +8,7 @@
         <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
 
     <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
-        <title>Defining a LineElement - SciBmad Documentation</title>
+        <title>Defining a LatElement - SciBmad Documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -221,20 +221,22 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
 <ul class="current">
-<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Defining a LineElement</a><input aria-label="Toggle navigation of Defining a LineElement" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameters">Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameter-groups">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-lineelements-in-a-beamline">Finding LineElements in a Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-lineelements-in-multiple-beamline">Multiple LineElements in (multiple) Beamline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-lineelement-parameters">Beamline-Dependent LineElement Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-latelements-in-multiple-beamline">Multiple LatElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#deferred-expressions">Deferred Expressions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="defexpr.html#contexts">Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -248,27 +250,38 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a></li>
-<li class="toctree-l1"><a class="reference internal" href="collective.html">Collective Effects</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#sagan-cavity">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
 </ul>
@@ -277,14 +290,17 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="twiss.html">Twiss</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#open-lattices">Open lattices</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimize.html">Optimization with Autodiff</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
@@ -297,27 +313,26 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#reflection-patch">Reflection Patch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#floor-coordinates">Floor Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
@@ -329,14 +344,14 @@
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">About</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
 <li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
@@ -385,36 +400,37 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="defining-a-lineelement">
-<span id="defining-lineelement"></span><h1>Defining a LineElement<a class="headerlink" href="#defining-a-lineelement" title="Link to this heading">¶</a></h1>
-<p>To construct a <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>,</p>
+          <section class="tex2jax_ignore mathjax_ignore" id="defining-a-latelement">
+<span id="defining-latelement"></span><h1>Defining a LatElement<a class="headerlink" href="#defining-a-latelement" title="Link to this heading">¶</a></h1>
+<p>To construct a <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>,</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">()</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LineElement:
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LatElement:
   UniversalParams
-   kind            = ""
-   name            = ""
-   L               = 0.0f0
-   tracking_method = SciBmadStandard(
-     radiation_damping_on      = false,
-     radiation_fluctuations_on = false,
-     ibs_damping_on            = false,
-     ibs_fluctuations_on       = false,
-   )
+   kind             = ""
+   name             = ""
+   L                = 0.0f0
+   tracking_method  = Nothing()
+   n_steps          = 1
+   n_slices         = 1
+   fringe_at        = Fringe.BothEnds
+   rad_damping      = false
+   rad_fluctuations = false
 </pre></div>
 </div>
 </div>
 </div>
-<p>As you can see, the <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> by default comes with a “parameter group” structure
+<p>As you can see, the <code class="docutils literal notranslate"><span class="pre">LatElement</span></code> by default comes with a “parameter group” structure
 called <code class="docutils literal notranslate"><span class="pre">UniversalParams</span></code>. This contains a <code class="docutils literal notranslate"><span class="pre">kind</span></code> as a string, a <code class="docutils literal notranslate"><span class="pre">name</span></code> as a string, a
-length <code class="docutils literal notranslate"><span class="pre">L</span></code>, and a <code class="docutils literal notranslate"><span class="pre">tracking_method</span></code>, which defaults to <code class="docutils literal notranslate"><span class="pre">SciBmadStandard</span></code>. For more details
-on the tracking methods available, see the <a class="reference internal" href="tracking-methods.html"><span class="std std-doc">Tracking Methods</span></a> section
-of the documentation.</p>
+length <code class="docutils literal notranslate"><span class="pre">L</span></code>, the <code class="docutils literal notranslate"><span class="pre">tracking_method</span></code>, and a few settings for how the element is tracked
+through (the number of integration steps and slices, fringe fields, and radiation). A bare
+<code class="docutils literal notranslate"><span class="pre">LatElement</span></code> has no tracking method set. For more details on the tracking methods
+available, see the <a class="reference internal" href="tracking-methods.html"><span class="std std-doc">Tracking Methods</span></a> section of the documentation.</p>
 <p>To set one of these parameters, use the natural syntax</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -431,25 +447,25 @@ of the documentation.</p>
 </div>
 </div>
 <p>Alternatively, we could have set these parameters as keyword arguments (”<code class="docutils literal notranslate"><span class="pre">kwargs</span></code>”) during
-<code class="docutils literal notranslate"><span class="pre">LineElement</span></code> construction:</p>
+<code class="docutils literal notranslate"><span class="pre">LatElement</span></code> construction:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">"ele"</span><span class="p">,</span><span class="w"> </span><span class="n">kind</span><span class="o">=</span><span class="s">"Quadrupole"</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">"ele"</span><span class="p">,</span><span class="w"> </span><span class="n">kind</span><span class="o">=</span><span class="s">"Quadrupole"</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LineElement:
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LatElement:
   UniversalParams
-   kind            = "Quadrupole"
-   name            = "ele"
-   L               = 123
-   tracking_method = SciBmadStandard(
-     radiation_damping_on      = false,
-     radiation_fluctuations_on = false,
-     ibs_damping_on            = false,
-     ibs_fluctuations_on       = false,
-   )
+   kind             = "Quadrupole"
+   name             = "ele"
+   L                = 123
+   tracking_method  = Nothing()
+   n_steps          = 1
+   n_slices         = 1
+   fringe_at        = Fringe.BothEnds
+   rad_damping      = false
+   rad_fluctuations = false
 </pre></div>
 </div>
 </div>
@@ -460,8 +476,8 @@ all element definitions in a <code class="docutils literal notranslate"><span cl
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
-<span class="w">  </span><span class="n">ele1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">()</span>
-<span class="w">  </span><span class="n">ele2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">()</span>
+<span class="w">  </span><span class="n">ele1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">()</span>
+<span class="w">  </span><span class="n">ele2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">()</span>
 <span class="k">end</span>
 <span class="n">println</span><span class="p">(</span><span class="n">ele1</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="n">println</span><span class="p">(</span><span class="n">ele2</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -475,34 +491,29 @@ ele2
 </div>
 </div>
 </div>
-<p>In SciBmad, all element “kinds” (e.g. <code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code>, <code class="docutils literal notranslate"><span class="pre">Sextupole</span></code>, <code class="docutils literal notranslate"><span class="pre">Multipole</span></code>, etc.) are one
-single type <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> under the hood. That is, the constructor for a <code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code> is
-precisely:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Quadrupole</span><span class="p">(;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(;</span><span class="w"> </span><span class="n">kind</span><span class="o">=</span><span class="s">"Quadrupole"</span><span class="p">,</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Therefore,</p>
+<p>In SciBmad, every element kind (<code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code>, <code class="docutils literal notranslate"><span class="pre">Sextupole</span></code>, <code class="docutils literal notranslate"><span class="pre">Multipole</span></code>, etc.) is the same
+type, <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>. The kind only does two things: it sets the <code class="docutils literal notranslate"><span class="pre">kind</span></code> string, and it chooses
+a suitable tracking method for the element (see <a class="reference internal" href="#element-kinds">Element Kinds</a> below):</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
-<span class="w">  </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">()</span>
-<span class="w">  </span><span class="n">sf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Sextupole</span><span class="p">()</span>
+<span class="w">  </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">sf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Sextupole</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
 <span class="k">end</span>
-<span class="n">println</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span>
-<span class="n">println</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span>
+<span class="n">println</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span><span class="w"> </span><span class="s">": "</span><span class="p">,</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">tracking_method</span><span class="p">)</span>
+<span class="n">println</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span><span class="w"> </span><span class="s">": "</span><span class="p">,</span><span class="w"> </span><span class="n">sf</span><span class="o">.</span><span class="n">tracking_method</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Quadrupole
-Sextupole
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Quadrupole: MatrixKick(order=4, opt_scheme=true)
+Sextupole: DriftKick(order=4, opt_scheme=true)
 </pre></div>
 </div>
 </div>
 </div>
-<p>Such an implementation provides maximal flexibility, allowing you to define an element with
-any combination of parameters you may have. For example, there is nothing stopping you from
-doing</p>
+<p>Because every element is a <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>, any element can have any combination of
+parameters. For example, there is nothing stopping you from adding a multipole to a drift:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.2</span><span class="p">)</span>
@@ -521,75 +532,173 @@ Storage Ring of the Electron-Ion Collider, we need to add multipoles to the drif
 interaction region to simulate field crosstalk from the Hadron Storage Ring. With SciBmad,
 one does not need to edit the lattice and change these “drifts” to “multipoles”; just set
 the multipole!</p>
-<p>How an element is tracked through ultimately depends on the parameters defined within that
-<code class="docutils literal notranslate"><span class="pre">LineElement</span></code>. For details, see the <a class="reference internal" href="tracking-methods.html"><span class="std std-doc">Tracking Methods</span></a> section of the
-documentation.</p>
+<p>The drift above still uses <code class="docutils literal notranslate"><span class="pre">DriftKick</span></code>, which can track through any multipole except a
+solenoid. If you were to add a solenoid field to this drift, you would also need to set
+<code class="docutils literal notranslate"><span class="pre">d.tracking_method</span> <span class="pre">=</span> <span class="pre">SolenoidKick()</span></code>; if you forget, tracking will stop with an error telling
+you so. Note that changing the <code class="docutils literal notranslate"><span class="pre">kind</span></code> string afterwards does not change the tracking method.
+For details, see the <a class="reference internal" href="tracking-methods.html"><span class="std std-doc">Tracking Methods</span></a> section of the documentation.</p>
+<section id="element-kinds">
+<span id="id1"></span><h2>Element Kinds<a class="headerlink" href="#element-kinds" title="Link to this heading">¶</a></h2>
+<p>These are all of the element kinds, and the tracking method each one uses by default. Any
+element with <code class="docutils literal notranslate"><span class="pre">L</span> <span class="pre">=</span> <span class="pre">0</span></code> uses <code class="docutils literal notranslate"><span class="pre">Exact()</span></code>, and you can always set a different tracking method,
+either as a keyword argument or afterwards.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Kind</p></th>
+<th class="head"><p>Default tracking method</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Drift</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DriftKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MatrixKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Sextupole</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DriftKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Octupole</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DriftKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Multipole</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DriftKick()</span></code></p></td>
+<td><p>Usually zero length, i.e. <code class="docutils literal notranslate"><span class="pre">Exact()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SBend</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BendKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Solenoid</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SolenoidKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kicker</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DriftKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">HKicker</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DriftKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VKicker</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DriftKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RFCavity</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SolenoidKick()</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CrabCavity</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SolenoidKick()</span></code></p></td>
+<td><p>Also sets <code class="docutils literal notranslate"><span class="pre">is_crabcavity</span> <span class="pre">=</span> <span class="pre">true</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Marker</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Exact()</span></code></p></td>
+<td><p>For any <code class="docutils literal notranslate"><span class="pre">L</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BPM</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Exact()</span></code></p></td>
+<td><p>For any <code class="docutils literal notranslate"><span class="pre">L</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Patch</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Exact()</span></code></p></td>
+<td><p>For any <code class="docutils literal notranslate"><span class="pre">L</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Map</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Exact()</span></code></p></td>
+<td><p>For any <code class="docutils literal notranslate"><span class="pre">L</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A bare <code class="docutils literal notranslate"><span class="pre">LatElement()</span></code> has no tracking method, so you must set one yourself before tracking
+through it.</p>
+</section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p>SciBmad supports a continually-growing list of parameters to define accelerator elements.
 To see a full list of the parameters you can set, look at the docstring for the
-<code class="docutils literal notranslate"><span class="pre">LineElement</span></code> type, reproduced below. In a Julia session it can be retrieved with
-<code class="docutils literal notranslate"><span class="pre">Docs.doc(LineElement)</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">LatElement</span></code> type, reproduced below. In a Julia session it can be retrieved with
+<code class="docutils literal notranslate"><span class="pre">Docs.doc(LatElement)</span></code>.</p>
 <div class="julia-docstring docutils container">
-<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">LineElement</span></code> — <em>Type</em>.</p>
-<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">LineElement</span>
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">LatElement</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">LatElement</span>
 </pre></div>
 </div>
 <p>The basic building block which makes up a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>. May be something physical like a
 quadrupole magnet, or something non-physical like a point in the accelerator you want
-to mark. A <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> may define a region in space distinguished by the presence of
+to mark. A <code class="docutils literal notranslate"><span class="pre">LatElement</span></code> may define a region in space distinguished by the presence of
 (possibly time-varying) electromagnetic fields, materials, apertures and other possible
 properties.</p>
-<p><code class="docutils literal notranslate"><span class="pre">LineElement</span></code> properties are split into “parameter groups” for convenient organization:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  AlignmentParams         ApertureParams               BMultipoleParams
-   x_offset                x1_limit                     KnX
-   y_offset                x2_limit                     KsX
-   z_offset                y1_limit                     BnX
-   x_rot                   y2_limit                     BsX
-   y_rot                   aperture_shape               KnXL
-   tilt                    aperture_at                  KsXL
-                           aperture_shifts_with_body    BnXL
-                                                        BsXL
-                                                        tiltX
+<p><code class="docutils literal notranslate"><span class="pre">LatElement</span></code> properties are split into “parameter groups” for convenient organization:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  AlignmentParams     ApertureParams               BMultipoleParams
+   x_offset            x1_limit                     KnX
+   y_offset            x2_limit                     KsX
+   z_offset            y1_limit                     BnX
+   x_rot               y2_limit                     BsX
+   y_rot               aperture_shape               KnXL
+   tilt                aperture_at                  KsXL
+                       aperture_shifts_with_body    BnXL
+                                                    BsXL
+                                                    tiltX
 
-  BeamlineParams          BendParams                   EMFieldParams
-   beamline                g_ref                        em_field
-   beamline_index          tilt_ref                     em_field_params
-   s                       e1                           em_field_normalized
-   s_downstream            e2
-   line                    edge1_int
-   context                 edge2_int
+  BeamlineParams      BendParams                   EMFieldParams
+   beamline            g_ref                        em_field
+   beamline_index      tilt_ref                     em_field_params
+   s                   e1                           em_field_normalized
+   s_downstream        e2
+   line                edge1_int
+   context             edge2_int
    branch
    branch_index
 
-  EMultipoleParams        FourPotentialParams          IgnoreParams
-   EnX                     four_potential               ignore_params
-   EsX                     four_potential_params
-   EnXL                    four_potential_normalized
+  EMultipoleParams    FourPotentialParams          IBSParams
+   EnX                 four_potential               ibs_model
+   EsX                 four_potential_params
+   EnXL                four_potential_normalized
    EsXL
    etiltX
 
-  InitialBeamlineParams   MapParams                    MetaParams
-   species_ref             transport_map                alias
-   E_ref                   transport_map_params         label
-   pc_ref                                               description
-   p_over_q_ref
-   dE_ref
-   dpc_ref
-   dp_over_q_ref
+  IgnoreParams        InitialBeamlineParams        MapParams
+   ignore_params       species_ref                  transport_map
+                       E_ref                        transport_map_params
+                       pc_ref
+                       p_over_q_ref
+                       dE_ref
+                       dpc_ref
+                       dp_over_q_ref
 
-  PatchParams             RFParams                     UniversalParams
-   dt                      rf_frequency                 kind
-   dx                      harmon                       name
-   dy                      phi0                         L
-   dz                      zero_phase                   tracking_method
-   dx_rot                  traveling_wave
-   dy_rot                  is_crabcavity
-   dz_rot
+  MetaParams          PatchParams                  RFParams
+   alias               dt                           rf_frequency
+   label               dx                           harmon
+   description         dy                           phi0
+                       dz                           zero_phase
+                       dx_rot                       traveling_wave
+                       dy_rot                       is_crabcavity
+                       dz_rot
+
+  UniversalParams
+   kind
+   name
+   L
+   fringe_at
+   n_steps
+   ds_step
+   n_slices
+   tracking_method
+   rad_damping
+   rad_fluctuations
 </pre></div>
 </div>
 <p>To set a property, use the natural syntax:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">()</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">()</span>
 <span class="n">ele</span><span class="o">.</span><span class="n">L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">   </span><span class="c"># Length </span>
 <span class="n">ele</span><span class="o">.</span><span class="n">Kn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="c"># Normal quadrupole strength</span>
 <span class="n">ele</span><span class="o">.</span><span class="n">rf_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e6</span><span class="w"> </span>
@@ -604,7 +713,7 @@ They are all documented below.</p>
 <section id="parameter-groups">
 <span id="pgs"></span><h2>Parameter Groups<a class="headerlink" href="#parameter-groups" title="Link to this heading">¶</a></h2>
 <section id="alignmentparams">
-<span id="id1"></span><span id="alignment-params"></span><h3>AlignmentParams<a class="headerlink" href="#alignmentparams" title="Link to this heading">¶</a></h3>
+<span id="id2"></span><span id="alignment-params"></span><h3>AlignmentParams<a class="headerlink" href="#alignmentparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">AlignmentParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">AlignmentParams</span>
@@ -624,7 +733,7 @@ Rotations are applied in order: <code class="docutils literal notranslate"><span
 </div>
 </section>
 <section id="apertureparams">
-<span id="id2"></span><span id="aperture-params"></span><h3>ApertureParams<a class="headerlink" href="#apertureparams" title="Link to this heading">¶</a></h3>
+<span id="id3"></span><span id="aperture-params"></span><h3>ApertureParams<a class="headerlink" href="#apertureparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">ApertureParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ApertureParams</span>
@@ -669,7 +778,7 @@ omitting the <code class="docutils literal notranslate"><span class="pre">n</spa
 <p class="admonition-title">Note</p>
 <p>The last <em>set</em> for a given multipole defines if both the normal and skew strengths
 for a given multipole order are normalized and integrated. E.g.</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="n">Ks1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span><span class="w"> </span><span class="c"># Order 1 is normalized, nonintegrated</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="n">Ks1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span><span class="w"> </span><span class="c"># Order 1 is normalized, nonintegrated</span>
 <span class="n">ele</span><span class="o">.</span><span class="n">Kn1L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span><span class="w">         </span><span class="c"># Order 1 independent variables are now normalized, integrated</span>
 <span class="n">ele</span><span class="o">.</span><span class="n">Ks1L</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.2</span><span class="o">*</span><span class="mf">0.4</span><span class="w">    </span><span class="c"># true</span>
 <span class="n">ele</span><span class="o">.</span><span class="n">Bn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="w">          </span><span class="c"># Order 1 independent variables are now unnormalized, nonintegrated</span>
@@ -686,14 +795,14 @@ for a given multipole order are normalized and integrated. E.g.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BeamlineParams</span>
 </pre></div>
 </div>
-<p>Defines information for <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>s that are in a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>.</p>
+<p>Defines information for <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>s that are in a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>.</p>
 <p class="rubric">Properties</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">beamline</span></code>: <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> that this <code class="docutils literal notranslate"><span class="pre">LineElement</span></code> is in</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beamline</span></code>: <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> that this <code class="docutils literal notranslate"><span class="pre">LatElement</span></code> is in</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">beamline_index</span></code>: Index of the <code class="docutils literal notranslate"><span class="pre">line</span></code> array of the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> that this element is at</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>: Longitudinal position from the start of the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> at the entrance of the element [m]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">s_downstream</span></code>: Longitudinal position from the start of the <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> at the exit of the element [m]</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">line</span></code>: A read-only array of <code class="docutils literal notranslate"><span class="pre">LineElements</span></code> in the beamline, in order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line</span></code>: A read-only array of <code class="docutils literal notranslate"><span class="pre">LatElements</span></code> in the beamline, in order</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: <code class="docutils literal notranslate"><span class="pre">Context</span></code> struct containing control variables associated with the beamline. If in a <code class="docutils literal notranslate"><span class="pre">Branch</span></code>, this is shared by the whole <code class="docutils literal notranslate"><span class="pre">Branch</span></code> (and <code class="docutils literal notranslate"><span class="pre">Lattice</span></code>, if any), and setting it sets it for all of them</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">branch</span></code>: <code class="docutils literal notranslate"><span class="pre">Branch</span></code> that the beamline is placed in, if any</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">branch_index</span></code>: Index of the beamline in the <code class="docutils literal notranslate"><span class="pre">Branch</span></code>, if in a <code class="docutils literal notranslate"><span class="pre">Branch</span></code></p></li>
@@ -701,7 +810,7 @@ for a given multipole order are normalized and integrated. E.g.</p>
 </div>
 </section>
 <section id="bendparams">
-<span id="id3"></span><span id="bend-params"></span><h3>BendParams<a class="headerlink" href="#bendparams" title="Link to this heading">¶</a></h3>
+<span id="id4"></span><span id="bend-params"></span><h3>BendParams<a class="headerlink" href="#bendparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">BendParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BendParams</span>
@@ -719,6 +828,52 @@ element. Does not specify any magnetic field.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">edge1_int</span></code>: Pole face field integral at the entrance [m]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">edge2_int</span></code>: Pole face field integral at the exit [m]</p></li>
 </ul>
+</div>
+</section>
+<section id="emfieldparams">
+<span id="emfield-params"></span><h3>EMFieldParams<a class="headerlink" href="#emfieldparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">EMFieldParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">EMFieldParams</span>
+</pre></div>
+</div>
+<p>Defines the electromagnetic field of an element as a function
+<code class="docutils literal notranslate"><span class="pre">em_field(x,</span> <span class="pre">y,</span> <span class="pre">s,</span> <span class="pre">t,</span> <span class="pre">p=nothing)</span></code> where <code class="docutils literal notranslate"><span class="pre">p</span></code> is a tuple of parameters that may be used
+inside the function.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">em_field</span></code>: Function with arguments (x, y, s, t, p) the returns a tuple of the EM field values (Ex, Ey, Ez, Bx, By, Bz) at the given point.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">em_field_params</span></code>: Tuple of parameters passed to the <code class="docutils literal notranslate"><span class="pre">em_field</span></code> function. Default is <code class="docutils literal notranslate"><span class="pre">nothing</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">em_field_normalized</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, then EM field values returned are normalized by <code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span></code>; default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+</ul>
+</div>
+</section>
+<section id="emultipoleparams">
+<h3>EMultipoleParams<a class="headerlink" href="#emultipoleparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">EMultipoleParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">EMultipoleParams</span>
+</pre></div>
+</div>
+<p>Defines electric (E) multipoles for an element.</p>
+<p>A given multipole can be set using any of the following:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">EnX</span></code>: Order X normal strength in [V/m^(X+1)] (nonintegrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EsX</span></code>: Order X skew strength   in [V/m^(X+1)] (nonintegrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EnXL</span></code>: Order X normal strength in [V/m^X] (integrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EsXL</span></code>: Order X skew strength in [V/m^X] (integrated)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">etiltX</span></code>: Tilt to only order X multipole</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The last <em>set</em> for a given multipole defines if both the normal and skew strengths
+for a given multipole order are integrated. E.g.</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ele</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">(</span><span class="n">En1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="n">Es1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span><span class="w"> </span><span class="c"># Order 1 is nonintegrated</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">En1L</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span><span class="w">         </span><span class="c"># Order 1 independent variables are now integrated</span>
+<span class="n">ele</span><span class="o">.</span><span class="n">Es1L</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.2</span><span class="o">*</span><span class="mf">0.4</span><span class="w">    </span><span class="c"># true</span>
+</pre></div>
+</div>
+</div>
 </div>
 </section>
 <section id="fourpotentialparams">
@@ -743,6 +898,28 @@ tuple <code class="docutils literal notranslate"><span class="pre">(C,</span> <s
 <li><p><code class="docutils literal notranslate"><span class="pre">four_potential_params</span></code>: Tuple of parameters passed to the <code class="docutils literal notranslate"><span class="pre">four_potential</span></code> function. Default is <code class="docutils literal notranslate"><span class="pre">nothing</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">four_potential_normalized</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, then potential/derivatives returned are normalized by <code class="docutils literal notranslate"><span class="pre">p_over_q_ref</span></code>; default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
 </ul>
+</div>
+</section>
+<section id="ibsparams">
+<span id="ibs-params"></span><h3>IBSParams<a class="headerlink" href="#ibsparams" title="Link to this heading">¶</a></h3>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">IBSParams</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">IBSParams</span>
+</pre></div>
+</div>
+<p>Defines intra-beam scattering modelling.</p>
+<p class="rubric">Properties</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ibs_model</span></code>: A <code class="docutils literal notranslate"><span class="pre">IBSModel</span></code> that specifies which intra-beam scattering model is used</p></li>
+</ul>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">ibs_model</span></code> parameter takes an <code class="docutils literal notranslate"><span class="pre">IBSModel</span></code>:</p>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">IBSModel</span></code> — <em>Module</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@enumx</span><span class="w"> </span><span class="n">IBSModel</span><span class="o">::</span><span class="kt">Int8</span><span class="w"> </span><span class="n">None</span><span class="w"> </span><span class="n">Gaussian</span><span class="w"> </span><span class="n">GaussianDampingOnly</span><span class="w"> </span><span class="n">GaussianFluctuationsOnly</span>
+</pre></div>
+</div>
+<p>Which intra-beam scattering model should be used.</p>
 </div>
 </section>
 <section id="initialbeamlineparams">
@@ -808,7 +985,7 @@ returns the output as a tuple <code class="docutils literal notranslate"><span c
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">((</span><span class="n">vx</span><span class="p">,</span><span class="w"> </span><span class="n">vpx</span><span class="p">,</span><span class="w"> </span><span class="n">vy</span><span class="p">,</span><span class="w"> </span><span class="n">vpy</span><span class="p">,</span><span class="w"> </span><span class="n">vz</span><span class="p">,</span><span class="w"> </span><span class="n">vpz</span><span class="p">),</span><span class="w"> </span><span class="n">q</span><span class="p">)</span>
 <span class="k">end</span>
 
-<span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineElement</span><span class="p">(</span><span class="n">transport_map</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span><span class="w"> </span><span class="n">transport_map_params</span><span class="o">=</span><span class="n">random_matrix</span><span class="p">)</span>
+<span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">(</span><span class="n">transport_map</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span><span class="w"> </span><span class="n">transport_map_params</span><span class="o">=</span><span class="n">random_matrix</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -831,7 +1008,7 @@ or storing extra information about a given element.</p>
 </div>
 </section>
 <section id="patchparams">
-<span id="id4"></span><span id="patch-params"></span><h3>PatchParams<a class="headerlink" href="#patchparams" title="Link to this heading">¶</a></h3>
+<span id="id5"></span><span id="patch-params"></span><h3>PatchParams<a class="headerlink" href="#patchparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">PatchParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">PatchParams</span>
@@ -852,7 +1029,7 @@ Rotations are applied in order: <code class="docutils literal notranslate"><span
 </div>
 </section>
 <section id="rfparams">
-<span id="id5"></span><span id="rf-params"></span><h3>RFParams<a class="headerlink" href="#rfparams" title="Link to this heading">¶</a></h3>
+<span id="id6"></span><span id="rf-params"></span><h3>RFParams<a class="headerlink" href="#rfparams" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">RFParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">RFParams</span>
@@ -886,6 +1063,13 @@ entire containing <code class="docutils literal notranslate"><span class="pre">B
 <li><p><code class="docutils literal notranslate"><span class="pre">AboveTransition</span></code>:   Zero phase is at the stable zero crossing for particles above transition.</p></li>
 </ul>
 </div>
+<p>All tracking methods for RF cavities use the same phase convention. A particle of the
+reference species that arrives a time <span class="math notranslate nohighlight">\(\Delta t\)</span> after the reference particle gains the
+energy <span class="math notranslate nohighlight">\(|q| V \cos(\phi_0 + \phi_\mathrm{zero} + \omega \Delta t)\)</span>, where <span class="math notranslate nohighlight">\(\omega\)</span> is the
+angular RF frequency and <span class="math notranslate nohighlight">\(\phi_\mathrm{zero}\)</span> is <span class="math notranslate nohighlight">\(0\)</span> for <code class="docutils literal notranslate"><span class="pre">PhaseRef.Accelerating</span></code>, <span class="math notranslate nohighlight">\(+\pi/2\)</span>
+for <code class="docutils literal notranslate"><span class="pre">PhaseRef.AboveTransition</span></code>, and <span class="math notranslate nohighlight">\(-\pi/2\)</span> for <code class="docutils literal notranslate"><span class="pre">PhaseRef.BelowTransition</span></code>. So with
+<code class="docutils literal notranslate"><span class="pre">phi0</span> <span class="pre">=</span> <span class="pre">0</span></code>, a particle arriving late loses energy above transition and gains energy below
+transition, which is what makes the motion stable in each case.</p>
 </section>
 <section id="universalparams">
 <h3>UniversalParams<a class="headerlink" href="#universalparams" title="Link to this heading">¶</a></h3>
@@ -894,14 +1078,29 @@ entire containing <code class="docutils literal notranslate"><span class="pre">B
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">UniversalParams</span>
 </pre></div>
 </div>
-<p>Describes the kind, name, length, and tracking method for a <code class="docutils literal notranslate"><span class="pre">LineElement</span></code>.</p>
+<p>Describes the kind, name, length, and tracking method for a <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>.</p>
 <p class="rubric">Properties</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">kind</span></code>: String specifing the “kind”, of an element, e.g. “Quadrupole”</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of an element as a string</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">L</span></code>: Length of the element [m]</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tracking_method</span></code>: Tracking method for the element, defaults to <code class="docutils literal notranslate"><span class="pre">SciBmadStandard()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fringe_at</span></code>: A <code class="docutils literal notranslate"><span class="pre">Fringe</span></code> that specifies which, if any, element ends should include fringe field modelling. Default is <code class="docutils literal notranslate"><span class="pre">Fringe.BothEnds</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_steps</span></code>: Number of integrator steps to take per element slice, default is 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ds_step</span></code>: Length of each integrator step to take per element slice, such that <code class="docutils literal notranslate"><span class="pre">n_steps</span> <span class="pre">=</span> <span class="pre">ceil(L</span> <span class="pre">/</span> <span class="pre">n_slices</span> <span class="pre">/</span> <span class="pre">ds_step)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_slices</span></code>: Number of slices to split the element into in tracking, typically so that collective effects can be applied multiple times
+in an element. If no collective effects are included, then prefer to vary <code class="docutils literal notranslate"><span class="pre">n_steps</span></code>/<code class="docutils literal notranslate"><span class="pre">ds_step</span></code> instead for performance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tracking_method</span></code>: Tracking method for the element</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rad_damping</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the deterministic effect of synchrotron radiation is included, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rad_fluctuations</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the stochastic radiation kicks are included, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
 </ul>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">fringe_at</span></code> parameter takes a <code class="docutils literal notranslate"><span class="pre">Fringe</span></code>:</p>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">Fringe</span></code> — <em>Module</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@enumx</span><span class="w"> </span><span class="n">Fringe</span><span class="o">::</span><span class="kt">Int8</span><span class="w"> </span><span class="n">NoEnd</span><span class="w"> </span><span class="n">BothEnds</span><span class="w"> </span><span class="n">EntranceEnd</span><span class="w"> </span><span class="n">ExitEnd</span>
+</pre></div>
+</div>
+<p>Defines which ends fringe field modelling should be included</p>
 </div>
 </section>
 </section>
@@ -962,7 +1161,8 @@ entire containing <code class="docutils literal notranslate"><span class="pre">B
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Defining a LineElement</a><ul>
+<li><a class="reference internal" href="#">Defining a LatElement</a><ul>
+<li><a class="reference internal" href="#element-kinds">Element Kinds</a></li>
 <li><a class="reference internal" href="#parameters">Parameters</a></li>
 <li><a class="reference internal" href="#parameter-groups">Parameter Groups</a><ul>
 <li><a class="reference internal" href="#alignmentparams">AlignmentParams</a></li>
@@ -970,7 +1170,10 @@ entire containing <code class="docutils literal notranslate"><span class="pre">B
 <li><a class="reference internal" href="#bmultipoleparams">BMultipoleParams</a></li>
 <li><a class="reference internal" href="#beamlineparams">BeamlineParams</a></li>
 <li><a class="reference internal" href="#bendparams">BendParams</a></li>
+<li><a class="reference internal" href="#emfieldparams">EMFieldParams</a></li>
+<li><a class="reference internal" href="#emultipoleparams">EMultipoleParams</a></li>
 <li><a class="reference internal" href="#fourpotentialparams">FourPotentialParams</a></li>
+<li><a class="reference internal" href="#ibsparams">IBSParams</a></li>
 <li><a class="reference internal" href="#initialbeamlineparams">InitialBeamlineParams</a></li>
 <li><a class="reference internal" href="#mapparams">MapParams</a></li>
 <li><a class="reference internal" href="#metaparams">MetaParams</a></li>
@@ -996,6 +1199,8 @@ entire containing <code class="docutils literal notranslate"><span class="pre">B
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=552d2a3d"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="_static/topbar-github.js?v=c13617d6"></script>
     <script src="_static/sidebar-current.js?v=23c44312"></script>
     </body>
