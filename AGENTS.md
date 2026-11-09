@@ -206,7 +206,7 @@ plainly what was not verified and what could be wrong. Never present unverified 
    `n_steps > 1` or `n_slices > 1`, and Beamlines forces `n_steps = n_slices = 1` for zero length. 
    Verified per element with a counting callback on mixed lines and ESR.
 3. `_compute_periodic_a_and_cache!` (uniform truncation orders): tracks the identity map (Bunch 
-   `t_ref = zero(eltype(s))`, so it can hold parametric lengths) once with 
+   `t_ref = zero(s[1])`, so it can hold parametric lengths) once with 
    a callback storing the map at each saved step; the one-turn map gives `a` (`normal`) and tunes. 
    Otherwise `_compute_periodic_a` and a second tracking pass.
 4. `factorise` (NNF) of `a`, then `_twiss_push_a_with_cache`: per saved step `a = map ∘ a` and 

@@ -329,7 +329,7 @@ function twiss(
       # also fills beta_gamma_ref, t_ref
       a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
     else
-      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}(), zero(eltype(s)))
+      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}(), zero(s[1]))
     end
   end
 
@@ -595,7 +595,7 @@ function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, rf_on, batch_ind
   eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
   maps = _twiss_cache_preallocate(step_save, eye)
   cb = _twiss_cache_make_callback(step_save, beta_gamma_ref, t_ref, in_body_coordinates, maps)
-  _twiss_track!(eye, (cb,), bl, rf_on, batch_index, zero(eltype(t_ref)))
+  _twiss_track!(eye, (cb,), bl, rf_on, batch_index, zero(t_ref[1]))
   m_turn = eye
   for map in maps
     m_turn = map ∘ m_turn
@@ -718,7 +718,7 @@ function _twiss_push_a!(bl, rf_on, batch_index, step_save, a_initial, canonise, 
     initial_step_save_idx = 1
   end
   cb = _twiss_make_callback(step_save, initial_step_save_idx, in_body_coordinates, a_initial, fac, canonise, phase, phi1, phi2, phi3_or_slip, damp, damp1, damp2, damp3, beta_gamma_ref, t_ref)
-  _twiss_track!(a_initial, (cb,), bl, rf_on, batch_index, zero(eltype(t_ref)))
+  _twiss_track!(a_initial, (cb,), bl, rf_on, batch_index, zero(t_ref[1]))
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 
