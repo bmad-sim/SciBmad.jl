@@ -470,10 +470,16 @@ various options available are:</p>
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vpopcntdq.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vp2intersect.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512cd.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +evex512.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
+<span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avxvnni.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512vl.
@@ -505,43 +511,6 @@ various options available are:</p>
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">┌ Warning: </span>Runtime invalidation was disabled, but the CPU info is out-of-date.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">│ </span>Will continue with incorrect CPU feature flag: +avx512dq.
 <span class=" -Color -Color-Bold -Color-Bold-Yellow">└ </span>@ HostCPUFeatures ~/.julia/packages/HostCPUFeatures/ZTXz4/src/cpu_info.jl:56
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling NonlinearSolve [8913a72c-1f9b-4ce2-8d82-65094dcecaec] (caches not reused: 1 for different system or CPU target, 2 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   0.9 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase → SciMLBaseDifferentiationInterfaceExt
-   1.0 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase → SciMLBaseReactantCoreExt
-   1.2 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase → SciMLBaseForwardDiffExt
-   1.5 s<span class=" -Color -Color-Green">  ✓ </span>SciMLJacobianOperators
-   4.9 s<span class=" -Color -Color-Green">  ✓ </span>LineSearch
-   6.7 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase
-   1.5 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseLineSearchExt
-   1.5 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseSparseArraysExt
-   2.3 s<span class=" -Color -Color-Green">  ✓ </span>BracketingNonlinearSolve
-   1.2 s<span class=" -Color -Color-Green">  ✓ </span>BracketingNonlinearSolve → BracketingNonlinearSolveForwardDiffExt
-   7.7 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseForwardDiffExt
-  18.9 s<span class=" -Color -Color-Green">  ✓ </span>LinearSolve
-   2.5 s<span class=" -Color -Color-Green">  ✓ </span>LinearSolve → LinearSolveEnzymeExt
-   2.5 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseLinearSolveExt
-   3.6 s<span class=" -Color -Color-Green">  ✓ </span>LinearSolve → LinearSolveForwardDiffExt
-  12.3 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveSpectralMethods
-   1.2 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveSpectralMethods → NonlinearSolveSpectralMethodsForwardDiffExt
-   8.8 s<span class=" -Color -Color-Green">  ✓ </span>SimpleNonlinearSolve
-  19.6 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveQuasiNewton
-   1.2 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveQuasiNewton → NonlinearSolveQuasiNewtonForwardDiffExt
-  45.2 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveFirstOrder
-  61.1 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolve
-  22 dependencies successfully precompiled in 129 seconds. 145 already precompiled.
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling SciMLBaseStaticArraysExt [48122e34-4194-5f4b-933d-012f106bf9d6] (caches not reused: 1 for different system or CPU target, 2 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   0.7 s<span class=" -Color -Color-Green">  ✓ </span>SciMLBase → SciMLBaseStaticArraysExt
-  1 dependency successfully precompiled in 1 seconds. 55 already precompiled.
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling NonlinearSolveBaseSparseMatrixColoringsExt [1b479212-cad0-5ec9-a3d5-a9b04584e81d] (caches not reused: 1 for different system or CPU target, 2 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   0.8 s<span class=" -Color -Color-Green">  ✓ </span>NonlinearSolveBase → NonlinearSolveBaseSparseMatrixColoringsExt
-  1 dependency successfully precompiled in 1 seconds. 101 already precompiled.
-<span class=" -Color -Color-Bold -Color-Bold-Cyan">[ Info: </span>Precompiling LinearSolveKernelAbstractionsExt [04391eab-734d-5a92-9278-9bf651c5eb72] (caches not reused: 1 for different dependency version already loaded, 1 for different system or CPU target, 3 for different Julia build configuration)
-<span class=" -Color -Color-Bold -Color-Bold-Green">Precompiling</span> packages...
-   1.6 s<span class=" -Color -Color-Green">  ✓ </span>LinearSolve → LinearSolveKernelAbstractionsExt
-  1 dependency successfully precompiled in 2 seconds. 113 already precompiled.
 </pre></div>
 </div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-1.2
