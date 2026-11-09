@@ -239,7 +239,9 @@ dq1/dL and dbeta1/dL agree with finite differences); `track` rejected a weight v
 returned the end row; selected elements had `s` one ulp off the full table; `alphac` was the 
 slip factor (the one-turn change of z is -L(δ) + L0 β(δ)/β0, so α_c = η + 1/γ² at first order: 
 `_velocity_slip`), and coasting TPS `etac`/`alphac` took β without its δ dependence (the cached 
-`pz` column is only the value of δ, not the Taylor series variable: use `twi.fac[j].a0.v[6]`); checked against Bmad (`Alpha_p`/`Eta_p`, Bmad 
+`pz` column is only the value of δ, not the Taylor series variable: use `twi.fac[j].a0.v[6]`), while at order 1 with parameters (z_slip a number, the `pz` 
+column a TPS containing δ) `etac` was the δ-derivative of 1/β, ~0 (β must then be its value on 
+the orbit); checked against Bmad (`Alpha_p`/`Eta_p`, Bmad 
 is in the `condamatt` conda environment: `~/miniconda3/envs/condamatt/bin/tao -lat <file> -noplot 
 -command "show universe; quit"`) and one-turn tracking, tested.
 
@@ -281,8 +283,8 @@ Open items:
   Kinds table, RF phase convention), beamline (name matching, other species), defexpr 
   (`rawget`/`deval`), def-tools (phase trombone), track (other species, callbacks per step of 
   each slice, Float32/Metal), tracking-methods, collective (IBS), timedependent, batch, co, 
-  dynamic-aperture (notebook cell updated, outputs not rerun), twiss (docstring typos). Left: 
-  parametric-nf, optimize, fma, examples, coordinates, 
+  dynamic-aperture (notebook cell updated, outputs not rerun), twiss (docstring typos), 
+  parametric-nf (checked, no changes). Left: optimize, fma, examples, coordinates, 
   `sagancavity-tracking.md` (`num_cells` → `n_cells`, radiation flags are element settings, 
   `zero_phase` is an `RFParams` field, `PhaseReference` → `PhaseRef`, typo `SagaņCavity`), 
   `sagancavity-physics.md` (`num_cells`, RF convention), miscellaneous. Outside `docs/`: 

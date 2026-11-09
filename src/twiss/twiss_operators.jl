@@ -670,6 +670,9 @@ end
     _pz(j, twi, cache, Val{true}())
   end
   pz = haskey(cache.tps, :pz) ? cache.tps[:pz] : cache.float[:pz]
+  if iscoasting(twi) # see _slip
+    pz = scalar(pz)
+  end
   rel_p = 1 + pz
   return tilde_m*tilde_m/sqrt(rel_p*rel_p + tilde_m*tilde_m)^3/beta_0
 end
@@ -702,6 +705,10 @@ end
       # column is only the value of δ)
       rel_p = 1 + twi.fac[j].a0.v[6]
       beta = rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)
+    else
+      # phi3 is then the change of z per δ, so β is its value on the orbit (with parameters, the 
+      # cached pz column is a Taylor series that also contains δ)
+      beta = scalar(beta)
     end
     return phi3 / beta
   end 

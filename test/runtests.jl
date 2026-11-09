@@ -173,6 +173,23 @@ using Test
         @test tps[delta=k] ≈ (k + 1)*c[k+2] rtol=rtol
       end
     end
+    # With a parameter (the quadrupole strength): at order 1 the same values, at order 2 also 
+    # their derivatives in it, as finite differences (in separate Beamlines: each Descriptor needs 
+    # its own lattice)
+    ring_k(K) = Beamline([Quadrupole(Kn1=K, L=0.5), SBend(L=1.2, angle=pi/132), Drift(L=0.1),
+        Quadrupole(Kn1=-0.36, L=0.5), SBend(L=1.2, angle=pi/132), Drift(L=0.1)]; species_ref=e, pc_ref=10e6)
+    D1 = Descriptor([1, 1, 1, 1, 1, 1], 1, [1], 1)
+    tk1 = twiss(ring_k(0.36 + params(D1)[1]); GTPSA_descriptor=D1)
+    @test tk1.etac[] ≈ t1.etac rtol=1e-12
+    @test tk1.alphac[] ≈ t1.alphac rtol=1e-12
+    D2 = Descriptor([1, 1, 1, 1, 1, 1], 2, [1], 1)
+    tk2 = twiss(ring_k(0.36 + params(D2)[1]); GTPSA_descriptor=D2)
+    hk = 1e-6
+    tp, tm = twiss(ring_k(0.36 + hk)), twiss(ring_k(0.36 - hk))
+    @test tk2.etac[] ≈ t1.etac rtol=1e-12
+    @test tk2.alphac[] ≈ t1.alphac rtol=1e-12
+    @test GTPSA.geti(tk2.etac.taylor_series, 7) ≈ (tp.etac - tm.etac)/(2hk) rtol=1e-7
+    @test GTPSA.geti(tk2.alphac.taylor_series, 7) ≈ (tp.alphac - tm.alphac)/(2hk) rtol=1e-7
   end
 
   @testset "Spin normal form with n0 exactly vertical" begin
