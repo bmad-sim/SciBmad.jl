@@ -37,8 +37,8 @@ decision before deviating.
   minimal diffs.
 - **Minimal changes.** Keep the existing structure and the shape of functions you edit. Don't add 
   helper functions, abstractions or reorganize code unless it is necessary or asked for. Match the 
-  surrounding style and comment density. 2-space indentation in source files (keep a test file's 
-  own indentation).
+  surrounding style and comment density. 2-space indentation everywhere, tests included (lines 
+  continuing a bracket or an expression may be aligned with it); fix other indentation you find.
 - **Verify, don't assume.** Re-derive physics from the actual source, not from memory. Never guess 
   a field, property or function name: look it up (e.g. it is `n_steps`, not `num_steps`). When 
   asked to check something, say plainly what you verified, what you could not, and what was wrong 
@@ -231,10 +231,17 @@ Fixed on the way (with tests): rows after the first started with the previous ro
 exactly vertical `n0` (NNF `normal`); `twiss` failed for `DefExpr` element lengths (now evaluated 
 with the Beamline's context, as in tracking); `getterm(…; as_taylor_series=true)` with all orders 0 
 dropped the constant term (`TI.cycle!` started at 0 skips index 0: start at -1 to include it); 
-`twiss` mutated a user-supplied `v0`; parametric (TPS) element lengths are supported (the Bunch 
+`twiss` mutated a user-supplied `v0`; `track` printed the reference messages of `track!` on every 
+turn (now `notify` only on the first); the first three `transport_map_params` of `phase_trombone!` 
+are the tune changes (units of 2π, as its keywords; they were stored in radians), tested; parametric (TPS) element lengths are supported (the Bunch 
 `t_ref`, `s` and `t_ref` storage have the type the lengths sum to, Float64 for ordinary lattices; 
 dq1/dL and dbeta1/dL agree with finite differences); `track` rejected a weight vector; `at=[last element]` also 
-returned the end row; selected elements had `s` one ulp off the full table.
+returned the end row; selected elements had `s` one ulp off the full table; `alphac` was the 
+slip factor (the one-turn change of z is -L(δ) + L0 β(δ)/β0, so α_c = η + 1/γ² at first order: 
+`_velocity_slip`), and coasting TPS `etac`/`alphac` took β without its δ dependence (the cached 
+`pz` column is only the value of δ, not the Taylor series variable: use `twi.fac[j].a0.v[6]`); checked against Bmad (`Alpha_p`/`Eta_p`, Bmad 
+is in the `condamatt` conda environment: `~/miniconda3/envs/condamatt/bin/tao -lat <file> -noplot 
+-command "show universe; quit"`) and one-turn tracking, tested.
 
 Precompile workload (`src/SciBmad.jl`), Julia 1.10, Apple silicon, measured as in "Compile cost is 
 performance too" with each call in its own fresh process. It saves 15–20 s on the first call of 
@@ -269,12 +276,36 @@ Open items:
 - Unknown entries of `at` are ignored silently; `_dampdec` returns an `Int` 0 without radiation; 
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.
-- Docs (`docs/`) describe the previous version; to update together with the maintainer at the end: 
-  `LineElement` → `LatElement` everywhere; no default tracking method (`element.md`, `batch.md` 
-  mention `SciBmadStandard`/`Symplectic`); empty `tracking-methods.md` and `collective.md`; 
+- Docs (`docs/`) are being updated page by page in TOC order (`docs/toctree.md`), see "Writing 
+  docs". Done (uncommitted or committed by the maintainer): README, quickstart, element (Element 
+  Kinds table, RF phase convention), beamline (name matching, other species), defexpr 
+  (`rawget`/`deval`), def-tools (phase trombone), track (other species, callbacks per step of 
+  each slice, Float32/Metal), tracking-methods, collective (IBS), timedependent, batch, co, 
+  dynamic-aperture (notebook cell updated, outputs not rerun), twiss (docstring typos). Left: 
+  parametric-nf, optimize, fma, examples, coordinates, 
   `sagancavity-tracking.md` (`num_cells` → `n_cells`, radiation flags are element settings, 
-  `zero_phase` is an `RFParams` field, `PhaseReference` → `PhaseRef`); the RF phase convention 
-  change; callbacks per integrator step of each slice; new features (`n_slices`, a Bunch of a 
-  different species, differentiable `L`, Float32 time dependence on GPUs, `notify=false`); the 
-  unfinished Metal note in `track.md`. Outside `docs/`: `lattices/RCSV5S0.jl` and 
-  `examples/julia/dynamic-aperture-gpu.ipynb` use old names.
+  `zero_phase` is an `RFParams` field, `PhaseReference` → `PhaseRef`, typo `SagaņCavity`), 
+  `sagancavity-physics.md` (`num_cells`, RF convention), miscellaneous. Outside `docs/`: 
+  `lattices/RCSV5S0.jl` uses old names.
+
+### Writing docs
+
+- Readers know nothing about the internals and often little physics: say what a feature does for 
+  them in plain words, without implementation details (e.g. "with 32-bit coordinates all numbers in 
+  the tracking are 32-bit", not how they are lowered). Keep the tone of the surrounding page.
+- Run every code cell of a changed page as a script (`awk` the `{code-cell}` blocks) before 
+  reporting, and check printed values in the text against the output. Don't add helper functions 
+  to examples: show the plain call and write the result in a comment next to it. Write loops as plain 
+  `for` loops, not `foreach(...) do` blocks.
+- Examples must be physically sensible: e.g. a positron at an electron ring's rigidity bends the 
+  wrong way in every dipole and is lost within a few turns, so "another species" examples use a 
+  species with the same sign of charge (muons in an electron ring).
+- Check docstrings against the code while documenting a feature (`phase_trombone!` described its 
+  stored parameters wrongly) and fix them in the same round.
+- Keep the existing wording. Change a sentence only if it is wrong or no longer true, and then 
+  change as little as needed (e.g. "a `GPUArray`" → "a `BatchParam` of a `GPUArray`"); don't 
+  rephrase or restructure text that is correct.
+- Check every claim of a page by running it, including "X cannot be done" limitations, and check 
+  that what runs is also physically right (a time dependent `g_ref` runs, but would put particles 
+  in different coordinate systems, so it stays a limitation). Bugs found this way (time dependent 
+  `Kn0` in a bend, tilts of another number type) are fixed with tests, not documented around.

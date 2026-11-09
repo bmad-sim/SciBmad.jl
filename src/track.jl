@@ -275,7 +275,7 @@ function _track(bl, bunch, config, groupsize)
   end
 
   t = @elapsed for i in 1:n_turns
-    track!(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf, ramp_update_each_particle, batch_start, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
+    track!(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf, ramp_update_each_particle, batch_start, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading, notify=(i == 1))
     if mod(i, save_every_n_turns) == 0
       idx = div(i,save_every_n_turns)+1
       state_data[:,idx] .= state

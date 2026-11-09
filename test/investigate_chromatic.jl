@@ -34,12 +34,12 @@ println("First $n_show elements — dbeta_dpz_a (∂β₁/∂pz):")
 println("  idx │ name              │        s (m) │      SciBmad │          Tao │  Tao/SciBmad")
 println("  ────┼───────────────────┼──────────────┼──────────────┼──────────────┼─────────────")
 for i in 1:min(n_show, N)
-    sc  = tw.table.beta_1[i][[0,0,0,0,0,1]]
-    ta  = ref[i, 1]
-    rat = iszero(sc) ? NaN : ta / sc
-    nm  = rpad(tw.table.name[i], 18)
-    @printf("  %3d │ %s│ %12.4f │ %12.4g │ %12.4g │ %12.4g\n",
-            i, nm, s_vals[i], sc, ta, rat)
+  sc  = tw.table.beta_1[i][[0,0,0,0,0,1]]
+  ta  = ref[i, 1]
+  rat = iszero(sc) ? NaN : ta / sc
+  nm  = rpad(tw.table.name[i], 18)
+  @printf("  %3d │ %s│ %12.4f │ %12.4g │ %12.4g │ %12.4g\n",
+          i, nm, s_vals[i], sc, ta, rat)
 end
 
 # ── Also show last 5 elements near ring end ──────────────────────────────────
@@ -47,12 +47,12 @@ println("\nLast 5 elements (near end/closure):")
 println("  idx │ name              │        s (m) │      SciBmad │          Tao │  Tao/SciBmad")
 println("  ────┼───────────────────┼──────────────┼──────────────┼──────────────┼─────────────")
 for i in (N-4):N
-    sc  = tw.table.beta_1[i][[0,0,0,0,0,1]]
-    ta  = ref[i, 1]
-    rat = iszero(sc) ? NaN : ta / sc
-    nm  = rpad(tw.table.name[i], 18)
-    @printf("  %3d │ %s│ %12.4f │ %12.4g │ %12.4g │ %12.4g\n",
-            i, nm, s_vals[i], sc, ta, rat)
+  sc  = tw.table.beta_1[i][[0,0,0,0,0,1]]
+  ta  = ref[i, 1]
+  rat = iszero(sc) ? NaN : ta / sc
+  nm  = rpad(tw.table.name[i], 18)
+  @printf("  %3d │ %s│ %12.4f │ %12.4g │ %12.4g │ %12.4g\n",
+          i, nm, s_vals[i], sc, ta, rat)
 end
 
 # ── Check smoothness of each dataset independently ────────────────────────────
@@ -70,9 +70,9 @@ println("  (If ratio ≈ 1 here, Tao is reporting exit instead of beginning for 
 println("  idx │        s_SciBmad │  SciBmad[i+1] │     Tao[i] │     ratio")
 println("  ────┼──────────────────┼───────────────┼────────────┼──────────")
 for i in 2:min(10, N-1)
-    sc_next = tw.table.beta_1[i+1][[0,0,0,0,0,1]]
-    ta_cur  = ref[i, 1]
-    rat     = iszero(sc_next) ? NaN : ta_cur / sc_next
-    @printf("  %3d │ %16.4f │ %13.4g │ %10.4g │ %8.4g\n",
-            i, s_vals[i+1], sc_next, ta_cur, rat)
+  sc_next = tw.table.beta_1[i+1][[0,0,0,0,0,1]]
+  ta_cur  = ref[i, 1]
+  rat     = iszero(sc_next) ? NaN : ta_cur / sc_next
+  @printf("  %3d │ %16.4f │ %13.4g │ %10.4g │ %8.4g\n",
+          i, s_vals[i+1], sc_next, ta_cur, rat)
 end

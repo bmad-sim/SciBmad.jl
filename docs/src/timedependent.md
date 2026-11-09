@@ -22,13 +22,13 @@ ENV["LINES"] = 30
 
 ## Time-Dependent Parameters
 
-In SciBmad, *any* `LineElement` parameter may be set to have an arbitrary time-dependence
+In SciBmad, almost any `LatElement` parameter may be set to have an arbitrary time-dependence
 using `Time()`. For example to construct an AC-kicker with amplitude `1e-4` T and angular
 frequency `1e6`, we can simply write
 
 ```{code-cell} julia
 t = Time()
-ac_kicker = VKicker(L=0.5, Ks0=1e-4*sin(1e6*t))
+ac_kicker = VKicker(L=0.5, Ks0=1e-4*sin(1e6*t));
 ```
 
 Here, `Time()` refers to the wall-clock, global reference time, also called the "absolute"
@@ -37,11 +37,12 @@ time in classical Bmad parlance. And that's it! We can now track using the same
 be initialized with a specific `t_ref` or even `p_over_q_ref` if desired.
 
 :::{note}
-Time-dependent `LineElement` parameters **always** take into account a particle's z/time
-offset, for a most accurate tracking result. However, time-dependent element parameters are
-only evaluated per-particle at the element *entrance*, and through the element are assumed to
-remain constant. If the timescale of the parameter variation is similar to the particle
-traversal time, then this approximation is no longer valid.
+Time-dependent parameters are evaluated for each particle at its own time, so its z offset
+is taken into account. However, they are only evaluated at the entrance of the element, and
+are assumed constant through it. If the parameter changes a lot during the time a particle
+takes to go through the element, split the element into slices with `n_slices` (see
+[Integration Steps and Slices](#track.steps)): the parameters are then evaluated again at
+the entrance of each slice.
 :::
 
 Note that any expression including `Time()` builds up a function, stored as a
@@ -59,7 +60,7 @@ will work on the GPU.
 Really, anything can be a time-dependent parameter. Even misalignments:
 
 ```{code-cell} julia
-earthquake = Quadrupole(Kn1=0.36, L=0.5, x_offset=0.1*sin(120*t), y_offset=0.1*sin(120*t))
+earthquake = Quadrupole(Kn1=0.36, L=0.5, x_offset=0.1*sin(120*t), y_offset=0.1*sin(120*t));
 ```
 
 ## Energy Ramping
@@ -82,12 +83,16 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d], species_ref=Species("electron"))
 fodo.E_ref = 18e9 + 4e11*Time();
 ```
 
-Now, we see that the unnormalized magnetic field strengths will be time-dependent, as they
-are derived from the reference energy:
+Now, the unnormalized magnetic field strengths are time-dependent too, as they are derived
+from the reference energy (here `Kn1` is the independent variable, so the fields are ramped
+with the energy):
 
 ```{code-cell} julia
-println(typeof(fodo[1].Bn1))
+println(fodo[1].Bn1(0))
+println(fodo[1].Bn1(1e-3))
 ```
+
+The reference energy is evaluated at the reference time at the entrance of each element slice.
 
 When ramping, two [configuration settings](track.md) that we can pass
 to `track` become relevant:
@@ -109,4 +114,6 @@ Once again, we can now track using the same (GPU-compatible) tracking function d
 
 ## Limitations
 
-Currently, any parameter **except for element length `L` and element curvature `g_ref`** may be made time-dependent.
+- The element length `L` and the bend curvature `g_ref` (and so the bend `angle`) cannot be
+  time-dependent: they set the reference coordinate system, which is fixed.
+- `SaganCavity` does not support a ramping reference energy.

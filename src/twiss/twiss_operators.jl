@@ -656,6 +656,24 @@ end
   end
 end
 
+# The change of z in a turn is from the path length and from the velocity: z = -L(δ) + L0*β(δ)/β0.
+# Returns the velocity part over L0, β(δ)/β0 - 1, if z_slip is the whole change as a function of δ
+# (coasting, TPS), else its derivative in pz (z_slip is then the change of z per δ), 1/γ0² at pz = 0
+@inline function _velocity_slip(j, twi, cache, whole)
+  tilde_m = 1/twi.beta_gamma_ref[j]
+  beta_0 = 1/sqrt(1 + tilde_m*tilde_m)
+  if whole
+    rel_p = 1 + twi.fac[j].a0.v[6] # δ as the Taylor series variable (the cached pz column is only its value)
+    return rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)/beta_0 - 1
+  end
+  if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)
+    _pz(j, twi, cache, Val{true}())
+  end
+  pz = haskey(cache.tps, :pz) ? cache.tps[:pz] : cache.float[:pz]
+  rel_p = 1 + pz
+  return tilde_m*tilde_m/sqrt(rel_p*rel_p + tilde_m*tilde_m)^3/beta_0
+end
+
 @inline function _slip(j, twi, cache, ::Val{as_tps}) where {as_tps}
   # convert z (bmad) to tau (mad)
   # Need to include parameter/delta dependence in Lorentz beta...
@@ -679,6 +697,12 @@ end
   phi3 = _phi(j, twi, cache, Val{as_tps}(), 3)
 
   if iscoasting(twi)
+    if TI.is_tps_type(typeof(phi3)) isa TI.IsTPSType
+      # phi3 is then the whole change of z as a Taylor series in δ, so β must be too (the cached pz
+      # column is only the value of δ)
+      rel_p = 1 + twi.fac[j].a0.v[6]
+      beta = rel_p/sqrt(rel_p*rel_p + tilde_m*tilde_m)
+    end
     return phi3 / beta
   end 
 

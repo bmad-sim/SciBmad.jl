@@ -110,7 +110,7 @@ function dynamic_aperture(
     sig_y = sqrt(sig_y)
     sol = find_closed_orbit(bl)
     if sol.sol.retcode != BatchSolve.RETCODE_SUCCESS
-        error("Unable to find closed orbit")
+      error("Unable to find closed orbit")
     end
     for i in 1:n_deltas
       co[i,:] = sol.v0
@@ -174,44 +174,44 @@ function dynamic_aperture(
   # Loop thru the thetas, find max for each along r
   idx_particle = 1
   for i in LinearIndices(deltas)
-      if state[idx_particle] != 0x1
-          idx_particle += length(thetas)*length(rs)+1
-          continue
-      end
-      idx_particle += 1
-      for j in LinearIndices(thetas)
+    if state[idx_particle] != 0x1
+      idx_particle += length(thetas)*length(rs)+1
+      continue
+    end
+    idx_particle += 1
+    for j in LinearIndices(thetas)
           
-        # Sanity check:
-          x = v0[idx_particle:idx_particle+length(rs)-1,1]./(max_sig_x.*sig_x)
-          y = v0[idx_particle:idx_particle+length(rs)-1,3]./(max_sig_y.*sig_y)
-          for (xi, yi) in zip(x,y)
+      # Sanity check:
+      x = v0[idx_particle:idx_particle+length(rs)-1,1]./(max_sig_x.*sig_x)
+      y = v0[idx_particle:idx_particle+length(rs)-1,3]./(max_sig_y.*sig_y)
+      for (xi, yi) in zip(x,y)
             
-              if !(atan(yi,xi) ≈ thetas[j])
-                  writedlm("error.dlm", hcat(v, state))
-                  println()
-                  error("Something went wrong with the analysis. Submit an issue including output files.")
-              end
+        if !(atan(yi,xi) ≈ thetas[j])
+          writedlm("error.dlm", hcat(v, state))
+          println()
+          error("Something went wrong with the analysis. Submit an issue including output files.")
+        end
               
-          end
-          
-          if !isnothing(findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1]))
-            idx_da = idx_particle-1 + findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1])
-
-            # Sanity check:
-            
-            if idx_da-(idx_particle-1) != 1 && state[idx_da-1] != 0x1
-                error("Something went wrong")
-            end
-            
-            x_norm_da[j,i] = v0[idx_da,1]/sig_x
-            y_norm_da[j,i] = v0[idx_da,3]/sig_y
-            idx_particle += length(rs)
-          else
-            x_norm_da[j,i] = Inf
-            y_norm_da[j,i] = Inf
-            idx_particle += length(rs)
-          end
       end
+          
+      if !isnothing(findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1]))
+        idx_da = idx_particle-1 + findfirst(t->t != 0x1, state[idx_particle:idx_particle+length(rs)-1])
+
+        # Sanity check:
+            
+        if idx_da-(idx_particle-1) != 1 && state[idx_da-1] != 0x1
+          error("Something went wrong")
+        end
+            
+        x_norm_da[j,i] = v0[idx_da,1]/sig_x
+        y_norm_da[j,i] = v0[idx_da,3]/sig_y
+        idx_particle += length(rs)
+      else
+        x_norm_da[j,i] = Inf
+        y_norm_da[j,i] = Inf
+        idx_particle += length(rs)
+      end
+    end
   end
 
   # output file will have first 6 columns as INITIAL coordinates wrt

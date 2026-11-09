@@ -9,8 +9,11 @@ creating zero-length elements where the phase advance can be tuned without impac
 Twiss parameters/linear optics. The `LatElement` must be in a `Beamline` in order to 
 use this function.
 
-The `LatElement` property `transport_map` is filled with the corresponding phase trombone 
-transport map, and the property `transport_map_params` is set to `(phi1, phi2, phi3)`.
+`phi1`, `phi2`, and `phi3` are the changes of the phase advances of the three normal modes, in 
+units of 2π (i.e. the changes of the tunes). The `LatElement` property `transport_map` is filled 
+with the corresponding phase trombone transport map, and `transport_map_params` with its parameters. 
+The first three entries of `transport_map_params` are `phi1`, `phi2`, and `phi3`, and can be 
+changed later to change the phase advances.
 
 Spin tracking is NOT currently compatible with phase trombones.
   
@@ -24,15 +27,15 @@ function phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0)
   a = SMatrix{6,6}(tw.a[1])
   ai = inv(a)
   ele.transport_map = _make_trombone_map()
-  ele.transport_map_params = (2*pi*phi1, 2*pi*phi2, 2*pi*phi3, a, ai, tw.x[1], tw.px[1], tw.y[1], tw.py[1], tw.z[1], tw.pz[1])
+  ele.transport_map_params = (phi1, phi2, phi3, a, ai, tw.x[1], tw.px[1], tw.y[1], tw.py[1], tw.z[1], tw.pz[1])
   return ele
 end
 
 function _make_trombone_map()
   return (v, q::Nothing, p) -> begin
-    nu1 = p[1]
-    nu2 = p[2]
-    nu3 = p[3]
+    nu1 = 2*pi*p[1]
+    nu2 = 2*pi*p[2]
+    nu3 = 2*pi*p[3]
     a   = p[4]
     ai  = p[5]
     x   = p[6]

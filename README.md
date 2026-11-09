@@ -17,13 +17,13 @@ SciBmad is a new open source, high-performance, CPU/GPU compatible, polymorphic,
 
 ## Project Status
 
-SciBmad development is progressing rapidly. Features included in the current state of the project (0.5.0) and currently being planned for later releases are:
+SciBmad development is progressing rapidly. Features included in the current state of the project (0.7.0) and currently being planned for later releases are:
 
-### Current Release 0.5
+### Current Release 0.7
 - CPU/GPU parallelized 6D symplectic particle tracking including spin and radiation
-- Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything
+- Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything, including element lengths
 - Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
-- Arbitrary time-dependent accelerator parameters (e.g. magnet strengths, reference energy, misalignments)
+- Arbitrary time-dependent accelerator parameters (e.g. magnet strengths, reference energy, misalignments), seen by each particle at its own arrival time
 - CPU/GPU parallelized tracking and analysis over differing accelerator parameters (batch parameter evaluation)
 - Arbitrarily-interdependent accelerator parameters with lazily-evaluated deferred expressions
 - CPU/GPU parallelized dynamic aperture scans
@@ -31,11 +31,18 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - CPU/GPU parallelized intrabeam scattering (IBS)
 - CPU/GPU parallelized Numerical Analysis of Fundamental Frequencies (NAFF)
 - CPU/GPU parallelized Newton root finder
+- CPU/GPU parallelized Levenberg-Marquardt
 - CPU/GPU parallelized and differentiable symplectic tracking through arbitrary electromagnetic fields (implicit integration)
+- Choice of tracking method per element: drift-kick, matrix-kick, bend-kick, and solenoid-kick symplectic integrators of order 2 to 10, exact maps, Runge-Kutta, and implicit symplectic integration
 - Twiss functions at every integration step (inside elements)
-- Resonance driving terms (including parameter dependence) included in Twiss
-- Context-switching for evalution of deferred expressions for accelerator parameters
+- Resonance driving terms/detune coefficients (including parameter dependence) included in Twiss
+- Context-switching for evaluation of deferred expressions for accelerator parameters
 - Open lattice Twiss functions given initial normalizing transformation
+- Lower precision (32-bit) tracking on the CPU and GPU (including Apple Metal), including with time-dependent and batch parameters
+- Tracking of any particle species through a lattice designed for another (e.g. muons in an electron ring)
+- Splitting elements into slices, so that collective effects can be applied several times inside an element
+- Exact electric dipole tracking
+- Bmad-style element searches by name, with wild cards, ranges, and regular expressions
 
 ### Features in Future Releases
 - Easy optimization interface
@@ -49,7 +56,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Space charge
 - Coherent synchrotron radiation
 - Superposition of elements
-- Fork elements and connecting lattice branches together.
+- Fork elements and connecting lattice branches together
 - [Other projects](https://github.com/bmad-sim/SciBmad.jl/issues/54)
 
 ## SciBmad Family

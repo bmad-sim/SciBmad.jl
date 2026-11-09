@@ -58,7 +58,7 @@ base_cols::Vector{String} = ["index", "name", "kind", "s"]
     twiss(bl::Beamline; kwargs...)
 
 General function to compute the (parametric and nonlinear) Twiss parameters of a `Beamline`. 
-Returns a `Twiss`struct that contains the (amplitude-dependent) (spin) tunes/slip, and a 
+Returns a `Twiss` struct that contains the (amplitude-dependent) (spin) tunes/slip, and a 
 dataframe of the Twiss parameters at each specified integration step. By default, lattice 
 functions of the Sagan-Rubin/Edwards-Teng coupling formalism are computed in the dataframe 
 at every integration step.
@@ -114,14 +114,15 @@ keyword arguments:
     UNLESS `a_initial` is coasting, in which case this will set the value for δ. 
 - `v0`: Initial guess for the closed orbit finder if `a_initial` is not provided, else setting this 
     will override the orbit expansion origin coordinates in `a_initial.v0`.
-- `spin::Bool`: If `true`, spin is included in the Twiss calculation. Default is `false`.
+- `spin::Bool`: If `true`, spin is included in the Twiss calculation. Default is `false`, or `true` if 
+    `a_initial` includes spin.
 - `base_cols`: A vector of "base columns", that will always be included in the Twiss dataframe regardless 
     of what is specified in `cols`. Defaults to the global variable `SciBmad.base_cols`, which defaults 
     to `["index", "name", "kind", "s"]`.
 - `cols`: A vector of columns to include in the Twiss dataframe. See the extended help for all possible 
     columns.
-- `as_taylor_series::Union{Bool,Nothing}`: If `true`, that the lattice functions in the dataframe are 
-    returned as Taylor series types - this will be necessary if doiong parametric normal form. Default 
+- `as_taylor_series::Union{Bool,Nothing}`: If `true`, the lattice functions in the dataframe are 
+    returned as Taylor series types - this will be necessary if doing parametric normal form. Default 
     is `nothing`, which autoselects to `false` if there are no parameters in the GTPSA, and `true` if 
     there are parameters.
 - `coast_tol`: Tolerance for the first-order delta dependences on each of the phase space variables below 
@@ -137,7 +138,7 @@ section using `??twiss`
 # Extended help
 
 Columns to include in `cols` are detailed below. As a reminder, an arbitrary order chromatic derivative 
-of *any* scalar-valued output can be computed using the syntax "d<column>_<order" (e.g. "dx_1" is the 
+of *any* scalar-valued output can be computed using the syntax "d<column>_<order>" (e.g. "dx_1" is the 
 linear dispersion).
 
 - `index`  : Beamline index of the containing `LatElement`
@@ -160,7 +161,7 @@ linear dispersion).
 - `y`      : Orbit canonical y coordinate
 - `py`     : Orbit canonical py coordinate
 - `z`      : Orbit canonical z coordinate
-- `pz`     : Orbit canonize pz coordinate
+- `pz`     : Orbit canonical pz coordinate
 - `zx`     : Adiabatic dependence of x on initial longitudinal position/time (AKA "crab dispersion") 
 - `zpx`    : Adiabatic dependence of px on initial longitudinal position/time (AKA "crab dispersion")
 - `zy`     : Adiabatic dependence of y on initial longitudinal position/time (AKA "crab dispersion")
@@ -194,7 +195,7 @@ linear dispersion).
 - `E2`     : De Moivre-Ripken E² matrix (see E. Forest, _From Tracking Code to Analysis_)
 - `E3`     : De Moivre-Ripken E³ matrix (see E. Forest, _From Tracking Code to Analysis_)
 - `a`      : (Nonlinear) map to transform from Floquet variables to laboratory variables
-- `a0`     : (Nonlinear) map to transform from to the parameter-dependent fixed point
+- `a0`     : (Nonlinear) map to transform to the parameter-dependent fixed point
 - `a1`     : Linear normalizing map around the parameter-dependent fixed point, including nonlinear parameter dependence
 - `a2`     : Nonlinear part of the normalizing map, around the parameter-dependent fixed point
 - `as`     : (Nonlinear) spin normalizing map
@@ -753,7 +754,8 @@ function _twiss_summ(twi, cache)
   end
 
   etac = -_slip(j, twi, cache, Val{true}()) / (C_LIGHT * twi.t_ref[end])
-  alphac = -_z_slip(j, twi, cache, Val{true}()) / twi.s[end]
+  z_slip = _z_slip(j, twi, cache, Val{true}())
+  alphac = -z_slip / twi.s[end] + _velocity_slip(j, twi, cache, coast && TI.is_tps_type(typeof(z_slip)) isa TI.IsTPSType)
   if coast && TI.is_tps_type(typeof(etac)) isa TI.IsTPSType
     etac = TI.deriv(etac, 6)
   end
