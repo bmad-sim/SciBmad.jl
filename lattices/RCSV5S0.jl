@@ -3,8 +3,6 @@
 
 using Beamlines
 
-BPM(; kwargs...) = SciBmad.LineElement(; kind="BPM", kwargs...)
-
 @elements qfsh0_1 = Quadrupole(L =  2.34999999999999987E-001, Kn1 =  4.02006151208300189E-001,
    x1_limit = -1.81599999999999991E-00, x2_limit =  1.81599999999999991E-00,
    y1_limit = -1.81599999999999991E-00, y2_limit =  1.81599999999999991E-00)

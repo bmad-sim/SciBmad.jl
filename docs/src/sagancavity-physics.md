@@ -34,7 +34,7 @@ which is the length over which there is a finite RF field. The active length
 is centered longitudinally in the element. If there are (DC) multipole or solenoid
 fields, these fields exist along the entire element and not just in the active region.
 
-`L_active` is divided into `num_cells` equal-width cells. 
+`L_active` is divided into `n_cells` equal-width cells. 
 Inside each cell, particles are tracked ("drifted") ignoring the RF field but
 including any DC solenoid field. 
 Longitudinal energy kicks are applied at the cell boundaries, with half-kicks at 
@@ -59,13 +59,13 @@ field produces a transverse kick. Following R&S {cite}`Rosenzweig:RF`
 (their Eq. (12)), the appropriate fringe Hamiltonian to reproduce this, in energy coordinates, is:
 ```{math}
 :label: eq:Hf
-H_f = \mp \frac{q}{2 P_0 c} \, G \, \cos(\phi_{RF})\,(x^2 + y^2),
+H_f = \pm \frac{q}{4 P_0 c} \, G \, \cos(\phi_{RF})\,(x^2 + y^2),
 ```
 where $q$ is the particle charge, and $G$ is the gradient which is equal to $V/L_\text{active}$
 with $V$ being the voltage.
 In the above equation, [$\phi_{RF}$](#sc:phase)
-is the RF phase and the minus sign applies at the entrance end of the active region
-and the plus sign at the exit end. 
+is the RF phase and the plus sign applies at the entrance end of the active region
+and the minus sign at the exit end. 
 If `L_active` is zero (giving infinite gradient), the edge focusting is not applied.
 
 Applying Hamilton's equations in energy-time phase space coordinates
@@ -73,26 +73,26 @@ yields the fringe kicks
 ```{math}
 :label: eq:edgekick
 \begin{aligned}
-  \Delta p_x &= \mp \frac{q}{P_0 c} \, G \cos(\phi_{RF})\, x, \\
-  \Delta p_y &= \mp \frac{q}{P_0 c} \, G \cos(\phi_{RF})\, y, \\
-  \Delta p_E &= \mp \frac{\pi f_\text{rf} q}{P_0 c^2} \, G
+  \Delta p_x &= \mp \frac{q}{2 P_0 c} \, G \cos(\phi_{RF})\, x, \\
+  \Delta p_y &= \mp \frac{q}{2 P_0 c} \, G \cos(\phi_{RF})\, y, \\
+  \Delta p_E &= \mp \frac{\pi f_\text{rf} q}{2 P_0 c^2} \, G
                 \sin(\phi_{RF})\,(x^2 + y^2).
 \end{aligned}
 ```
 where $f_\text{rf}$ is the RF frequency given by the `rf_frequency` parameter.
-The entrance kick will be defocusing and
-the exit kick will be focusing for accelerated particles. 
+The entrance kick will be focusing and
+the exit kick will be defocusing for accelerated particles. 
 
 The spin fringe kick is calculated using the Thomas-BMT equation with the integrated radial electric field being
 ```{math}
-\int_\text{kick} {\bf E} = \pm G \, \cos(\phi_{RF}) \, (x, y, 0)
+\int_\text{kick} {\bf E} = \mp \frac{G}{2} \, \cos(\phi_{RF}) \, (x, y, 0)
 ```
 
 %---------------------------------------------------------------------------------------------------
 (sc:energy)=
 ## Energy Kick
 
-Kick points at the cell boundaries are indexed from zero to $N_c$ (set with the `num_cells` parameter).
+Kick points at the cell boundaries are indexed from zero to $N_c$ (set with the `n_cells` parameter).
 The energy kick at the $n^{th}$ kick point is
 ```{math}
 :label: eq:vk
@@ -125,7 +125,7 @@ t_\text{trans}(n) = t_{out} + \sum_{j=1}^{n} t_c(j)
 where
 ```{math}
 t_{out} = \frac{L_{out}}{c \,\beta_\text{ref}(out)}, \qquad
-t_c(j) = \frac{L}{c \, \beta_\text{ref}(j) N_s}
+t_c(j) = \frac{L_\text{active}}{c \, \beta_\text{ref}(j) N_c}
 ```
 with $t_{out}$ being the reference transit time in the region just before the active
 region from the element entrance end to active region entrance end, and
@@ -134,7 +134,7 @@ In the above equations, $L_{out} = (L - L_\text{active}) / 2$ and
 $\beta_\text{ref}$ is the reference velocity which is 
 computed assuming that the reference energy increases by
 $\kappa_n dE_\text{ref} /N_c$ at the $n^{th}$ kick point with $dE_\text{ref}$ being
-set by the `dE_ref` paramter.
+set by the `dE_ref` parameter.
 This construction ensures that with the voltage set commensurate with `dE_ref` and `phi_0`, 
 a particle on the zero orbit will see a constant RF phase at each kick
 point. This is important for correctly modeling sub-relativistic
@@ -159,7 +159,7 @@ which give a time-averaged force.
 The appropriate Hamiltonian corresponding to R&S Eq. (4) with $\eta(\phi) = 1$ (no harmonics) is:
 ```{math}
 :label: eq:Hp
-H_p = -\frac{\kappa_n \, L \, q^2 G^2}{16 N_s P_0^2 c^2 (1 + p_z)}
+H_p = \frac{\kappa_n \, L_\text{active} \, q^2 G^2}{16 N_c P_0^2 c^2 (1 + p_z)}
       (x^2 + y^2),
 ```
 The pondermotive kick is applied at each kick point. 
@@ -170,12 +170,12 @@ The resulting phase-space kicks are
 ```{math}
 :label: eq:pond
 \begin{aligned}
-  \Delta p_x &= -\frac{\kappa_n \, L \, q^2 G^2}
-                      {8 N_s P_0^2 c^2 (1 + p_z)} \, x, \\
-  \Delta p_y &= -\frac{\kappa_n \, L \, q^2 G^2}
-                      {8 N_s P_0^2 c^2 (1 + p_z)} \, y, \\
-  \Delta z   &= -\frac{\kappa_n \, L \, q^2 G^2}
-                      {16 N_s P_0^2 c^2 (1 + p_z)^2}
+  \Delta p_x &= -\frac{\kappa_n \, L_\text{active} \, q^2 G^2}
+                      {8 N_c P_0^2 c^2 (1 + p_z)} \, x, \\
+  \Delta p_y &= -\frac{\kappa_n \, L_\text{active} \, q^2 G^2}
+                      {8 N_c P_0^2 c^2 (1 + p_z)} \, y, \\
+  \Delta z   &= -\frac{\kappa_n \, L_\text{active} \, q^2 G^2}
+                      {16 N_c P_0^2 c^2 (1 + p_z)^2}
                 (x^2 + y^2).
 \end{aligned}
 ```

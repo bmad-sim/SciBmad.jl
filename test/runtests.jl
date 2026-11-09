@@ -117,6 +117,66 @@ using Test
     end
   end
 
+  @testset "Parametric normal form vs finite differences" begin
+      # The examples of docs/src/parametric-nf.md: derivatives of the tunes, of beta1, of the 
+      # chromaticities and of dh2000 in magnet strengths (GTPSA parameters, changing Descriptors 
+      # with scalarize!) agree with central finite differences of ordinary twiss calls
+    @elements begin
+      qf = Quadrupole(Kn1=DefExpr(c -> c.kqf), L=0.5)
+      sf = Sextupole(Kn2=DefExpr(c -> c.ksf), L=0.2)
+      d = Drift(L=0.1)
+      b = SBend(L=1.2, angle=pi/132)
+      qd = Quadrupole(Kn1=DefExpr(c -> c.kqd), L=0.5)
+      sd = Sextupole(Kn2=DefExpr(c -> c.ksd), L=0.2)
+    end
+    fodo = Beamline([qf, sf, b, d, qd, sd, b, d]; species_ref=Species("electron"), pc_ref=18e9)
+    k0 = (kqf=0.36, kqd=-0.36, ksf=1.2, ksd=-1.2)
+    for k in keys(k0)
+      setproperty!(fodo.context, k, k0[k])
+    end
+    function fd(f, key, h) # central difference in one context value, the others at k0
+      setproperty!(fodo.context, key, k0[key] + h)
+      fp = f()
+      setproperty!(fodo.context, key, k0[key] - h)
+      fm = f()
+      setproperty!(fodo.context, key, k0[key])
+      return (fp .- fm) ./ (2h)
+    end
+
+    lin() = (tt = twiss(fodo); (tt.q1, tt.q2, tt.beta1[1]))
+    fd_lin = [fd(lin, :kqf, 1e-6), fd(lin, :kqd, 1e-6)]
+    chrom() = (tt = twiss(fodo; chrom=2); (tt.q1[delta=1], tt.q2[delta=1]))
+    fd_chrom = [fd(chrom, :ksf, 1e-5), fd(chrom, :ksd, 1e-5)]
+    fd_dh2000 = fd(() -> twiss(fodo; order=2, cols=["dh2000"]).dh2000[1], :ksf, 1e-5)
+
+    dnf = Descriptor([1, 1, 1, 1, 1, 1], 2, [1, 1], 1)
+    dk = params(dnf)
+    fodo.context.kqf += dk[1]
+    fodo.context.kqd += dk[2]
+    tw = twiss(fodo; GTPSA_descriptor=dnf)
+    for (i, v) in enumerate((tw.q1, tw.q2, tw.beta1[1]))
+      @test grad(v) ≈ [fd_lin[1][i], fd_lin[2][i]] rtol=1e-6
+    end
+
+    scalarize!(fodo)
+    dnf2 = Descriptor([1, 1, 1, 1, 1, 2], 3, [1, 1], 1)
+    dk = params(dnf2)
+    fodo.context.ksf += dk[1]
+    fodo.context.ksd += dk[2]
+    tw = twiss(fodo; GTPSA_descriptor=dnf2)
+    for (i, q) in enumerate((tw.q1, tw.q2))
+      chrom_q = getterm(q, delta=1, as_taylor_series=true)
+      @test grad(chrom_q) ≈ [fd_chrom[1][i], fd_chrom[2][i]] rtol=1e-6
+    end
+
+    scalarize!(fodo)
+    dnf3 = Descriptor([2, 2, 2, 2, 2, 2], 3, [1], 1)
+    dk = params(dnf3)
+    fodo.context.ksf += dk[1]
+    tw = twiss(fodo; GTPSA_descriptor=dnf3, cols=["dh2000"])
+    @test only(grad(tw.dh2000[1])) ≈ fd_dh2000 rtol=1e-6
+  end
+
   @testset "Phase trombone" begin
       # A phase trombone changes the tunes by phi1 and phi2 (in units of 2π, also when set later
       # through transport_map_params) and leaves the Twiss parameters unchanged

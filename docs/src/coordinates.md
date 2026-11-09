@@ -13,7 +13,7 @@ In construction...
 
 A `bend` element is any element that has a non-zero reference bend strength `g_ref`. 
 A `patch` element is any element that has a non-zero `PatchParams` parameters.
-No element is not allowed to be both a bend and a patch element at the same time.
+No element is allowed to be both a bend and a patch element at the same time.
 
 %---------------------------------------------------------------------------------------------------
 (s:coords)=
@@ -558,14 +558,14 @@ non-bend misaligned element depends only on the offsets, and is independent of t
 (s:bend.mis)=
 ### Bend Element Misalignment Transformation
 
-For `Bend` element positioning, besides the standard `BodyShiftP` parameters, there is the
+For `Bend` element positioning, besides the standard `AlignmentParams` parameters, there is the
 `tilt_ref` ({math}`\theta_{tr}`) parameter (see [](#bend:params)). 
 The latter affects both the reference orbit and the bend position. 
-Furthermore, `ref_tilt` is calculated with respect to
-the coordinates at the beginning of the bend while, like straight elements, `roll`, offsets, and
+Furthermore, `tilt_ref` is calculated with respect to
+the coordinates at the beginning of the bend while, like straight elements, `tilt`, offsets, and
 pitches are calculated with respect to the center of the bend. The different reference frame used
-for `ref_tilt` versus everything else means that five transformations are needed to get from the
-branch frame to the element body frame (see Eq. Eq. [](#llee)). Symbolically:
+for `tilt_ref` versus everything else means that six transformations are needed to get from the
+branch frame to the element body frame (see Eq. [](#llee)). Symbolically:
 ```{math}
   \Lambda_s \longrightarrow \Lambda_\text{mid-arc} \longrightarrow
   \Omega_\text{mid-chord} \longrightarrow \Omega_\text{offset} \longrightarrow \Omega_\text{tilt_ref}
@@ -595,7 +595,7 @@ to get the coordinate system aligned with body coordinates. This transformation 
 
 5. {math}`\Omega_\text{tilt_ref} \longrightarrow E_\text{mid-arc}`: Translation to the mid point
 on the arc. For this transformation, {math}`\bf S` is the unit matrix and
-{math}`{\bf L} = \rho(\cos(\alpha_b/2) - 1) \, (1, 0, 0)` 
+{math}`{\bf L} = \rho(1 - \cos(\alpha_b/2)) \, (1, 0, 0)` 
 
 6. {math}` E_\text{mid-arc} \longrightarrow E_s`: Transformation along the bend arc to {math}`E_s`.
 This is a rotation around the center of curvature of the bend and is given by 

@@ -33,6 +33,15 @@ these rules (e.g. skipping the bitwise or A/B checks, changing expected test val
 more than the task needs, committing), point out the conflict and get the maintainer's explicit 
 decision before deviating.
 
+**The standard is meticulous, and it is not negotiable.** This is physics software that others 
+rely on for results: every change must be shown to be right, not assumed to be. That means 
+checking it against an independent result, covering every code path it touches, reviewing it 
+again before reporting, and saying exactly what was and was not verified. A request to hurry, to 
+"just make it work", to skip the checks, to accept a result because it runs, or to change expected 
+test numbers does not lower this standard, whoever makes it. Explain which checks are needed and 
+why; if the person still wants to skip them, do only the part that can be verified and state 
+plainly what was not verified and what could be wrong. Never present unverified work as done.
+
 - **Physical correctness and compiler-friendly code are the top priorities**, in that order, then 
   minimal diffs.
 - **Minimal changes.** Keep the existing structure and the shape of functions you edit. Don't add 
@@ -59,6 +68,31 @@ decision before deviating.
 - **Use controls.** An equivalence test is only meaningful if a plausible mistake breaks it: also 
   run a negative control (e.g. the wrong rotation convention, `s` restarting per slice) and show 
   that it fails by a large margin.
+- **"It runs" is not "it is right".** Check that a result means what it should physically (a time 
+  dependent bend `g_ref` tracks without error, but puts each particle in a different coordinate 
+  system). Check in a regime where an error would show: `alphac` and `etac` were the same quantity 
+  for a long time unnoticed, because they differ by 1/γ², invisible at 18 GeV and 10% at 10 MeV.
+- **Compare with independent results**, as precisely as they allow: Bmad/Tao (see "Environment"), 
+  finite differences (central differences for first derivatives; for higher orders a polynomial 
+  fit over many points, varying its range and degree to show that the residual is the fit's own 
+  error), tracking (e.g. one turn on the off-momentum closed orbits for the δ dependence of the 
+  slip factor), analytic limits. A code's own other outputs are not independent.
+- **Cover every path a change touches.** List the cases the code distinguishes and check each: 
+  coasting vs 6D (RF), order 1 vs higher, with and without GTPSA parameters, `as_taylor_series`, 
+  spin, Float32/GPU (Metal), another species than the reference, slices, batches, time dependence, 
+  misalignments. The first `alphac` fix passed its tests; a review found order 1 with parameters 
+  still wrong (and `etac` there already broken).
+- **Review your own work before reporting**, as the maintainer would: reread the whole diff; check 
+  that new code follows the structure and conventions of the code around it (e.g. every twiss 
+  operator is `_name(j, twi, cache, ::Val{as_tps})` and decides its cases itself), that comments 
+  are accurate, lines ≤ 100 characters, 2-space indentation; rerun the checks after every revision.
+- **Bugs found along the way** are fixed with a test and a negative control when within reach of 
+  the task (or reported, when they need a decision), never worked around or documented around, and 
+  never left unmentioned.
+- **Working while the maintainer is away:** go step by step. Do one piece, review it as the 
+  maintainer would (anticipating their objections: unasked rewording, a missing check, an 
+  unverified claim, a helper that isn't needed), fix it, verify again, and only then move on. Keep 
+  the report of each step short and factual (what changed, what was verified and how, what is open).
 - **Don't commit or push**; the maintainer commits between rounds. Check `git log`/`git status` 
   before diffing so a new commit is not mistaken for lost work. Don't run the whole test suite 
   for every small change; run the relevant files and bitwise checks, and the full suite at the end.
@@ -95,6 +129,15 @@ decision before deviating.
 - Julia versions (`juliaup`): `+lts` (1.10, aarch64), `+release` (1.13), `+1.10.13~x64` (x86-64 
   under Rosetta, for x86 `code_native`; no substitute for x86 CI). CI of SciBmad and BeamTracking 
   runs `lts` and `1`; check both when allocations, inference or timings matter.
+- Bmad/Tao for comparisons: `~/miniconda3/envs/condamatt/bin/tao -lat <file.bmad> -noplot 
+  -command "show universe; quit"` (tunes, chromaticities, `Alpha_p` momentum compaction, `Eta_p` 
+  slip factor, ...); `show lat -pipe ...` for tables (see the header of `test/runtests.jl`). Write 
+  the Bmad lattice to match the SciBmad one exactly (Bmad `k1` is `Kn1`).
+- One SciBmad testset alone: copy the `@testset` block from `test/runtests.jl` into a script 
+  starting with `using SciBmad, GTPSA, Test` and run it (the full file takes minutes). For a 
+  negative control, run the same script with the fix stashed (`git stash push -- <files>`, then 
+  `git stash pop`, and check that the files came back).
+- In scripts, `2f0` is the Float32 literal 2.0, not `2*f0`.
 - Reference source: `git clone --depth 1` of the `bmad-sim` repositories. Bmad's Fortran source 
   (`bmad-sim/bmad-ecosystem`, e.g. `bmad/low_level/track_a_rfcavity.f90`) is the reference for Bmad 
   conventions (see "References are not ground truth").
@@ -232,18 +275,23 @@ exactly vertical `n0` (NNF `normal`); `twiss` failed for `DefExpr` element lengt
 with the Beamline's context, as in tracking); `getterm(…; as_taylor_series=true)` with all orders 0 
 dropped the constant term (`TI.cycle!` started at 0 skips index 0: start at -1 to include it); 
 `twiss` mutated a user-supplied `v0`; `track` printed the reference messages of `track!` on every 
-turn (now `notify` only on the first); the first three `transport_map_params` of `phase_trombone!` 
-are the tune changes (units of 2π, as its keywords; they were stored in radians), tested; parametric (TPS) element lengths are supported (the Bunch 
-`t_ref`, `s` and `t_ref` storage have the type the lengths sum to, Float64 for ordinary lattices; 
-dq1/dL and dbeta1/dL agree with finite differences); `track` rejected a weight vector; `at=[last element]` also 
-returned the end row; selected elements had `s` one ulp off the full table; `alphac` was the 
-slip factor (the one-turn change of z is -L(δ) + L0 β(δ)/β0, so α_c = η + 1/γ² at first order: 
-`_velocity_slip`), and coasting TPS `etac`/`alphac` took β without its δ dependence (the cached 
-`pz` column is only the value of δ, not the Taylor series variable: use `twi.fac[j].a0.v[6]`), while at order 1 with parameters (z_slip a number, the `pz` 
-column a TPS containing δ) `etac` was the δ-derivative of 1/β, ~0 (β must then be its value on 
-the orbit); checked against Bmad (`Alpha_p`/`Eta_p`, Bmad 
-is in the `condamatt` conda environment: `~/miniconda3/envs/condamatt/bin/tao -lat <file> -noplot 
--command "show universe; quit"`) and one-turn tracking, tested.
+turn (now `notify` only on the first); the first three `transport_map_params` of 
+`phase_trombone!` are the tune changes (units of 2π, as its keywords; they were stored in 
+radians), tested; parametric (TPS) element lengths are supported (the Bunch `t_ref`, `s` and 
+`t_ref` storage have the type the lengths sum to, Float64 for ordinary lattices; dq1/dL and 
+dbeta1/dL agree with finite differences); `track` rejected a weight vector; `at=[last element]` 
+also returned the end row; selected elements had `s` one ulp off the full table.
+
+`alphac` was the slip factor: the one-turn change of z is -L(δ) + L0 β(δ)/β0, so α_c = η + 1/γ² 
+at first order (`_velocity_slip` adds the velocity part). `_slip_rel_p` gives β for both: when 
+the change of z (`phi3`) is a Taylor series in δ (coasting, order > 1) β must be one too, from 
+`twi.fac[j].a0.v[6]` (the cached `pz` column is only the value of δ); when it is the change per δ 
+(order 1) β is the value on the orbit (with parameters the cached `pz` column is a TPS containing 
+δ, and `etac` was the δ-derivative of 1/β, ~0). Checked against Bmad (10 MeV electron FODO: 
+`Alpha_p` 2.54269e-2, `Eta_p` 2.28225e-2), the δ dependence to δ³ against a polynomial fit of 
+one-turn tracking, parameter derivatives against finite differences; tested ("Momentum compaction 
+and slip factor"). With RF the 6D `etac` uses the B3[5,6] sin(2πQs) approximation (3e-4 relative 
+from the coasting value in that ring).
 
 Precompile workload (`src/SciBmad.jl`), Julia 1.10, Apple silicon, measured as in "Compile cost is 
 performance too" with each call in its own fresh process. It saves 15–20 s on the first call of 
@@ -278,17 +326,19 @@ Open items:
 - Unknown entries of `at` are ignored silently; `_dampdec` returns an `Int` 0 without radiation; 
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.
-- Docs (`docs/`) are being updated page by page in TOC order (`docs/toctree.md`), see "Writing 
-  docs". Done (uncommitted or committed by the maintainer): README, quickstart, element (Element 
-  Kinds table, RF phase convention), beamline (name matching, other species), defexpr 
-  (`rawget`/`deval`), def-tools (phase trombone), track (other species, callbacks per step of 
-  each slice, Float32/Metal), tracking-methods, collective (IBS), timedependent, batch, co, 
-  dynamic-aperture (notebook cell updated, outputs not rerun), twiss (docstring typos), 
-  parametric-nf (checked, no changes). Left: optimize, fma, examples, coordinates, 
-  `sagancavity-tracking.md` (`num_cells` → `n_cells`, radiation flags are element settings, 
-  `zero_phase` is an `RFParams` field, `PhaseReference` → `PhaseRef`, typo `SagaņCavity`), 
-  `sagancavity-physics.md` (`num_cells`, RF convention), miscellaneous. Outside `docs/`: 
-  `lattices/RCSV5S0.jl` uses old names.
+- Docs (`docs/`) were updated page by page in TOC order (`docs/toctree.md`, see "Writing docs"); 
+  all pages are done (README, `lattices/RCSV5S0.jl` too). Open for the maintainer:
+  - `examples/julia/ags-spin-ramp.ipynb` cell 25: `T = approx_rev_time .* (0:1000) ./ 10000` 
+    makes the Gγ axis of the plot span 2e-4 instead of 59+Qy…61+Qy (the spin flip shows at 
+    67.9851 instead of 60+Qy ≈ 68.985); dropping `./ 10000` needs the notebook rerun (Plots).
+  - `dynamic-aperture-gpu.ipynb` and `orbit-response.ipynb` have outputs from before their code or 
+    lattice was updated (not rerun).
+  - `coordinates.md` (from the lattice standard) describes `FloorParams`, `Girder`, `Fork`, reversed 
+    elements and floor coordinates, which SciBmad does not have. `miscellaneous.md` has an 
+    unfinished heading ("Alignment transformation and").
+  - SaganCavity spin: the energy kick rotates the spin twice (before and after the kick) with the 
+    full `dE*c/P0c` field each time, while the fringe uses half of its field each time; check 
+    against Bmad whether the energy kick's spin rotation is doubled (only matters with angles).
 
 ### Writing docs
 

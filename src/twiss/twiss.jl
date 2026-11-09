@@ -754,8 +754,8 @@ function _twiss_summ(twi, cache)
   end
 
   etac = -_slip(j, twi, cache, Val{true}()) / (C_LIGHT * twi.t_ref[end])
-  z_slip = _z_slip(j, twi, cache, Val{true}())
-  alphac = -z_slip / twi.s[end] + _velocity_slip(j, twi, cache, coast && TI.is_tps_type(typeof(z_slip)) isa TI.IsTPSType)
+  alphac = -_z_slip(j, twi, cache, Val{true}()) / twi.s[end] +
+            _velocity_slip(j, twi, cache, Val{true}())
   if coast && TI.is_tps_type(typeof(etac)) isa TI.IsTPSType
     etac = TI.deriv(etac, 6)
   end
