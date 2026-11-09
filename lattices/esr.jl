@@ -1,4 +1,4 @@
-using Beamlines
+using SciBmad
 
 @elements begin
 IP6__1 =  Marker()
