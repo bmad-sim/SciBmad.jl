@@ -327,18 +327,22 @@ Open items:
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.
 - Docs (`docs/`) were updated page by page in TOC order (`docs/toctree.md`, see "Writing docs"); 
-  all pages are done (README, `lattices/RCSV5S0.jl` too). Open for the maintainer:
-  - `examples/julia/ags-spin-ramp.ipynb` cell 25: `T = approx_rev_time .* (0:1000) ./ 10000` 
-    makes the Gγ axis of the plot span 2e-4 instead of 59+Qy…61+Qy (the spin flip shows at 
-    67.9851 instead of 60+Qy ≈ 68.985); dropping `./ 10000` needs the notebook rerun (Plots).
-  - `dynamic-aperture-gpu.ipynb` and `orbit-response.ipynb` have outputs from before their code or 
-    lattice was updated (not rerun).
-  - `coordinates.md` (from the lattice standard) describes `FloorParams`, `Girder`, `Fork`, reversed 
-    elements and floor coordinates, which SciBmad does not have. `miscellaneous.md` has an 
-    unfinished heading ("Alignment transformation and").
+  all pages are done (README, `lattices/RCSV5S0.jl` too). `coordinates.md` no longer describes 
+  what SciBmad does not have (floor coordinates, `FloorParams`, `Girder`, `Fork`, reversed 
+  elements, reflection patches); it keeps the frame math the misalignment sections use. 
+  `twiss.md` has an open-lattice example (`a_initial`, tested in "Open-lattice Twiss"). 
+  Open for the maintainer:
+  - `miscellaneous.md` has an unfinished heading ("Alignment transformation and").
   - SaganCavity spin: the energy kick rotates the spin twice (before and after the kick) with the 
-    full `dE*c/P0c` field each time, while the fringe uses half of its field each time; check 
-    against Bmad whether the energy kick's spin rotation is doubled (only matters with angles).
+    full `dE*c/P0c` field each time, i.e. twice ∫E_z (the fringe uses half of its field each 
+    time). Bmad's lcavity (`this_energy_kick` in `track_a_lcavity.f90`) does the same; tracked 
+    alone, the kick rotates exactly 2x the Thomas-BMT angle as dE → 0, and with half the field 
+    it matches to the trapezoidal error. Reported to Bmad; fix both after confirmation.
+- Notebooks (`examples/julia`) are rerun with `jupyter nbconvert --to notebook --execute --inplace` 
+  (condamatt env) and `JUPYTER_PATH=<scratch>/jupyter`, holding a kernelspec with the notebooks' 
+  kernel name that runs a scratch environment (plus Plots, CairoMakie, LaTeXStrings, Metal, IJulia), 
+  so the notebook metadata and `~/Library/Jupyter` stay unchanged. Check every number quoted in 
+  the markdown against the new output (orbit-response quoted a stale dy/dtilt, 3% off).
 
 ### Writing docs
 

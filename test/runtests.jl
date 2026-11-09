@@ -117,6 +117,55 @@ using Test
     end
   end
 
+  @testset "Open-lattice Twiss (a_initial)" begin
+      # Starting from the periodic a reproduces the periodic Twiss (coasting and 6D, with and
+      # without spin, orders 1 and 2). An unmatched start (a thin kick in x, y scaled) propagates
+      # as Courant-Snyder through thin quadrupoles and drifts, and differs from the periodic Twiss
+    ring = Beamline([Quadrupole(Kn1=0.37, L=0.5), Sextupole(Kn2=1.2, L=0.2),
+        SBend(L=1.2, angle=pi/132), Drift(L=0.1), Quadrupole(Kn1=-0.37, L=0.5, Ks1=1e-3),
+        Sextupole(Kn2=-1.2, L=0.2), SBend(L=1.2, angle=pi/132), Drift(L=0.1),
+        RFCavity(L=1e-2, voltage=1e7, rf_frequency=1e9, zero_phase=PhaseRef.AboveTransition)];
+        species_ref=Species("electron"), E_ref=18e9)
+    for (rf_on, order, spin) in ((false, 1, false), (false, 1, true), (true, 1, false),
+                                 (true, 1, true), (false, 2, false), (true, 2, true))
+      tw = twiss(ring; rf_on, order, spin)
+      a = twiss(ring; rf_on, order, spin, cols=["a"], as_taylor_series=true, at=[1]).a[1]
+      to = twiss(ring; rf_on, a_initial=a)
+      @test isodd(SciBmad.NonlinearNormalForm.nvars(a)) == !rf_on
+      @test isnothing(a.q) == !spin
+      for c in propertynames(tw)
+        c == :qspin && continue # The spin tune is a one-turn quantity
+        x = getproperty(tw, c)
+        x isa AbstractVector{<:Real} || continue
+        @test getproperty(to, c) ≈ x atol=1e-11
+      end
+    end
+
+    qf = Multipole(Kn1L=0.8); qd = Multipole(Kn1L=-0.7); d = Drift(L=1.0)
+    bl = Beamline([qf, d, qd, d]; species_ref=Species("electron"), pc_ref=1e9)
+    tw = twiss(bl)
+    a = twiss(bl; cols=["a"], as_taylor_series=true, at=[1]).a[1]
+    K, r = 0.3, 1.5
+    M = [1 0 0 0 0; -K 1 0 0 0; 0 0 r 0 0; 0 0 0 1/r 0; 0 0 0 0 1.0]
+    m = DAMap(v_matrix=M, init=SciBmad.NonlinearNormalForm.getinit(a), nv=5, np=1)
+    to = twiss(bl; a_initial=m ∘ a)
+    quad = (k -> [1 0; -k 1.0], k -> [1 0; k 1.0]) # Thin quadrupole in x and y
+    for (p, β0, α0, β, α, ϕ, βp) in (
+        (1, tw.beta1[1], tw.alpha1[1] + K*tw.beta1[1], to.beta1, to.alpha1, to.phi1, tw.beta1),
+        (2, r^2*tw.beta2[1], tw.alpha2[1], to.beta2, to.alpha2, to.phi2, tw.beta2))
+      γ0 = (1 + α0^2)/β0
+      T = [1 0; 0 1.0]
+      for (i, m) in enumerate([quad[p](0.8), [1 1; 0 1.0], quad[p](-0.7), [1 1; 0 1.0]])
+        T = m*T
+        @test β[i+1] ≈ T[1,1]^2*β0 - 2T[1,1]*T[1,2]*α0 + T[1,2]^2*γ0 atol=1e-13
+        @test α[i+1] ≈ -T[1,1]*T[2,1]*β0 + (T[1,1]*T[2,2] + T[1,2]*T[2,1])*α0 -
+            T[1,2]*T[2,2]*γ0 atol=1e-13
+        @test ϕ[i+1] ≈ atan(T[1,2], T[1,1]*β0 - T[1,2]*α0)/(2pi) atol=1e-14
+      end
+      @test abs(β[end] - βp[end]) > 1 # Unmatched: not the periodic Twiss
+    end
+  end
+
   @testset "Parametric normal form vs finite differences" begin
       # The examples of docs/src/parametric-nf.md: derivatives of the tunes, of beta1, of the 
       # chromaticities and of dh2000 in magnet strengths (GTPSA parameters, changing Descriptors 
