@@ -17,9 +17,10 @@ using Reexport
         StaticArrays,
         ForwardDiff,
         DelimitedFiles,
-        PrettyTables
+        PrettyTables,
+        BeamTracking
+  using BeamTracking: track!
   @reexport using ADTypes      
-  @reexport using BeamTracking
   @reexport using Beamlines
   @reexport using NonlinearNormalForm
   @reexport using GTPSA
@@ -30,8 +31,7 @@ end
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
 export  twiss, 
-        find_closed_orbit, 
-        track!,
+        find_closed_orbit,
         dynamic_aperture,
         track,
         track_spin,
@@ -45,7 +45,13 @@ export  twiss,
         grad,
         val,
         jac,
-        phase_trombone!
+        phase_trombone!,
+        BeamTracking,
+        Bunch,
+        ParticleView, 
+        Time, 
+        TimeDependentParam, 
+        BatchParam
         
 include("closed_orbit.jl") 
 include("track.jl")

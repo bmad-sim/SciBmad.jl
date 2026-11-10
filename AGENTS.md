@@ -11,8 +11,10 @@ convention, a pitfall, a measured result, an open question), add it here or in t
 
 All are local clones in `~/.julia/dev` (local branches may be ahead of GitHub):
 
-- `SciBmad`: the umbrella package. Re-exports the others and adds `find_closed_orbit`, `track`, 
-  `twiss`, `dynamic_aperture`, `phase_trombone!` and `experimental/` (one-torus tools).
+- `SciBmad`: the umbrella package. Re-exports the others (BeamTracking's names explicitly, without 
+  `track!`: users track with `track`; `BeamTracking.track!` is for single elements and custom 
+  loops) and adds `find_closed_orbit`, `track`, `twiss`, `dynamic_aperture`, `phase_trombone!` 
+  and `experimental/` (one-torus tools).
 - `Beamlines`: lattice elements, `Beamline`, deferred expressions, tracking method types.
 - `BeamTracking`: tracking kernels and `ext/BeamTrackingBeamlinesExt` (tracks a `Bunch` through a 
   `Beamline`); see `BeamTracking/AGENTS.md`.
@@ -121,8 +123,10 @@ plainly what was not verified and what could be wrong. Never present unverified 
 - SciBmad tests: `julia --project=<env> -e 'include(joinpath(ENV["HOME"], ".julia/dev/SciBmad/test/runtests.jl"))'`. 
   The precompile workload (`@compile_workload` block in `src/SciBmad.jl`) exercises many more paths 
   (tracking with spin, `twiss` orders 1–2, `chrom`, spin, parametric normal forms): run its body as 
-  a script after changes. `experimental/` is not in the workload and must stay out of it, but it 
-  must keep working (smoke test `Experimental.dynamic_aperture`, `max_one_torus`).
+  a script after changes, inside the module (`using SciBmad; Core.eval(SciBmad, quote … end)`: 
+  it calls `track!`, which SciBmad does not export). `experimental/` is not in the workload and 
+  must stay out of it, but it must keep working (smoke test `Experimental.dynamic_aperture`, 
+  `max_one_torus`).
 - The previous release for comparisons: a `git worktree` of the last commit (outside the repo, 
   remove it when done) in its own environment with the registered versions it was written for 
   (e.g. SciBmad 0.6: BeamTracking 0.8.7, Beamlines 0.11, AtomicAndPhysicalConstants 0.11). In 
