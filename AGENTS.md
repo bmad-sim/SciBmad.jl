@@ -185,7 +185,10 @@ plainly what was not verified and what could be wrong. Never present unverified 
 - `src/SciBmad.jl`: module, re-exports, includes, the precompile workload.
 - `src/closed_orbit.jl`: `find_closed_orbit` (BatchSolve Newton over `track!` with `scalar_params=true`, 
   KernelAbstractions kernels to set/subtract coordinates), `coast_check` (Jacobian row 6).
-- `src/track.jl`: `track`, `TrackingConfig`, `TrackingResult`, `track_spin`.
+- `src/track.jl`: `track`, `TrackingConfig`, `TrackingResult`, `track_spin`. `track` and 
+  `dynamic_aperture` build the kernel chains once per call (`BTBL.prepare`) and run them every 
+  turn with `track!(bunch, chains; <launch keywords>)` (bitwise equal to `track!` per turn); 
+  `track`'s `elapsed_time` excludes building them (about one turn of one particle).
 - `src/twiss/`: `twiss.jl` (`twiss` and its phases), `twiss_operators.jl` (one function per 
   column, `_beta1(j, twi, cache, Val{as_tps})` etc.), `twiss_map.jl` (column name → function, units), 
   `twiss_df.jl` (`_twiss_df`, the row/column loop), `twiss_types.jl` (`Twiss`, `TwissSummary`, 

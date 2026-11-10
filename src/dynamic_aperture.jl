@@ -154,8 +154,14 @@ function dynamic_aperture(
   end
 
   b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
+  # The kernel chains of the elements are built once for all turns; the other settings are passed
+  # to each launch
+  prep_keys = (:rf_on, :ramp_particle_energy_without_rf, :ramp_update_each_particle, :batch_start)
+  prep_kwargs = NamedTuple(k => v for (k, v) in pairs(track_kwargs) if k in prep_keys)
+  launch_kwargs = NamedTuple(k => v for (k, v) in pairs(track_kwargs) if !(k in prep_keys))
+  chains = BTBL.prepare(b0, bl; scalar_params=true, prep_kwargs...)
   for i in 1:n_turns
-    track!(b0, bl; scalar_params=true, track_kwargs...)
+    track!(b0, chains; launch_kwargs...)
     print("\rFinished turn $i out of $n_turns")
     flush(stdout) 
   end

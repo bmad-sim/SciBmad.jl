@@ -41,3 +41,13 @@ SUITE["twiss"]["fodo parametric"] = @benchmarkable twiss($pfodo; GTPSA_descripto
 
 SUITE["find_closed_orbit"] = BenchmarkGroup()
 SUITE["find_closed_orbit"]["esr"] = @benchmarkable find_closed_orbit($esr)
+
+# Tracking over turns (track and dynamic_aperture build the kernel chains once per call)
+const v2 = [6.5e-4 0 6e-5 0 0 5e-4; 1e-4 1e-5 1e-5 0 0 0]
+const v1000 = 1e-4 .* [sin(3i + j) for i in 1:1000, j in 1:6]
+SUITE["track"] = BenchmarkGroup()
+SUITE["track"]["esr 2 particles 100 turns"] = @benchmarkable track($esr; v0=$v2, n_turns=100)
+SUITE["track"]["esr 1000 particles 10 turns"] = @benchmarkable track($esr; v0=$v1000, n_turns=10)
+SUITE["dynamic_aperture"] = BenchmarkGroup()
+SUITE["dynamic_aperture"]["esr 34 particles 20 turns"] = @benchmarkable dynamic_aperture($esr; n_r=5, n_theta=4,
+  deltas=[0.0, 1e-3], max_sig_x=20, max_sig_y=20, emit_1=24e-9, emit_2=2e-9, n_turns=20)
