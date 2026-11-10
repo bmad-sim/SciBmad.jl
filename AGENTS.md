@@ -102,7 +102,8 @@ plainly what was not verified and what could be wrong. Never present unverified 
 - **PR descriptions** (when asked): a Markdown file outside the repository covering everything on the 
   branch relative to `main` (`git log main..HEAD` plus uncommitted changes), with the sections Summary, 
   Breaking/Behavior changes (each quantified), Fixes, Internal changes, Tests, Verification, Open. 
-  Only claim test runs that have finished.
+  Only claim test runs that have finished. The current release texts (PR descriptions, release notes,
+  Slack message for SciBmad, BeamTracking and Beamlines) are in `~/scibmad-release/`.
 
 ### Environment
 
@@ -255,6 +256,28 @@ elements (unless `in_body_coordinates`).
   job summary). The script runs on both revisions, so it may only use API that exists in both 
   (check it against the base branch's environment). Locally: `include("benchmark/benchmarks.jl"); run(SUITE)`.
 
+### Comparison with other codes
+
+ESR (SciBmad's, 6,271 elements) without radiation against Xsuite (xtrack 0.118.7) and MAD-NG (1.1.15, a native arm64 build in
+`~/madng-arm64`), each converged to the same 1000-turn error with its cheapest settings (integrator
+order and steps per element kind), one thread, Apple M4. Scripts, the settings that make the codes
+compute the same physics (exact Hamiltonian everywhere, hard-edge fringes, MAD-NG `frngmax = 3` on
+each sextupole, sub-1e-10 m drifts removed for MAD-NG's `minlen`) and the method are in
+`~/scibmad-benchmarks/esr-codes/` (README). The converged codes agree to ~3e-10 (round-off floor
+~3e-9 of the metric). Nov 2026, ms per turn at a 1000-turn error ≤ 1e-7 (SciBmad: quads MatrixKick
+order 6 Yoshida x4, sextupoles DriftKick order 6):
+
+| Particles | SciBmad | Xsuite | MAD-NG (best of 5 processes) |
+|---|---|---|---|
+| 1 | 1.31 | 1.02 | 5.58 |
+| 10 | 4.92 | 7.67 | 6.89 |
+| 100 | 40.3 | 77.5 | 39.1 |
+| 1000 | 387 | 776 | 676 |
+
+At 1e-5 and 1e-8 the pattern is the same (SciBmad fastest at 10 and 1000 particles, level with
+MAD-NG at 100, 1.3-1.5x behind Xsuite for one particle). Rerun SciBmad's side after tracking
+changes (`time_sci.jl`, `tN_sci.jl`; settings may need re-selecting with `pareto.py`).
+
 ### Status (Nov 2026)
 
 SciBmad 0.7 (branch `v0.7.0`) works with BeamTracking 0.9 / Beamlines 0.12: `check_bl_bunch!` 
@@ -265,6 +288,10 @@ ESR `twiss` is bitwise equal to SciBmad 0.6 on BeamTracking 0.8.7; the workload'
 ≤1e-15, from its RF cavity (order 4 instead of 2) and its straight-dipole kicker (a Sextupole kind, 
 now DriftKick; the old default used the exact dipole solution: 1.3e-18 there, but strong kickers of 
 Sextupole/kicker kinds are now approximated by kicks).
+
+Tracking (BeamTracking's `test/lattices/esr.jl`, 4,891 elements; SciBmad's has 6,271 and is used
+for `twiss`, `find_closed_orbit` and first calls; Julia 1.10, Apple M4, per turn): `track` (prepared) 0.50/1.3/8.0/75 ms for
+1/10/100/1000 particles, 36 ms for 1000 in Float32 (`track!` per turn: 3.2 ms for one particle).
 
 ESR, Julia 1.10, Apple silicon: `find_closed_orbit` 38 → 17 ms (BeamTracking 0.9); `twiss` 374 → 
 352 ms (0.9) → 287 ms (row caches shared by the columns) → 254 ms (NNF `inv!`: `inv(A)` once, work 
@@ -310,6 +337,17 @@ binary 315 → 356 MB; first calls on ESR: `twiss` 1.5 → 0.30 s (its run time 
 17–23 s. Each workload call compiles a distinct path (rf on/off, spin, orders, `chrom`, parametric), 
 calls that repeat compiled paths cost ~0.01 s. The SIMD and remainder loops of `launch!` are both 
 compiled whatever the number of particles.
+Nov 2026 (prepared tracking, 64-byte SIMD lanes): the workload also tracks a FODO with apertures 
+on every element with length (and `twiss`), with radiation damping (and `twiss`), and with 
+Float32 coordinates. First calls on ESR with radiation 3.45 -> 0.21 s, apertures 1.94 -> 0.21 s, 
+Float32 6.29 -> 0.21 s; RCSV5S0 (apertures on 5032 elements) `track`/`twiss`/`find_closed_orbit` 
+1.52/2.14/1.40 -> 0.36/1.01/0.74 s. Cost: precompile 174 -> 198 s, binary 484 -> 659 MB, peak 
+memory unchanged (12.5 GB). All three SIMD loops of `launch!` (64-byte, native width, scalar) 
+are compiled with `launch!`: first calls with 1/3/9/17/100 Float64 and 1/5/17/100 Float32 
+particles take 0.06-0.08 s. Already covered (first calls <= 1 s): AGS, ESR v6.3.1 and tapered 
+`track`/`twiss`/`find_closed_orbit`, AGS spin, `dynamic_aperture`; `twiss(…; order=2)` on ESR 
+v6.3.1 takes 2.2 s (1.6 s run time). Time dependent parameters can't be covered in general (the 
+function is part of the type).
 
 Open items:
 - `factorise` speed: the remaining cost is ~19 temporary maps per call (inversions, compositions, 
@@ -319,7 +357,11 @@ Open items:
   (order 2) has not been profiled yet.
 - `twiss` table: one dynamic call per cell (~17 ms of ~42 ms on ESR). Specializing the row loop on 
   the column set removes it but compiles per column set (5 s for the default set): rejected.
-- Closed orbit: `coast_check` and Newton compute the same Jacobian (~8 ms on ESR).
+- Closed orbit: `coast_check` and Newton compute the same Jacobian (~8 ms on ESR). Prepared tracking 
+  does not help `find_closed_orbit` on ESR: it tracks each coordinate type (numbers, and Duals for 
+  each Jacobian) once (Newton converges in one step from the zero guess), and preparing costs 
+  5.5-6 ms per type, more than the plain turn (13.3 -> 14.4 ms; reverted). It would pay off only 
+  with two or more evaluations per type (several Newton iterations).
 - `Experimental.dynamic_aperture` sets `RFParams = nothing` on the cavities and restores them only 
   after steps that can throw (the main `dynamic_aperture` uses `rf_on=false` instead).
 - `BatchParam` element lengths: `find_closed_orbit` fails (its Bunch `t_ref` is a Float64; `track` 
@@ -336,6 +378,8 @@ Open items:
   `twiss.md` has an open-lattice example (`a_initial`, tested in "Open-lattice Twiss"). 
   Open for the maintainer:
   - `miscellaneous.md` has an unfinished heading ("Alignment transformation and").
+  - `dynamic-aperture.md` could say, as `track.md` does, that parameters (also deferred
+    expressions) are evaluated once per call and time-dependent parameters change during tracking.
   - SaganCavity spin: the energy kick rotates the spin twice (before and after the kick) with the 
     full `dE*c/P0c` field each time, i.e. twice ∫E_z (the fringe uses half of its field each 
     time). Bmad's lcavity (`this_energy_kick` in `track_a_lcavity.f90`) does the same; tracked 

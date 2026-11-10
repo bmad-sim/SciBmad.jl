@@ -87,6 +87,11 @@ bunch to `track`:
 res2 = track(fodo, bunch=res.bunch, n_turns=5)
 ```
 
+The parameters of the beamline, including [deferred expressions](defexpr.md), are evaluated
+once when `track` is called, and kept for all turns of that call. Changes to them take effect
+at the next call of `track`. To have parameters change during tracking (for example a ramp),
+use [time-dependent parameters](timedependent.md).
+
 To do spin tracking, simply set `spin=true`. This will initialize all particles with their
 own spin [quaternion](https://en.wikipedia.org/wiki/Quaternion), each of which will be
 tracked along with the particle. A quaternion is essentially a rotation matrix - by tracking
