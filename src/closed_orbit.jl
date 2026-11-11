@@ -55,6 +55,39 @@ end
   end
 end
 
+# KernelAbstractions 0.10 compiles CPU kernels with POCL (GPUCompiler). On Julia 1.10, compiling
+# one in the precompile workload puts device symbols into SciBmad's package image, which then
+# fails to link on Windows. There the CPU uses broadcasts (as fast as the kernels on the CPU)
+@static if Sys.iswindows() && VERSION < v"1.11" && pkgversion(KA) >= v"0.10"
+  function _set_v_cpu!(v_res, v_cache, v, n_particles; ndrange)
+    reshape(v_res, n_particles, 6) .= v
+    v_cache .= v
+    return nothing
+  end
+  function _set_v_coast_cpu!(v_res, v_cache, v_constant, v_coast, n_particles; ndrange)
+    @views v_cache[:, 5:6] .= v_constant[:, 5:6]
+    @views v_cache[:, 1:4] .= v_coast[:, 1:4]
+    @views reshape(v_res, n_particles, 4) .= v_coast[:, 1:4]
+    return nothing
+  end
+  function _set_v_coast_final_cpu!(v0, v_coast; ndrange)
+    @views v0[:, 1:4] .= v_coast[:, 1:4]
+    return nothing
+  end
+  function _sub_v_cpu!(v_res, v, n_particles, ::Val{coast}; ndrange) where {coast}
+    if coast
+      @views reshape(v_res, n_particles, 4) .-= v[:, 1:4]
+    else
+      reshape(v_res, n_particles, 6) .-= v
+    end
+    return nothing
+  end
+  set_v!(::KA.CPU) = _set_v_cpu!
+  set_v_coast!(::KA.CPU) = _set_v_coast_cpu!
+  set_v_coast_final!(::KA.CPU) = _set_v_coast_final_cpu!
+  sub_v!(::KA.CPU) = _sub_v_cpu!
+end
+
 function _co_res!(
     v_res, 
     v, 

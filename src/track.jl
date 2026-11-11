@@ -340,6 +340,22 @@ end
 
 @kernel function _rotate_spins!(s, @Const(q), @Const(s0))
   i = @index(Global)
+  _rotate_spin!(i, s, q, s0)
+end
+
+# On Windows with Julia < 1.11 and KernelAbstractions 0.10, CPU arrays use a loop instead of the
+# kernel (see closed_orbit.jl: a CPU kernel compiled in a precompile workload breaks the image)
+@static if Sys.iswindows() && VERSION < v"1.11" && pkgversion(KA) >= v"0.10"
+  function _rotate_spins_cpu!(s, q, s0; ndrange)
+    for i in 1:ndrange
+      _rotate_spin!(i, s, q, s0)
+    end
+    return nothing
+  end
+  _rotate_spins!(::KA.CPU) = _rotate_spins_cpu!
+end
+
+@inline function _rotate_spin!(i, s, q, s0)
   @inbounds begin
 
     # Set initial condition:

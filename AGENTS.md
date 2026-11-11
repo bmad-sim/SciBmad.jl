@@ -190,6 +190,14 @@ plainly what was not verified and what could be wrong. Never present unverified 
 - `src/SciBmad.jl`: module, re-exports, includes, the precompile workload.
 - `src/closed_orbit.jl`: `find_closed_orbit` (BatchSolve Newton over `track!` with `scalar_params=true`, 
   KernelAbstractions kernels to set/subtract coordinates), `coast_check` (Jacobian row 6).
+  On Windows with Julia < 1.11 and KernelAbstractions ≥ 0.10, CPU arrays use broadcasts instead 
+  of these kernels (`@static`, methods `set_v!(::KA.CPU)` etc.): KA 0.10 compiles CPU kernels with 
+  POCL/GPUCompiler, and on Julia 1.10 a kernel compiled in the precompile workload leaves device 
+  symbols (`julia.gpu.state_getter`, `__spirv_BuiltInGlobalInvocationId`) in SciBmad's package 
+  image, which Windows can't link (macOS/Linux resolve them lazily; check with `nm -u` on the 
+  image). Bitwise equal to the kernels (coasting and not, batches, BatchParams, Float32, twiss, 
+  dynamic_aperture); broadcasts are faster than the POCL kernels on the CPU (0.7 vs 1.6 µs, 1000 
+  particles). Upstream reproducer and reply: `~/scibmad-release/windows-lts-issue.md`.
 - `src/track.jl`: `track`, `TrackingConfig`, `TrackingResult`, `track_spin`. `track` and 
   `dynamic_aperture` build the kernel chains once per call (`BTBL.prepare`) and run them every 
   turn with `track!(bunch, chains; <launch keywords>)` (bitwise equal to `track!` per turn); 
