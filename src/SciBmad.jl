@@ -17,9 +17,10 @@ using Reexport
         StaticArrays,
         ForwardDiff,
         DelimitedFiles,
-        PrettyTables
+        PrettyTables,
+        BeamTracking
+  using BeamTracking: track!
   @reexport using ADTypes      
-  @reexport using BeamTracking
   @reexport using Beamlines
   @reexport using NonlinearNormalForm
   @reexport using GTPSA
@@ -30,8 +31,7 @@ end
 const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)
 
 export  twiss, 
-        find_closed_orbit, 
-        track!,
+        find_closed_orbit,
         dynamic_aperture,
         track,
         track_spin,
@@ -45,7 +45,13 @@ export  twiss,
         grad,
         val,
         jac,
-        phase_trombone!
+        phase_trombone!,
+        BeamTracking,
+        Bunch,
+        ParticleView, 
+        Time, 
+        TimeDependentParam, 
+        BatchParam
         
 include("closed_orbit.jl") 
 include("track.jl")
@@ -98,6 +104,24 @@ if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE",
     redirect_stdout(devnull) do # dynamic_aperture prints its progress
       dynamic_aperture(fodo; n_r=3, n_theta=3, deltas=[0.0], max_sig_x=1, max_sig_y=1, emit_1=1e-9, emit_2=1e-9, n_turns=1)
     end
+    # Elements with apertures (e.g. most elements of the RCS)
+    fodo_ap = Beamline([deepcopy_no_beamline(ele) for ele in fodo_line]; species_ref=Species("electron"), E_ref=18e9)
+    for ele in fodo_ap.line
+      if ele.L > 0
+        ele.x1_limit = -0.1; ele.x2_limit = 0.1; ele.y1_limit = -0.1; ele.y2_limit = 0.1
+      end
+    end
+    res = track(fodo_ap, v0=rand(4, 6) .* 1e-5)
+    tw = twiss(fodo_ap)
+    # Radiation damping (electron rings)
+    fodo_rad = Beamline([deepcopy_no_beamline(ele) for ele in fodo_line]; species_ref=Species("electron"), E_ref=18e9)
+    for ele in fodo_rad.line
+      ele.rad_damping = true
+    end
+    res = track(fodo_rad, v0=rand(4, 6) .* 1e-5)
+    tw = twiss(fodo_rad)
+    # 32-bit coordinates
+    res = track(fodo, v0=Float32.(rand(4, 6) .* 1e-5))
     # twiss
     # first order and second order
     tw = twiss(fodo)

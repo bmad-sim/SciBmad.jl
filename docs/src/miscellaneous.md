@@ -8,7 +8,7 @@ This convention simplifies the conversion between phase space `z` and the absolu
 the conversion is independent of the alignment and only dependent upon where the particle is
 with respect to the element being tracked through.
 
-### Alignment transformation and 
+### Alignment transformation and reference time
 
 The reference time convention discussed above has the following consequence: 
 In the transformation from a particle at the 

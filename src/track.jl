@@ -184,7 +184,7 @@ function track(
 
     # Or explicitly provide a Bunch:
     bunch::Bunch=Bunch(; 
-      v=copy.(v0), spin=spin, 
+      v=(v = similar(v0); v .= copy.(v0); v), spin=spin,
       q=(!isnothing(q0) ? copy.(q0) : nothing), 
       weight=(!isnothing(weight) ? copy.(weight) : nothing), 
       species=bl.species_ref, 
@@ -274,8 +274,11 @@ function _track(bl, bunch, config, groupsize)
     q_data[:,:,1] .= q
   end
 
+  # The kernel chains of the elements are built once for all turns (not included in the time t)
+  chains = BTBL.prepare(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf,
+                        ramp_update_each_particle, batch_start)
   t = @elapsed for i in 1:n_turns
-    track!(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf, ramp_update_each_particle, batch_start, groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading, notify=(i == 1))
+    track!(bunch, chains; groupsize, use_KA, use_explicit_SIMD, use_cpu_multithreading)
     if mod(i, save_every_n_turns) == 0
       idx = div(i,save_every_n_turns)+1
       state_data[:,idx] .= state
