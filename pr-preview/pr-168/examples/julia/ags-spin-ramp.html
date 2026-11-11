@@ -1,0 +1,695 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Nonlinear Twiss (Python example compatible with SciBmad version &lt; 0.5.0)" href="../python/nonlinear-twiss.html"><link rel="prev" title="Orbit response" href="orbit-response.html">
+        <link rel="prefetch" href="../../_static/SciBmad-Logo.png" as="image">
+        <link rel="prefetch" href="../../_static/SciBmad-Logo-dark.png" as="image">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Ramping through a spin-orbit resonance with SciBmad - SciBmad Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=0d90b94b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">SciBmad Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../../_static/SciBmad-Logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../../_static/SciBmad-Logo-dark.png" alt="Dark Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contents.html">Table of Contents</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../installation.html">Installation</a><input aria-label="Toggle navigation of Installation" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#updating-scibmad">Updating SciBmad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#jupyter-kernel-installation">Jupyter Kernel Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#adding-other-packages">Adding Other Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#adding-gpu-support">Adding GPU Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#a-simple-copy-paste-example">A Simple Copy-Paste Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#step-by-step-description">Step-By-Step Description</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../element.html#element-kinds">Element Kinds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../element.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../element.html#pgs">Parameter Groups</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../beamline.html#multiple-latelements-in-multiple-beamline">Multiple LatElements in (multiple) Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../defexpr.html#deferred-expressions">Deferred Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../defexpr.html#contexts">Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../def-tools.html#phase-trombone">Phase Trombone</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#configuration-settings">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#tracking-a-different-species">Tracking a Different Species</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#track-callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#coordinates-number-type">Coordinates Number Type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#gpuparallel">GPU Parallelization</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#sagan-cavity">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timedependent.html#energy-ramping">Energy Ramping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timedependent.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../batch.html#limitations">Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../dynamic-aperture.html">Dynamic Aperture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#open-lattices">Open lattices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../parametric-nf.html">Parametric Normal Form</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimize.html">Optimization with Autodiff</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fma.html">Frequency Map Analysis</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">AGS spin ramp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python/ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-tracking.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#justification">Justification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../miscellaneous.html#reference-time-for-an-element-that-has-a-finite-misalignment">Reference time for an element that has a finite misalignment.</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../governance.html#steering-committee">Steering Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../governance.html#technical-committee">Technical Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../governance.html#former-members">Former Members</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../governance.html#ai-contribution-guidelines">AI Contribution Guidelines</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/examples/julia/ags-spin-ramp.ipynb?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/examples/julia/ags-spin-ramp.ipynb" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="ramping-through-a-spin-orbit-resonance-with-scibmad">
+<h1>Ramping through a spin-orbit resonance with SciBmad<a class="headerlink" href="#ramping-through-a-spin-orbit-resonance-with-scibmad" title="Link to this heading">¶</a></h1>
+<p>BNL’s Relativistic Heavy Ion Collider (RHIC) and its successor the Hadron Storage Ring (HSR) of the Electron-Ion Collider (EIC) are characterized by their high degree of polarization. The lack of a significant self-polarization mechanism for protons and ions means that these species have to be polarized at the source and accelerated without a significant loss of polarization. However, without special care, the electromagnetic fields used to accelerate the particles will destroy their polarization. This is often discussed in the context of the Alternating Gradient Synchrotron (AGS), as if particles cannot maintain their polarization through the AGS, there will be no polarization left to maintain once the particles reach RHIC/HSR.</p>
+<p>The equation of motion for the rest-frame spin of relativistic particles is the Thomas-Bargmann-Michel-Telegdi (T-BMT) equation. As the length of the spin is constant (usually taken to be unity for simplicity), the T-BMT equation is a precession equation:
+$<span class="math notranslate nohighlight">\( \dot{\vec{S}}(t)=\vec{\Omega}(t)\times\vec{S}(t). \)</span><span class="math notranslate nohighlight">\(
+If there is only a magnetic field \)</span>\vec{B}<span class="math notranslate nohighlight">\( in the lab frame, the precession vector takes the form
+\)</span><span class="math notranslate nohighlight">\( \vec{\Omega}=-\frac{q}{m\gamma}\left[(1+G\gamma)\vec{B}_\perp+(1+G)\vec{B}_\parallel \right], \)</span><span class="math notranslate nohighlight">\(
+where \)</span>\perp<span class="math notranslate nohighlight">\( and \)</span>\parallel<span class="math notranslate nohighlight">\( indicate components perpendicular to and parallel to the particle's velocity. Comparing this equation to the Lorentz force, one sees that spins precess \)</span>G\gamma<span class="math notranslate nohighlight">\( times faster than the orbit in a transverse field. Therefore, in a ring where a particle on the closed orbit has no vertical momentum in the bending magnets and sees no other fields, the closed-orbit spin tune \)</span>\nu_0<span class="math notranslate nohighlight">\( is exactly equal to \)</span>G\gamma$. In rings without egregious misalignments or spin rotators, we often hope that this is approximately true.</p>
+<p>In general, the precession vector <span class="math notranslate nohighlight">\(\vec{\Omega}\)</span> is a quasiperiodic function of the position in the accelerator given by the azimuth <span class="math notranslate nohighlight">\(\theta\)</span>. As a function of phase space and the lattice, it must be periodic in the orbital angles and <span class="math notranslate nohighlight">\(\theta\)</span>. Hence, a Fourier decomposition in <span class="math notranslate nohighlight">\(\theta\)</span> alone would contain frequencies of the form
+$<span class="math notranslate nohighlight">\(\kappa=k_0+\vec{k}\cdot\vec{Q} \quad \mathrm{with}\,\left(k_0,\vec{k}\right)\in\mathbb{Z}^4, \)</span><span class="math notranslate nohighlight">\(
+where \)</span>\vec{Q}<span class="math notranslate nohighlight">\( contains the orbital tunes. During the acceleration process, \)</span>\nu_0<span class="math notranslate nohighlight">\(, being approximately equal to \)</span>G\gamma<span class="math notranslate nohighlight">\(, usually increases, and we can reach the condition \)</span>\nu_0=\kappa<span class="math notranslate nohighlight">\(. We then speak of a &quot;spin-orbit resonance&quot;, and the spin motion usually becomes wild in the vicinity of these resonances, as in the image below for \)</span>\kappa=0<span class="math notranslate nohighlight">\(. In the approximation of an isolated resonance, the effect of a linear crossing depends only on the resonance strength \)</span>\epsilon<span class="math notranslate nohighlight">\( and the crossing speed \)</span>\alpha=(\nu_0-\kappa)/\theta<span class="math notranslate nohighlight">\(. However, the resonance strength \)</span>\epsilon$ depends on the orbital amplitude, and thus every particle’s spin is changed differently. This can lead to a loss of polarization.</p>
+<p><img alt="crossing.png" src="../../_images/crossing.png" /></p>
+<p>The desired polarization outside the interaction region is often vertical, because vertical spins are mostly unaffected by the vertical fields of the bending magnets. Resonances containing <span class="math notranslate nohighlight">\(Q_y\)</span> then become extremely important because vertical motion in the quadrupoles leads to horizontal magnetic fields. It is therefore of interest to see what happens to a vertical spin when it passes through an isolated resonance at constant speed. Froissart and Stora (1963) found that, if the spin is vertical infinitely far before the resonance, then infinitely far after the resonance, the vertical component of the spin will become
+$<span class="math notranslate nohighlight">\( S_y=2\exp\left(-\frac{\pi\epsilon^2}{2\alpha}\right)-1. \)</span><span class="math notranslate nohighlight">\(
+As can be seen below, this formula is often quite accurate even when crossing from a finite distance, as long as the resonances are isolated. In the AGS, the isolated vertical resonances used to be very important. Even now, with the partial snakes, the isolated horizontal resonances are the most important and the Froissart-Stora theory still applies. Note, however, that in the general case, instead of the component of \)</span>\vec{S}<span class="math notranslate nohighlight">\( along the vertical direction, we must consider the component along \)</span>\vec{n}_0$, the periodic spin direction on the closed orbit.
+<img alt="FS.png" src="../../_images/FS.png" /></p>
+<p>Now, onto the simulation. We will only need <code class="docutils literal notranslate"><span class="pre">SciBmad</span></code>, with <code class="docutils literal notranslate"><span class="pre">Plots</span></code> and <code class="docutils literal notranslate"><span class="pre">LaTeXStrings</span></code> included for plotting purposes:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">SciBmad</span><span class="p">,</span><span class="w"> </span><span class="n">Plots</span><span class="p">,</span><span class="w"> </span><span class="n">LaTeXStrings</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We will use a simple FODO lattice based on the AGS with superperiod <span class="math notranslate nohighlight">\(P=60\)</span>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="p">(</span><span class="s">"../../lattices/ags.jl"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>To know where to look for spin-orbit resonances, we have to know the tunes:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
+<span class="n">Qy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>8.984999999999715
+</pre></div>
+</div>
+</div>
+</div>
+<p>Because the lattice has an exact superperiod of 60, we only expect first-order resonances at <span class="math notranslate nohighlight">\(\nu_0=60N \pm Q_y\)</span> with <span class="math notranslate nohighlight">\(N\in\mathbb{Z}\)</span>. The ring is flat, so <span class="math notranslate nohighlight">\(\nu_0=G\gamma\)</span> and we will track through the <span class="math notranslate nohighlight">\(\nu_0=60 + Q_y\)</span> resonance. Let’s start at <span class="math notranslate nohighlight">\(G\gamma=59 + Q_y\)</span> and end at <span class="math notranslate nohighlight">\(G\gamma=61+Q_y\)</span>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Gγ_start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">59</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Qy</span><span class="w"> </span>
+<span class="n">Gγ_end</span><span class="w"> </span><span class="o">=</span><span class="w">   </span><span class="mi">61</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Qy</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>69.98499999999972
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can convert to <span class="math notranslate nohighlight">\(E=\gamma mc^2\)</span> using our physical constants package:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Species</span><span class="p">(</span><span class="s">"proton"</span><span class="p">)</span>
+<span class="n">E_start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Gγ_start</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">gyromagnetic_anomaly</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">massof</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="n">E_end</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">Gγ_end</span><span class="w">   </span><span class="o">/</span><span class="w"> </span><span class="n">gyromagnetic_anomaly</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">massof</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.662608106301287e10
+</pre></div>
+</div>
+</div>
+</div>
+<p>For applying the Froissart-Stora formula, the useful quantity is <span class="math notranslate nohighlight">\(\alpha = (\text{Change in \)</span>G\gamma<span class="math notranslate nohighlight">\( per turn})/(2\pi)\)</span>. But for a tracking code (and in the control room), we use the rate of change in terms of time. So we need the (approximate) revolution time, using the fact that we are ultrarelativistic:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">approx_rev_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">line</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="o">.</span><span class="n">s_downstream</span><span class="o">/</span><span class="n">C_LIGHT</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2.6686347026566107e-6
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s set it up so that the ramping takes place over 1,000 turns:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">dE_dt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">E_end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">E_start</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1000</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">approx_rev_time</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.922169442209169e11
+</pre></div>
+</div>
+</div>
+</div>
+<p>In <code class="docutils literal notranslate"><span class="pre">SciBmad</span></code>, ramping is extremely simple because almost everything (magnet strengths, cavity voltages, cavity frequencies, the reference energy, etc.) can be made a time-dependent function. This is done using the function <code class="docutils literal notranslate"><span class="pre">Time()</span></code>, which creates an object that will, when the particle reaches an element during tracking, evaluate to the current time. So, to ramp, we simply make the reference energy of the ring a time-dependent function.</p>
+<p>Note that there are other ways to go through a resonance, e.g., to vary the tune by changing quadrupole strengths or to drive the resonance with an AC dipole. Using <code class="docutils literal notranslate"><span class="pre">Time()</span></code>, both of these are easily simulated in <code class="docutils literal notranslate"><span class="pre">SciBmad</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ring</span><span class="o">.</span><span class="n">E_ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">E_start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dE_dt</span><span class="o">*</span><span class="n">Time</span><span class="p">();</span><span class="w"> </span>
+<span class="c"># This is saying E_ref(t) = E_start + dE_dt*t, but it could also be more complicated like sin(Time()), etc.</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s start with a vertical offset <span class="math notranslate nohighlight">\((y=0.25\,\text{mm},\,p_y=0)\)</span> and vertical spin. We will initialize a bunch, and then because this lattice doesn’t have RF cavities in it, we will use the simple ramping model which ramps the particle energy uniformly.</p>
+<p>To do this, we will use <code class="docutils literal notranslate"><span class="pre">track</span></code> with the keyword arguments <code class="docutils literal notranslate"><span class="pre">spin=true</span></code>, <code class="docutils literal notranslate"><span class="pre">ramp_particle_energy_without_rf=true</span></code>, and <code class="docutils literal notranslate"><span class="pre">n_turns=1000</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">2.5e-4</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.0</span><span class="p">]</span><span class="w"> </span><span class="c"># Initial phase space coordinate</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">,</span><span class="w"> </span><span class="n">spin</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">ramp_particle_energy_without_rf</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">n_turns</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TrackingResult{Matrix{UInt8}, Array{Float64, 3}, Array{Float64, 3}}:
+config:
+ n_turns                         = 1000
+ save_every_n_turns              = 1
+ scalar_params                   = false
+ rf_on                           = true
+ ramp_particle_energy_without_rf = true
+ ramp_update_each_particle       = false
+ batch_start                     = 1
+ verbose                         = false
+ groupsize                       = 0
+ use_cpu_multithreading          = false
+ use_KA                          = false
+ use_explicit_SIMD               = true
+
+elapsed_time = 3.388223667 seconds
+
+state[1:1, 1:1001]:	States indexable as		 state[particle, turn+1]
+v[1:1, 1:6, 1:1001]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
+q[1:1, 1:4, 1:1001]:	Quaternions indexable as	 q[particle, quat_coordinate, turn+1]
+
+bunch:	Bunch at the end of tracking
+</pre></div>
+</div>
+</div>
+</div>
+<p>Also store <span class="math notranslate nohighlight">\(G\gamma\)</span> for plotting:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">T</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">approx_rev_time</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="o">:</span><span class="mi">1000</span><span class="p">);</span>
+<span class="n">Gγ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gyromagnetic_anomaly</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">E_ref</span><span class="o">.</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">massof</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Because SciBmad tracks quaternions instead of spin 3-vectors, we can use the per-particle quaternions to track <em>any</em> initial spin, using the <code class="docutils literal notranslate"><span class="pre">track_spin</span></code> function. In this case, we just assume initial vertical spin:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track_spin</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="c"># [0,1,0] = vertical</span>
+<span class="n">s_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">:</span><span class="p">];</span><span class="w"> </span><span class="c"># Particle (1), vertical (2) component of spin, all turns (:)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s plot the vertical spin component now, as a function of <span class="math notranslate nohighlight">\(G\gamma_0\)</span></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">plot</span><span class="p">(</span><span class="n">Gγ</span><span class="p">,</span><span class="w"> </span><span class="n">s_y</span><span class="p">,</span><span class="w"> </span><span class="n">xlabel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sa">L</span><span class="s">"G\gamma_0"</span><span class="p">,</span><span class="w"> </span><span class="n">ylabel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sa">L</span><span class="s">"</span><span class="si">$S_y</span><span class="s">$"</span><span class="p">,</span><span class="w"> </span><span class="n">legend</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><img src="data:image/png;base64,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nArCHCYkShqDkMhu2DtK1CkMQiK78fJOTESdwSAkshuuqSfqFAYhkd14ucsaUWcwCInshmvqiTqFQUhkN9YKCiJKEoOQyG483G6UqDMYhER24+GsUaLOYBAS2Q1vSUjUKQxCIrth1yhRpyQbhNXV1fPnz6+trT2krSGiA+dRGYREnaAleZ3T6Vy3bt3//u//NjY2jhs3bsqUKWeeeabT6TykjSOiLvBwizWizki2IkxLS7vrrrsWLFiwePHiCy+88C9/+ctFF120du3aQ9o4IuoCjypCnCxDlLRkg7Curu5//ud/3nvvPSnlaaeddt1117399tsffvjhIW0cEXUBK0KiTkk2CFesWDFx4sSvvvpqypQpZ5111tq1a7/++usRI0YEg8GuvfGOHTu2b9++jwvq6uo2bdqk6xzrIOocjhESdUqyQThx4sSSkpJLLrnk008//eCDD26++ebt27dv3rzZ6/V29i3D4fD06dNPPPHEk08+edq0aaFQqP01jz322KBBgy666KKhQ4euXr26s29B1JuxIiTqlGSDUNO0mTNnDhs2LHHmoosuuv7667vwls8//3xNTc2WLVs2b97c0NDw/PPPt7lg69at999//9KlS1evXj1r1qybb765C+9C1GuxIiTqlJYg3L179+LFizuszw6u119//ZprrnE4HA6H45prrnnttdfaXzB58uShQ4cCmD179qeffrp79+5D3Soi22BFSNQpLUFYUFDw7rvvZmdnX3rppX//+98P3Vtu3bp18ODB1vGQIUO2bdvW5oKSkpIhQ4ZYxzk5ORkZGSUlJR2+lJQyGAyuaKW+vv6QNZwoNXg1zhol6oSWdYRCCMMwNm3a1K9fP+vMtm3bbr311rVr1w4dOvS2226bMmXKQXnLpqYmj8djHXu93oaGhvYXZGdnJx56vd7GxsYOX6qmpqakpGTWrFmJMzfddNMPf/jD/bYhGAzquq4o3Fin+wQCASFET7eiV5BRJRBVm5qaFEVxOBw93ZxehB/ybhaLxQzD2PecSrfbrWn7WTHf8uWvv/56ypQpiRQE8IMf/GDr1q0PPPBAXl7es88+u3r16ltuueUA2w2goKAgsUNNTU1Nnz592lyQn59fV1eXeFhbW1tQUNDhS+Xk5Bx11FHLly/vbBsURXG73QzC7iSl9Pv9Pd2KXiErKKMw/H4/g7Cb8UPe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wzjw7/khSYK8vLyx7YwZM2bfz2psbLQq3IkTJ3788cfW8aeffpqTkzN06NCD28JnnnlmxYoVB/c1aR+amppuvfXWnm5F7/L666+///77Pd2K3uXaa6/lgEt3WrRo0auvvnrgr9MDJdGaNWtmz5790ksvbdmyZfbs2c8995x1vrCwcPHixQDOPvvs7OzsGTNmPPPMM1dfffWdd96paQe5cl22bBkn4HSn+vr69957r6db0bt8++2369at6+lW9C5///vfTdPs6Vb0IuvXr1+5cuWBv04PTJbJyMgYN27cuHHjrIcDBw60Dn73u98dddRRABRF+fjjj//0pz9t3br16aefPvfcc7u/kURE1Ev0QBD279//2muvbX9+1qxZieO0tDT2pBERUTc4HJdPdIphGLW1tZ19VjQabWpq6sITqWvq6+tN0+Q3vDuFw+FQKMTveTerra3d7xxFOliCwWAkEtn3hzwzM3O/UzVFSg/tLlmyZNKkST6fr7NPDAaDTqfzoA890t5IKZuamtLS0nq6Ib1IOBxWFMXp5B0Iu09DQ0N6enpPt6IXiUaj1hKAfVxzzTXXPProo/t+ndQOQiIiogPEhXRERNSrMQiJiKhXYxASEVGvxiAkIqJejUFIRES9mj3XD5im+Ze//GX+/PmGYZx++unW2vxIJPLss8/++9//djgc06dPv/LKK9svLlmzZs2jjz5aVVV1zjnnzJkzh7tyJ6+mpuaxxx77+uuvMzMzZ8+ePXnyZADbt29/7LHHvvvuuz59+txwww3HH398m2f99a9/tfbVs/zhD3/gGqzkvfnmm/PmzQuFQmPGjPnNb34DQEr55z//ecGCBYqizJ49e+rUqe2fVVJS8pvf/Ka0tPSUU0654447XC5Xtzc8VQWDwSeffPKzzz7zeDyXX375RRddBKC+vv6RRx5ZuXJlcXHxPffc079//zbP+vDDD994443EwwcffDAvL69b252avvvuuzZ3MbrhhhtGjx4N4N///vezzz4biUQuu+yySy+9tP1zd+3a9eCDD27evHnChAl33323x+PZ93vZ8xf9bbfd9tRTT82cOfO6665LhNm999772muv3XbbbVdfffX999//wgsvtHlWbW3tpEmTRowYcdtttz3//PPt7yRFe9PU1HTqqafu3LnzxhtvvPDCC5uamgCYpnn66afrun7//fePHTv29NNPLykpafPEL774YteuXeOaJX+LEnriiSduu+22888//8Ybb/T7/dbJRx555PHHH7/++usvueSSyy+/fNmyZW2epev61KlT09LS7rzzzg8//PCOO+7o9oanKsMwpk2btmTJkmuvvfbHP/5xKBQCYJrm2WefvXPnzl/84hf5+fmTJ09ufxumb7/9du3atYkPOf/ySFJaWlrim5adnf3iiy8WFBQAWL9+/fnnnz9t2rRZs2bdcsstb7/9dpsnWj8UAHfffffSpUvnzJmz/zeTtrN+/XqPx7Nr164258ePH//nP//ZOr733nsvv/zyNhc89dRTkydPto4XLlzYuQpYcAAADBNJREFUr18/69amtF8PPfTQpEmT2pzcsWMHgPr6euvhiBEj3njjjTbX3HTTTb/61a+6oYU2U11d7fV6v/nmmzbnBw0a9NZbb1nHv/zlL2fOnNnmgrfeemvIkCHW8fr1630+X+IHRPv26quvDh06VNf11idXrlzpdrtDoZD1cNSoUX/729/aPPG3v/3tVVdd1U2ttKm77777ggsusI5vvPHG2bNnW8fPPPNM+988CxcuLCoqsn57l5aWulyuioqKfb++DSvCzz777IQTTvj888+vueaaX//619XV1db5KVOmzJ8/v6Ghoays7IMPPmjfa7RixYqTTjrJOj7ppJN27NhRXl7erU1PWZ999tnZZ5/98MMPX3311XPnzrU24O/Tp8/RRx89b948Xdc/++yzysrK8ePHt3/uwoULr7jiil/+8pdWcFIyli9fXlhYWFlZOXv27Lvuumv79u3W+YaGhuzsbOs4Jyfnq6++avPEFStWnHjiidbx8OHDXS7X+vXru63ZKe0///nP9OnT//CHP1x55ZVPP/10NBoF0NDQ4PV6EzubZGdnt/+eA/jqq6+uuOKKO++8c+PGjd3aaFvQdf2ll1666qqrrIetf1GffPLJ7W+oZ33Irb7A/v37FxQUrF69et9vYcMgLCkpWbly5RtvvHHBBReUlpaefPLJkUgEwD333FNeXp6Tk9O3b99BgwZdccUVbZ5YXl6e+CXi8/ncbndZWVl3tz41lZSUPPHEE0KIc8899/e///3Pf/5zAKqqzp0795e//KXP5zv99NMfffTR9sMn48aNu+yyy84+++wdO3aMGjWqfd8pdaikpKSqqurxxx+fPn26aZrj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" /></div></div>
+</div>
+<p>This indeed looks like a Froissart-Stora crossing. We can compute the resonance strength by looking at <span class="math notranslate nohighlight">\(S_y\)</span> at the end and inverting the Froissart-Stora formula:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">epsilon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span><span class="o">/</span><span class="nb">pi</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">s_y</span><span class="p">[</span><span class="k">end</span><span class="p">])))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.05227747865646387
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now, we can write a function which (in the isolated-resonance approximation) gives us the final <span class="math notranslate nohighlight">\(S_y\)</span> for any ramping rate <span class="math notranslate nohighlight">\(\alpha\)</span>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="nb">pi</span><span class="o">*</span><span class="n">epsilon</span><span class="o">^</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">alpha</span><span class="p">))</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>f (generic function with 1 method)
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s try some other ramping rates and see how the final <span class="math notranslate nohighlight">\(S_y\)</span> varies with <span class="math notranslate nohighlight">\(\alpha\)</span> (or equivalently the number of turns over which the ramping takes place):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">turns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">70</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w"> </span><span class="mi">700</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="mi">5000</span><span class="p">,</span><span class="w"> </span><span class="mi">7000</span><span class="p">]</span>
+<span class="n">final_s_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="p">(</span><span class="n">turns</span><span class="p">))</span>
+
+<span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="mi">1</span><span class="o">:</span><span class="n">length</span><span class="p">(</span><span class="n">turns</span><span class="p">)</span>
+<span class="w">    </span><span class="n">N</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">turns</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<span class="w">    </span><span class="n">ring</span><span class="o">.</span><span class="n">E_ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">E_start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1000</span><span class="o">/</span><span class="n">N</span><span class="o">*</span><span class="n">dE_dt</span><span class="o">*</span><span class="n">Time</span><span class="p">()</span>
+<span class="w">    </span><span class="n">v0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">2.5e-4</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.0</span><span class="p">]</span>
+<span class="w">    </span><span class="c"># save_every_n_turns=N because we only need final spin</span>
+<span class="w">    </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">,</span><span class="w"> </span><span class="n">spin</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">save_every_n_turns</span><span class="o">=</span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">ramp_particle_energy_without_rf</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">n_turns</span><span class="o">=</span><span class="n">N</span><span class="p">)</span>
+<span class="w">    </span><span class="n">final_s_y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track_spin</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="k">end</span><span class="p">]</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we can plot these results against the Froissart-Stora function we wrote:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">plot</span><span class="p">(</span><span class="n">range</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">turns</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mi">2</span><span class="o">/</span><span class="n">turns</span><span class="p">[</span><span class="k">end</span><span class="p">],</span><span class="w"> </span><span class="mi">10000</span><span class="p">),</span><span class="w"> </span><span class="n">f</span><span class="o">.</span><span class="p">(</span><span class="n">range</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">turns</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mi">2</span><span class="o">/</span><span class="n">turns</span><span class="p">[</span><span class="k">end</span><span class="p">],</span><span class="w"> </span><span class="mi">10000</span><span class="p">)),</span><span class="w"> </span><span class="n">xscale</span><span class="o">=</span><span class="ss">:log10</span><span class="p">,</span><span class="w"> </span><span class="n">xlabel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sa">L</span><span class="s">"$</span><span class="se">\a</span><span class="s">lpha$"</span><span class="p">,</span><span class="w"> </span><span class="n">ylabel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sa">L</span><span class="s">"Final </span><span class="si">$S_y</span><span class="s">$"</span><span class="p">,</span><span class="w"> </span><span class="n">legend</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span>
+<span class="n">scatter!</span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="n">turns</span><span class="p">,</span><span class="w"> </span><span class="n">final_s_y</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><img src="data:image/png;base64,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" /></div></div>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../python/nonlinear-twiss.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Nonlinear Twiss (Python example compatible with SciBmad version &lt; 0.5.0)</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="orbit-response.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Orbit response</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=552d2a3d"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../../_static/topbar-github.js?v=c13617d6"></script>
+    <script src="../../_static/sidebar-current.js?v=23c44312"></script>
+    </body>
+</html>
