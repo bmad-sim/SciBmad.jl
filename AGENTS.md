@@ -381,9 +381,9 @@ Open items:
   elements, reflection patches); it keeps the frame math the misalignment sections use. 
   `twiss.md` has an open-lattice example (`a_initial`, tested in "Open-lattice Twiss"). 
   Open for the maintainer:
-  - `miscellaneous.md` has an unfinished heading ("Alignment transformation and").
-  - `dynamic-aperture.md` could say, as `track.md` does, that parameters (also deferred
-    expressions) are evaluated once per call and time-dependent parameters change during tracking.
+  - A showcase draft (README gallery, first-look example, Speed section, a Performance page with
+    figures) is on the local branch `docs-showcase`, not for release; figure data and scripts in
+    `~/scibmad-benchmarks/docs-figures/`.
   - SaganCavity spin: the energy kick rotates the spin twice (before and after the kick) with the 
     full `dE*c/P0c` field each time, i.e. twice ∫E_z (the fringe uses half of its field each 
     time). Bmad's lcavity (`this_energy_kick` in `track_a_lcavity.f90`) does the same; tracked 

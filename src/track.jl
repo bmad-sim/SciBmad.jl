@@ -184,7 +184,7 @@ function track(
 
     # Or explicitly provide a Bunch:
     bunch::Bunch=Bunch(; 
-      v=copy.(v0), spin=spin, 
+      v=(v = similar(v0); v .= copy.(v0); v), spin=spin,
       q=(!isnothing(q0) ? copy.(q0) : nothing), 
       weight=(!isnothing(weight) ? copy.(weight) : nothing), 
       species=bl.species_ref, 
