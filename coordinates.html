@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="SaganCavity Tracking" href="sagancavity-tracking.html"><link rel="prev" title="Ramping through a spin-orbit resonance with SciBmad (Python example compatible with SciBmad version &lt; 0.5.0)" href="examples/python/ags-spin-ramp.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="SaganCavity Tracking" href="sagancavity-tracking.html"><link rel="prev" title="Ramping through a spin-orbit resonance with SciBmad (Python example)" href="examples/python/ags-spin-ramp.html">
         <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
         <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
 
@@ -224,7 +224,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#pgs">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -251,14 +251,14 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpuparallel">GPU Parallelization</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
@@ -314,15 +314,15 @@
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul class="current">
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Coordinates</a><input aria-label="Toggle navigation of Coordinates" checked="" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#nomenclature">Nomenclature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coordinate-frames">Coordinate Frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#lattice-element-positioning">Lattice Element Positioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#particle-position-transformation">Particle Position Transformation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -335,11 +335,11 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#edge-kick">Edge Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#energy-kick">Energy Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#rf-phase">RF Phase</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
@@ -400,20 +400,20 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="coordinates">
-<span id="c-coords"></span><h1>Coordinates<a class="headerlink" href="#coordinates" title="Link to this heading">¶</a></h1>
-<section id="phase-space-coordinate-system">
-<span id="s-phase-space"></span><h2>Phase Space Coordinate System<a class="headerlink" href="#phase-space-coordinate-system" title="Link to this heading">¶</a></h2>
+          <section class="tex2jax_ignore mathjax_ignore" id="c-coords">
+<span id="coordinates"></span><h1>Coordinates<a class="headerlink" href="#c-coords" title="Link to this heading">¶</a></h1>
+<section id="s-phase-space">
+<span id="phase-space-coordinate-system"></span><h2>Phase Space Coordinate System<a class="headerlink" href="#s-phase-space" title="Link to this heading">¶</a></h2>
 <p>In construction…</p>
 </section>
-<section id="nomenclature">
-<span id="s-nomen"></span><h2>Nomenclature<a class="headerlink" href="#nomenclature" title="Link to this heading">¶</a></h2>
+<section id="s-nomen">
+<span id="nomenclature"></span><h2>Nomenclature<a class="headerlink" href="#s-nomen" title="Link to this heading">¶</a></h2>
 <p>A <code class="docutils literal notranslate"><span class="pre">bend</span></code> element is any element that has a non-zero reference bend strength <code class="docutils literal notranslate"><span class="pre">g_ref</span></code>.
 A <code class="docutils literal notranslate"><span class="pre">patch</span></code> element is any element that has a non-zero <code class="docutils literal notranslate"><span class="pre">PatchParams</span></code> parameters.
 No element is allowed to be both a bend and a patch element at the same time.</p>
 </section>
-<section id="coordinate-systems-used-to-describe-a-machine">
-<span id="s-coords"></span><h2>Coordinate Systems Used to Describe a Machine<a class="headerlink" href="#coordinate-systems-used-to-describe-a-machine" title="Link to this heading">¶</a></h2>
+<section id="s-coords">
+<span id="coordinate-systems-used-to-describe-a-machine"></span><h2>Coordinate Systems Used to Describe a Machine<a class="headerlink" href="#s-coords" title="Link to this heading">¶</a></h2>
 <figure class="align-default" id="f-coords">
 <a class="caption-left reference internal image-reference" href="_images/coordinates.svg"><img alt="_images/coordinates.svg" class="caption-left" src="_images/coordinates.svg" style="width: 70%;" />
 </a>
@@ -447,8 +447,8 @@ alignment shifts, the <code class="docutils literal notranslate"><span class="pr
 The transformation between <code class="docutils literal notranslate"><span class="pre">branch</span></code> and <code class="docutils literal notranslate"><span class="pre">body</span></code> coordinates is given in
 <a class="reference internal" href="#s-lab-body-transform">xxx</a>.</p>
 </section>
-<section id="element-entrance-and-exit-coordinates">
-<span id="s-ent-exi"></span><h2>Element Entrance and Exit Coordinates<a class="headerlink" href="#element-entrance-and-exit-coordinates" title="Link to this heading">¶</a></h2>
+<section id="s-ent-exi">
+<span id="element-entrance-and-exit-coordinates"></span><h2>Element Entrance and Exit Coordinates<a class="headerlink" href="#s-ent-exi" title="Link to this heading">¶</a></h2>
 <figure class="align-default" id="f-ele-coord-frame">
 <a class="caption-left reference internal image-reference" href="_images/ele-coord-frame.svg"><img alt="_images/ele-coord-frame.svg" class="caption-left" src="_images/ele-coord-frame.svg" style="width: 70%;" />
 </a>
@@ -482,8 +482,8 @@ For elements with a <code class="docutils literal notranslate"><span class="pre"
 is dependent upon the patch parameter settings (<a class="reference internal" href="element.html#id5"><span class="std std-ref">xxx</span></a>) and, in general,
 will have a discontinuity.</p>
 </section>
-<section id="branch-coordinate-construction">
-<span id="s-ref-construct"></span><h2>Branch Coordinate Construction<a class="headerlink" href="#branch-coordinate-construction" title="Link to this heading">¶</a></h2>
+<section id="s-ref-construct">
+<span id="branch-coordinate-construction"></span><h2>Branch Coordinate Construction<a class="headerlink" href="#s-ref-construct" title="Link to this heading">¶</a></h2>
 <p>The construction of a branch coordinate system starts at the first element of the branch,
 where <span class="math notranslate nohighlight">\(s\)</span> is zero.</p>
 <p>Starting from the beginning element, succeeding elements are concatenated together
@@ -503,8 +503,8 @@ the branch so that the <span class="math notranslate nohighlight">\((x,y,z)\)</s
 If there are body alignment shifts, the <code class="docutils literal notranslate"><span class="pre">entrance</span></code> and <code class="docutils literal notranslate"><span class="pre">exit</span></code> frames will move with the element.
 However, this does not affect the branch coordinate system.</p>
 </section>
-<section id="coordinate-frames">
-<span id="s-floor"></span><h2>Coordinate Frames<a class="headerlink" href="#coordinate-frames" title="Link to this heading">¶</a></h2>
+<section id="s-floor">
+<span id="coordinate-frames"></span><h2>Coordinate Frames<a class="headerlink" href="#s-floor" title="Link to this heading">¶</a></h2>
 <p>Following MAD, the position of a coordinate frame within a fixed Cartesian coordinate system
 with axes <span class="math notranslate nohighlight">\((X, Y, Z)\)</span> is characterized by a vector <span class="math notranslate nohighlight">\(\bf V\)</span></p>
 <div class="math-wrapper docutils container">
@@ -571,8 +571,8 @@ axis <span class="math notranslate nohighlight">\(\bf u\)</span> (normalized to 
   \end{pmatrix}\end{split}\]</div>
 </div>
 </section>
-<section id="lattice-element-positioning">
-<span id="s-ele-pos"></span><h2>Lattice Element Positioning<a class="headerlink" href="#lattice-element-positioning" title="Link to this heading">¶</a></h2>
+<section id="s-ele-pos">
+<span id="lattice-element-positioning"></span><h2>Lattice Element Positioning<a class="headerlink" href="#s-ele-pos" title="Link to this heading">¶</a></h2>
 <p>The lattice standard, again following MAD, computes <span class="math notranslate nohighlight">\(\bf V\)</span> and <span class="math notranslate nohighlight">\(\bf W\)</span>
 by starting at the first element of the lattice and iteratively using the equations</p>
 <div class="math-wrapper docutils container" id="equation-wws">
@@ -665,8 +665,8 @@ the <span class="math notranslate nohighlight">\(Y\)</span>-axis as it does by d
 For <span class="math notranslate nohighlight">\(\theta_{tr} = \pm\pi/2\)</span>, the bend axis is the <span class="math notranslate nohighlight">\(x\)</span>-axis.
 A value of <span class="math notranslate nohighlight">\(\theta_{tr} = +\pi/2\)</span> represents a downward pointing bend.</p>
 </section>
-<section id="particle-position-transformation">
-<span id="s-position-transform"></span><h2>Particle Position Transformation<a class="headerlink" href="#particle-position-transformation" title="Link to this heading">¶</a></h2>
+<section id="s-position-transform">
+<span id="particle-position-transformation"></span><h2>Particle Position Transformation<a class="headerlink" href="#s-position-transform" title="Link to this heading">¶</a></h2>
 <p>A point <span class="math notranslate nohighlight">\({\bf Q}_g = (X, Y, Z)\)</span> defined in the global coordinate system, when expressed in the
 coordinate system defined by <span class="math notranslate nohighlight">\(({\bf V}, {\bf W})\)</span> is</p>
 <div class="math-wrapper docutils container" id="equation-rwrv">
@@ -679,9 +679,9 @@ transformation of the coordinate system.</p>
 particle’s position <span class="math notranslate nohighlight">\({\bf q} = (x,y,z)\)</span> and momentum <span class="math notranslate nohighlight">\({\bf P} = (P_x, P_y, P_z)\)</span>
 when the coordinate frame is transformed from frame
 <span class="math notranslate nohighlight">\(({\bf V}_{i-1}, {\bf W}_{i-1})\)</span> to frame <span class="math notranslate nohighlight">\(({\bf V}_i, {\bf W}_i)\)</span> is</p>
-<div class="math-wrapper amsmath docutils container" id="equation-f4f9d103-fb01-43eb-9a33-ea24a939cb04">
-<div class="amsmath math notranslate nohighlight" id="equation-f4f9d103-fb01-43eb-9a33-ea24a939cb04">
-<span class="eqno">(10)<a class="headerlink" href="#equation-f4f9d103-fb01-43eb-9a33-ea24a939cb04" title="Permalink to this equation">¶</a></span>\[\begin{align}
+<div class="math-wrapper amsmath docutils container" id="equation-1e3c9e37-7b5d-4ace-9586-984bb5ca2f22">
+<div class="amsmath math notranslate nohighlight" id="equation-1e3c9e37-7b5d-4ace-9586-984bb5ca2f22">
+<span class="eqno">(10)<a class="headerlink" href="#equation-1e3c9e37-7b5d-4ace-9586-984bb5ca2f22" title="Permalink to this equation">¶</a></span>\[\begin{align}
 {\bf q}_i &amp;= {\bf S}_i^{-1} \, \left( {\bf q}_{i-1} - {\bf L}_i \right),
 \label{rwlr} \\
 {\bf P}_i &amp;= {\bf S}_i^{-1} \, {\bf P}_{i-1}
@@ -695,8 +695,8 @@ rotation matrices, <span class="math notranslate nohighlight">\({\bf S}\)</span>
 \[  {\bf S}^{-1} = {\bf S}^T\]</div>
 </div>
 </section>
-<section id="transformation-between-branch-and-element-body-coordinates">
-<span id="s-lab-body-transform"></span><h2>Transformation Between Branch and Element Body Coordinates<a class="headerlink" href="#transformation-between-branch-and-element-body-coordinates" title="Link to this heading">¶</a></h2>
+<section id="s-lab-body-transform">
+<span id="transformation-between-branch-and-element-body-coordinates"></span><h2>Transformation Between Branch and Element Body Coordinates<a class="headerlink" href="#s-lab-body-transform" title="Link to this heading">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code> coordinate system is the coordinate system attached to an element. Without any
 alignment shifts, the <a class="reference internal" href="#s-ref-construct"><code class="docutils literal notranslate"><span class="pre">branch</span></code> coordinates</a> and <code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code> coordinates
 are the same. With alignment shifts, the transformation between <code class="docutils literal notranslate"><span class="pre">branch</span></code> and <code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">body</span></code>
@@ -712,8 +712,8 @@ tracking backwards. Similarly, after a particle has been tracked through the phy
 actual downstream face, the tracking to the nominal downstream end involves transforming to
 branch coordinates (using <span class="math notranslate nohighlight">\(s = L\)</span> in the equations below) and then propagating the particle as
 in a field free drift space to the nominal downstream edge.</p>
-<section id="straight-element-misalignment-transformation">
-<span id="s-straight-mis"></span><h3>Straight Element Misalignment Transformation<a class="headerlink" href="#straight-element-misalignment-transformation" title="Link to this heading">¶</a></h3>
+<section id="s-straight-mis">
+<span id="straight-element-misalignment-transformation"></span><h3>Straight Element Misalignment Transformation<a class="headerlink" href="#s-straight-mis" title="Link to this heading">¶</a></h3>
 <p>For straight line elements, given a branch coordinate frame <span class="math notranslate nohighlight">\(\Lambda_s\)</span> with an origin a distance
 <span class="math notranslate nohighlight">\(s\)</span> from the beginning of the element, misalignments will shift the coordinates to a new reference
 frame denoted <span class="math notranslate nohighlight">\(E_s\)</span>. Since misalignments are defined with respect to the middle of the element, the
@@ -748,8 +748,8 @@ For this transformation, <span class="math notranslate nohighlight">\(\bf S\)</s
 <p>Notice that with this definition of how elements are misaligned, the position of the center of a
 non-bend misaligned element depends only on the offsets, and is independent of the pitches and tilt.</p>
 </section>
-<section id="bend-element-misalignment-transformation">
-<span id="s-bend-mis"></span><h3>Bend Element Misalignment Transformation<a class="headerlink" href="#bend-element-misalignment-transformation" title="Link to this heading">¶</a></h3>
+<section id="s-bend-mis">
+<span id="bend-element-misalignment-transformation"></span><h3>Bend Element Misalignment Transformation<a class="headerlink" href="#s-bend-mis" title="Link to this heading">¶</a></h3>
 <p>For <code class="docutils literal notranslate"><span class="pre">Bend</span></code> element positioning, besides the standard <code class="docutils literal notranslate"><span class="pre">AlignmentParams</span></code> parameters, there is the
 <code class="docutils literal notranslate"><span class="pre">tilt_ref</span></code> (<span class="math notranslate nohighlight">\(\theta_{tr}\)</span>) parameter (see <a class="reference internal" href="element.html#id4"><span class="std std-ref">BendParams</span></a>).
 The latter affects both the reference orbit and the bend position.
@@ -817,7 +817,7 @@ misaligned element depends only on the offsets and is independent of the rotatio
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Ramping through a spin-orbit resonance with SciBmad (Python example compatible with SciBmad version &lt; 0.5.0)</div>
+                <div class="title">Ramping through a spin-orbit resonance with SciBmad (Python example)</div>
                 
               </div>
             </a>
@@ -852,17 +852,17 @@ misaligned element depends only on the offsets and is independent of the rotatio
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Coordinates</a><ul>
-<li><a class="reference internal" href="#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
-<li><a class="reference internal" href="#nomenclature">Nomenclature</a></li>
-<li><a class="reference internal" href="#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
-<li><a class="reference internal" href="#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
-<li><a class="reference internal" href="#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li><a class="reference internal" href="#coordinate-frames">Coordinate Frames</a></li>
-<li><a class="reference internal" href="#lattice-element-positioning">Lattice Element Positioning</a></li>
-<li><a class="reference internal" href="#particle-position-transformation">Particle Position Transformation</a></li>
-<li><a class="reference internal" href="#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a><ul>
-<li><a class="reference internal" href="#straight-element-misalignment-transformation">Straight Element Misalignment Transformation</a></li>
-<li><a class="reference internal" href="#bend-element-misalignment-transformation">Bend Element Misalignment Transformation</a></li>
+<li><a class="reference internal" href="#s-phase-space">Phase Space Coordinate System</a></li>
+<li><a class="reference internal" href="#s-nomen">Nomenclature</a></li>
+<li><a class="reference internal" href="#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li><a class="reference internal" href="#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li><a class="reference internal" href="#s-ref-construct">Branch Coordinate Construction</a></li>
+<li><a class="reference internal" href="#s-floor">Coordinate Frames</a></li>
+<li><a class="reference internal" href="#s-ele-pos">Lattice Element Positioning</a></li>
+<li><a class="reference internal" href="#s-position-transform">Particle Position Transformation</a></li>
+<li><a class="reference internal" href="#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a><ul>
+<li><a class="reference internal" href="#s-straight-mis">Straight Element Misalignment Transformation</a></li>
+<li><a class="reference internal" href="#s-bend-mis">Bend Element Misalignment Transformation</a></li>
 </ul>
 </li>
 </ul>

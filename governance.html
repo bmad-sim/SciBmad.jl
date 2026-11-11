@@ -224,7 +224,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#pgs">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -251,14 +251,14 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpuparallel">GPU Parallelization</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
@@ -314,15 +314,15 @@
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -335,11 +335,11 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#edge-kick">Edge Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#energy-kick">Energy Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#rf-phase">RF Phase</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
@@ -439,7 +439,7 @@ SC members can resign or be removed by majority vote, e.g., due to inactivity, b
 <h2>Technical Committee<a class="headerlink" href="#technical-committee" title="Link to this heading">¶</a></h2>
 <p>The people most involved in the programming of SciBmad are trusted to act in the full code’s best interest and TC membership should enable them to develop the code without much interference.</p>
 <section id="id1">
-<h3>Current Roster<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<span id="current-roster-1"></span><h3>Current Roster<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Joe Devlin</p></li>
 <li><p>David Sagan</p></li>
@@ -447,21 +447,21 @@ SC members can resign or be removed by majority vote, e.g., due to inactivity, b
 </ul>
 </section>
 <section id="id2">
-<h3>Role<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<span id="role-1"></span><h3>Role<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <p>Individual TC members can accept pull requests from all TC members.
 Pull requests from non-TC members need two approvals to be accepted. This number can be changed when the number of TC members increases and should remain at least 50% of the number of TC members.
 The TC can propose governance changes to the SC.
 The TC can propose new TC members to be approved by the SC.</p>
 </section>
 <section id="id3">
-<h3>Decision Process<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<span id="decision-process-1"></span><h3>Decision Process<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <p>Discussion in the TC usually happens in the weekly developer meetings (currently Thursday 4pm EST).
 The weekly developer meeting is open to the public.
 Votes in the TC are cast in a non-confidential manner.
 Meeting notes and decisions of the weekly developers meeting are being maintained at <a class="reference external" href="https://docs.google.com/document/d/1PLLP6VJxmtq8eQGjdXAwLCNX66hAswFtFeLSL3kq2PQ/edit?tab=t.0">https://docs.google.com/document/d/1PLLP6VJxmtq8eQGjdXAwLCNX66hAswFtFeLSL3kq2PQ/edit?tab=t.0</a></p>
 </section>
 <section id="id4">
-<h3>Appointment Process<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<span id="appointment-process-1"></span><h3>Appointment Process<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <p>Members of the TC are appointed by the steering committee by majority vote.
 Any TC or SC member can suggest new TC members for a vote of the SC.
 TC members are expected to regularly attend and contribute to the weekly developer meetings.

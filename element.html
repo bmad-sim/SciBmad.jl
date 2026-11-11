@@ -224,7 +224,7 @@
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameters">Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#parameter-groups">Parameter Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pgs">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -251,14 +251,14 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpuparallel">GPU Parallelization</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
@@ -314,15 +314,15 @@
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -335,11 +335,11 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#edge-kick">Edge Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#energy-kick">Energy Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#rf-phase">RF Phase</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
@@ -400,8 +400,8 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="defining-a-latelement">
-<span id="defining-latelement"></span><h1>Defining a LatElement<a class="headerlink" href="#defining-a-latelement" title="Link to this heading">¶</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="defining-latelement">
+<span id="defining-a-latelement"></span><h1>Defining a LatElement<a class="headerlink" href="#defining-latelement" title="Link to this heading">¶</a></h1>
 <p>To construct a <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>,</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -710,10 +710,10 @@ for that parameter group.</p>
 <p>Note that parameters are split into “parameter groups”, for organization and convenience.
 They are all documented below.</p>
 </section>
-<section id="parameter-groups">
-<span id="pgs"></span><h2>Parameter Groups<a class="headerlink" href="#parameter-groups" title="Link to this heading">¶</a></h2>
-<section id="alignmentparams">
-<span id="id2"></span><span id="alignment-params"></span><h3>AlignmentParams<a class="headerlink" href="#alignmentparams" title="Link to this heading">¶</a></h3>
+<section id="pgs">
+<span id="parameter-groups"></span><h2>Parameter Groups<a class="headerlink" href="#pgs" title="Link to this heading">¶</a></h2>
+<section id="id2">
+<span id="alignmentparams"></span><span id="alignment-params"></span><h3>AlignmentParams<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">AlignmentParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">AlignmentParams</span>
@@ -732,8 +732,8 @@ Rotations are applied in order: <code class="docutils literal notranslate"><span
 </ul>
 </div>
 </section>
-<section id="apertureparams">
-<span id="id3"></span><span id="aperture-params"></span><h3>ApertureParams<a class="headerlink" href="#apertureparams" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<span id="apertureparams"></span><span id="aperture-params"></span><h3>ApertureParams<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">ApertureParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ApertureParams</span>
@@ -752,8 +752,8 @@ Rotations are applied in order: <code class="docutils literal notranslate"><span
 </ul>
 </div>
 </section>
-<section id="bmultipoleparams">
-<span id="multipole-solenoid-params"></span><span id="multipole-sol-params"></span><h3>BMultipoleParams<a class="headerlink" href="#bmultipoleparams" title="Link to this heading">¶</a></h3>
+<section id="multipole-solenoid-params">
+<span id="bmultipoleparams"></span><span id="multipole-sol-params"></span><h3>BMultipoleParams<a class="headerlink" href="#multipole-solenoid-params" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">BMultipoleParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BMultipoleParams</span>
@@ -809,8 +809,8 @@ for a given multipole order are normalized and integrated. E.g.</p>
 </ul>
 </div>
 </section>
-<section id="bendparams">
-<span id="id4"></span><span id="bend-params"></span><h3>BendParams<a class="headerlink" href="#bendparams" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<span id="bendparams"></span><span id="bend-params"></span><h3>BendParams<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">BendParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">BendParams</span>
@@ -830,8 +830,8 @@ element. Does not specify any magnetic field.</p>
 </ul>
 </div>
 </section>
-<section id="emfieldparams">
-<span id="emfield-params"></span><h3>EMFieldParams<a class="headerlink" href="#emfieldparams" title="Link to this heading">¶</a></h3>
+<section id="emfield-params">
+<span id="emfieldparams"></span><h3>EMFieldParams<a class="headerlink" href="#emfield-params" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">EMFieldParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">EMFieldParams</span>
@@ -900,8 +900,8 @@ tuple <code class="docutils literal notranslate"><span class="pre">(C,</span> <s
 </ul>
 </div>
 </section>
-<section id="ibsparams">
-<span id="ibs-params"></span><h3>IBSParams<a class="headerlink" href="#ibsparams" title="Link to this heading">¶</a></h3>
+<section id="ibs-params">
+<span id="ibsparams"></span><h3>IBSParams<a class="headerlink" href="#ibs-params" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">IBSParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">IBSParams</span>
@@ -1007,8 +1007,8 @@ or storing extra information about a given element.</p>
 </ul>
 </div>
 </section>
-<section id="patchparams">
-<span id="id5"></span><span id="patch-params"></span><h3>PatchParams<a class="headerlink" href="#patchparams" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<span id="patchparams"></span><span id="patch-params"></span><h3>PatchParams<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">PatchParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">PatchParams</span>
@@ -1028,8 +1028,8 @@ Rotations are applied in order: <code class="docutils literal notranslate"><span
 </ul>
 </div>
 </section>
-<section id="rfparams">
-<span id="id6"></span><span id="rf-params"></span><h3>RFParams<a class="headerlink" href="#rfparams" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<span id="rfparams"></span><span id="rf-params"></span><h3>RFParams<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <div class="julia-docstring docutils container">
 <p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">RFParams</span></code> — <em>Type</em>.</p>
 <div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">RFParams</span>
@@ -1164,21 +1164,21 @@ in an element. If no collective effects are included, then prefer to vary <code 
 <li><a class="reference internal" href="#">Defining a LatElement</a><ul>
 <li><a class="reference internal" href="#element-kinds">Element Kinds</a></li>
 <li><a class="reference internal" href="#parameters">Parameters</a></li>
-<li><a class="reference internal" href="#parameter-groups">Parameter Groups</a><ul>
-<li><a class="reference internal" href="#alignmentparams">AlignmentParams</a></li>
-<li><a class="reference internal" href="#apertureparams">ApertureParams</a></li>
-<li><a class="reference internal" href="#bmultipoleparams">BMultipoleParams</a></li>
+<li><a class="reference internal" href="#pgs">Parameter Groups</a><ul>
+<li><a class="reference internal" href="#id2">AlignmentParams</a></li>
+<li><a class="reference internal" href="#id3">ApertureParams</a></li>
+<li><a class="reference internal" href="#multipole-solenoid-params">BMultipoleParams</a></li>
 <li><a class="reference internal" href="#beamlineparams">BeamlineParams</a></li>
-<li><a class="reference internal" href="#bendparams">BendParams</a></li>
-<li><a class="reference internal" href="#emfieldparams">EMFieldParams</a></li>
+<li><a class="reference internal" href="#id4">BendParams</a></li>
+<li><a class="reference internal" href="#emfield-params">EMFieldParams</a></li>
 <li><a class="reference internal" href="#emultipoleparams">EMultipoleParams</a></li>
 <li><a class="reference internal" href="#fourpotentialparams">FourPotentialParams</a></li>
-<li><a class="reference internal" href="#ibsparams">IBSParams</a></li>
+<li><a class="reference internal" href="#ibs-params">IBSParams</a></li>
 <li><a class="reference internal" href="#initialbeamlineparams">InitialBeamlineParams</a></li>
 <li><a class="reference internal" href="#mapparams">MapParams</a></li>
 <li><a class="reference internal" href="#metaparams">MetaParams</a></li>
-<li><a class="reference internal" href="#patchparams">PatchParams</a></li>
-<li><a class="reference internal" href="#rfparams">RFParams</a></li>
+<li><a class="reference internal" href="#id5">PatchParams</a></li>
+<li><a class="reference internal" href="#id6">RFParams</a></li>
 <li><a class="reference internal" href="#universalparams">UniversalParams</a></li>
 </ul>
 </li>

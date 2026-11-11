@@ -224,7 +224,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#pgs">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -251,14 +251,14 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpuparallel">GPU Parallelization</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
@@ -314,15 +314,15 @@
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul class="current">
 <li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -335,11 +335,11 @@
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" checked="" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#justification">Justification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#edge-kick">Edge Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#energy-kick">Energy Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rf-phase">RF Phase</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
@@ -425,8 +425,8 @@ Rosenzweig–Serafini (R&amp;S) <span class="bibtex-citation" id="id2">[<a class
 included via a symplectic fringe Hamiltonian along with a
 pondermotive focusing term that is applied for standing-wave cavities.</p>
 </section>
-<section id="kick-drift-kick-model">
-<span id="sc-kdk"></span><h2>Kick-Drift-Kick Model<a class="headerlink" href="#kick-drift-kick-model" title="Link to this heading">¶</a></h2>
+<section id="sc-kdk">
+<span id="kick-drift-kick-model"></span><h2>Kick-Drift-Kick Model<a class="headerlink" href="#sc-kdk" title="Link to this heading">¶</a></h2>
 <p>The cavity of total length <code class="docutils literal notranslate"><span class="pre">L</span></code> has an “active” length specified by <code class="docutils literal notranslate"><span class="pre">L_active</span></code>
 which is the length over which there is a finite RF field. The active length
 is centered longitudinally in the element. If there are (DC) multipole or solenoid
@@ -446,8 +446,8 @@ to <span class="math notranslate nohighlight">\((t, p_E)\)</span> <strong>energy
 the energy, and <span class="math notranslate nohighlight">\(P_0\)</span> beging the reference momentum.
 After any kicks have been applied, a conversion back to momentum coordinates is done.</p>
 </section>
-<section id="edge-kick">
-<span id="sc-edge"></span><h2>Edge Kick<a class="headerlink" href="#edge-kick" title="Link to this heading">¶</a></h2>
+<section id="sc-edge">
+<span id="edge-kick"></span><h2>Edge Kick<a class="headerlink" href="#sc-edge" title="Link to this heading">¶</a></h2>
 <p>At the entrance and exit ends of the active region, the radial electric fringe
 field produces a transverse kick. Following R&amp;S <span class="bibtex-citation" id="id3">[<a class="reference internal" href="#id5" title="J. Rosenzweig and L. Serafini. Transverse particle motion in radio-frequency linear accelerators. Phys. Rev. E, 49:1599–1602, Feb 1994. URL: https://link.aps.org/doi/10.1103/PhysRevE.49.1599, doi:10.1103/PhysRevE.49.1599.">RS94</a>]</span>
 (their Eq. (12)), the appropriate fringe Hamiltonian to reproduce this, in energy coordinates, is:</p>
@@ -481,8 +481,8 @@ the exit kick will be defocusing for accelerated particles.</p>
 \[\int_\text{kick} {\bf E} = \mp \frac{G}{2} \, \cos(\phi_{RF}) \, (x, y, 0)\]</div>
 </div>
 </section>
-<section id="energy-kick">
-<span id="sc-energy"></span><h2>Energy Kick<a class="headerlink" href="#energy-kick" title="Link to this heading">¶</a></h2>
+<section id="sc-energy">
+<span id="energy-kick"></span><h2>Energy Kick<a class="headerlink" href="#sc-energy" title="Link to this heading">¶</a></h2>
 <p>Kick points at the cell boundaries are indexed from zero to <span class="math notranslate nohighlight">\(N_c\)</span> (set with the <code class="docutils literal notranslate"><span class="pre">n_cells</span></code> parameter).
 The energy kick at the <span class="math notranslate nohighlight">\(n^{th}\)</span> kick point is</p>
 <div class="math-wrapper docutils container" id="equation-eq-vk">
@@ -497,8 +497,8 @@ two end kick points and <span class="math notranslate nohighlight">\(\kappa_n = 
 \[\int_\text{kick} {\bf E} = (0, 0, c \cdot dE / q)\]</div>
 </div>
 </section>
-<section id="rf-phase">
-<span id="sc-phase"></span><h2>RF Phase<a class="headerlink" href="#rf-phase" title="Link to this heading">¶</a></h2>
+<section id="sc-phase">
+<span id="rf-phase"></span><h2>RF Phase<a class="headerlink" href="#sc-phase" title="Link to this heading">¶</a></h2>
 <p>At the <span class="math notranslate nohighlight">\(n^{th}\)</span> kick point, the RF phase <span class="math notranslate nohighlight">\(\phi_{RF}(n)\)</span> in the above equations is taken to be</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -533,8 +533,8 @@ point. This is important for correctly modeling sub-relativistic
 beams where the phase velocity of the reference particle can differ
 significantly from the speed of light.</p>
 </section>
-<section id="standing-wave-pondermotive-focusing">
-<span id="sc-ponder"></span><h2>Standing-Wave Pondermotive Focusing<a class="headerlink" href="#standing-wave-pondermotive-focusing" title="Link to this heading">¶</a></h2>
+<section id="sc-ponder">
+<span id="standing-wave-pondermotive-focusing"></span><h2>Standing-Wave Pondermotive Focusing<a class="headerlink" href="#sc-ponder" title="Link to this heading">¶</a></h2>
 <p>For a <em>traveling-wave</em> cavity, there is a forward-propagating wave
 and this wave provides both acceleration and the edge kick of Section <a class="reference internal" href="#sc-edge"><span class="std std-ref">Edge Kick</span></a>.
 A <em>standing-wave</em> cavity is modeled as the superposition of a
@@ -655,11 +655,11 @@ and at the kick points at the cell ends alongside the RF kicks.</p>
 <li><a class="reference internal" href="#">SaganCavity Physics</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#justification">Justification</a></li>
-<li><a class="reference internal" href="#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
-<li><a class="reference internal" href="#edge-kick">Edge Kick</a></li>
-<li><a class="reference internal" href="#energy-kick">Energy Kick</a></li>
-<li><a class="reference internal" href="#rf-phase">RF Phase</a></li>
-<li><a class="reference internal" href="#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li><a class="reference internal" href="#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li><a class="reference internal" href="#sc-edge">Edge Kick</a></li>
+<li><a class="reference internal" href="#sc-energy">Energy Kick</a></li>
+<li><a class="reference internal" href="#sc-phase">RF Phase</a></li>
+<li><a class="reference internal" href="#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
 <li><a class="reference internal" href="#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
 <li><a class="reference internal" href="#references">References</a></li>
 </ul>

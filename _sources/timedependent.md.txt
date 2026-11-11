@@ -63,6 +63,19 @@ Really, anything can be a time-dependent parameter. Even misalignments:
 earthquake = Quadrupole(Kn1=0.36, L=0.5, x_offset=0.1*sin(120*t), y_offset=0.1*sin(120*t));
 ```
 
+A time-dependent parameter can also differ from particle to particle, by using a
+[`BatchParam`](batch.md) in its expression. Each particle sees its element of the batch, as for
+any other `BatchParam`. For example, an AC kicker with a different frequency for each of three
+particles:
+
+```{code-cell} julia
+ω = BatchParam([1e6, 2e6, 3e6])
+ac_kicker2 = VKicker(L=0.5, Ks0=1e-4*sin(ω*t))
+bl = Beamline([Drift(L=1.0), ac_kicker2], species_ref=Species("electron"), E_ref=18e9)
+res = track(bl, v0=zeros(3, 6))
+res.v[:, 4, end] # vertical kicks of the three particles
+```
+
 ## Energy Ramping
 
 In SciBmad, "ramping" refers to ramping the reference energy of a `Bunch`. To ramp, simply

@@ -224,7 +224,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#pgs">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -251,14 +251,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tracking-a-different-species">Tracking a Different Species</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#track-callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#coordinates-number-type">Coordinates Number Type</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cpu-parallelization">CPU Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#gpu-parallelization">GPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpuparallel">GPU Parallelization</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
@@ -314,15 +314,15 @@
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -335,11 +335,11 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#edge-kick">Edge Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#energy-kick">Energy Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#rf-phase">RF Phase</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
@@ -400,8 +400,8 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="track">
-<span id="track1"></span><h1>Track<a class="headerlink" href="#track" title="Link to this heading">¶</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="track1">
+<span id="track"></span><h1>Track<a class="headerlink" href="#track1" title="Link to this heading">¶</a></h1>
 <section id="basics">
 <h2>Basics<a class="headerlink" href="#basics" title="Link to this heading">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">track</span></code> function can be used for all particle tracking, including spin tracking with
@@ -444,7 +444,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.002913478 seconds
+elapsed_time = 8.3296e-5 seconds
 
 state[1:1, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -508,7 +508,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000199423 seconds
+elapsed_time = 3.0616e-5 seconds
 
 state[1:1, 1:6]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:6]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -518,6 +518,10 @@ bunch:	Bunch at the end of tracking
 </div>
 </div>
 </div>
+<p>The parameters of the beamline, including <a class="reference internal" href="defexpr.html"><span class="std std-doc">deferred expressions</span></a>, are evaluated
+once when <code class="docutils literal notranslate"><span class="pre">track</span></code> is called, and kept for all turns of that call. Changes to them take effect
+at the next call of <code class="docutils literal notranslate"><span class="pre">track</span></code>. To have parameters change during tracking (for example a ramp),
+use <a class="reference internal" href="timedependent.html"><span class="std std-doc">time-dependent parameters</span></a>.</p>
 <p>To do spin tracking, simply set <code class="docutils literal notranslate"><span class="pre">spin=true</span></code>. This will initialize all particles with their
 own spin <a class="reference external" href="https://en.wikipedia.org/wiki/Quaternion">quaternion</a>, each of which will be
 tracked along with the particle. A quaternion is essentially a rotation matrix - by tracking
@@ -546,7 +550,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000521326 seconds
+elapsed_time = 0.000124718 seconds
 
 state[1:1, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -577,21 +581,21 @@ use the post-processing function <code class="docutils literal notranslate"><spa
  0.0  1.0  0.0
 
 [:, :, 2] =
- -1.23826e-17  1.0  -1.10358e-16
+ -4.56097e-20  1.0  -2.27956e-20
 
 [:, :, 3] =
- 6.31344e-17  1.0  -5.42472e-17
+ -5.49677e-20  1.0  -2.12903e-20
 
 ;;; … 
 
 [:, :, 9] =
- -7.75215e-16  1.0  3.88642e-16
+ -2.60899e-16  1.0  -2.3486e-16
 
 [:, :, 10] =
- -5.59851e-17  1.0  -8.93209e-16
+ 3.06584e-16  1.0  -1.70839e-16
 
 [:, :, 11] =
- 9.61429e-16  1.0  2.95138e-16
+ 1.17471e-16  1.0  3.53528e-16
 </pre></div>
 </div>
 </div>
@@ -802,11 +806,11 @@ Setting bunch.p_over_q_ref = -60.04153713566737 (reference p_over_q_ref from the
 </pre></div>
 </div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6-element Vector{Float64}:
-  0.0028841216027158728
-  0.0003383657925571668
-  4.983269456867931e-18
- -7.460755942673629e-20
- -0.0011932726181699566
+  0.002884121602613005
+  0.00033836579267463473
+  4.983269458042861e-18
+ -7.460755923359613e-20
+ -0.0011932726181455356
   0.001
 </pre></div>
 </div>
@@ -815,8 +819,8 @@ Setting bunch.p_over_q_ref = -60.04153713566737 (reference p_over_q_ref from the
 <p>A particle with the opposite charge, such as a positron in an electron ring, is bent the other
 way by the dipoles and is quickly lost, just as it would be in the real ring.</p>
 </section>
-<section id="callbacks">
-<span id="track-callbacks"></span><h2>Callbacks<a class="headerlink" href="#callbacks" title="Link to this heading">¶</a></h2>
+<section id="track-callbacks">
+<span id="callbacks"></span><h2>Callbacks<a class="headerlink" href="#track-callbacks" title="Link to this heading">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">Bunch</span></code> struct may also contain a tuple of functions <code class="docutils literal notranslate"><span class="pre">callbacks</span></code>. These functions are
 executed <strong>every integration step</strong>, and allow users to inject their own code into the
 tracking if desired. An element with <code class="docutils literal notranslate"><span class="pre">n_slices</span></code> slices of <code class="docutils literal notranslate"><span class="pre">n_steps</span></code> steps each (see
@@ -896,7 +900,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 3.461215318 seconds
+elapsed_time = 5.6565e-5 seconds
 
 state[1:1, 1:2]:	States indexable as		 state[particle, turn+1]
 v[1:1, 1:6, 1:2]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]
@@ -911,8 +915,8 @@ bunch:	Bunch at the end of tracking
 <p>When 32-bit floats are used for the particle coordinates, <em>all</em> numbers in the tracking (e.g. magnet strengths, lengths, and time-dependent parameters) are 32-bit floats too.</p>
 </div>
 </section>
-<section id="cpu-parallelization">
-<span id="cpuparallel"></span><h2>CPU Parallelization<a class="headerlink" href="#cpu-parallelization" title="Link to this heading">¶</a></h2>
+<section id="cpuparallel">
+<span id="cpu-parallelization"></span><h2>CPU Parallelization<a class="headerlink" href="#cpuparallel" title="Link to this heading">¶</a></h2>
 <p>On the CPU, all tracking will automatically be parallelized using explicitly-programmed
 single instruction, multiple data (SIMD) instructions if your hardware supports it. To
 disable explicit SIMD (and rely on potential compiler auto-vectorization), run <code class="docutils literal notranslate"><span class="pre">track</span></code> with
@@ -941,15 +945,15 @@ full long-term run.</p>
 </div>
 </section>
 <section id="multiple-processes-nodes">
-<h3>Multiple Processes/Nodes<a class="headerlink" href="#multiple-processes-nodes" title="Link to this heading">¶</a></h3>
+<span id="multiple-processesnodes"></span><h3>Multiple Processes/Nodes<a class="headerlink" href="#multiple-processes-nodes" title="Link to this heading">¶</a></h3>
 <p>(Documentation in development, see
 <a class="reference external" href="https://docs.julialang.org/en/v1/manual/distributed-computing/">Distributed</a> and
 <a class="reference external" href="https://github.com/JuliaParallel/SlurmClusterManager.jl">SlurmClusterManager</a> in the
 meantime)</p>
 </section>
 </section>
-<section id="gpu-parallelization">
-<span id="gpuparallel"></span><h2>GPU Parallelization<a class="headerlink" href="#gpu-parallelization" title="Link to this heading">¶</a></h2>
+<section id="gpuparallel">
+<span id="gpu-parallelization"></span><h2>GPU Parallelization<a class="headerlink" href="#gpuparallel" title="Link to this heading">¶</a></h2>
 <p><strong>All SciBmad tracking is fully GPU parallelized and branchless.</strong> To do particle tracking
 on the GPU, either initialize a <code class="docutils literal notranslate"><span class="pre">Bunch</span></code> with the corresponding device <code class="docutils literal notranslate"><span class="pre">GPUArray</span></code>, or provide
 the <code class="docutils literal notranslate"><span class="pre">GPUArray</span></code> to <code class="docutils literal notranslate"><span class="pre">track</span></code>. For example, to do GPU-parallelized spin tracking on a CUDA GPU,</p>
@@ -1047,14 +1051,14 @@ meantime)</p>
 <li><a class="reference internal" href="#configuration-settings">Configuration Settings</a></li>
 <li><a class="reference internal" href="#the-bunch-struct">The Bunch Struct</a></li>
 <li><a class="reference internal" href="#tracking-a-different-species">Tracking a Different Species</a></li>
-<li><a class="reference internal" href="#callbacks">Callbacks</a></li>
+<li><a class="reference internal" href="#track-callbacks">Callbacks</a></li>
 <li><a class="reference internal" href="#coordinates-number-type">Coordinates Number Type</a></li>
-<li><a class="reference internal" href="#cpu-parallelization">CPU Parallelization</a><ul>
+<li><a class="reference internal" href="#cpuparallel">CPU Parallelization</a><ul>
 <li><a class="reference internal" href="#multithreading">Multithreading</a></li>
 <li><a class="reference internal" href="#multiple-processes-nodes">Multiple Processes/Nodes</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#gpu-parallelization">GPU Parallelization</a><ul>
+<li><a class="reference internal" href="#gpuparallel">GPU Parallelization</a><ul>
 <li><a class="reference internal" href="#multiple-gpus">Multiple GPUs</a></li>
 </ul>
 </li>

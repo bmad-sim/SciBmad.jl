@@ -224,7 +224,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#pgs">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -251,14 +251,14 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpuparallel">GPU Parallelization</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
@@ -314,15 +314,15 @@
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -335,11 +335,11 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#edge-kick">Edge Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#energy-kick">Energy Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#rf-phase">RF Phase</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
@@ -605,10 +605,10 @@ rebuild <code class="docutils literal notranslate"><span class="pre">fodo</span>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
- q1     = 0.05489859401259576
- q2     = 0.054013300010008904
- etac   = 0.019165878242797172
- alphac = 0.01916587904872287
+ q1     = 0.05489859401259567
+ q2     = 0.054013300010008834
+ etac   = 0.01916587824279721
+ alphac = 0.019165879048722908
 
 df:
 <span class=" -Color -Color-Bold">9×26 DataFrame</span>
@@ -650,10 +650,10 @@ the columns returned) to exactly what you ask for, which can save computation ti
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
- q1     = 0.05489859401259576
- q2     = 0.054013300010008904
- etac   = 0.019165878242797172
- alphac = 0.01916587904872287
+ q1     = 0.05489859401259567
+ q2     = 0.054013300010008834
+ etac   = 0.01916587824279721
+ alphac = 0.019165879048722908
 
 df:
 <span class=" -Color -Color-Bold">9×7 DataFrame</span>
@@ -711,10 +711,10 @@ is the second derivative w.r.t. δ.</p>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
- q1     = 0.054898594012595635 - 0.0723176764295375 δ
- q2     = 0.05401330001000886 - 0.008253153240321111 δ
- etac   = 0.019165878242797273 + 0.10369346694612037 δ
- alphac = 0.01916587904872304 + 0.1036934645592356 δ
+ q1     = 0.05489859401259557 - 0.07231767642953767 δ
+ q2     = 0.05401330001000872 - 0.008253153240320936 δ
+ etac   = 0.019165878242797328 + 0.10369346694612076 δ
+ alphac = 0.019165879048723095 + 0.10369346455923599 δ
 
 df:
 <span class=" -Color -Color-Bold">9×8 DataFrame</span>
@@ -745,7 +745,7 @@ variables <code class="docutils literal notranslate"><span class="pre">J₁</spa
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
- 0.05401330001000886 - 0.008253153240321111 δ
+ 0.05401330001000872 - 0.008253153240320936 δ
 </pre></div>
 </div>
 </div>
@@ -761,7 +761,7 @@ is the coefficient of <code class="docutils literal notranslate"><span class="pr
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-0.008253153240321111
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-0.008253153240320936
 </pre></div>
 </div>
 </div>
@@ -772,9 +772,7 @@ coefficients of <code class="docutils literal notranslate"><span class="pre">J�
 <p>Using the operator notation, the “nonlinear effective Hamiltonian” in linear action-angle variables is defined as the polynomial <span class="math notranslate nohighlight">\(h\)</span> in</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\mathcal{M} = \mathcal{A}_{cs}^{-1}\exp{(: h : )} \mathcal{R} \mathcal{A}_{cs}
-\]</div>
+\[\mathcal{M} = \mathcal{A}_{cs}^{-1}\exp{(: h : )} \mathcal{R} \mathcal{A}_{cs}\]</div>
 </div>
 <p>where <span class="math notranslate nohighlight">\(\mathcal{M}\)</span> is the compositional operator representing the one turn map and
 <span class="math notranslate nohighlight">\(\mathcal{A}_{cs}\)</span> is the compositional operator representing only a linear (Courant Snyder)
@@ -794,10 +792,10 @@ coasting, we can take chromatic derivatives as described before.</p>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
 summ:
- q1     = 0.054898594012595725 + 0.07905747898014202 δ
- q2     = 0.05401330001000888 - 0.008253153240321238 δ
- etac   = 0.019165878242797172 - 0.03645782324708626 δ
- alphac = 0.01916587904872294 - 0.036457825633971014 δ
+ q1     = 0.05489859401259567 + 0.0790574789801424 δ
+ q2     = 0.05401330001000883 - 0.00825315324032128 δ
+ etac   = 0.01916587824279721 - 0.03645782324708666 δ
+ alphac = 0.019165879048722977 - 0.03645782563397141 δ
 
 df:
 <span class=" -Color -Color-Bold">9×6 DataFrame</span>
@@ -840,26 +838,26 @@ and the amplitude-dependent spin tune:</p>
 Descriptor(NV=6, MO=2)
 INDEX  COEFFICIENT             ORDER   EXPONENTS
 ----------------------------------------------------
-  1:  -2.5729811718970192E-15    1     1 0  0 0  0 0
-  1:  -5.7912105164160302E-16    1     0 1  0 0  0 0
-  1:   2.8726619690311641E+00    1     0 0  1 0  0 0
-  1:   7.1359575552105681E-01    1     0 0  0 1  0 0
-  1:   7.6740389427510141E-15    1     0 0  0 0  0 1
-  1:  -8.1386438069829196E-16    2     2 0  0 0  0 0
-  1:   2.7709841195167283E-14    2     1 1  0 0  0 0
-  1:  -1.6599251993596687E-13    2     0 2  0 0  0 0
-  1:  -9.8609301484051510E+00    2     1 0  1 0  0 0
-  1:   2.5979472338669467E+00    2     0 1  1 0  0 0
-  1:  -1.9539926245238080E-15    2     0 0  2 0  0 0
-  1:   4.6570660212420885E+00    2     1 0  0 1  0 0
-  1:   5.5944457674648092E+01    2     0 1  0 1  0 0
-  1:   2.4868599294069415E-14    2     0 0  1 1  0 0
-  1:   8.4718971049770415E-14    2     0 0  0 2  0 0
-  1:  -4.3128201306421581E-14    2     1 0  0 0  0 1
-  1:   2.0729409438531794E-14    2     0 1  0 0  0 1
-  1:  -1.6861654804791822E+01    2     0 0  1 0  0 1
-  1:   1.6098131882682825E+01    2     0 0  0 1  0 1
-  1:  -9.5621901981671188E-14    2     0 0  0 0  0 2
+  1:  -2.5599950934831651E-15    1     1 0  0 0  0 0
+  1:  -6.5923118809290317E-16    1     0 1  0 0  0 0
+  1:   2.8726619690311681E+00    1     0 0  1 0  0 0
+  1:   7.1359575552105514E-01    1     0 0  0 1  0 0
+  1:   7.6832675580812382E-15    1     0 0  0 0  0 1
+  1:  -8.0238198248515499E-16    2     2 0  0 0  0 0
+  1:   2.7526911843773637E-14    2     1 1  0 0  0 0
+  1:  -1.6540063160329318E-13    2     0 2  0 0  0 0
+  1:  -9.8609301484051581E+00    2     1 0  1 0  0 0
+  1:   2.5979472338670035E+00    2     0 1  1 0  0 0
+  1:  -3.6072911767633764E-15    2     0 0  2 0  0 0
+  1:   4.6570660212421418E+00    2     1 0  0 1  0 0
+  1:   5.5944457674648028E+01    2     0 1  0 1  0 0
+  1:   2.3342991768086524E-14    2     0 0  1 1  0 0
+  1:   8.8706020698275306E-14    2     0 0  0 2  0 0
+  1:  -4.3188866269821838E-14    2     1 0  0 0  0 1
+  1:   2.0931164367208350E-14    2     0 1  0 0  0 1
+  1:  -1.6861654804791790E+01    2     0 0  1 0  0 1
+  1:   1.6098131882682754E+01    2     0 0  0 1  0 1
+  1:  -9.5718890273723254E-14    2     0 0  0 0  0 2
 ----------------------------------------------------
   2:  -9.9999999999999989E-01    0     0 0  0 0  0 0
        ... (Output truncated)
@@ -878,7 +876,7 @@ spin tune, accessible as <code class="docutils literal notranslate"><span class=
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
- -0.3094612779434054 - 0.3094612776236826 δ - 7.680774092601614e-10 J₁ + 28.127501689589913 J₂ - 4.385295785557206e-10 δ²
+ -0.3094612779434054 - 0.30946127762368164 δ - 7.680877722602752e-10 J₁ + 28.127501689589906 J₂ - 4.385302853456498e-10 δ²
 </pre></div>
 </div>
 </div>
@@ -925,7 +923,7 @@ config:
  use_KA                          = false
  use_explicit_SIMD               = true
 
-elapsed_time = 0.000786183 seconds
+elapsed_time = 0.000190538 seconds
 
 state[1:10, 1:11]:	States indexable as		 state[particle, turn+1]
 v[1:10, 1:6, 1:11]:	Phase space coords indexable as	 v[particle, coordinate, turn+1]

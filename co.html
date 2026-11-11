@@ -224,7 +224,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="element.html#parameter-groups">Parameter Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#pgs">Parameter Groups</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -251,14 +251,14 @@
 <li class="toctree-l2"><a class="reference internal" href="track.html#configuration-settings">Configuration Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-callbacks">Callbacks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#cpu-parallelization">CPU Parallelization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="track.html#gpu-parallelization">GPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpuparallel">GPU Parallelization</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#integration-steps-and-slices">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
@@ -314,15 +314,15 @@
 <p class="caption" role="heading"><span class="caption-text">Physics</span></p>
 <ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#phase-space-coordinate-system">Phase Space Coordinate System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#nomenclature">Nomenclature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-systems-used-to-describe-a-machine">Coordinate Systems Used to Describe a Machine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#element-entrance-and-exit-coordinates">Element Entrance and Exit Coordinates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#branch-coordinate-construction">Branch Coordinate Construction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#coordinate-frames">Coordinate Frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#lattice-element-positioning">Lattice Element Positioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#particle-position-transformation">Particle Position Transformation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinates.html#transformation-between-branch-and-element-body-coordinates">Transformation Between Branch and Element Body Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -335,11 +335,11 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#kick-drift-kick-model">Kick-Drift-Kick Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#edge-kick">Edge Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#energy-kick">Energy Kick</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#rf-phase">RF Phase</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#standing-wave-pondermotive-focusing">Standing-Wave Pondermotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-ponder">Standing-Wave Pondermotive Focusing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
 </ul>
@@ -400,8 +400,8 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="gpu-batched-closed-orbit-finder">
-<span id="closedorbit"></span><h1>(GPU-)Batched Closed Orbit Finder<a class="headerlink" href="#gpu-batched-closed-orbit-finder" title="Link to this heading">¶</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="closedorbit">
+<span id="gpu-batched-closed-orbit-finder"></span><h1>(GPU-)Batched Closed Orbit Finder<a class="headerlink" href="#closedorbit" title="Link to this heading">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">find_closed_orbit</span></code> function can be used to find the fixed point of a periodic beamline.
 It uses the Newton method implemented in the
 <a class="reference external" href="https://github.com/mattsignorelli/BatchSolve.jl"><code class="docutils literal notranslate"><span class="pre">BatchSolve</span></code></a> package. By default,
@@ -463,7 +463,7 @@ last coordinate δ of the guess did not change: the result is the closed orbit f
 <p>When <code class="docutils literal notranslate"><span class="pre">v0</span></code> is provided, it <strong>will be mutated in place with the result!</strong></p>
 </div>
 <section id="dependent-closed-orbits">
-<h2>δ-Dependent Closed Orbits<a class="headerlink" href="#dependent-closed-orbits" title="Link to this heading">¶</a></h2>
+<span id="δ-dependent-closed-orbits"></span><h2>δ-Dependent Closed Orbits<a class="headerlink" href="#dependent-closed-orbits" title="Link to this heading">¶</a></h2>
 <p>For beamlines with coasting beam, δ-dependent closed orbits can be computed. To do this, we
 set <code class="docutils literal notranslate"><span class="pre">v0</span></code> equal to a matrix of <code class="docutils literal notranslate"><span class="pre">n_particles</span> <span class="pre">x</span> <span class="pre">6</span></code>:</p>
 <div class="cell docutils container">
@@ -518,7 +518,7 @@ where <code class="docutils literal notranslate"><span class="pre">kick.Kn0L=2e-
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(v0 = [-0.0004994295806922626 -4.96448474792256e-5 … 0.0 0.001; -0.0009997640972285269 -9.937089270145966e-5 … 0.0 0.002], coasting_beam = true, sol = (u = [-0.0004994295806922626 -4.96448474792256e-5 -1.6338627084277484e-18 1.4595604602569835e-19; -0.0009997640972285269 -9.937089270145966e-5 -3.274240918442859e-18 2.924962167559885e-19], f = [-3.2526065174565133e-19 -2.710505431213761e-20 1.925929944387236e-34 1.2037062152420224e-34; -4.336808689942018e-19 -1.3552527156068805e-20 3.851859888774472e-34 0.0], jac = sparse([1, 3, 5, 7, 2, 4, 6, 8, 1, 3  …  6, 8, 1, 3, 5, 7, 2, 4, 6, 8], [1, 1, 1, 1, 2, 2, 2, 2, 3, 3  …  6, 6, 7, 7, 7, 7, 8, 8, 8, 8], [0.3729345122731341, 0.04962649592106689, -8.118329739482393e-17, -5.584159974607815e-17, 0.3724955750275555, 0.04957706733496499, -8.11351097732713e-17, -5.586486137515086e-17, -3.751738826827986, -0.29781396734752374  …  -0.23815083567129713, 0.049577060459984106, -2.32310479916036e-16, -1.615748459392269e-16, -3.0189641981835207, 0.313442203826904, -2.318373683587164e-16, -1.6140697368990874e-16, -3.0163387054147734, 0.31312181914188064], 8, 8), retcode = UInt8[0x00; 0x00;;], iters = [2; 2;;]))
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(v0 = [-0.000499429580692261 -4.964484747922549e-5 … 0.0 0.001; -0.0009997640972285228 -9.937089270145935e-5 … 0.0 0.002], coasting_beam = true, sol = (u = [-0.000499429580692261 -4.964484747922549e-5 -1.6338627084277428e-18 1.4595604602569772e-19; -0.0009997640972285228 -9.937089270145935e-5 -3.2742409184428352e-18 2.924962167559868e-19], f = [-1.0842021724855044e-19 0.0 -7.703719777548943e-34 1.6851887013388314e-34; 0.0 8.131516293641283e-20 -2.311115933264683e-33 9.62964972193618e-35], jac = sparse([1, 3, 5, 7, 2, 4, 6, 8, 1, 3  …  6, 8, 1, 3, 5, 7, 2, 4, 6, 8], [1, 1, 1, 1, 2, 2, 2, 2, 3, 3  …  6, 6, 7, 7, 7, 7, 8, 8, 8, 8], [0.3729345122731341, 0.04962649592106685, -8.118329739482383e-17, -5.584159974607817e-17, 0.37249557502755526, 0.04957706733496511, -8.113510977327135e-17, -5.586486137515083e-17, -3.7517388268279843, -0.2978139673475231  …  -0.2381508356712967, 0.04957706045998415, -2.3231047991603536e-16, -1.6157484593922657e-16, -3.0189641981835194, 0.31344220382690424, -2.318373683587164e-16, -1.6140697368990864e-16, -3.016338705414775, 0.31312181914188], 8, 8), retcode = UInt8[0x00; 0x00;;], iters = [2; 2;;]))
 </pre></div>
 </div>
 </div>
