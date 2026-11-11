@@ -91,8 +91,7 @@ Any parameter of a `LatElement` or `Beamline` may be a `BatchParam`, with a few 
 
 - All particles go through an element with the same tracking method (see
   [Tracking Methods](tracking-methods.md)), whatever their parameter values are.
-- A `BatchParam` cannot contain time-dependent values (see
-  [Time-Dependent Parameters](timedependent.md)).
+- While a time-dependent parameter can contain a `BatchParam` (see [Time-Dependent Parameters](timedependent.md)), a `BatchParam` cannot contain time-dependent values. For example, `BatchParam([sin(a*Time()), cos(b*Time())])` does _not_ work. One workaround is reformulating the function, in this example as `BatchParam([1.,0.])*sin(a*Time()) + BatchParam([0.,1.])*cos(b*Time())`
 - If you pass your own `Bunch` to track (else this is handled for you): if any element length `L` is
   a `BatchParam`, the `t_ref` of the `Bunch` must be a `BatchParam` of the same size, for
   example `Bunch(v=v0, t_ref=BatchParam(zeros(10)))`. If the reference energy of the

@@ -455,6 +455,29 @@ will work on the GPU.</p>
 </div>
 </div>
 </div>
+<p>A time-dependent parameter can also differ from particle to particle, by using a
+<a class="reference internal" href="batch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">BatchParam</span></code></span></a> in its expression. Each particle sees its element of the batch, as for
+any other <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>. For example, an AC kicker with a different frequency for each of three
+particles:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ω</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">BatchParam</span><span class="p">([</span><span class="mf">1e6</span><span class="p">,</span><span class="w"> </span><span class="mf">2e6</span><span class="p">,</span><span class="w"> </span><span class="mf">3e6</span><span class="p">])</span>
+<span class="n">ac_kicker2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">VKicker</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">Ks0</span><span class="o">=</span><span class="mf">1e-4</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">ω</span><span class="o">*</span><span class="n">t</span><span class="p">))</span>
+<span class="n">bl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span><span class="w"> </span><span class="n">ac_kicker2</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">E_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">(</span><span class="n">bl</span><span class="p">,</span><span class="w"> </span><span class="n">v0</span><span class="o">=</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">))</span>
+<span class="n">res</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="c"># vertical kicks of the three particles</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3-element Vector{Float64}:
+ 1.6678173838302983e-7
+ 3.335616210706697e-7
+ 5.00337792388177e-7
+</pre></div>
+</div>
+</div>
+</div>
 </section>
 <section id="energy-ramping">
 <h2>Energy Ramping<a class="headerlink" href="#energy-ramping" title="Link to this heading">¶</a></h2>

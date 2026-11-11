@@ -402,6 +402,10 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="dynamicaperture">
 <span id="dynamic-aperture"></span><h1>Dynamic Aperture<a class="headerlink" href="#dynamicaperture" title="Link to this heading">¶</a></h1>
+<p>As with <a class="reference internal" href="track.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">track</span></code></span></a>, the parameters of the beamline, including
+<a class="reference internal" href="defexpr.html"><span class="std std-doc">deferred expressions</span></a>, are evaluated once when <code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> is called, and
+kept for all turns of that call. To have parameters change during tracking, use
+<a class="reference internal" href="timedependent.html"><span class="std std-doc">time-dependent parameters</span></a>.</p>
 <div class="embedded-notebook docutils container">
 <p>Thanks to SciBmad’s support for both explicit Single Instruction, Multiple Data (SIMD) on the CPU and Single Instruction, Multiple Thread (SIMT) on the GPU, highly-parallelized and performant tracking simulations can be run on all types of architectures. Here we will do a dynamic aperture scan of the v6.3.1 Electron Storage Ring (ESR) of the Electron-Ion Collider (EIC) using SciBmad’s <code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> function on an Apple Metal GPU. Also supported are NVIDIA CUDA, AMD ROCm, and Intel oneAPI GPUs.</p>
 <p>Firstly, please be aware that SciBmad’s <code class="docutils literal notranslate"><span class="pre">dynamic_aperture</span></code> function works differently than that in classical Bmad; in Bmad, the dynamic aperture is computed by tracking a particle initialized at with some angle and radius in the x-y acceptance plane, and if it lives for the specified number of turns, then a larger radius is used. This is repeated until the particle is lost, and then that radius is specified as the dynamic aperture.</p>
