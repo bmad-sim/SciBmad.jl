@@ -372,7 +372,7 @@ end
 
 _twiss_assemble_locations(bl::Beamline, ::Colon) = _twiss_assemble_locations(bl, [(0., Inf)])
 
-function _twiss_assemble_locations(bl::Beamline, at::Vector)
+function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
   at_idxs = filter(x->x isa Integer, at)
   at_eles = filter(x->x isa LatElement, at)
   at_ranges = filter(x->x isa Tuple, at)
@@ -399,6 +399,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
 
   scur = 0f0
   step_cur = 0
+  first_found = false # steps of the first element inside an s-range (not only at s = 0)
   for ele in bl.line
     idx = ((ele.BeamlineParams)::BeamlineParams).beamline_index
     up = (ele.UniversalParams)::UniversalParams
@@ -428,7 +429,10 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
       step_cur += 1
       scur += ds_step
     end
-    
+    if idx == 1
+      first_found = found
+    end
+
     # If not in an s-range, check if explicitly provided
     # Always include first element
     if !found && (idx == 1 || (any(x -> x == idx, at_idxs) || any(at_eles) do x
@@ -453,7 +457,7 @@ function _twiss_assemble_locations(bl::Beamline, at::Vector)
   # Now resolve type of s:
   s = typeof(scur).(stmp)
 
-  include_start = any(x->x[1]<=0<=x[2], at_ranges) || any(x->x==1, at_idxs) || any(at_eles) do x
+  include_start = first_found || any(x->x[1]<=0<=x[2], at_ranges) || any(x->x==1, at_idxs) || any(at_eles) do x
     x == bl.line[1] || (haskey(getfield(bl.line[1], :pdict), InheritParams) ? x == (getfield(bl.line[1], :pdict)[InheritParams].parent) : false)
   end
   # The end row is the exit of the last element, so only an s-range containing it includes it 
@@ -572,18 +576,18 @@ function _twiss_cache_make_callback(_step_save, _beta_gamma_ref, _t_ref, _in_bod
     _cur_step_save_idx = 1
   end
   let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx), beta_gamma_ref=_beta_gamma_ref, t_ref=_t_ref, in_body_coordinates=_in_body_coordinates
-    return (i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+    return (i, coords, cur_s, cur_t_ref, cur_step, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
       curstep[] += 1
       if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]] # Store the current map
         map = maps[cur_step_save_idx[]]
         if !in_body_coordinates
-          transforms_out!(i, coords, cur_s, cur_t_ref)
+          transforms_out!(i, coords)
         end
         _twiss_setmap!(map, coords)
         beta_gamma_ref[cur_step_save_idx[]] = cur_beta_gamma_ref
         t_ref[cur_step_save_idx[]] = cur_t_ref
         if !in_body_coordinates
-          transforms_in!(i, coords, cur_s, cur_t_ref)
+          transforms_in!(i, coords)
         end
         cur_step_save_idx[] += 1
       end
@@ -652,12 +656,12 @@ function _twiss_make_callback(_step_save, initial_step_save_idx, _in_body_coordi
     phi1=_phi1, phi2=_phi2, phi3_or_slip=_phi3_or_slip, damp=_damp, damp1=_damp1, damp2=_damp2, damp3=_damp3,
     curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(initial_step_save_idx), map=_map, beta_gamma_ref=_beta_gamma_ref, t_ref=_t_ref
     
-    return (i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+    return (i, coords, cur_s, cur_t_ref, cur_step, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
       curstep[] += 1
       j = cur_step_save_idx[]
       if j <= length(step_save) && curstep[] == step_save[j]
         if !in_body_coordinates
-          transforms_out!(i, coords, cur_s, cur_t_ref)
+          transforms_out!(i, coords)
         end
         _twiss_setmap!(map, coords)
         _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, map, canonise, phase, damp, j)
@@ -674,7 +678,7 @@ function _twiss_make_callback(_step_save, initial_step_save_idx, _in_body_coordi
           end
         end
         if !in_body_coordinates
-          transforms_in!(i, coords, cur_s, cur_t_ref)
+          transforms_in!(i, coords)
         end
         cur_step_save_idx[] += 1
       end

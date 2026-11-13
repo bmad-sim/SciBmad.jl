@@ -73,7 +73,7 @@ particles:
 ac_kicker2 = VKicker(L=0.5, Ks0=1e-4*sin(ω*t))
 bl = Beamline([Drift(L=1.0), ac_kicker2], species_ref=Species("electron"), E_ref=18e9)
 res = track(bl, v0=zeros(3, 6))
-res.v[:, 4, end] # vertical kicks of the three particles
+res.v[:, 4, 1, end] # vertical kicks of the three particles
 ```
 
 ## Energy Ramping

@@ -117,6 +117,96 @@ using Test
     end
   end
 
+  @testset "track at locations" begin
+    # Reference: each particle tracked alone with track!, with a callback that counts the steps of
+    # the turn and saves the particle in lab coordinates at every step (and restores it)
+    qf = Quadrupole(L=0.5, Kn1=0.36, n_steps=4)
+    qd = Quadrupole(L=0.5, Kn1=-0.36, x_offset=1e-4, y_rot=1e-4, tilt=0.1, n_steps=3,
+        x1_limit=-1.5e-3, x2_limit=1.5e-3, y1_limit=-1.5e-3, y2_limit=1.5e-3)
+    b = SBend(L=1.0, angle=0.1, n_slices=2, n_steps=2, x_rot=1e-4, y_offset=2e-4)
+    rf = RFCavity(L=0.1, voltage=1e5, rf_frequency=4e8, zero_phase=PhaseRef.BelowTransition)
+    bl = Beamline([qf, Drift(L=1.0), b, qd, Drift(L=1.0), rf]; species_ref=Species("electron"),
+        E_ref=1e9)
+    n_turns = 4
+    v0 = [2e-4*sin(7.0*i + k) for i in 1:11, k in 1:6] # some particles are lost
+    n_steps = sum(e -> e.n_slices*e.n_steps, bl.line)
+    # A turn ends at the end of the beamline, the first one begins at the element start (its
+    # beginning is step0 steps from the beginning of the beamline, the step of a location)
+    function reference(start)
+      ref = Dict{Tuple{Int,Int,Int},Any}() # (particle, turn, step) => (v, q, state)
+      step0 = sum(e -> e.n_slices*e.n_steps, bl.line[1:start-1]; init=0)
+      for p in 1:size(v0, 1)
+        cnt = Ref(0); turn = Ref(1)
+        cb = (i, coords, s, t_ref, step, bg, ds, g, out!, in!) -> begin
+          cnt[] += 1
+          vs = coords.v[i,:]; qs = coords.q[i,:]
+          out!(i, coords)
+          ref[(p, turn[], cnt[])] = (coords.v[i,:], coords.q[i,:], coords.state[i])
+          coords.v[i,:] .= vs; coords.q[i,:] .= qs
+        end
+        bun = Bunch(v=v0[p:p,:], q=[1.0 0 0 0], callbacks=(cb,), species=bl.species_ref,
+            p_over_q_ref=bl.p_over_q_ref)
+        ref[(p, 1, step0)] = (bun.v[1,:], bun.q[1,:], bun.state[1]) # the start in the first turn
+        cnt[] = step0
+        for ele in bl.line[start:end] # element by element from the start
+          BeamTracking.track!(bun, ele; notify=false)
+        end
+        for t in 2:n_turns
+          ref[(p, t, 0)] = (bun.v[1,:], bun.q[1,:], bun.state[1]) # the beginning of the beamline
+          cnt[] = 0; turn[] = t
+          BeamTracking.track!(bun, bl; notify=false)
+        end
+      end
+      return ref, step0
+    end
+    # steps of the rows: step of the location, the end of the beamline n_steps
+    function matches(r, ref, step0, steps; m=1)
+      for p in 1:size(v0, 1), (l, step) in enumerate(steps), t in 1:m:n_turns
+        j = div(t-1, m) + 1
+        if t == 1 && step < step0 # not reached yet
+          all(isnan, r.v[p,:,l,j]) && r.state[p,l,j] == BeamTracking.STATE_PREBORN || return false
+        else
+          isequal((r.v[p,:,l,j], r.q[p,:,l,j], r.state[p,l,j]), ref[(p, t, step)]) || return false
+        end
+      end
+      return true
+    end
+    all_steps = [0:n_steps-1; n_steps]
+    key(res, k) = (res.index[k], res.s[k])
+    for start in (1, 4)
+      ref, step0 = reference(start)
+      plain = track(bl; v0, n_turns, spin=true, start)
+      @test plain.v0 == v0 && plain.v[:,:,1,end] == plain.bunch.v && plain.index == [-1]
+      @test matches(plain, ref, step0, [n_steps])
+      @test 0 < count(!=(BeamTracking.STATE_ALIVE), plain.bunch.state) < size(v0, 1)
+      for kw in ((;), (; use_KA=true, use_explicit_SIMD=false), (; use_explicit_SIMD=false))
+        r = track(bl; v0, n_turns, spin=true, at=:, start, kw...)
+        @test size(r.v, 3) == n_steps + 1 && r.index[end] == -1
+        @test matches(r, ref, step0, all_steps)
+        # saving does not change the tracking
+        @test isequal(r.bunch.v, plain.bunch.v) && isequal(r.bunch.q, plain.bunch.q)
+        # Other locations are the same rows of at=:
+        for at in ([qf, qd], [2, 5], [(0.2, 2.6)], [qd, (2.4, 2.6), 1], [(3.0, Inf)]), m in (1, 2)
+          rs = track(bl; v0, n_turns, spin=true, at, start, save_every_n_turns=m, kw...)
+          rows = [findfirst(k -> key(r, k) == key(rs, l), eachindex(r.s)) for l in eachindex(rs.s)]
+          @test matches(rs, ref, step0, all_steps[rows]; m)
+        end
+      end
+      # in_body_coordinates: the misaligned elements differ from lab coordinates
+      rb = track(bl; v0, n_turns, spin=true, at=:, start, in_body_coordinates=true)
+      @test !matches(rb, ref, step0, all_steps)
+    end
+    @test_throws ErrorException track(bl; v0, n_turns=0)
+    # twiss: an s-range starting inside the first element keeps all of its steps in the range
+    cell = Beamline([qf, Drift(L=1.0), Quadrupole(L=0.5, Kn1=-0.36), Drift(L=1.0)];
+        species_ref=Species("electron"), E_ref=1e9)
+    tw = twiss(cell; at=[(0.2, 0.4)], cols=["beta1"])
+    tall = twiss(cell; cols=["beta1"])
+    # (the one-turn map is composed from the maps between the rows, so it rounds differently)
+    @test tw.s == [0.25, 0.375]
+    @test tw.beta1 ≈ tall.beta1[3:4] rtol=1e-14
+  end
+
   @testset "Open-lattice Twiss (a_initial)" begin
       # Starting from the periodic a reproduces the periodic Twiss (coasting and 6D, with and
       # without spin, orders 1 and 2). An unmatched start (a thin kick in x, y scaled) propagates
@@ -269,7 +359,7 @@ using Test
     beta(δ) = (1 + δ)/sqrt((1 + δ)^2 + tilde_m^2)
     function dz(δ)
       co = find_closed_orbit(ring; v0=[0.0 0 0 0 0 δ]).v0
-      return track(ring; v0=copy(co)).v[1,5,end] - co[1,5]
+      return track(ring; v0=copy(co)).v[1,5,1,end] - co[1,5]
     end
     rel_dt(δ) = -dz(δ)/beta(δ)*beta(0.0)/L
     rel_dl(δ) = -dz(δ)/L + beta(δ)/beta(0.0) - 1

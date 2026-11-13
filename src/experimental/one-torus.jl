@@ -555,7 +555,7 @@ function freq_res!(
   @. v_cache[:,6] = ifelse(m1, v4,  ifelse(m2, v2,  mc2))
 
   res = track(bl; v0=v_cache, n_turns, verbose, use_explicit_SIMD=false)
-  coords = res.v
+  coords = cat(res.v0, dropdims(res.v; dims=3); dims=3) # initial and after each turn
   data = reshape(permutedims(coords, (2,1,3)), 6*n_particles, n_turns+1) 
 
   # Now this makes it x + im*px, etc:

@@ -232,9 +232,11 @@ plainly what was not verified and what could be wrong. Never present unverified 
    start of each row (`persistent_*` caches live for the whole table).
 6. `_twiss_summ`: tunes, `etac`, `alphac`, spin tune, damping.
 
-Callbacks get `(i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!)`; 
-`twiss` uses `transforms_out!`/`transforms_in!` to store maps in lab coordinates inside misaligned 
-elements (unless `in_body_coordinates`).
+Callbacks get `(i, coords, cur_s, cur_t_ref, cur_step, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!)`, 
+`cur_s` and `cur_step` from the beginning of the Beamline; `twiss` uses `transforms_out!(i, coords)`/
+`transforms_in!(i, coords)` to store maps in lab coordinates inside misaligned elements (unless 
+`in_body_coordinates`). `track` finds its locations (`at`) from `cur_step` (one callback for all 
+locations, as in `twiss`).
 
 ### NonlinearNormalForm facts
 
