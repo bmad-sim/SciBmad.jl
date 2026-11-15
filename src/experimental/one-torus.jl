@@ -125,7 +125,7 @@ function dynamic_aperture(
 
   b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
   for i in 1:n_turns
-    track!(b0, bl; scalar_params=true)
+    track(bl; bunch=b0, at=[], scalar_params=true)
     @. turns_survivedt = ifelse(b0.coords.state != BeamTracking.STATE_ALIVE && turns_survivedt == n_turns+1, i, turns_survivedt)
     if verbose
       print("\rFinished turn $i out of $n_turns")

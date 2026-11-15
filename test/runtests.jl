@@ -137,10 +137,10 @@ using Test
       step0 = sum(e -> e.n_slices*e.n_steps, bl.line[1:start-1]; init=0)
       for p in 1:size(v0, 1)
         cnt = Ref(0); turn = Ref(1)
-        cb = (i, coords, s, t_ref, step, bg, ds, g, out!, in!) -> begin
+        cb = (i, coords, pt) -> begin
           cnt[] += 1
           vs = coords.v[i,:]; qs = coords.q[i,:]
-          out!(i, coords)
+          transforms_out!(i, coords, pt)
           ref[(p, turn[], cnt[])] = (coords.v[i,:], coords.q[i,:], coords.state[i])
           coords.v[i,:] .= vs; coords.q[i,:] .= qs
         end

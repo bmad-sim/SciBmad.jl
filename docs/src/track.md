@@ -202,7 +202,7 @@ every integration step, inside of elements.
 Callbacks are required to have the function signature defined below
 
 ```julia
-function mycallback(i, coords, cur_s, cur_t_ref, cur_step, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!)
+function mycallback(i, coords, p)
   # Do stuff...
   return
 end
@@ -217,22 +217,21 @@ callback signature. These are:
   - `coords.v`: particle phase space matrix of size `n_particle x 6`
   - `coords.q`: `nothing` if no spin tracking, else, particle spin quaternion matrix of size `n_particle x 4`
   - `coords.weight`: `nothing` if uniform macroparticle weights, else weights vector of length `n_particles`
-- `cur_s`: Current s-position from the beginning of the beamline
-- `cur_t_ref`: Current reference time of the bunch **from the beginning of tracking**
-- `cur_step`: Current integration step from the beginning of the beamline (the steps of the
-  elements counted as above, the last one of an element at its exit). This is how `track` finds
-  the locations of `at`
-- `cur_beta_gamma_ref`: Current reference Lorentz $\beta\gamma$ of the bunch
-- `last_ds_step`: Last integration step length before executing this callback
-- `last_g`: Last integration coordinate system curvature as a tuple `(gx, gy)` in lab coordinates before executing this callback
+- `p`: A `TrackPoint`, the point of the tracking, with the properties:
+  - `p.s`: Current s-position from the beginning of the beamline
+  - `p.t_ref`: Current reference time of the bunch **from the beginning of tracking**
+  - `p.step`: Current integration step from the beginning of the beamline (the steps of the
+    elements counted as above, the last one of an element at its exit). This is how `track` finds
+    the locations of `at`
+  - `p.beta_gamma_ref`: Current reference Lorentz $\beta\gamma$ of the bunch
+  - `p.last_ds_step`: Last integration step length before executing this callback
+  - `p.last_g`: Last integration coordinate system curvature as a tuple `(gx, gy)` in lab coordinates before executing this callback
 
-The last two arguments, `transforms_out!` and `transforms_in!`, are special, in that they
-are functions that can be applied to `coords` in order to transform the particle coordinates
-out of the element integration body frame and back into the laboratory frame. This can be
-useful if, for example, an element is misaligned, but you want to see the phase space
-coordinates in the laboratory frame. The transformations may be called by simply executing
-`transforms_out!(i, coords)` or
-`transforms_in!(i, coords)`
+The functions `transforms_out!` and `transforms_in!` can be applied to `coords` in order to
+transform the particle coordinates out of the element integration body frame and back into the
+laboratory frame. This can be useful if, for example, an element is misaligned, but you want to
+see the phase space coordinates in the laboratory frame. The transformations may be called by
+simply executing `transforms_out!(i, coords, p)` or `transforms_in!(i, coords, p)`
 
 Any of these quantities may be used in the callback. Also, as long as callbacks are written
 to be GPU compatible, they will work on the GPU. For example, this callback prints the $x$
@@ -241,10 +240,10 @@ coordinate of each particle on the GPU in laboratory coordinates, each integrati
 ```julia
 using CUDA
 
-function mycallback(i, coords, cur_s, cur_t_ref, cur_step, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!)
-  transforms_out!(i, coords) # Transform out of body integration coordinates
-  CUDA.@cuprintln("Hi! I'm particle $i at $cur_t_ref and my x-coordinate is $(coords.v[i,1])")
-  transforms_in!(i, coords) # Transform back into body integration coordinates
+function mycallback(i, coords, p)
+  transforms_out!(i, coords, p) # Transform out of body integration coordinates
+  CUDA.@cuprintln("Hi! I'm particle $i at $(p.t_ref) and my x-coordinate is $(coords.v[i,1])")
+  transforms_in!(i, coords, p) # Transform back into body integration coordinates
   return
 end
 ```

@@ -299,13 +299,19 @@ function track(
   # Locations where the particles are saved, as in twiss (the first entry is the beginning of the
   # beamline unless steps of the first element are in an s-range, the last the end of the beamline)
   # (by default only the end of the beamline)
-  s, names, kinds, idxs, step_save, include_start, include_end = _twiss_assemble_locations(bl,
-                                                                   isnothing(at) ? [] : at)
-  include_end |= isnothing(at)
-  sel = (include_start ? 1 : 2):(include_end ? length(s) : length(s)-1)
-  loc_s, loc_names, loc_kinds, loc_idxs = s[sel], names[sel], kinds[sel], idxs[sel]
-  loc_steps = step_save[sel]
-  n_steps_turn = last(step_save)
+  if at isa AbstractVector && isempty(at) # nothing to save (1.5 ms less on ESR than resolving it)
+    loc_s, loc_names, loc_kinds, loc_idxs = Float64[], String[], String[], Int[]
+    loc_steps = Int[]
+    n_steps_turn = 0
+  else
+    s, names, kinds, idxs, step_save, include_start, include_end = _twiss_assemble_locations(bl,
+                                                                     isnothing(at) ? [] : at)
+    include_end |= isnothing(at)
+    sel = (include_start ? 1 : 2):(include_end ? length(s) : length(s)-1)
+    loc_s, loc_names, loc_kinds, loc_idxs = s[sel], names[sel], kinds[sel], idxs[sel]
+    loc_steps = step_save[sel]
+    n_steps_turn = last(step_save)
+  end
   # Function barrier for Bunch and groupsize (needs special handling for KA)
   locations = (loc_s, loc_idxs, loc_names, loc_kinds)
   return @noinline _track(bl, bunch, newconfig, groupsize == 0 ? nothing : groupsize, start,
@@ -340,9 +346,10 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
   slot_of_turn(i) = (i <= n_turns && mod(i-1, save_every_n_turns) == 0) ?
                     div(i-1, save_every_n_turns) + 1 : 0
 
+  # (elementwise: a copy of an array of TPS would share the TPS that the tracking changes)
   state0 = copy(state)
-  v0 = copy(v)
-  q0 = isnothing(q) ? nothing : copy(q)
+  v0 = similar(v); v0 .= copy.(v)
+  q0 = isnothing(q) ? nothing : (q0 = similar(q); q0 .= copy.(q); q0)
   state_data = similar(state, n_particles, n_locations, n_data_pts)
   v_data = similar(v, n_particles, 6, n_locations, n_data_pts)
   q_data = isnothing(q) ? nothing : similar(q, n_particles, 4, n_locations, n_data_pts)
@@ -382,9 +389,11 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
     end
   end
 
-  # The callback finds the location from its step in the turn (loc_of_step[cur_step] is the
-  # location, or 0). At the last step (the end of the beamline), it also saves the beginning of the
-  # beamline (location i_begin, or 0) of the next turn
+  # The callback finds the location from its step in the turn: table[cur_step] is the location,
+  # or 0 (at every step of a turn that is not saved). At the last step (the end of the beamline) it
+  # also saves the beginning of the beamline (location i_begin, or 0) of the next turn: the entry
+  # is then -1 if it is not a location itself. The table is the only thing read at every step,
+  # everything else (_TrackSaveState) only at the locations
   loc_of_step = zeros(Int, n_steps_turn)
   for (l, step) in enumerate(loc_steps)
     if step > 0
@@ -392,23 +401,35 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
     end
   end
   i_begin = something(findfirst(==(0), loc_steps), 0)
-  with_cb = any(!=(0), loc_of_step) || i_begin != 0
-  if with_cb
-    slots = similar(v, Int, 2) # slots of the turn and of the next turn in the saved data (or 0)
-    _loc_of_step = similar(v, Int, n_steps_turn)
-    copyto!(_loc_of_step, loc_of_step)
-    cb = _track_make_callback(slots, _loc_of_step, i_begin, in_body_coordinates, v_data, q_data,
-                              state_data)
-    # Tracked with the callback appended to those of the bunch
-    coords = BeamTracking.Coords(state, v, q, bunch.coords.weight, (bunch.coords.callbacks..., cb))
-    b = Bunch(bunch.species, bunch.p_over_q_ref, bunch.t_ref, coords)
-  else
-    b = bunch
+  # the table for (turn saved, beginning of the beamline saved after it)
+  function table_of(saved, begin_next)
+    t = saved ? copy(loc_of_step) : zeros(Int, n_steps_turn)
+    if begin_next && n_steps_turn > 0 && t[end] == 0
+      t[end] = -1
+    end
+    return t
   end
+  table = similar(v, Int, n_steps_turn)
+  slots = similar(v, Int, 2) # slots of the turn and of the next turn in the saved data (or 0)
+  # (on the CPU through pointers: arrays in the callback would be GC-rooted at every integration
+  # step, 5-7% slower for 1 to 10 particles on ESR, and the state only at the locations through one
+  # pointer, as it is copied into the coordinates of every launch; they are preserved below)
+  state_ref = Ref(_TrackSaveState(_kernel_array(slots), i_begin, in_body_coordinates,
+                                  _kernel_array(v_data), _kernel_array(q_data),
+                                  _kernel_array(state_data)))
+  cb = _track_make_callback(_kernel_array(table), _kernel_state(state_ref, v))
+  # Always tracked with the callback (also without locations), appended to those of the bunch, so
+  # that all tracking compiles the kernels with it
+  coords = BeamTracking.Coords(state, v, q, bunch.coords.weight, (bunch.coords.callbacks..., cb))
+  b = Bunch(bunch.species, bunch.p_over_q_ref, bunch.t_ref, coords)
 
-  t = @elapsed for i in 1:n_turns
-    if with_cb
-      copyto!(slots, [slot_of_turn(i), slot_of_turn(i+1)])
+  table_key = nothing
+  t = @elapsed GC.@preserve table slots v_data q_data state_data state_ref for i in 1:n_turns
+    copyto!(slots, [slot_of_turn(i), slot_of_turn(i+1)])
+    key = (slot_of_turn(i) != 0, i_begin != 0 && slot_of_turn(i+1) != 0)
+    if key != table_key # (changes at most a few times)
+      copyto!(table, table_of(key...))
+      table_key = key
     end
     track!(b, i == 1 && first_chain > 1 ? chains[first_chain:end] : chains; groupsize, use_KA,
            use_explicit_SIMD, use_cpu_multithreading)
@@ -420,13 +441,11 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
   if verbose
     println()
   end
-  if b !== bunch
-    bunch.species = b.species
-    bunch.p_over_q_ref = b.p_over_q_ref
-    bunch.t_ref = b.t_ref
-    bunch.s = b.s
-    bunch.step = b.step
-  end
+  bunch.species = b.species
+  bunch.p_over_q_ref = b.p_over_q_ref
+  bunch.t_ref = b.t_ref
+  bunch.s = b.s
+  bunch.step = b.step
   return TrackingResult(config, t, locations..., state0, v0, q0, state_data, v_data, q_data, bunch)
 end
 
@@ -449,28 +468,37 @@ function _chain_steps(bl)
   return chain_steps, chain_ele
 end
 
-function _track_make_callback(_slots, _loc_of_step, _i_begin, _in_body_coordinates, _v_data,
-                              _q_data, _state_data)
-  let slots=_slots, loc_of_step=_loc_of_step, i_begin=_i_begin,
-    in_body_coordinates=_in_body_coordinates, v_data=_v_data, q_data=_q_data, state_data=_state_data
-    return (i, coords, cur_s, cur_t_ref, step, cur_beta_gamma_ref, last_ds_step, last_g,
-            transforms_out!, transforms_in!) -> begin
-      @inbounds begin
-        n = length(loc_of_step)
-        j = slots[1]
-        if j != 0 && step <= n
-          l = loc_of_step[step]
-          if l != 0
-            _track_save!(i, coords, transforms_out!, in_body_coordinates, v_data, q_data, state_data,
-                         l, j)
-          end
-        end
-        if step == n && i_begin != 0
-          j_next = slots[2]
-          if j_next != 0
-            _track_save!(i, coords, transforms_out!, in_body_coordinates, v_data, q_data, state_data,
-                         i_begin, j_next)
-          end
+# What the callback needs only at the locations (on the CPU it gets a pointer to it)
+struct _TrackSaveState{SL,V,Q,S}
+  slots::SL
+  i_begin::Int
+  in_body_coordinates::Bool
+  v_data::V
+  q_data::Q
+  state_data::S
+end
+
+# (its arrays converted for GPU kernels, as the arrays captured by the callback)
+BeamTracking.Adapt.@adapt_structure _TrackSaveState
+
+# A pointer to the state on the CPU (if all of it is bits), else the state itself
+_kernel_state(r::Base.RefValue{T}, v::Array) where {T} =
+  isbitstype(T) ? Base.unsafe_convert(Ptr{T}, r) : r[]
+_kernel_state(r::Base.RefValue, v) = r[]
+_load_state(s::Ptr) = unsafe_load(s)
+_load_state(s) = s
+
+function _track_make_callback(_table, _state)
+  let table=_table, state=_state
+    # Inlined into the integration steps, with the rarely taken saving outlined. At a step without
+    # a location, only the table is read
+    return @inline (i, coords, p) -> begin
+      step = p.step
+      n = length(table)
+      @inbounds if step <= n
+        l = table[step]
+        if l != 0
+          _track_save_at_step!(i, coords, p, _load_state(state), l, step == n)
         end
       end
       return nothing
@@ -478,8 +506,41 @@ function _track_make_callback(_slots, _loc_of_step, _i_begin, _in_body_coordinat
   end
 end
 
-@inline function _track_save!(i, coords, transforms_out!, in_body_coordinates, v_data, q_data,
-                              state_data, l, j)
+# At a step with location l (or -1, see _track), the last step of the turn if last
+@inline function _track_save_at_step!(i, coords, p, s, l, last)
+  @inbounds begin
+    j = s.slots[1]
+    if l > 0 && j != 0
+      _track_save_at!(i, coords, p, s.in_body_coordinates, s.v_data, s.q_data, s.state_data, l, j)
+    end
+    if last && s.i_begin != 0
+      j_next = s.slots[2]
+      if j_next != 0
+        _track_save_at!(i, coords, p, s.in_body_coordinates, s.v_data, s.q_data, s.state_data,
+                        s.i_begin, j_next)
+      end
+    end
+  end
+  return nothing
+end
+
+# Without transforms at p (known at compile time) only copied: the step loop then has no code that
+# writes the coordinates, which would make it reload them at every step
+@inline function _track_save_at!(i, coords, p, in_body_coordinates, v_data, q_data, state_data,
+                                 l, j)
+  if has_transforms(p)
+    _track_save!(i, coords, p, in_body_coordinates, v_data, q_data, state_data, l, j)
+  else
+    _track_copy_out!(i, coords, v_data, q_data, state_data, l, j)
+  end
+  return nothing
+end
+
+@noinline _track_copy_out!(i, coords, v_data, q_data, state_data, l, j) =
+  _track_copy!(i, coords, v_data, q_data, state_data, l, j)
+
+@noinline function _track_save!(i, coords, p, in_body_coordinates, v_data, q_data,
+                                state_data, l, j)
   @inbounds begin
     if in_body_coordinates
       _track_copy!(i, coords, v_data, q_data, state_data, l, j)
@@ -490,7 +551,7 @@ end
       vs = ntuple(k -> v[i,k], Val{6}())
       qs = isnothing(q) ? nothing : ntuple(k -> q[i,k], Val{4}())
       ss = coords.state[i]
-      transforms_out!(i, coords)
+      transforms_out!(i, coords, p)
       _track_copy!(i, coords, v_data, q_data, state_data, l, j)
       for k in 1:6
         v[i,k] = vs[k]
@@ -510,16 +571,43 @@ end
   @inbounds begin
     state_data[i,l,j] = coords.state[i]
     for k in 1:6
-      v_data[i,k,l,j] = coords.v[i,k]
+      v_data[i,k,l,j] = _saved(coords.v[i,k])
     end
     if !isnothing(q_data)
       for k in 1:4
-        q_data[i,k,l,j] = coords.q[i,k]
+        q_data[i,k,l,j] = _saved(coords.q[i,k])
       end
     end
   end
   return nothing
 end
+
+# An Array of bits as seen by the tracking callback: its pointer and size, which the GC does not
+# track (the Array must be preserved while it is used). GPU arrays are device arrays in the kernels
+# anyway, and arrays of TPS are kept as they are
+struct _PtrArray{T,N} <: DenseArray{T,N}
+  ptr::Ptr{T}
+  size::NTuple{N,Int}
+end
+
+Base.size(a::_PtrArray) = a.size
+Base.IndexStyle(::Type{<:_PtrArray}) = IndexLinear()
+Base.elsize(::Type{<:_PtrArray{T}}) where {T} = sizeof(T)
+Base.unsafe_convert(::Type{Ptr{T}}, a::_PtrArray{T}) where {T} = a.ptr
+@inline Base.getindex(a::_PtrArray, i::Int) = unsafe_load(a.ptr, i)
+@inline Base.setindex!(a::_PtrArray, x, i::Int) = (unsafe_store!(a.ptr, x, i); a)
+# A SIMD lane of particles (the first index) at once
+@inline function Base.setindex!(a::_PtrArray{T}, x::BeamTracking.SIMD.Vec{M,T},
+                                i::BeamTracking.SIMD.VecRange{M}, I::Int...) where {T,M}
+  BeamTracking.SIMD.vstore(x, a.ptr + (LinearIndices(a)[i.i, I...] - 1)*sizeof(T))
+  return a
+end
+
+_kernel_array(a::Array{T}) where {T} = isbitstype(T) ? _PtrArray(pointer(a), size(a)) : a
+_kernel_array(a) = a
+
+# A copy of a coordinate that the tracking changes in place (TPS), else the value itself
+@inline _saved(x) = isbits(x) ? x : copy(x)
 
 """
     track_spin(q::AbstractArray, s0::AbstractVecOrMat)

@@ -520,8 +520,11 @@ function _twiss_track!(eye, cbs, bl, rf_on, batch_index, t_ref0)
     v = reshape([eye.v0[i]+copy(eye.v[i]) for i in 1:6], 1, 6)
   end
   q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
-  b0 = Bunch(v=v, q=q, callbacks=cbs, t_ref=t_ref0) # t_ref must hold the type of the lengths
-  track!(b0, bl; rf_on, batch_start=batch_index, notify=false)
+  # t_ref must hold the type of the lengths
+  p_over_q_ref = bl.p_over_q_ref isa TimeDependentParam ? bl.p_over_q_ref(0) : bl.p_over_q_ref
+  b0 = Bunch(v=v, q=q, callbacks=cbs, t_ref=t_ref0, species=bl.species_ref,
+             p_over_q_ref=p_over_q_ref)
+  track(bl; bunch=b0, at=[], rf_on, batch_start=batch_index)
   return b0
 end
 
@@ -576,18 +579,18 @@ function _twiss_cache_make_callback(_step_save, _beta_gamma_ref, _t_ref, _in_bod
     _cur_step_save_idx = 1
   end
   let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx), beta_gamma_ref=_beta_gamma_ref, t_ref=_t_ref, in_body_coordinates=_in_body_coordinates
-    return (i, coords, cur_s, cur_t_ref, cur_step, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+    return (i, coords, p) -> begin
       curstep[] += 1
       if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]] # Store the current map
         map = maps[cur_step_save_idx[]]
         if !in_body_coordinates
-          transforms_out!(i, coords)
+          transforms_out!(i, coords, p)
         end
         _twiss_setmap!(map, coords)
-        beta_gamma_ref[cur_step_save_idx[]] = cur_beta_gamma_ref
-        t_ref[cur_step_save_idx[]] = cur_t_ref
+        beta_gamma_ref[cur_step_save_idx[]] = p.beta_gamma_ref
+        t_ref[cur_step_save_idx[]] = p.t_ref
         if !in_body_coordinates
-          transforms_in!(i, coords)
+          transforms_in!(i, coords, p)
         end
         cur_step_save_idx[] += 1
       end
@@ -656,19 +659,19 @@ function _twiss_make_callback(_step_save, initial_step_save_idx, _in_body_coordi
     phi1=_phi1, phi2=_phi2, phi3_or_slip=_phi3_or_slip, damp=_damp, damp1=_damp1, damp2=_damp2, damp3=_damp3,
     curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(initial_step_save_idx), map=_map, beta_gamma_ref=_beta_gamma_ref, t_ref=_t_ref
     
-    return (i, coords, cur_s, cur_t_ref, cur_step, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!) -> begin
+    return (i, coords, p) -> begin
       curstep[] += 1
       j = cur_step_save_idx[]
       if j <= length(step_save) && curstep[] == step_save[j]
         if !in_body_coordinates
-          transforms_out!(i, coords)
+          transforms_out!(i, coords, p)
         end
         _twiss_setmap!(map, coords)
         _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, map, canonise, phase, damp, j)
         # Reset coords with canonised a:
         aj = fac[j].a
-        beta_gamma_ref[j] = cur_beta_gamma_ref
-        t_ref[j] = cur_t_ref
+        beta_gamma_ref[j] = p.beta_gamma_ref
+        t_ref[j] = p.t_ref
         for k in 1:6
           TI.copy!(coords.v[k], aj.v[k])
         end
@@ -678,7 +681,7 @@ function _twiss_make_callback(_step_save, initial_step_save_idx, _in_body_coordi
           end
         end
         if !in_body_coordinates
-          transforms_in!(i, coords)
+          transforms_in!(i, coords, p)
         end
         cur_step_save_idx[] += 1
       end
