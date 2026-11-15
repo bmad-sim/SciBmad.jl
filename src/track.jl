@@ -524,8 +524,7 @@ end
   return nothing
 end
 
-# Without transforms at p (known at compile time) only copied: the step loop then has no code that
-# writes the coordinates, which would make it reload them at every step
+# Without transforms at p (known at compile time) only copied
 @inline function _track_save_at!(i, coords, p, in_body_coordinates, v_data, q_data, state_data,
                                  l, j)
   if has_transforms(p)
@@ -539,30 +538,15 @@ end
 @noinline _track_copy_out!(i, coords, v_data, q_data, state_data, l, j) =
   _track_copy!(i, coords, v_data, q_data, state_data, l, j)
 
+# Saved in the lab coordinates by transforming the saved copy, so the tracked coordinates are not
+# written (the step loop would otherwise reload them at every step)
 @noinline function _track_save!(i, coords, p, in_body_coordinates, v_data, q_data,
                                 state_data, l, j)
-  @inbounds begin
-    if in_body_coordinates
-      _track_copy!(i, coords, v_data, q_data, state_data, l, j)
-    else
-      # Saved in the lab coordinates, and restored after (saving does not change the tracking)
-      v = coords.v
-      q = coords.q
-      vs = ntuple(k -> v[i,k], Val{6}())
-      qs = isnothing(q) ? nothing : ntuple(k -> q[i,k], Val{4}())
-      ss = coords.state[i]
-      transforms_out!(i, coords, p)
-      _track_copy!(i, coords, v_data, q_data, state_data, l, j)
-      for k in 1:6
-        v[i,k] = vs[k]
-      end
-      if !isnothing(q)
-        for k in 1:4
-          q[i,k] = qs[k]
-        end
-      end
-      coords.state[i] = ss
-    end
+  _track_copy!(i, coords, v_data, q_data, state_data, l, j)
+  if !in_body_coordinates
+    saved = BeamTracking.Coords(_slot(state_data, l, j), _slot(v_data, l, j),
+                                _slot(q_data, l, j), coords.weight, coords.callbacks)
+    transforms_out!(i, saved, p)
   end
   return nothing
 end
@@ -597,11 +581,23 @@ Base.unsafe_convert(::Type{Ptr{T}}, a::_PtrArray{T}) where {T} = a.ptr
 @inline Base.getindex(a::_PtrArray, i::Int) = unsafe_load(a.ptr, i)
 @inline Base.setindex!(a::_PtrArray, x, i::Int) = (unsafe_store!(a.ptr, x, i); a)
 # A SIMD lane of particles (the first index) at once
+@inline Base.getindex(a::_PtrArray{T}, i::BeamTracking.SIMD.VecRange{M}, I::Int...) where {T,M} =
+  BeamTracking.SIMD.vload(BeamTracking.SIMD.Vec{M,T},
+                          a.ptr + (LinearIndices(a)[i.i, I...] - 1)*sizeof(T))
 @inline function Base.setindex!(a::_PtrArray{T}, x::BeamTracking.SIMD.Vec{M,T},
                                 i::BeamTracking.SIMD.VecRange{M}, I::Int...) where {T,M}
   BeamTracking.SIMD.vstore(x, a.ptr + (LinearIndices(a)[i.i, I...] - 1)*sizeof(T))
   return a
 end
+
+# The saved coordinates at location l and slot j (the last two dimensions of a)
+@inline function _slot(a::_PtrArray{T,N}, l, j) where {T,N}
+  sz = Base.front(Base.front(a.size))
+  return _PtrArray(a.ptr + ((j-1)*a.size[N-1] + l-1)*prod(sz)*sizeof(T), sz)
+end
+@inline _slot(a::AbstractArray{T,N}, l, j) where {T,N} =
+  view(a, ntuple(_ -> Colon(), Val{N-2}())..., l, j)
+_slot(::Nothing, l, j) = nothing
 
 _kernel_array(a::Array{T}) where {T} = isbitstype(T) ? _PtrArray(pointer(a), size(a)) : a
 _kernel_array(a) = a
