@@ -1,0 +1,538 @@
+# Evaluation of LatticeExprs and of their derivatives in Knobs.
+#
+# The knobs are set to value + GTPSA parameter, every TwissExpr used is computed with one twiss
+# call (only the columns and rows used), each quantity is reduced to a Taylor series in the knobs
+# alone (a parameter-only Descriptor), and the expression trees are evaluated with these. The
+# lattice is always restored.
+#
+# Truncation orders: for a quantity that needs phase space order v and derivatives of total order
+# n in the knobs, all six variables get order v+n. The one-turn map then has every term that the
+# parameter dependent closed orbit turns into a term of lower order in x (e.g. x^2), and twiss
+# tracks only once (see `_check_cachable`).
+
+struct _Group
+  tw::TwissExpr
+  leaves::Vector{_TwissLeaf}
+end
+
+struct _Collection
+  groups::Vector{_Group} # in dependency order
+  groupof::IdDict{TwissExpr,Int}
+  getters::Vector{_Getter}
+  seen::IdDict{Any,Nothing}
+end
+_Collection() = _Collection(_Group[], IdDict{TwissExpr,Int}(), _Getter[], IdDict{Any,Nothing}())
+
+_collect!(c::_Collection, e) = nothing # numbers, knobs
+function _collect!(c::_Collection, e::_Call)
+  haskey(c.seen, e) && return
+  c.seen[e] = nothing
+  for a in e.args
+    _collect!(c, a)
+  end
+end
+function _collect!(c::_Collection, e::_Deriv)
+  haskey(c.seen, e) && return
+  c.seen[e] = nothing
+  _collect!(c, e.arg)
+end
+function _collect!(c::_Collection, e::_Getter)
+  haskey(c.seen, e) && return
+  c.seen[e] = nothing
+  push!(c.getters, e)
+  return
+end
+function _collect!(c::_Collection, e::_TwissLeaf)
+  haskey(c.seen, e) && return
+  c.seen[e] = nothing
+  if !haskey(c.groupof, e.tw)
+    # The TwissExprs this one takes inputs from (e.g. a_initial) come first
+    for v in values(getfield(e.tw, :kwargs))
+      v isa LatticeExpr && _collect!(c, v)
+    end
+    push!(c.groups, _Group(e.tw, _TwissLeaf[]))
+    c.groupof[e.tw] = length(c.groups)
+  end
+  push!(c.groups[c.groupof[e.tw]].leaves, e)
+  return
+end
+
+# Orders of derivative (deriv) in each knob that an expression takes, and their largest total
+function _deriv_orders(e, memo)
+  if e isa _Deriv
+    haskey(memo, e) && return memo[e]
+    orders, total = _deriv_orders(e.arg, memo)
+    orders = copy(orders)
+    k = findfirst(p -> _sameknob(p.first, e.knob), orders)
+    if isnothing(k)
+      push!(orders, e.knob => 1)
+    else
+      orders[k] = orders[k].first => orders[k].second + 1
+    end
+    return memo[e] = (orders, total + 1)
+  elseif e isa _Call
+    haskey(memo, e) && return memo[e]
+    orders = Pair{Knob,Int}[]
+    total = 0
+    for a in e.args
+      oa, ta = _deriv_orders(a, memo)
+      total = max(total, ta)
+      for p in oa
+        k = findfirst(q -> _sameknob(q.first, p.first), orders)
+        if isnothing(k)
+          push!(orders, p)
+        else
+          orders[k] = p.first => max(orders[k].second, p.second)
+        end
+      end
+    end
+    return memo[e] = (orders, total)
+  elseif e isa _TwissLeaf
+    # Derivatives taken in the inputs of its TwissExpr (e.g. a_initial)
+    haskey(memo, e.tw) && return memo[e.tw]
+    orders = Pair{Knob,Int}[]
+    total = 0
+    for v in values(getfield(e.tw, :kwargs))
+      v isa LatticeExpr || continue
+      oa, ta = _deriv_orders(v, memo)
+      total = max(total, ta)
+      append!(orders, oa)
+    end
+    return memo[e.tw] = (orders, total)
+  end
+  return (Pair{Knob,Int}[], 0)
+end
+
+# Thrown when the rows of a TwissExpr are (or may be) too far apart in phase
+struct _StalePhaseRows <: Exception
+  tw::TwissExpr
+end
+
+_is_phase_leaf(l::_TwissLeaf) = l.index == 0 ? (l.col in ("q1", "q2") && l.mono == (0, 0, 0, 0)) :
+                                 l.col in ("phi1", "phi2")
+
+# Chooses the elements whose rows keep consecutive rows at most 0.2 turns of phase apart (more
+# only across a single element), from the phases at the beginning of every element (one ordinary
+# twiss of the whole beamline)
+function _refresh_phase_rows!(tw::TwissExpr)
+  bl = getfield(tw, :bl)
+  n = length(bl.line)
+  c1 = TwissColumn(tw, "phi1")
+  c2 = TwissColumn(tw, "phi2")
+  leaves = Any[(_leaf(c, (i, 0)) for c in (c1, c2) for i in 1:n)..., c1[end], c2[end]]
+  vals = _evaluate(leaves, Knob[], false; phase_rows=false)[1]
+  phi1 = [view(vals, 1:n); vals[2n+1]]
+  phi2 = [view(vals, n+1:2n); vals[2n+2]]
+  rows = getfield(tw, :phase_rows)
+  empty!(rows)
+  last = 1
+  gap = 0.0
+  for j in 2:n
+    # (the row of element j is needed if the next one would be too far from the last row)
+    if max(phi1[j+1] - phi1[last], phi2[j+1] - phi2[last]) > 0.2
+      push!(rows, j)
+      gap = max(gap, phi1[j] - phi1[last], phi2[j] - phi2[last])
+      last = j
+    end
+  end
+  gap = max(gap, phi1[n+1] - phi1[last], phi2[n+1] - phi2[last])
+  getfield(tw, :phase_rows_n)[] = n
+  getfield(tw, :phase_gap)[] = gap
+  return tw
+end
+
+mutable struct _EvalState
+  phase_rows::Symbol # :off, :check (throw _StalePhaseRows if they are too far apart) or :use
+  seeds::Vector{Knob}
+  x0::Vector{Float64}
+  pvars::Any # the knobs' variables in the parameter-only Descriptor (nothing: no derivatives)
+  vals::IdDict{Any,Any}  # values of leaves and (memoized) nodes as Taylor series in the knobs
+  maps::IdDict{Any,Any}  # map-valued leaves (e.g. a), in the twiss Descriptor
+end
+
+function _knob_value(k::Knob)
+  x = _getknob(k)
+  if x isa DefExpr
+    error("Knob $(k.name) is a deferred expression. Vary what it depends on instead " *
+          "(e.g. a variable of the Beamline's context).")
+  elseif !(x isa Union{AbstractFloat,Integer,Rational})
+    error("Knob $(k.name) holds a $(typeof(x)), not a plain number. If it is left over from " *
+          "a parametric calculation, use `scalarize!` first.")
+  end
+  return Float64(x)
+end
+
+_seed_index(st::_EvalState, k::Knob) = findfirst(s -> _sameknob(s, k), st.seeds)
+
+_scalarize_knob!(obj) = nothing
+_scalarize_knob!(obj::LatElement) = (scalarize!(obj); nothing)
+function _scalarize_knob!(obj::Controller)
+  for (target, _) in keys(obj.fcns)
+    _scalarize_knob!(target)
+  end
+  return
+end
+
+# The part of the Taylor series t with the phase space monomial varmono, as a Taylor series in the
+# parameters alone (in the Descriptor of pzero), or a number if there are no parameters
+function _to_p(t::TPS, varmono, pzero)
+  nn = TI.ndiffs(t)
+  ords = zeros(UInt8, nn)
+  T = TI.numtype(typeof(t))
+  v = Ref{T}()
+  out = isnothing(pzero) ? zero(T) : (T <: Complex ? complex(pzero) : zero(pzero))
+  idx = TI.cycle!(t, -1, mono=ords, val=v) # -1 to include the constant term
+  while idx > -1
+    if all(k -> ords[k] == varmono[k], 1:6)
+      if isnothing(pzero)
+        out = v[]
+      else
+        TI.setm!(out, v[], ords[7:nn])
+      end
+    end
+    idx = TI.cycle!(t, idx, mono=ords, val=v)
+  end
+  return out
+end
+function _to_p(x::Number, varmono, pzero)
+  all(==(0), varmono) || error("The truncation order is too low for this term")
+  return x isa Complex ? ComplexF64(x) : Float64(x)
+end
+function _to_p(a::AmplitudeDependentValue, mono4, pzero)
+  delta, J1, J2, J3 = mono4
+  if a.coast && J3 != 0
+    error("`J3` is not an amplitude of this value (the beam is coasting), use `delta`")
+  elseif !a.coast && delta != 0
+    error("`delta` is not an amplitude of this value (the beam is not coasting; turn the RF " *
+          "off with `rf_on=false`), or use `J3`")
+  end
+  varmono = a.coast ? (J1, J1, J2, J2, 0, delta) : (J1, J1, J2, J2, J3, J3)
+  return _to_p(a.taylor_series, varmono, pzero)
+end
+
+# Copy of the Taylor series t in the Descriptor of zer (terms it does not have are dropped)
+function _redescribe(t::TPS, zer)
+  out = zero(zer)
+  nn_old = TI.ndiffs(t)
+  nn = TI.ndiffs(out)
+  ords = zeros(UInt8, nn_old)
+  new = zeros(UInt8, nn)
+  v = Ref{TI.numtype(typeof(t))}()
+  desc = GTPSA.getdesc(out).desc
+  idx = TI.cycle!(t, -1, mono=ords, val=v)
+  while idx > -1
+    new .= 0
+    n = min(nn_old, nn)
+    new[1:n] .= view(ords, 1:n)
+    if all(==(0), view(ords, n+1:nn_old)) && GTPSA.mad_desc_isvalidm(desc, Cint(nn), new)
+      TI.setm!(out, v[], new)
+    end
+    idx = TI.cycle!(t, idx, mono=ords, val=v)
+  end
+  return out
+end
+function _redescribe(m::DAMap, zer)
+  GTPSA.getdesc(first(m.v)) == GTPSA.getdesc(zer) && return m
+  nv = NNF.nvars(m)
+  v = [_redescribe(t, zer) for t in m.v]
+  q = isnothing(m.q) ? nothing : [_redescribe(m.q.q0, zer), _redescribe(m.q.q1, zer),
+                                  _redescribe(m.q.q2, zer), _redescribe(m.q.q3, zer)]
+  return DAMap(v0=m.v0, v=v, q=q, s=m.s, nv=nv, np=TI.ndiffs(zer) - nv)
+end
+
+function _kwarg_value(v, st, dzero)
+  if v isa _TwissLeaf && v.col in _MAP_COLS
+    return st.maps[v]
+  elseif v isa _Getter
+    return v.f()
+  elseif v isa LatticeExpr
+    error("As a keyword argument of a TwissExpr, an expression must be a map of another " *
+          "TwissExpr (e.g. `tw.a[end]`) or `lazy(f)`")
+  elseif v isa DAMap
+    return _redescribe(v, dzero)
+  end
+  return v
+end
+
+# One twiss call for all quantities used of a TwissExpr
+function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
+  tw = g.tw
+  bl = getfield(tw, :bl)
+  cols = unique!(String[l.col for l in g.leaves if l.index != 0 && l.col != "s"])
+  needmaps = any(l -> l.index != 0 && l.col in _MAP_COLS, g.leaves)
+  entrances = Int[l.index for l in g.leaves if l.index > 0 && l.step == 0]
+  phases = st.phase_rows != :off && any(_is_phase_leaf, g.leaves)
+  if phases
+    if st.phase_rows == :check && getfield(tw, :phase_rows_n)[] != length(bl.line)
+      throw(_StalePhaseRows(tw))
+    end
+    append!(entrances, getfield(tw, :phase_rows))
+    union!(cols, ("phi1", "phi2"))
+  end
+  at = Any[]
+  append!(at, unique!(sort!(entrances)))
+  inner = unique!(sort!(Int[l.index for l in g.leaves if l.step > 0]))
+  needend = any(l -> l.index == -1, g.leaves)
+  s, L, n = (isempty(inner) && !needend) ? (Float64[], Float64[], Int[]) : _line_steps(bl)
+  for i in inner # every step of these elements (the ranges end just before their exits)
+    d = 1e-6*L[i]/n[i]
+    push!(at, (s[i] - d, s[i] + L[i] - d))
+  end
+  if needend
+    s_end = s[end] + L[end]
+    push!(at, (s_end - 1e-9*max(1.0, s_end), Inf))
+  end
+  kw = Dict{Symbol,Any}(k => _kwarg_value(v, st, dzero) for (k, v) in getfield(tw, :kwargs))
+  t = twiss(bl; at=at, cols=cols, base_cols=["index", "s"], GTPSA_descriptor=D,
+            as_taylor_series=(!isnothing(pzero) || needmaps), kw...)
+  df = t.df
+  if phases && st.phase_rows == :check
+    # (rows further apart than when they were chosen, or going backwards: choose them again)
+    limit = max(0.35, min(getfield(tw, :phase_gap)[] + 0.1, 0.48))
+    for phi in (df.phi1, df.phi2), r in 2:length(phi)
+      -0.05 < scalar(phi[r]) - scalar(phi[r-1]) < limit || throw(_StalePhaseRows(tw))
+    end
+  end
+  rows = Dict{Int,Vector{Int}}()
+  for (r, i) in enumerate(df.index)
+    push!(get!(rows, i, Int[]), r)
+  end
+  for l in g.leaves
+    if l.index == 0
+      haskey(t.summ.sdict, Symbol(l.col)) || error("twiss did not compute `$(l.col)` here " *
+        "(e.g. `q3` needs RF, `qspin` needs `spin=true`)")
+      st.vals[l] = _to_p(t.summ.sdict[Symbol(l.col)], l.mono, pzero)
+      continue
+    end
+    rs = rows[l.index]
+    r = rs[1]
+    if l.step > 0
+      l.step < n[l.index] || error("$(l): the number of integration steps of the element " *
+        "changed since the expression was written")
+      sl = s[l.index] + l.step*L[l.index]/n[l.index]
+      r = rs[argmin([abs(scalar(df.s[k]) - sl) for k in rs])]
+      abs(scalar(df.s[r]) - sl) <= 1e-3*L[l.index]/n[l.index] ||
+        error("$(l): no twiss row at s = $sl") # unreachable unless the rows are assembled wrongly
+    end
+    x = df[r, l.col]
+    if l.col in _MAP_COLS
+      st.maps[l] = x
+    else
+      st.vals[l] = _to_p(x, (0, 0, 0, 0, 0, 0), pzero)
+    end
+  end
+  return
+end
+
+_peval(e::Real, st) = e
+function _peval(k::Knob, st)
+  i = _seed_index(st, k)
+  return isnothing(i) || isnothing(st.pvars) ? _knob_value(k) : st.x0[i] + st.pvars[i]
+end
+_peval(e::Union{_TwissLeaf,_Getter}, st) = haskey(st.vals, e) ? st.vals[e] :
+  error("$(e) is a map: it can only be used as an input of another TwissExpr")
+function _peval(e::_Call, st)
+  haskey(st.vals, e) && return st.vals[e]
+  if e.f === _esum || e.f === _emax || e.f === _emin # (no splatting of long argument lists)
+    op = e.f === _esum ? (+) : e.f
+    r = _peval(e.args[1], st)
+    for k in 2:length(e.args)
+      r = op(r, _peval(e.args[k], st))
+    end
+  else
+    r = e.f((_peval(a, st) for a in e.args)...)
+  end
+  return st.vals[e] = r
+end
+function _peval(e::_Deriv, st)
+  haskey(st.vals, e) && return st.vals[e]
+  x = _peval(e.arg, st)
+  return st.vals[e] = x isa TPS ? GTPSA.deriv(x, _seed_index(st, e.knob)) : 0.0
+end
+
+_flatten_exprs(e::Union{LatticeExpr,Real}) = Any[e]
+_flatten_exprs(e::AbstractArray) = Any[x for x in e]
+_knobs(k::Union{Knob,Pair}) = Knob[Knob(k)]
+function _knobs(ks)
+  knobs = Knob[Knob(k) for k in ks]
+  for i in eachindex(knobs), j in 1:i-1
+    _sameknob(knobs[i], knobs[j]) && error("Knob $(knobs[i].name) is given twice")
+  end
+  return knobs
+end
+
+# Values of the expressions and, if jac, their derivatives in the knobs vary
+function _evaluate(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool; phase_rows::Bool=true)
+  phase_rows || return _evaluate_once(exprs, vary, jac, :off)
+  for attempt in 1:2
+    try
+      return _evaluate_once(exprs, vary, jac, :check)
+    catch err
+      err isa _StalePhaseRows || rethrow()
+      _refresh_phase_rows!(err.tw)
+    end
+  end
+  # (an element with more than a third of a turn of phase advance: nothing more can be done)
+  return _evaluate_once(exprs, vary, jac, :use)
+end
+
+function _evaluate_once(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool, phase_rows::Symbol)
+  for e in exprs
+    e isa Union{LatticeExpr,Real} || error("Expected expressions (LatticeExpr), got a " *
+      "$(typeof(e)). (A vector of expressions compared with `==` to a plain vector of " *
+      "expressions is a Bool: build targets from an ExprVector, or with `.==`.)")
+  end
+  c = _Collection()
+  memo = IdDict{Any,Any}()
+  dorders = Pair{Knob,Int}[]
+  nd = 0
+  for e in exprs
+    _collect!(c, e)
+    oe, te = _deriv_orders(e, memo)
+    nd = max(nd, te)
+    for p in oe
+      k = findfirst(q -> _sameknob(q.first, p.first), dorders)
+      if isnothing(k)
+        push!(dorders, p)
+      else
+        dorders[k] = p.first => max(dorders[k].second, p.second)
+      end
+    end
+  end
+  # The knobs that carry derivatives: those varied, then those of deriv
+  seeds = jac ? copy(vary) : Knob[]
+  orders = fill(1, length(seeds))
+  for p in dorders
+    k = findfirst(s -> _sameknob(s, p.first), seeds)
+    if isnothing(k)
+      push!(seeds, p.first)
+      push!(orders, p.second)
+    else
+      orders[k] += p.second
+    end
+  end
+  n = isempty(seeds) ? 0 : (jac && !isempty(vary) ? 1 : 0) + nd
+  V = n + maximum(max(getfield(g.tw, :order), maximum(_leaf_order, g.leaves)) for g in c.groups;
+                  init=1)
+  if n > 0 && any(g -> any(l -> occursin(r"^d?h[0-9]", l.col), g.leaves), c.groups)
+    @warn "Derivatives of h terms in knobs are only correct for knobs that change neither " *
+          "the closed orbit nor the linear optics (e.g. sextupole strengths around a zero " *
+          "orbit): the parameter dependence of the linear normalization is not yet part of " *
+          "their calculation." maxlog=1
+  end
+  x0 = Float64[_knob_value(k) for k in seeds]
+  # With derivatives, the rows added for the phases would each cost a parametric normal form.
+  # Tunes and phases are then computed without the rows (so only modulo 1), and their integer
+  # parts are taken from an evaluation without derivatives
+  phase_leaves = Any[]
+  phase_ref = Float64[]
+  if n > 0 && phase_rows != :off
+    for g in c.groups
+      append!(phase_leaves, filter(_is_phase_leaf, g.leaves))
+    end
+    if !isempty(phase_leaves)
+      phase_ref = _evaluate(phase_leaves, Knob[], false)[1]
+      phase_rows = :off
+    end
+  end
+  st = _EvalState(phase_rows, seeds, x0, nothing, IdDict{Any,Any}(), IdDict{Any,Any}())
+  desc_old = GTPSA.desc_current
+  pzero = nothing
+  try
+    if n > 0
+      st.pvars = vars(Descriptor(orders, n))
+      pzero = zero(st.pvars[1])
+      D = Descriptor(fill(V, 6), V, orders, n)
+    else
+      D = Descriptor(6, V)
+    end
+    GTPSA.desc_current = D
+    dk = params(D)
+    dzero = zero(first(vars(D)))
+    try
+      for (i, k) in enumerate(seeds)
+        _setknob!(k, x0[i] + dk[i])
+      end
+      for g in c.groups
+        _run_group!(st, g, D, dzero, pzero)
+      end
+      for g in c.getters
+        st.vals[g] = _to_p(g.f(), (0, 0, 0, 0, 0, 0), pzero)
+      end
+    finally
+      # (with D still current: a number set next to a TPS is converted with the current one)
+      for (i, k) in enumerate(seeds)
+        _setknob!(k, x0[i])
+        _scalarize_knob!(k.obj)
+      end
+    end
+  finally
+    GTPSA.desc_current = desc_old
+  end
+  for (l, ref) in zip(phase_leaves, phase_ref)
+    st.vals[l] += round(ref - scalar(st.vals[l]))
+  end
+  vals = Vector{Float64}(undef, length(exprs))
+  J = jac ? zeros(length(exprs), length(vary)) : nothing
+  for (i, e) in enumerate(exprs)
+    r = _peval(e, st)
+    scalar(r) isa Real || error("The expression $(e) is complex (e.g. an h term): use " *
+                                "`abs`, `real` or `imag` of it")
+    vals[i] = scalar(r)
+    if jac && r isa TPS
+      J[i, :] .= view(GTPSA.gradient(r), 1:length(vary))
+    end
+  end
+  return vals, J
+end
+
+"""
+    value(expr)
+    value(exprs::AbstractArray)
+
+The current value of the expression ([`LatticeExpr`](@ref)) `expr`, or of each expression of an
+array. Each [`TwissExpr`](@ref) used is computed with one `twiss` call, only at the locations and
+with the columns the expressions use.
+"""
+value(e::Union{LatticeExpr,Real}) = _evaluate(Any[e], Knob[], false)[1][1]
+value(e::AbstractArray) = reshape(_evaluate(_flatten_exprs(e), Knob[], false)[1], size(e))
+
+"""
+    value_and_jacobian(exprs, knobs) -> (values, jacobian)
+    value_and_jacobian(exprs, knobs, x) -> (values, jacobian)
+
+The current values of the expressions ([`LatticeExpr`](@ref)s) `exprs` and their exact derivatives
+in the `knobs` ([`Knob`](@ref)s, or `obj => :property` pairs): `jacobian[i, j]` is the derivative of
+`exprs[i]` (in the order of `vec(exprs)`) in `knobs[j]`. For a single expression, the value and its
+gradient are returned. With `x`, the knobs are first set to the values `x` (and stay there).
+
+The derivatives are computed by automatic differentiation: the knobs are made parameters of the
+truncated power series (GTPSA) of one `twiss` call per [`TwissExpr`](@ref), with the truncation
+orders the expressions need, and the lattice is restored afterwards.
+"""
+function value_and_jacobian(e::Union{LatticeExpr,Real}, knobs)
+  vals, J = _evaluate(Any[e], _knobs(knobs), true)
+  return vals[1], J[1, :]
+end
+function value_and_jacobian(e::AbstractArray, knobs)
+  vals, J = _evaluate(_flatten_exprs(e), _knobs(knobs), true)
+  return reshape(vals, size(e)), J
+end
+function value_and_jacobian(e, knobs, x)
+  setknobs!(knobs, x)
+  return value_and_jacobian(e, knobs)
+end
+
+"""
+    setknobs!(knobs, x)
+
+Sets the `knobs` to the values `x`.
+"""
+function setknobs!(knobs, x)
+  ks = _knobs(knobs)
+  length(ks) == length(x) || error("$(length(ks)) knobs but $(length(x)) values")
+  for (k, xk) in zip(ks, x)
+    _setknob!(k, xk)
+  end
+  return knobs
+end

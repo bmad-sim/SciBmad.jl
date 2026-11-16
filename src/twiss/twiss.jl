@@ -333,6 +333,22 @@ function twiss(
       m_turn = _twiss_map(eye, view(tr0.bunch.v, 1, :), _view_q(tr0.bunch.q))
     end
     a, r, tunes = _a_r_tunes(m_turn)
+    if isnothing(maps)
+      # With phase space variables below the maximum order, the one-turn map around the closed
+      # orbit lacks terms (e.g. x^2) that the fixed point's dependence on δ and on parameters
+      # turns into terms of lower order in x, so a is only right to first order in them. Tracking
+      # the fixed point itself (a0, a translation) loses nothing: the one-turn map around it
+      # gives a again, with the error of the fixed point squared each time (a Newton iteration)
+      mo = unsafe_load(GTPSA_descriptor.desc).mo
+      for _ in 1:ceil(Int, log2(mo))
+        a0 = factorise(a).a0
+        tr0 = _twiss_track(a0, bl, rf_on, batch_index, zero(s[1]), (similar(s, 0), Int[], String[],
+                           String[]), Int[], in_body_coordinates)
+        m0 = inv(a0) ∘ _twiss_map(a0, view(tr0.bunch.v, 1, :), _view_q(tr0.bunch.q))
+        b, r, tunes = _a_r_tunes(m0)
+        a = a0 ∘ b
+      end
+    end
     a_initial, r_and_tunes = a, (r, tunes)
   end
 
@@ -476,12 +492,13 @@ function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
 end
 
 function _check_cachable(GTPSA_descriptor)
-  # check if we can cache_and_concat:
+  # check if we can cache_and_concat: the maps from the start composed with a lose no term if
+  # all phase space variables have the maximum order (a has no constant part, so a term of total
+  # order n of the composition only needs terms of the maps up to order n). Parameters may have
+  # lower orders
   desc = unsafe_load(GTPSA_descriptor.desc)
-  nn = desc.nn
   mo = desc.mo
-  po = desc.po
-  if all(x->x == mo && (po == 0 || x == po), unsafe_wrap(Vector{UInt8}, desc.no, nn))
+  if all(x->x == mo, unsafe_wrap(Vector{UInt8}, desc.no, desc.nv))
     return true
   else
     return false

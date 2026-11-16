@@ -11,6 +11,7 @@ using Reexport
   using NonlinearNormalForm: NonlinearNormalForm as NNF
   using TPSAInterface: TPSAInterface as TI
   using DifferentiationInterface: DifferentiationInterface as DI
+  using Statistics: Statistics, mean
   using LinearAlgebra,
         DataFrames,
         OrderedCollections,
@@ -46,6 +47,22 @@ export  twiss,
         val,
         jac,
         phase_trombone!,
+        TwissExpr,
+        LatticeExpr,
+        ExprVector,
+        Knob,
+        @knob,
+        Target,
+        MatchProblem,
+        MatchResult,
+        match!,
+        undo!,
+        value,
+        value_and_jacobian,
+        penalty,
+        setknobs!,
+        lazy,
+        mean,
         BeamTracking,
         Bunch,
         ParticleView, 
@@ -68,6 +85,9 @@ include("dynamic_aperture.jl")
 include("experimental/Experimental.jl")
 include("utils.jl")
 include("trombone.jl")
+include("match/expressions.jl")
+include("match/engine.jl")
+include("match/match.jl")
 
 # Only precompile when not processing code coverage, and not during General registry
 # AutoMerge checks (the workload exceeds the memory of the AutoMerge CI runners).
@@ -185,6 +205,16 @@ if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE",
 
     tw = twiss(fodo, GTPSA_descriptor=dnf3, cols=["dh2000"])
     grad(tw.dh2000[1])
+
+    # Matching: tunes and a beta function with the quadrupoles, chromaticities with the sextupoles
+    scalarize!(fodo)
+    t0 = twiss(fodo, at=[])
+    tw = TwissExpr(fodo)
+    match!(vary=[@knob(fodo.context.kqf), @knob(fodo.context.kqd)],
+           targets=[tw.q1 == t0.q1 + 0.01, tw.q2 == t0.q2 - 0.01, tw.beta1[qd] <= 100])
+    match!(vary=[@knob(fodo.context.ksf), @knob(fodo.context.ksd)],
+           targets=[tw.dq1 == 1, tw.dq2 == 1])
+    value(tw.beta1[qd]^2 - 5*mean(tw.alpha1[b, :]))
   end
 end
 end # if Base.JLOptions().code_coverage == 0

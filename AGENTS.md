@@ -206,6 +206,10 @@ plainly what was not verified and what could be wrong. Never present unverified 
   column, `_beta1(j, twi, cache, Val{as_tps})` etc.), `twiss_map.jl` (column name → function, units), 
   `twiss_df.jl` (`_twiss_df`, the row/column loop), `twiss_types.jl` (`Twiss`, `TwissSummary`, 
   `TwissInternal`, `TwissCache`).
+- `src/match/`: matching and optimization (see "Matching" below). `expressions.jl`
+  (`LatticeExpr` nodes, `Knob`/`@knob`, `TwissExpr` and its locations, `ExprVector`, `lazy`,
+  `deriv`), `engine.jl` (`value`, `value_and_jacobian`: plan, seed, one `twiss` per
+  `TwissExpr`, extract, restore), `match.jl` (`Target`, `MatchProblem`, `match!`, `MatchResult`).
 - `src/dynamic_aperture.jl`, `src/trombone.jl` (`phase_trombone!`: a `MapParams` map from the 
   linear normal form), `src/adv.jl` (`AmplitudeDependentValue`), `src/utils.jl` (`grad`, `jac`, `val`), 
   `src/experimental/` (submodule `Experimental`).
@@ -234,6 +238,24 @@ plainly what was not verified and what could be wrong. Never present unverified 
    The slip of a coasting beam and the damping are totals. Old and new agree to round-off (23
    cases), except the self-detuning with variable orders below the total order (an artifact of the
    truncation either way; with complete orders they agree to all digits).
+   **Variables below the maximum order** (`chrom` above `order`, or a Descriptor with GTPSA
+   parameters and the variables at order 1): the one-turn map around the closed orbit then lacks
+   the terms (x², ...) that the dependence of the fixed point on δ or on a parameter turns into
+   terms of lower order in x, so `a` from it is only right to first order in them (docs FODO,
+   dispersion 1.8 m at its start: dq1/dδ -0.0759 instead of 0.0875617, which tracking differences,
+   `order=2` and Tao (0.087581) give; ESR from IP6, dispersion 5e-8, was right to 4e-8, the same
+   ring started at its largest dispersion gave 1.4166 instead of 1.1693). `twiss` therefore refines
+   the fixed point (Nov 2026): it tracks `a0` (the translation to the fixed point) and takes `a`
+   from the one-turn map around it, ⌈log2(maximum order)⌉ times (the error of the fixed point is
+   squared each time). It must be `a0` and not `a`: with these Descriptors `a` carries incomplete
+   second order terms (x·y but not x²), and composing with the first order part of the orbit
+   in δ turns them into wrong first order terms (uncoupled lattices were right either way, coupled
+   ones with dispersion wrong). Now `chrom=n` equals `order=n` to 1e-13 (n = 2, 3; coupled, with
+   spin), the Descriptors of `parametric-nf.md` are right with a kicked orbit and with dispersion
+   (dq1/dkqf 0.572409 against 0.572409 from tracking, 0.5566 before), also in 6D. Cost: ESR
+   `chrom=2` 683 -> 774 ms (`order=2`: 1300 ms). Test "Chromatic and parametric functions with a
+   parameter dependent closed orbit" (12 of 16 fail without the refinement). Uniform orders (as
+   `value_and_jacobian` uses) never needed it.
 5. `_twiss_df`: evaluates every column for every row. The caches in `TwissCache` hold one row's 
    intermediate results (`a1_mat`, H/B matrices, …) shared by its columns; they are emptied at the 
    start of each row (`persistent_*` caches live for the whole table).
@@ -253,6 +275,67 @@ location and turn, written by particle 1; per particle with `BatchParam`s, retur
 `BatchParam`s). It is off by default: the reference time is then computed at every integration
 step (6% for one particle on ESR; `_DtRef`, a lazy time in BeamTracking, still left 3-6% from the
 values kept alive for the save). With it off the kernels' native code is identical to without it.
+
+### Matching (`src/match/`)
+
+- User level: `tw = TwissExpr(bl; twiss kwargs...)`; `tw.beta1[ele]` etc. are `LatticeExpr`s
+  (nothing is computed), arithmetic builds trees, `==`/`<=`/`>=` make `Target`s; `match!(vary=
+  [@knob(qf.Kn1), ...], targets=[...])`; `value(exprs)`, `value_and_jacobian(exprs, knobs)`;
+  `MatchProblem` gives `value(prob, x)`, `value_and_jacobian(prob, x)`, `penalty(prob, x)` for
+  other optimizers (checked with NonlinearSolve, Optim LBFGS, Metaheuristics DE). Everything has a
+  function form (`Knob(obj, :prop)`, `Target(expr, value)`) for a later Python wrapper. Docs:
+  `docs/src/optimize.md`.
+- Engine (`_evaluate_once`): collect the leaves per `TwissExpr` (dependencies such as
+  `a_initial=tw.a[end]` first); the knobs that carry derivatives are those varied (order 1) plus
+  those of `deriv` (their own orders); one Descriptor for all `twiss` calls with **all six
+  variables at order v+n** (v: the largest order a quantity needs, `_col_order`/`_leaf_order`; n:
+  the total order in the knobs), which uses the single-tracking path of `twiss`; set `GTPSA.desc_current`, set each knob
+  to value + parameter, one `twiss(...; at, cols, GTPSA_descriptor)` per `TwissExpr`, then in
+  `finally` set the numbers back (with the Descriptor still current), `scalarize!` the elements
+  touched and restore `desc_current`. Each leaf is reduced to a Taylor series in the knobs alone
+  (`_to_p`: the part without phase space dependence, in a parameter-only Descriptor), and the
+  trees are evaluated with these (`_peval`); `deriv` is `GTPSA.deriv` there.
+- Rows: a location is (beamline index, step); the end of an element is the beginning of the next
+  (-1: the end of the beamline). Beginnings are requested by index, interior steps by an s-range
+  over the element, the end by `(s_end - δ, Inf)`; the rows of the result are found by index and s.
+- Tunes and phases: `twiss` unwraps the phases row by row, so with few rows they are only known
+  modulo 1 (`twiss(ring; at=[])` gives the tunes in (-0.5, 0.5]). When `q1`, `q2`, `phi1` or
+  `phi2` are used, the engine adds rows (`phase_rows` of the `TwissExpr`: elements at most 0.2
+  turns apart, chosen from one full `twiss`, chosen again when two rows are more than ~0.35
+  apart, `_StalePhaseRows`). With derivatives the rows would each cost a parametric normal form
+  (ESR, 40 knobs: 1.8 s instead of 0.48 s), so the integer parts are taken from an evaluation
+  without derivatives instead. An unwrapping inside `twiss` from the linear maps at every step
+  would make this unnecessary (not done).
+- `match!`: residuals = weight × distance from the goal (zero inside an interval, its Jacobian
+  row zero) and `minimize_weight` × the expressions to minimize; steps from the SVD of the
+  Jacobian of the knobs not held at a bound. Trials per iteration: the Gauss-Newton step, 1/2,
+  1/4, 1/8 of it, then Levenberg-Marquardt steps (Nielsen's update); the first trial is evaluated
+  with its Jacobian. Measured on the test problems: pure LM stalls at stability limits (a failed
+  evaluation counts as infinite), pure step halving stalls on ill-conditioned problems and takes
+  108 evaluations for an inconsistent least-squares problem (9 with LM); neither is best
+  everywhere. A weight of 1e-5 for `minimize` (to hold the targets exactly) made LM stall: the
+  default is 1, and targets that must hold get a larger weight (constrained minimization would
+  need a null-space step: not done).
+- ESR (5 rows, quadrupole strengths as knobs, Julia 1.10, Apple M4): `value` 60 ms (85 ms with
+  tunes); `value_and_jacobian` with 2/10/40 knobs 127/197/478 ms (231/315/587 ms with tunes);
+  the same Jacobian by forward differences would take 3/11/41 × 60 ms. A tune match with 4
+  quadrupoles: 4 iterations, 1.6 s.
+- `_check_cachable` (twiss): the single-tracking path (track the identity once, compose the maps
+  with `a`) is now also used when the six variables have the maximum order and parameters lower
+  ones (it required all orders equal). The composition loses nothing then, because `a` has no
+  constant part. Agrees with the previous path (tracking `a`) to round-off (1e-13 relative on
+  small rings with and without RF and spin, chromatic terms, a chain, `deriv`; ESR 4e-14, 8e-15
+  absolute on an `alpha1` of 4e-7), and halves the cost of a Jacobian (ESR, 10 knobs: 395 ->
+  208 ms).
+- Not supported in expressions yet: matrix columns (`N`, `H1`, ...); maps only as inputs of
+  another `TwissExpr`. Not done: tracking quantities (`track` at locations as expressions), a
+  `start`/`stop` range for `twiss`, chunks of knobs, knob generation.
+- Precompile workload: two small `match!` calls (tunes with context knobs and an inequality,
+  chromaticities) and a `value` on the parametric FODO. First `match!` in a fresh process (docs
+  FODO, element knobs): 16 s without any workload, 3.4 s with the workload before, 1.3 s now;
+  `value` 0.17 -> 0.00 s; a tune match on ESR 2.0 s either way (its run time). Cost (two runs
+  each, Julia 1.10): precompile 174-179 s both, binary 602 -> 608 MB, peak memory 13.8 and
+  15.8 GB before, 16.2 and 15.4 GB now (the spread between runs is larger than the difference).
 
 ### NonlinearNormalForm facts
 
@@ -383,6 +466,31 @@ v6.3.1 takes 2.2 s (1.6 s run time). Time dependent parameters can't be covered 
 function is part of the type).
 
 Open items:
+- `twiss(…; delta0=δ)` of a coasting beam finds the closed orbit at δ but tracks the map at δ = 0
+  (`_twiss_track`: the sixth coordinate is the map's variable without δ; the `pz` column is 0; q1
+  0.05346401 vs 0.05345806 from tracking at δ = 1e-4 on the docs FODO). Same in SciBmad 0.6. Not
+  fixed. Tried (Nov 16, 2026): δ as the scalar part of the identity's sixth component
+  (`_twiss_make_identity`) gives the right tunes, betas and `pz` at order 1, but the `x` column
+  then counts the orbit twice (v0 plus the fixed point at δ), and `order=2` and `chrom=2` are
+  wrong: the scalar part of the energy-like parameter has to be handled where the fixed point and
+  the normal form are computed, not only in the tracking.
+- GTPSA aborts the Julia process (no exception) when two Descriptors are mixed or an invalid
+  monomial is indexed. A Float64 stored next to a TPS in a parameter group is converted with
+  `GTPSA.desc_current`, so the Descriptor used for parameters must be the current one when they
+  are set (creating another Descriptor in between changes it). Setting a number back into a
+  parameter group that held a TPS keeps the TPS type: `scalarize!(ele)` (20 µs) is needed.
+- `etac` and `alphac` with RF (6D) and GTPSA parameters at maximum order 2 or more are wrong:
+  -0.666 instead of 0.0205 on a small ring, whatever the parameter and with the variables at order
+  1 or 2 (right at maximum order 1 with a parameter, and at order 2 without parameters). Found
+  through `value_and_jacobian`; not fixed. Without RF they agree with finite differences.
+- Parameter derivatives of the `h` columns are wrong when the parameter changes the linear
+  optics: docs FODO, d h3000/d kqf = 1.84-2.00im against -2.52-1.59im from central differences
+  (also with the docs' Descriptor `[2,2,2,2,2,2], 3, [1], 1`); right to 1e-10 for a sextupole
+  strength around a zero orbit, 2% off for one with a kicked orbit. The parameter dependence of
+  the linear normalization is missing in their calculation (NNF, see
+  `~/parametric_rdt_findings.txt`). `value_and_jacobian` warns when it differentiates them.
+- The first design draft of the matching interface (before the implementation, with the
+  evidence for the two items above): https://claude.ai/artifact/FDK4ajRV3EWLhVaf4j5PLW.
 - `twiss` should not assemble its rows itself (`_twiss_assemble_locations`): `track` resolves `at`
   already (it calls the same function), so `twiss` can take the locations from `track`. Remove
   it from `twiss` (not done yet).

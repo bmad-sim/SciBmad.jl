@@ -321,6 +321,302 @@ using Test
     @test only(grad(tw.dh2000[1])) ≈ fd_dh2000 rtol=1e-6
   end
 
+  @testset "Expressions: value_and_jacobian vs finite differences" begin
+      # Values of expressions of twiss quantities equal those of ordinary twiss calls, and their
+      # derivatives in knobs (element parameters, a context variable, a length) agree with central
+      # differences: 6D and coasting, a kicked closed orbit, chromatic and amplitude-dependent
+      # terms, deriv (orbit response and its derivative), lazy functions, a chained open lattice
+    function fdjac(exprs, knobs; h=1e-6) # central differences of value(exprs) in the knobs
+      x0 = [SciBmad._knob_value(k) for k in knobs]
+      J = zeros(length(exprs), length(knobs))
+      for j in eachindex(knobs)
+        x = copy(x0)
+        x[j] += h
+        setknobs!(knobs, x)
+        vp = vec(value(exprs))
+        x[j] -= 2h
+        setknobs!(knobs, x)
+        J[:, j] = (vp .- vec(value(exprs))) ./ 2h
+      end
+      setknobs!(knobs, x0)
+      return J
+    end
+      # (the differences have noise of ~1e-7)
+    close_to(J, Jfd) = all(abs.(J .- Jfd) .<= 2e-6 .* (abs.(Jfd) .+ 1e-3))
+    @elements begin
+      qf = Quadrupole(Kn1=0.36, L=0.5)
+      sf = Sextupole(Kn2=1.2, L=0.2)
+      d = Drift(L=0.1)
+      b = SBend(L=1.2, angle=pi/132, n_steps=4)
+      qd = Quadrupole(Kn1=-0.36, L=0.5)
+      sd = Sextupole(Kn2=-1.2, L=0.2)
+      hk = HKicker(Kn0L=2e-4)
+      rf = RFCavity(L=1e-2, voltage=1e7, rf_frequency=1e9, zero_phase=PhaseRef.AboveTransition)
+    end
+    ring = Beamline([qf, sf, b, d, qd, sd, b, d, hk, rf]; species_ref=Species("electron"),
+                    E_ref=18e9)
+    knobs = [@knob(qf.Kn1), Knob(qd, :Kn1), Knob(hk => :Kn0L), @knob(d.L)]
+    for rf_on in (true, false)
+      tw = TwissExpr(ring; rf_on)
+      e = [tw.q1, tw.q2, tw.beta1[qd], tw.beta2[end], tw.x[5], tw.dx[b, :exit]...,
+           mean(tw.beta1[3, :]), maximum(tw.beta2[:]), tw.phi1[7] - tw.phi1[2],
+           sqrt(sum(abs2(tw.x["q*"]))), tw.s[end], tw.beta1[1]^2 - 5*mean(tw.alpha1[3, :])]
+      push!(e, rf_on ? tw.q3 : tw.etac)
+      t = twiss(ring; rf_on)
+      r3 = [findall(==(3), t.index); findfirst(==(4), t.index)] # the 4 steps of b and its end
+      @test length(r3) == 5
+      v = value(e)
+      @test v[1:4] ≈ [t.q1, t.q2, t.beta1[findfirst(==(5), t.index)], t.beta2[end]] rtol=1e-12
+      @test v[8] ≈ sum(t.beta1[r3])/5 rtol=1e-12
+      @test v[9] ≈ maximum(t.beta2) rtol=1e-12
+      @test v[13] ≈ t.beta1[1]^2 - 5*sum(t.alpha1[r3])/5 rtol=1e-12
+      v2, J = value_and_jacobian(e, knobs)
+      @test v2 ≈ v rtol=1e-11
+      @test close_to(J, fdjac(e, knobs))
+      @test !close_to(J .* 1.0001, fdjac(e, knobs)) # (the comparison resolves 1e-4)
+        # The lattice is restored
+      @test qf.BMultipoleParams isa BMultipoleParams{Float64} && d.L === 0.1
+    end
+      # A single expression gives its gradient. With the kicked closed orbit, twiss with the
+      # variables at order 1 agrees (it did not before the fixed point was refined, see "Chromatic
+      # and parametric functions with a parameter dependent closed orbit")
+    tw = TwissExpr(ring)
+    D1 = Descriptor([1, 1, 1, 1, 1, 1], 2, [1], 1)
+    qf.Kn1 = 0.36 + params(D1)[1]
+    t1 = twiss(ring; GTPSA_descriptor=D1, at=[])
+    qf.Kn1 = 0.36
+    scalarize!(qf)
+    v, g = value_and_jacobian(tw.q1, [@knob(qf.Kn1)])
+    gfd = fdjac([tw.q1], [@knob(qf.Kn1)])[1]
+    @test g[1] ≈ gfd rtol=1e-7
+    @test grad(t1.q1)[1] ≈ gfd rtol=1e-7
+
+      # Chromatic and amplitude-dependent terms (the orders are chosen from the quantities)
+    tc = TwissExpr(ring; rf_on=false)
+    e = [tc.dq1, tc.dq2, tc.q1[delta=2], tc.dbeta1[qd], tc.dx_2[1], tc.q1[J1=1]]
+    ks = [@knob(sf.Kn2), @knob(sd.Kn2), @knob(qf.Kn1)]
+    v, J = value_and_jacobian(e, ks)
+    t3 = twiss(ring; rf_on=false, order=3, cols=["dbeta1", "dx_2"], at=[1, 5])
+    @test v ≈ [t3.q1[delta=1], t3.q2[delta=1], t3.q1[delta=2], t3.dbeta1[2], t3.dx_2[1],
+               t3.q1[J1=1]] rtol=1e-9
+    @test close_to(J, fdjac(e, ks; h=1e-5))
+    @test v[1] ≈ twiss(ring; rf_on=false, chrom=2, at=[]).q1[delta=1] rtol=1e-9
+      # h terms are complex
+    th = twiss(ring; rf_on=false, order=2, cols=["h3000", "h2100"], at=[1, 5])
+    @test value([abs(tc.h3000[1]), real(tc.h2100[5]), imag(tc.h2100[5]), abs2(tc.h3000[1])]) ≈
+          [abs(th.h3000[1]), real(th.h2100[2]), imag(th.h2100[2]), abs2(th.h3000[1])] rtol=1e-10
+    @test_throws ErrorException value(tc.h3000[1])
+
+      # deriv: the orbit response to the kicker, and its derivative in a quadrupole (second order)
+    theta = Knob(hk, :Kn0L)
+    R = [deriv(tw.x[i], theta) for i in (1, 5)]
+    @test value(R) ≈ vec(fdjac([tw.x[1], tw.x[5]], [theta]; h=1e-7)) rtol=1e-6
+    v, J = value_and_jacobian(R, [@knob(qf.Kn1), theta])
+    @test v ≈ value(R) rtol=1e-11
+    @test isapprox(J, fdjac(R, [@knob(qf.Kn1), theta]; h=1e-5); rtol=1e-5)
+
+      # A context variable behind a deferred expression, lazy functions, a knob in an expression
+    qf.Kn1 = DefExpr(c -> c.k1)
+    ring.context.k1 = 0.36
+    kc = @knob ring.context.k1
+    e = [tw.beta1[5]*kc, lazy(() -> ring[1].Bn1),
+         lazy((x, y) -> atan(x, y), tw.alpha1[5], tw.beta1[5]), abs(tw.alpha1[5]),
+         max(tw.beta1[5], tw.beta2[5]), sqrt(tw.beta1[5])/kc^2]
+    v, J = value_and_jacobian(e, [kc])
+    @test v[2] == ring[1].Bn1
+    @test close_to(J, fdjac(e, [kc]))
+    @test_throws ErrorException value_and_jacobian(tw.q1, [@knob(qf.Kn1)]) # a deferred expression
+    @test_throws ErrorException value_and_jacobian(tw.q1, [kc, Knob(ring.context, :k1)]) # twice
+    @test ring.context.k1 === 0.36
+    qf.Kn1 = 0.36
+
+      # An open line that starts with the periodic functions of a cell, and with a given map
+    cell = Beamline([qf, d, b, qd, d, b]; species_ref=Species("electron"), pc_ref=18e9)
+    q3 = Quadrupole(Kn1=0.2, L=0.5)
+    line = Beamline([q3, d, qd, d]; species_ref=Species("electron"), pc_ref=18e9)
+    tcell = TwissExpr(cell)
+    tl = TwissExpr(line; a_initial=tcell.a[1])
+    e = [tl.beta1[end], tl.alpha1[end], tl.beta2[3], tl.dx[end], tl.phi1[end], tcell.q1]
+    ks = [@knob(qf.Kn1), @knob(qd.Kn1), @knob(q3.Kn1)]
+    v, J = value_and_jacobian(e, ks)
+    a = twiss(cell, cols=["a"], as_taylor_series=true, at=[1]).a[1]
+    t = twiss(line, a_initial=a)
+    @test v[1:5] ≈ [t.beta1[end], t.alpha1[end], t.beta2[3], t.dx[end], t.phi1[end]] rtol=1e-11
+    @test close_to(J, fdjac(e, ks))
+    tf = TwissExpr(line; a_initial=a)
+    e = [tf.beta1[end], tf.alpha2[end]]
+    v, J = value_and_jacobian(e, [@knob(q3.Kn1), @knob(qd.Kn1)])
+    @test v ≈ [t.beta1[end], t.alpha2[end]] rtol=1e-11
+    @test close_to(J, fdjac(e, [@knob(q3.Kn1), @knob(qd.Kn1)]))
+
+      # Tunes and phases keep their integer parts whatever rows are used (6 cells: twiss with few
+      # rows gives them modulo 1)
+    qf6 = Quadrupole(Kn1=1.2, L=0.5)
+    qd6 = Quadrupole(Kn1=-1.1, L=0.5)
+    cells = Beamline(repeat([qf6, d, b, qd6, d, b], 6); species_ref=Species("electron"),
+                     pc_ref=18e9)
+    t = twiss(cells)
+    t6 = TwissExpr(cells)
+    e = [t6.q1, t6.q2, t6.phi1[30] - t6.phi1[3]]
+    ref = [t.q1, t.q2, t.phi1[findfirst(==(30), t.index)] - t.phi1[findfirst(==(3), t.index)]]
+    @test ref[1] > 1 && twiss(cells; at=[]).q1 < 0.5
+    @test value(e) ≈ ref rtol=1e-12
+    v, J = value_and_jacobian(e, [@knob(qf6.Kn1), @knob(qd6.Kn1)])
+    @test v ≈ ref rtol=1e-11
+    @test close_to(J, fdjac(e, [@knob(qf6.Kn1), @knob(qd6.Kn1)]))
+    res = match!(vary=[@knob(qf6.Kn1), @knob(qd6.Kn1)], targets=[t6.q1 == 1.6, t6.q2 == 1.3])
+    t = twiss(cells)
+    @test res.converged
+    @test t.q1 ≈ 1.6 atol=1e-8
+    @test t.q2 ≈ 1.3 atol=1e-8
+  end
+
+  @testset "match!" begin
+    @elements begin
+      qf = Quadrupole(Kn1=0.36, L=0.5)
+      sf = Sextupole(Kn2=1.2, L=0.2)
+      d = Drift(L=0.1)
+      b = SBend(L=1.2, angle=pi/132)
+      qd = Quadrupole(Kn1=-0.36, L=0.5)
+      sd = Sextupole(Kn2=-1.2, L=0.2)
+    end
+    cell = Beamline([qf, sf, b, d, qd, sd, b, d]; species_ref=Species("electron"), pc_ref=18e9)
+    tw = TwissExpr(cell)
+    kf, kd = @knob(qf.Kn1), @knob(qd.Kn1)
+      # Tunes, checked with an ordinary twiss; undo!
+    res = match!(vary=[kf, kd], targets=[tw.q1 == 0.2, tw.q2 == 0.15])
+    @test res.converged && res.status == "all targets met"
+    t = twiss(cell; at=[])
+    @test t.q1 ≈ 0.2 atol=1e-8
+    @test t.q2 ≈ 0.15 atol=1e-8
+    @test res.x == [qf.Kn1, qd.Kn1]
+    @test occursin("Match converged", sprint(show, res))
+    x_tunes = res.x
+    undo!(res)
+    @test [qf.Kn1, qd.Kn1] == [0.36, -0.36]
+      # The same given the Beamline and a function of its TwissExpr, and as a do block
+    res = match!(cell; vary=[qf => :Kn1, qd => :Kn1], targets = tw -> [tw.q1 == 0.2, tw.q2 == 0.15])
+    @test res.converged && res.x ≈ x_tunes
+    undo!(res)
+    res = match!(cell; vary=[kf, kd]) do tw
+      [tw.q1 == 0.2, tw.q2 == 0.15]
+    end
+    @test res.converged && res.x ≈ x_tunes
+    undo!(res)
+      # Chromaticities (coasting), checked with twiss at order 2
+    tc = TwissExpr(cell; rf_on=false)
+    res = match!(vary=[@knob(sf.Kn2), @knob(sd.Kn2)], targets=[tc.dq1 == 1, tc.dq2 == 1])
+    t = twiss(cell; order=2, at=[])
+    @test res.converged
+    @test t.q1[delta=1] ≈ 1 atol=1e-8
+    @test t.q2[delta=1] ≈ 1 atol=1e-8
+    undo!(res)
+      # A bound stops the match with the knob on it
+    res = match!(vary=[Knob(qf, :Kn1; upper=0.5), kd], targets=[tw.q1 == 0.2, tw.q2 == 0.15])
+    @test !res.converged && qf.Kn1 == 0.5 && x_tunes[1] > 0.5
+    undo!(res)
+      # An inequality that holds moves nothing; one that does not is brought to its limit
+    res = match!(vary=[kf, kd], targets=[tw.beta1[1] <= 20])
+    @test res.converged && res.iterations == 0
+    res = match!(vary=[kf, kd], targets=[tw.q1 == 0.2, maximum(tw.beta1[:]) <= 6])
+    t = twiss(cell)
+    @test res.converged
+    @test t.q1 ≈ 0.2 atol=1e-8
+    @test maximum(t.beta1) ≈ 6 atol=1e-7
+    undo!(res)
+      # More knobs than targets, and more targets than knobs (least squares: the gradient of the
+      # squared residuals vanishes there, and not at the start)
+    res = match!(vary=[kf, kd, @knob(d.L)], targets=[tw.q1 == 0.2, tw.q2 == 0.15])
+    @test res.converged && d.L != 0.1
+    undo!(res)
+    res = match!(vary=[kf], targets=[tw.q1 == 0.2, tw.q2 == 0.15])
+    @test !res.converged && res.status == "no further improvement possible"
+    r, J = value_and_jacobian(res.problem, res.x)
+    r0, J0 = value_and_jacobian(res.problem, res.x0)
+    @test sqrt(sum(abs2, J'*r)) < 1e-5*sqrt(sum(abs2, J)*sum(abs2, r))
+    @test sqrt(sum(abs2, J0'*r0)) > 0.1*sqrt(sum(abs2, J0)*sum(abs2, r0))
+    undo!(res)
+      # A step into an unstable lattice is shortened (the first step for 0.49 overshoots)
+    res = match!(vary=[kf, kd], targets=[tw.q1 == 0.49, tw.q2 == 0.49])
+    @test res.converged && any(diff(res.history) .> -0.9 .* res.history[1:end-1])
+    undo!(res)
+      # minimize
+    res = match!(vary=[kf, kd], minimize=[tw.beta1[1] - 8, tw.beta2[1] - 12])
+    t = twiss(cell; at=[1])
+    @test t.beta1[1] ≈ 8 atol=1e-6
+    @test t.beta2[1] ≈ 12 atol=1e-6
+    undo!(res)
+      # The functions for other optimizers
+    prob = MatchProblem(vary=[kf, kd], targets=[tw.q1 == 0.2, tw.q2 == 0.15])
+    x0 = prob.x
+    @test x0 == [0.36, -0.36] && prob.lower == [-Inf, -Inf] && prob.upper == [Inf, Inf]
+    @test penalty(prob, x0) ≈ sum(abs2, value(prob, x0))
+    @test penalty(prob, [50.0, 50.0]) == Inf # unstable
+    @test penalty(prob, x_tunes) < 1e-15
+    setknobs!(prob, x0)
+    @test [qf.Kn1, qd.Kn1] == x0
+      # Vectors of targets
+    @test (tw.beta1["q*"] <= 30) isa Vector{Target}
+    @test length(tw.dx[[1, 5]] == [1.0, 2.0]) == 2
+    @test_throws ErrorException match!(vary=[kf], targets=[[tw.q1, tw.q2] == [0.2, 0.1]])
+    @test_throws ErrorException match!(vary=[kf, Knob(qf, :Kn1)], targets=[tw.q1 == 0.2])
+  end
+
+  @testset "Chromatic and parametric functions with a parameter dependent closed orbit" begin
+      # With phase space variables below the maximum order (chrom above order, or GTPSA parameters
+      # with the variables at order 1), the one-turn map around the closed orbit lacks the terms
+      # (x^2, ...) that the dependence of the fixed point on δ or on a parameter turns into terms of
+      # lower order, so the fixed point is refined by tracking it. A coupled cell with sextupoles
+      # and dispersion at its start: chrom=n equals order=n, the chromaticities equal differences
+      # of the mode tunes of tracked one-turn matrices around the closed orbits at ±δ, and the
+      # derivative of a tune in a quadrupole strength with a kicked orbit equals a difference
+    qf = Quadrupole(Kn1=0.36, L=0.5)
+    hk = HKicker(Kn0L=2e-4)
+    bl = Beamline([qf, Sextupole(Kn2=1.2, L=0.2), SBend(L=1.2, angle=pi/132), Drift(L=0.1),
+                   Quadrupole(Kn1=-0.36, L=0.5, tilt=0.02), Sextupole(Kn2=-1.2, L=0.2),
+                   SBend(L=1.2, angle=pi/132), Drift(L=0.1), hk];
+                  species_ref=Species("electron"), pc_ref=18e9)
+    cols = ["dbeta1", "dbeta2", "dalpha1", "dc12", "dx_2", "w1", "dx"]
+    tc = twiss(bl; chrom=2, cols=cols)
+    to = twiss(bl; order=2, cols=cols)
+    @test abs(tc.dx[1]) > 1 # dispersion at the start
+    for c in cols
+      @test getproperty(tc, Symbol(c)) ≈ getproperty(to, Symbol(c)) rtol=1e-9
+    end
+    @test [tc.q1[delta=1], tc.q2[delta=1]] ≈ [to.q1[delta=1], to.q2[delta=1]] rtol=1e-10
+    t3 = twiss(bl; chrom=3, cols=["dbeta1_2", "dx_3"], at=[1, 5])
+    o3 = twiss(bl; order=3, cols=["dbeta1_2", "dx_3"], at=[1, 5])
+    @test t3.dbeta1_2 ≈ o3.dbeta1_2 rtol=1e-9
+    @test t3.dx_3 ≈ o3.dx_3 rtol=1e-9
+    @test [t3.q1[delta=2], t3.q2[delta=2]] ≈ [o3.q1[delta=2], o3.q2[delta=2]] rtol=1e-9
+    function mode_tunes(delta) # from the one-turn matrix around the closed orbit, by differences
+      co = find_closed_orbit(bl; v0=[0. 0. 0. 0. 0. delta]).v0
+      M = zeros(4, 4)
+      for j in 1:4
+        vp = copy(co)
+        vp[1,j] += 1e-6
+        vm = copy(co)
+        vm[1,j] -= 1e-6
+        M[:,j] = (track(bl; v0=vp).v[1,1:4,1,end] .- track(bl; v0=vm).v[1,1:4,1,end]) ./ 2e-6
+      end
+      return sort(filter(>(0), angle.(SciBmad.LinearAlgebra.eigvals(M)) ./ 2pi))
+    end
+    @test mode_tunes(0.0) ≈ sort([tc.q1[], tc.q2[]]) rtol=1e-8
+    chroms = (mode_tunes(1e-4) .- mode_tunes(-1e-4)) ./ 2e-4
+    @test chroms ≈ [tc.q2[delta=1], tc.q1[delta=1]] rtol=1e-5 # (q2 is the lower tune)
+    @test abs(chroms[1] - chroms[2]) > 0.01
+      # A parameter that moves the closed orbit, with the variables at order 1
+    f() = (t = twiss(bl; at=[]); [t.q1, t.q2])
+    qf.Kn1 = 0.36 + 1e-6
+    fp = f()
+    qf.Kn1 = 0.36 - 1e-6
+    fm = f()
+    D = Descriptor([1, 1, 1, 1, 1, 1], 2, [1], 1)
+    qf.Kn1 = 0.36 + params(D)[1]
+    tp = twiss(bl; GTPSA_descriptor=D, at=[])
+    @test [grad(tp.q1)[1], grad(tp.q2)[1]] ≈ (fp .- fm) ./ 2e-6 rtol=1e-7
+  end
+
   @testset "Phase trombone" begin
       # A phase trombone changes the tunes by phi1 and phi2 (in units of 2π, also when set later
       # through transport_map_params) and leaves the Twiss parameters unchanged
