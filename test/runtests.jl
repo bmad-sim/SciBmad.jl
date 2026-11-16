@@ -326,20 +326,22 @@ using Test
       # derivatives in knobs (element parameters, a context variable, a length) agree with central
       # differences: 6D and coasting, a kicked closed orbit, chromatic and amplitude-dependent
       # terms, deriv (orbit response and its derivative), lazy functions, a chained open lattice
-    function fdjac(exprs, knobs; h=1e-6) # central differences of value(exprs) in the knobs
-      x0 = [SciBmad._knob_value(k) for k in knobs]
-      J = zeros(length(exprs), length(knobs))
-      for j in eachindex(knobs)
-        x = copy(x0)
-        x[j] += h
-        setknobs!(knobs, x)
-        vp = vec(value(exprs))
-        x[j] -= 2h
-        setknobs!(knobs, x)
-        J[:, j] = (vp .- vec(value(exprs))) ./ 2h
+      # Central differences of value(exprs) in the knobs (a function in a testset shares the
+      # testset's variables: its own have names not used below)
+    function fdjac(exprs, knobs; h=1e-6)
+      fd_x0 = [SciBmad._knob_value(k) for k in knobs]
+      fd_J = zeros(length(exprs), length(knobs))
+      for fd_j in eachindex(knobs)
+        fd_x = copy(fd_x0)
+        fd_x[fd_j] += h
+        setknobs!(knobs, fd_x)
+        fd_vp = vec(value(exprs))
+        fd_x[fd_j] -= 2h
+        setknobs!(knobs, fd_x)
+        fd_J[:, fd_j] = (fd_vp .- vec(value(exprs))) ./ 2h
       end
-      setknobs!(knobs, x0)
-      return J
+      setknobs!(knobs, fd_x0)
+      return fd_J
     end
       # (the differences have noise of ~1e-7)
     close_to(J, Jfd) = all(abs.(J .- Jfd) .<= 2e-6 .* (abs.(Jfd) .+ 1e-3))
@@ -361,7 +363,8 @@ using Test
       e = [tw.q1, tw.q2, tw.beta1[qd], tw.beta2[end], tw.x[5], tw.dx[b, :exit]...,
            mean(tw.beta1[3, :]), maximum(tw.beta2[:]), tw.phi1[7] - tw.phi1[2],
            sqrt(sum(abs2(tw.x["q*"]))), tw.s[end], tw.beta1[1]^2 - 5*mean(tw.alpha1[3, :])]
-      push!(e, rf_on ? tw.q3 : tw.etac)
+      push!(e, tw.etac, tw.alphac) # (with RF and parameters they lacked the factor sin(2π q3))
+      rf_on && push!(e, tw.q3)
       t = twiss(ring; rf_on)
       r3 = [findall(==(3), t.index); findfirst(==(4), t.index)] # the 4 steps of b and its end
       @test length(r3) == 5
@@ -406,6 +409,20 @@ using Test
     @test value([abs(tc.h3000[1]), real(tc.h2100[5]), imag(tc.h2100[5]), abs2(tc.h3000[1])]) ≈
           [abs(th.h3000[1]), real(th.h2100[2]), imag(th.h2100[2]), abs2(th.h3000[1])] rtol=1e-10
     @test_throws ErrorException value(tc.h3000[1])
+      # Their derivatives, also in knobs that change the linear optics (the quadrupole) and the
+      # closed orbit (the kicker): the Courant-Snyder map of h depends on the parameters
+    e = [real(tc.h3000[1]), imag(tc.h2100[5]), abs(tc.h2200[1]), real(tc.dh2000[1])]
+    ks = [@knob(sf.Kn2), @knob(qf.Kn1), @knob(d.L)]
+    v, J = value_and_jacobian(e, ks)
+    Jfd = fdjac(e, ks; h=1e-5)
+    @test all(abs.(J .- Jfd) .<= 1e-5 .* (abs.(Jfd) .+ 1e-3))
+    @test abs(J[1,2]) > 1 # (the derivative in the quadrupole was wrong, not small)
+    v, J = value_and_jacobian(e, [Knob(hk, :Kn0L)])
+    @test all(abs.(J .- fdjac(e, [Knob(hk, :Kn0L)]; h=3e-7)) .<= 1e-5 .* abs.(J))
+    t6 = TwissExpr(ring)
+    e = [real(t6.h300000[1]), imag(t6.h210000[5]), real(t6.h200010[1])]
+    v, J = value_and_jacobian(e, ks)
+    @test all(abs.(J .- fdjac(e, ks; h=1e-5)) .<= 1e-5 .* (abs.(J) .+ 1e-3))
 
       # deriv: the orbit response to the kicker, and its derivative in a quadrupole (second order)
     theta = Knob(hk, :Kn0L)
@@ -589,22 +606,38 @@ using Test
     @test t3.dbeta1_2 ≈ o3.dbeta1_2 rtol=1e-9
     @test t3.dx_3 ≈ o3.dx_3 rtol=1e-9
     @test [t3.q1[delta=2], t3.q2[delta=2]] ≈ [o3.q1[delta=2], o3.q2[delta=2]] rtol=1e-9
-    function mode_tunes(delta) # from the one-turn matrix around the closed orbit, by differences
-      co = find_closed_orbit(bl; v0=[0. 0. 0. 0. 0. delta]).v0
-      M = zeros(4, 4)
-      for j in 1:4
-        vp = copy(co)
-        vp[1,j] += 1e-6
-        vm = copy(co)
-        vm[1,j] -= 1e-6
-        M[:,j] = (track(bl; v0=vp).v[1,1:4,1,end] .- track(bl; v0=vm).v[1,1:4,1,end]) ./ 2e-6
+      # From the one-turn matrix around the closed orbit, by differences (its variables have names
+      # not used below: a function in a testset shares the testset's variables)
+    function mode_tunes(delta)
+      mt_co = find_closed_orbit(bl; v0=[0. 0. 0. 0. 0. delta]).v0
+      mt_M = zeros(4, 4)
+      for mt_j in 1:4
+        mt_vp = copy(mt_co)
+        mt_vp[1,mt_j] += 1e-6
+        mt_vm = copy(mt_co)
+        mt_vm[1,mt_j] -= 1e-6
+        mt_M[:,mt_j] = (track(bl; v0=mt_vp).v[1,1:4,1,end] .-
+                        track(bl; v0=mt_vm).v[1,1:4,1,end]) ./ 2e-6
       end
-      return sort(filter(>(0), angle.(SciBmad.LinearAlgebra.eigvals(M)) ./ 2pi))
+      return sort(filter(>(0), angle.(SciBmad.LinearAlgebra.eigvals(mt_M)) ./ 2pi))
     end
     @test mode_tunes(0.0) ≈ sort([tc.q1[], tc.q2[]]) rtol=1e-8
     chroms = (mode_tunes(1e-4) .- mode_tunes(-1e-4)) ./ 2e-4
     @test chroms ≈ [tc.q2[delta=1], tc.q1[delta=1]] rtol=1e-5 # (q2 is the lower tune)
     @test abs(chroms[1] - chroms[2]) > 0.01
+      # delta0: the functions around the closed orbit at δ (the map is tracked at δ, also with
+      # higher orders), against tracking and against the expansion in δ from δ = 0
+    co = find_closed_orbit(bl; v0=[0. 0. 0. 0. 0. 1e-4]).v0
+    o4 = twiss(bl; order=4, cols=["dx_2", "dx_3"], at=[1])
+    for kw in ((;), (order=2,), (chrom=2,))
+      td = twiss(bl; delta0=1e-4, cols=["x", "px", "pz", "dx"], at=[1], kw...)
+      @test sort([td.q1[], td.q2[]]) ≈ mode_tunes(1e-4) rtol=1e-8
+      @test [td.x[1], td.px[1], td.pz[1]] ≈ [co[1], co[2], 1e-4] rtol=1e-11
+      @test td.dx[1] ≈ tc.dx[1] + 1e-4*o4.dx_2[1] + 0.5e-8*o4.dx_3[1] rtol=1e-9
+    end
+    td = twiss(bl; delta0=1e-4, chrom=2, at=[])
+    @test td.q1[delta=1] ≈ o4.q1[delta=1] + 2e-4*o4.q1[delta=2] + 3e-8*o4.q1[delta=3] rtol=1e-8
+    @test abs(mode_tunes(1e-4)[2] - mode_tunes(0.0)[2]) > 1e-6
       # A parameter that moves the closed orbit, with the variables at order 1
     f() = (t = twiss(bl; at=[]); [t.q1, t.q2])
     qf.Kn1 = 0.36 + 1e-6

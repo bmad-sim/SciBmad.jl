@@ -256,6 +256,15 @@ plainly what was not verified and what could be wrong. Never present unverified 
    `chrom=2` 683 -> 774 ms (`order=2`: 1300 ms). Test "Chromatic and parametric functions with a
    parameter dependent closed orbit" (12 of 16 fail without the refinement). Uniform orders (as
    `value_and_jacobian` uses) never needed it.
+   **δ of a coasting beam (`delta0`):** in the maps δ is a parameter without a value (their sixth
+   component has no constant part). `_twiss_track` adds the δ of the orbit to the tracked sixth
+   coordinate, `_twiss_map` takes it off the tracked map again, and `TwissInternal.delta0` gives
+   it to the `pz` column and to `_slip_rel_p`. (Before Nov 2026 the map was tracked at δ = 0
+   around the orbit of δ: q1 0.05346401 instead of 0.05345806 at δ = 1e-4 on the docs FODO, `pz`
+   0. Putting δ into the constant part of the identity's sixth component instead made order 1
+   right but counted the orbit twice in `x` and broke order 2: the normal form takes that constant
+   as a displacement.) Tested against tracking and the expansion in δ from δ = 0, orders 1 and 2
+   and `chrom=2`.
 5. `_twiss_df`: evaluates every column for every row. The caches in `TwissCache` hold one row's 
    intermediate results (`a1_mat`, H/B matrices, …) shared by its columns; they are emptied at the 
    start of each row (`persistent_*` caches live for the whole table).
@@ -306,6 +315,18 @@ values kept alive for the save). With it off the kernels' native code is identic
   (ESR, 40 knobs: 1.8 s instead of 0.48 s), so the integer parts are taken from an evaluation
   without derivatives instead. An unwrapping inside `twiss` from the linear maps at every step
   would make this unnecessary (not done).
+- Open lines are checked with numbers first (`_check_open_line`: the initial orbit and the
+  transfer matrix by differences, 13 particles): with wild knob values the tracked map overflows
+  and GTPSA ends the process in the normal form (`invsqrt(NaN)`), which a solver step can cause
+  (seen with BatchSolve's Levenberg-Marquardt on the four-quadrupole line of the docs). Periodic
+  lattices throw before that (closed orbit, unstable one-turn map).
+- BatchSolve's `levenberg_marquardt!(val!, val_and_jac!, y, jac, x)` runs a `MatchProblem` as it
+  is (failed evaluations as NaN residuals). Compared with `match!` on the test problems
+  (evaluations, residual-only + with Jacobian): tunes 5 vs 4+5; a first step into instability 13
+  vs 17+10; two targets with one knob 108 vs 23+19; four-quadrupole line to β = 10 m 7 vs 7+8;
+  ESR tunes 5 vs 4+5; a tune with max β <= 6: met vs not met; three problems neither solves. It
+  evaluates the residual at the trial point and then residual and Jacobian again at the same
+  point; it has no bounds and no step limits.
 - `match!`: residuals = weight × distance from the goal (zero inside an interval, its Jacobian
   row zero) and `minimize_weight` × the expressions to minimize; steps from the SVD of the
   Jacobian of the knobs not held at a bound. Trials per iteration: the Gauss-Newton step, 1/2,
@@ -336,6 +357,24 @@ values kept alive for the save). With it off the kernels' native code is identic
   `value` 0.17 -> 0.00 s; a tune match on ESR 2.0 s either way (its run time). Cost (two runs
   each, Julia 1.10): precompile 174-179 s both, binary 602 -> 608 MB, peak memory 13.8 and
   15.8 GB before, 16.2 and 15.4 GB now (the spread between runs is larger than the difference).
+
+### Columns: facts found by differentiating them (Nov 2026)
+
+- `h` columns (`_make_h!`): exp(:h:) is the one-turn map around the fixed point, in the
+  coordinates of the Courant-Snyder map (the part of `a1` linear in the oscillating variables)
+  and with the linear rotation taken off. The rotation keeps its dependence on δ and parameters.
+  The Courant-Snyder map is the one at δ = 0, and **with GTPSA parameters it keeps its dependence
+  on them**: only then is `h` as a Taylor series in a parameter the series of the `h` computed at
+  changed values of the parameter. With the map fixed at the expansion point (as it was) the
+  derivative in a quadrupole strength was another quantity (docs FODO, d h3000/d kqf 1.84-2.00im
+  instead of -2.52-1.59im), and so was any derivative with a kicked orbit; sextupole strengths
+  around a zero orbit were right. Now they agree with central differences (to the step error,
+  which goes to zero with the step) for h3000, h2100, h1020, h1011, h2200, h4000, dh2000, dh3000
+  with a kicked orbit and coupling, and for 6D terms. Without parameters the code path is the
+  previous one (bitwise).
+- `etac` and `alphac` with RF: `B3[5,6] sin(2π q3)`. The branch with GTPSA parameters (maximum
+  order above 1) lacked the sine: -0.666 instead of 0.0205 on a small ring. Fixed; values and
+  derivatives in quadrupole strengths, a length and the RF voltage agree with differences.
 
 ### NonlinearNormalForm facts
 
@@ -466,29 +505,11 @@ v6.3.1 takes 2.2 s (1.6 s run time). Time dependent parameters can't be covered 
 function is part of the type).
 
 Open items:
-- `twiss(…; delta0=δ)` of a coasting beam finds the closed orbit at δ but tracks the map at δ = 0
-  (`_twiss_track`: the sixth coordinate is the map's variable without δ; the `pz` column is 0; q1
-  0.05346401 vs 0.05345806 from tracking at δ = 1e-4 on the docs FODO). Same in SciBmad 0.6. Not
-  fixed. Tried (Nov 16, 2026): δ as the scalar part of the identity's sixth component
-  (`_twiss_make_identity`) gives the right tunes, betas and `pz` at order 1, but the `x` column
-  then counts the orbit twice (v0 plus the fixed point at δ), and `order=2` and `chrom=2` are
-  wrong: the scalar part of the energy-like parameter has to be handled where the fixed point and
-  the normal form are computed, not only in the tracking.
 - GTPSA aborts the Julia process (no exception) when two Descriptors are mixed or an invalid
   monomial is indexed. A Float64 stored next to a TPS in a parameter group is converted with
   `GTPSA.desc_current`, so the Descriptor used for parameters must be the current one when they
   are set (creating another Descriptor in between changes it). Setting a number back into a
   parameter group that held a TPS keeps the TPS type: `scalarize!(ele)` (20 µs) is needed.
-- `etac` and `alphac` with RF (6D) and GTPSA parameters at maximum order 2 or more are wrong:
-  -0.666 instead of 0.0205 on a small ring, whatever the parameter and with the variables at order
-  1 or 2 (right at maximum order 1 with a parameter, and at order 2 without parameters). Found
-  through `value_and_jacobian`; not fixed. Without RF they agree with finite differences.
-- Parameter derivatives of the `h` columns are wrong when the parameter changes the linear
-  optics: docs FODO, d h3000/d kqf = 1.84-2.00im against -2.52-1.59im from central differences
-  (also with the docs' Descriptor `[2,2,2,2,2,2], 3, [1], 1`); right to 1e-10 for a sextupole
-  strength around a zero orbit, 2% off for one with a kicked orbit. The parameter dependence of
-  the linear normalization is missing in their calculation (NNF, see
-  `~/parametric_rdt_findings.txt`). `value_and_jacobian` warns when it differentiates them.
 - The first design draft of the matching interface (before the implementation, with the
   evidence for the two items above): https://claude.ai/artifact/FDK4ajRV3EWLhVaf4j5PLW.
 - `twiss` should not assemble its rows itself (`_twiss_assemble_locations`): `track` resolves `at`

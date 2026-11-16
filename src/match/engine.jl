@@ -254,6 +254,34 @@ function _kwarg_value(v, st, dzero)
   return v
 end
 
+# GTPSA ends the Julia process (it does not throw) when a function such as 1/sqrt gets a NaN. A
+# periodic twiss throws before that (no closed orbit, or an unstable one-turn map), but an open
+# line has no such check: knobs that make it extremely defocusing let the map overflow. So the
+# initial orbit and the transfer matrix around it (by differences) are tracked as numbers first
+function _check_open_line(bl, a::DAMap, kw)
+  v0 = zeros(1, 6)
+  if haskey(kw, :v0)
+    v0 .= kw[:v0]
+  else
+    v0[1, 1:length(a.v0)] .= a.v0
+    length(a.v0) == 5 && (v0[1, 6] = get(kw, :delta0, 0.0))
+  end
+  v = repeat(v0, 13)
+  for j in 1:6
+    v[1+j, j] += 1e-6
+    v[7+j, j] -= 1e-6
+  end
+  res = track(bl; v0=v, scalar_params=true, rf_on=get(kw, :rf_on, true))
+  out = view(res.v, :, :, 1, size(res.v, 4))
+  alive = view(res.state, :, 1, size(res.state, 3))
+  if !all(isfinite, out) || any(!=(BeamTracking.STATE_ALIVE), alive)
+    error("The initial orbit of the open line is lost or not finite at its end")
+  end
+  maximum(abs, view(out, 2:7, :) .- view(out, 8:13, :))/2e-6 < 1e8 ||
+    error("The transfer matrix of the open line has elements above 1e8 (extremely defocusing)")
+  return
+end
+
 # One twiss call for all quantities used of a TwissExpr
 function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
   tw = g.tw
@@ -283,6 +311,7 @@ function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
     push!(at, (s_end - 1e-9*max(1.0, s_end), Inf))
   end
   kw = Dict{Symbol,Any}(k => _kwarg_value(v, st, dzero) for (k, v) in getfield(tw, :kwargs))
+  get(kw, :a_initial, nothing) isa DAMap && _check_open_line(bl, kw[:a_initial], kw)
   t = twiss(bl; at=at, cols=cols, base_cols=["index", "s"], GTPSA_descriptor=D,
             as_taylor_series=(!isnothing(pzero) || needmaps), kw...)
   df = t.df
@@ -414,12 +443,6 @@ function _evaluate_once(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool, phase
   n = isempty(seeds) ? 0 : (jac && !isempty(vary) ? 1 : 0) + nd
   V = n + maximum(max(getfield(g.tw, :order), maximum(_leaf_order, g.leaves)) for g in c.groups;
                   init=1)
-  if n > 0 && any(g -> any(l -> occursin(r"^d?h[0-9]", l.col), g.leaves), c.groups)
-    @warn "Derivatives of h terms in knobs are only correct for knobs that change neither " *
-          "the closed orbit nor the linear optics (e.g. sextupole strengths around a zero " *
-          "orbit): the parameter dependence of the linear normalization is not yet part of " *
-          "their calculation." maxlog=1
-  end
   x0 = Float64[_knob_value(k) for k in seeds]
   # With derivatives, the rows added for the phases would each cost a parametric normal form.
   # Tunes and phases are then computed without the rows (so only modulo 1), and their integer

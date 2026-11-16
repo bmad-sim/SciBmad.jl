@@ -529,6 +529,9 @@ end
   end
 
   o = twi.fac[j].a0.v[k]
+  if k == 6 && iscoasting(twi) && twi.delta0 != 0 # (δ is a parameter of the maps, without its value)
+    o = o + twi.delta0
+  end
   nn = ndiffs(twi)
 
   # Check what's going on with the orbit - should we store as TPS or float?
@@ -649,7 +652,7 @@ end
     return cache.matrix[:B3][5,6]*sin(2*pi*phi3)
   elseif haskey(cache.map, :B3) # Parameter dependence
     B3 = cache.map[:B3]
-    z_slip = NNF.factor_out(B3.v[5], 6)
+    z_slip = NNF.factor_out(B3.v[5], 6)*sin(2*pi*_phi(j, twi, cache, Val{true}(), 3))
     return as_tps ? z_slip : scalar(z_slip)
   else
     throwunreachable()
@@ -662,7 +665,7 @@ end
 # (with parameters, the cached pz column is a Taylor series that also contains δ)
 @inline function _slip_rel_p(j, twi, cache, phi3)
   if iscoasting(twi) && TI.is_tps_type(typeof(phi3)) isa TI.IsTPSType
-    return 1 + twi.fac[j].a0.v[6]
+    return 1 + twi.delta0 + twi.fac[j].a0.v[6]
   end
   if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)
     _pz(j, twi, cache, Val{true}()) # Force (potentially TPSA) calculation of pz
@@ -717,7 +720,7 @@ end
     return cache.matrix[:B3][5,6]*sin(2*pi*phi3) / beta
   elseif haskey(cache.map, :B3) # Parameter dependence
     B3 = cache.map[:B3]
-    slip = NNF.factor_out(B3.v[5], 6) / beta
+    slip = NNF.factor_out(B3.v[5], 6)*sin(2*pi*_phi(j, twi, cache, Val{true}(), 3)) / beta
     return as_tps ? slip : scalar(slip)
   else
     throwunreachable()
@@ -1068,6 +1071,28 @@ end
   NNF.clear!(a1_lin)
   NNF.setray!(a1_lin.v, v_matrix=I) 
   NNF.setray!(a1_lin.v, v_matrix=NNF.jacobian(a1, NNF.HVARS))
+  if ndiffs(twi) > 6
+    # With GTPSA parameters the Courant-Snyder map depends on them (not on δ): h as a Taylor
+    # series in a parameter is then the series of h computed at changed values of the parameter
+    # (with the map fixed at the values of the expansion point it would be another quantity)
+    nhv = nhvars(twi)
+    ords = zeros(UInt8, ndiffs(twi))
+    v = Ref{TI.numtype(eltype(a1.v))}()
+    for k in 1:nhv
+      TI.clear!(a1_lin.v[k])
+      idx = TI.cycle!(a1.v[k], 0, mono=ords, val=v)
+      while idx > -1
+        if sum(view(ords, 1:nhv)) == 1 && all(==(0), view(ords, nhv+1:6))
+          TI.setm!(a1_lin.v[k], v[], ords)
+        end
+        idx = TI.cycle!(a1.v[k], idx, mono=ords, val=v)
+      end
+    end
+    half = a1 ∘ a2 ∘ r ∘ a2i ∘ a1i ∘ a1_lin
+    exphc = ci ∘ ri_lin ∘ inv(a1_lin) ∘ half ∘ c
+    cache.vf[:h] = log(exphc)
+    return
+  end
   
   half = a1 ∘ a2 ∘ r ∘ a2i ∘ a1i ∘ a1_lin
   NNF.clear!(a1_lin)

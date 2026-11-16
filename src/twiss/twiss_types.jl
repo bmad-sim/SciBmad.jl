@@ -75,6 +75,7 @@ struct TwissInternal{T,F,P,D,R}
   damp2::D
   damp3::D
   r_and_tunes::R
+  delta0::Float64 # δ of the orbit of a coasting beam
 end
 
 ndiffs(twi::TwissInternal) = NNF.ndiffs(twi.fac[1].a)

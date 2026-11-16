@@ -252,6 +252,9 @@ function twiss(
   end
 
   coast = v0_and_coast[2]
+  # The δ of the orbit of a coasting beam (delta0). In the maps δ is a parameter without a value:
+  # it is added to the tracked coordinates and taken off the tracked maps again
+  delta_orbit = coast ? Float64(v0_and_coast[1][6]) : 0.0
 
   if isnothing(cols)
     if coast
@@ -324,12 +327,12 @@ function twiss(
     eye = _twiss_make_identity(v0_and_coast[1], init, Val{coast}(), Val{spin}())
     if _check_cachable(GTPSA_descriptor)
       tr = _twiss_track(eye, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
-                        in_body_coordinates)
+                        in_body_coordinates, delta_orbit)
       maps = _twiss_maps(eye, tr)
       m_turn = maps[end]
     else
       tr0 = _twiss_track(eye, bl, rf_on, batch_index, zero(s[1]), (similar(s, 0), Int[], String[],
-                         String[]), Int[], in_body_coordinates)
+                         String[]), Int[], in_body_coordinates, delta_orbit)
       m_turn = _twiss_map(eye, view(tr0.bunch.v, 1, :), _view_q(tr0.bunch.q))
     end
     a, r, tunes = _a_r_tunes(m_turn)
@@ -343,7 +346,7 @@ function twiss(
       for _ in 1:ceil(Int, log2(mo))
         a0 = factorise(a).a0
         tr0 = _twiss_track(a0, bl, rf_on, batch_index, zero(s[1]), (similar(s, 0), Int[], String[],
-                           String[]), Int[], in_body_coordinates)
+                           String[]), Int[], in_body_coordinates, delta_orbit)
         m0 = inv(a0) ∘ _twiss_map(a0, view(tr0.bunch.v, 1, :), _view_q(tr0.bunch.q))
         b, r, tunes = _a_r_tunes(m0)
         a = a0 ∘ b
@@ -364,7 +367,7 @@ function twiss(
   # a at every row: a composed with the maps to the rows, or tracked
   if isnothing(maps)
     tr = _twiss_track(a_initial, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
-                      in_body_coordinates)
+                      in_body_coordinates, delta_orbit)
     fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(tr, a_initial, canonise,
                                                                        phase, damp, coast)
   else
@@ -373,7 +376,7 @@ function twiss(
   end
   _twiss_reference!(beta_gamma_ref, t_ref, tr)
 
-  twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes)
+  twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes, delta_orbit)
 
   # Finally, construct the summ and the dataframe (with provided columns)
   # And post-process with the provided columns
@@ -521,6 +524,9 @@ end
 function _twiss_map(template, v, q)
   map = zero(template)
   NNF.setray!(map.v, v=v)
+  if NNF.nvars(map) == 5 # coasting: δ is a parameter of the map, without the value of the orbit
+    TI.seti!(map.v[6], 0, 0)
+  end
   if !isnothing(map.q)
     NNF.setquat!(map.q, q=q)
   end
@@ -557,9 +563,11 @@ _view_q(q) = isnothing(q) ? nothing : view(q, 1, :)
 # Tracks the map m (its coordinates: the orbit plus the map) through bl with track, saving it at the
 # rows (locations, at the steps step_save) with the reference there. (Always with the reference,
 # so that all of twiss's tracking compiles the same kernels)
-function _twiss_track(m, bl, rf_on, batch_index, t_ref0, locations, step_save, in_body_coordinates)
+function _twiss_track(m, bl, rf_on, batch_index, t_ref0, locations, step_save, in_body_coordinates,
+                      delta_orbit)
   if NNF.nvars(m) == 5
-    v = reshape([(i < 5 ? m.v0[i]+copy(m.v[i]) : copy(m.v[i])) for i in 1:6], 1, 6)
+    v = reshape([(i < 5 ? m.v0[i]+copy(m.v[i]) : (i == 6 ? delta_orbit+m.v[i] : copy(m.v[i])))
+                 for i in 1:6], 1, 6)
   else
     v = reshape([m.v0[i]+copy(m.v[i]) for i in 1:6], 1, 6)
   end

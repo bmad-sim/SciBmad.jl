@@ -188,12 +188,6 @@ The sum of the squares of the expressions in `minimize` and of the distances fro
 (each times its weight) is made as small as possible. If they cannot all vanish, the result
 balances them, so give targets that must hold a larger weight, as here.
 
-:::{note}
-The derivatives of the `h` terms are currently only exact for knobs that change neither the
-closed orbit nor the linear optics, such as sextupole strengths in a ring without orbit errors.
-A warning is shown when they are used.
-:::
-
 ## Knobs
 
 A knob is any parameter that can be set with `object.parameter = value`:
