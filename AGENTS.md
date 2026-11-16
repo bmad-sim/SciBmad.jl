@@ -221,20 +221,38 @@ plainly what was not verified and what could be wrong. Never present unverified 
    guarantees it: elements tracked in one step (patches, maps, SaganCavity) error for 
    `n_steps > 1` or `n_slices > 1`, and Beamlines forces `n_steps = n_slices = 1` for zero length. 
    Verified per element with a counting callback on mixed lines and ESR.
-3. `_compute_periodic_a_and_cache!` (uniform truncation orders): tracks the identity map (Bunch 
-   `t_ref = zero(s[1])`, so it can hold parametric lengths) once with 
-   a callback storing the map at each saved step; the one-turn map gives `a` (`normal`) and tunes. 
-   Otherwise `_compute_periodic_a` and a second tracking pass.
-4. `factorise` (NNF) of `a`, then `_twiss_push_a_with_cache`: per saved step `a = map ∘ a` and 
-   `factorise` (canonise level from `canonise_phase_damp`; 0 at order 1), accumulating phases.
+3. Tracking with `track` (`_twiss_track`: `_track` at the rows, `save_reference=true` so that all
+   of `twiss`'s tracking compiles the same kernels; the Bunch `t_ref = zero(s[1])` holds parametric
+   lengths). Uniform truncation orders: the identity is tracked once, the saved maps are the maps
+   from the start to the rows (`_twiss_maps`), the last one the one-turn map, which gives `a`
+   (`normal`) and the tunes. Otherwise the one-turn map gives `a`, which is tracked itself.
+   `beta_gamma_ref` and `t_ref` of the rows come from the result.
+4. `factorise` (NNF) of `a`, then `_twiss_push_a`: per row `a = map ∘ a` (or the tracked `a`) and
+   `factorise` (canonise level from `canonise_phase_damp`; 0 at order 1) with fresh phases: the
+   phases from the start mod 1, unwrapped against the previous row (so rows must be less than half
+   a turn of phase apart, as before: with sparse `at` the integer tunes are lost, a known issue).
+   The slip of a coasting beam and the damping are totals. Old and new agree to round-off (23
+   cases), except the self-detuning with variable orders below the total order (an artifact of the
+   truncation either way; with complete orders they agree to all digits).
 5. `_twiss_df`: evaluates every column for every row. The caches in `TwissCache` hold one row's 
    intermediate results (`a1_mat`, H/B matrices, …) shared by its columns; they are emptied at the 
    start of each row (`persistent_*` caches live for the whole table).
 6. `_twiss_summ`: tunes, `etac`, `alphac`, spin tune, damping.
 
-Callbacks get `(i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!)`; 
-`twiss` uses `transforms_out!`/`transforms_in!` to store maps in lab coordinates inside misaligned 
-elements (unless `in_body_coordinates`).
+Callbacks get `(i, coords, p)` with a `TrackPoint` `p` (`p.s` and `p.step` from the beginning of 
+the Beamline, `p.t_ref`, `p.beta_gamma_ref`, `p.last_ds_step`, `p.last_g`); `twiss` uses 
+`transforms_out!(i, coords, p)`/`transforms_in!(i, coords, p)` to store maps in lab coordinates 
+inside misaligned elements (unless `in_body_coordinates`). `track` saves its locations (`at`) with 
+one callback (`_track_make_callback`): `location_of_step[p.step]` is the location or 0, `slot[1]` 
+the column of the turn (0 if not saved, set before each turn); the location where a turn begins is 
+copied before the turn (no callback runs at step 0). It always tracks with this callback (also 
+with `at=[]`), so `track`, `twiss` and `dynamic_aperture` compile the same kernels. Saved: the 
+initial particles (column 1, at every location), then every `save_every_n_turns`-th turn.
+`save_reference=true` also saves `p.t_ref` and `p.beta_gamma_ref` at the locations (one value per
+location and turn, written by particle 1; per particle with `BatchParam`s, returned as
+`BatchParam`s). It is off by default: the reference time is then computed at every integration
+step (6% for one particle on ESR; `_DtRef`, a lazy time in BeamTracking, still left 3-6% from the
+values kept alive for the save). With it off the kernels' native code is identical to without it.
 
 ### NonlinearNormalForm facts
 
@@ -309,7 +327,10 @@ ESR, Julia 1.10, Apple silicon: `find_closed_orbit` 38 → 17 ms (BeamTracking 0
 352 ms (0.9) → 287 ms (row caches shared by the columns) → 254 ms (NNF `inv!`: `inv(A)` once, work 
 buffers only for maxord > 1; bitwise); `chrom=2` case 891 → 839 → 685 ms (the `inv!` change does 
 not help at order 2). Phases of `twiss` at order 1: closed orbit 18 ms, tracking the maps 50 ms, 
-`push` ~120 ms (mostly `factorise`: 14 µs and ~300 allocations per row), table 56 ms.
+`push` ~120 ms (mostly `factorise`: 14 µs and ~300 allocations per row), table 56 ms. Through
+`track` (Nov 2026; 267-274 -> 261-265 ms, `chrom=2` 692-720 -> 658-676 ms): closed orbit 15 ms,
+tracking the identity 46 ms (3 ms of it saving the rows), maps 3 ms, composing 4 ms, `factorise`
+per row 155 ms, table ~60 ms.
 
 Fixed on the way (with tests): rows after the first started with the previous row's cache (with 
 `base_cols=String[]` row 2 repeated row 1, 2.5% off in a FODO); `twiss(…; spin=true)` NaN for an 
@@ -362,6 +383,20 @@ v6.3.1 takes 2.2 s (1.6 s run time). Time dependent parameters can't be covered 
 function is part of the type).
 
 Open items:
+- `twiss` should not assemble its rows itself (`_twiss_assemble_locations`): `track` resolves `at`
+  already (it calls the same function), so `twiss` can take the locations from `track`. Remove
+  it from `twiss` (not done yet).
+- After the `track`/`twiss` rework (Nov 2026), still to do: rerun the notebooks (`examples/`; the
+  location index of `TrackingResult`: Julia's `res.v[:, :, end]` and `track_spin(res.q, …)[1, 2,
+  end]` still work with the default single location, the Python notebook's `[0, 1, -1]` through
+  the Julia bridge is unverified); check Julia 1.13 (CI's other version); measure the precompile
+  workload's effect on the first `twiss` call (below). BeamTracking's `test/performance_test.jl`
+  still allows 2 allocations per prepared chain, now 5 per ESR turn in total: a bound independent
+  of the number of elements would catch a regression of the boxed `Coords`.
+- First call of `twiss` on ESR (no precompile workload) 14.7-14.9 -> 16.7-17.1 s since `twiss`
+  tracks with `track`. Not more kernels (the tracking compiles faster than with the old
+  callbacks); the extra host-side compile was not found (the row loop behind a function barrier
+  did not change it). Not measured with the workload.
 - `factorise` speed: the remaining cost is ~19 temporary maps per call (inversions, compositions, 
   `exp!` work maps; sharing the two `exp!` calls' work maps would save ~2) and GTPSA arithmetic; 
   further gains need structural changes. A separate order-1 path based on Duals (GPU batchable) is 

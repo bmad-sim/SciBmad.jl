@@ -51,7 +51,10 @@ export  twiss,
         ParticleView, 
         Time, 
         TimeDependentParam, 
-        BatchParam
+        BatchParam,
+        TrackPoint,
+        transforms_out!,
+        transforms_in!
         
 include("closed_orbit.jl") 
 include("track.jl")
@@ -98,9 +101,10 @@ if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE",
     # track
     res = track(fodo, v0=rand(4, 6) .* 1e-5)
     res = track(fodo, v0=rand(4, 6) .* 1e-5, spin=true)
-    # track! of a Bunch (BeamTracking) compiles other keyword argument methods than track
+    # track of a given Bunch (as in twiss and dynamic_aperture), locations and a start element
     b = Bunch(rand(4, 6) .* 1e-5; species=fodo.species_ref, p_over_q_ref=fodo.p_over_q_ref)
-    track!(b, fodo)
+    res = track(fodo, bunch=b, at=[])
+    res = track(fodo, v0=rand(4, 6) .* 1e-5, at=[qf, (1.0, 2.0)], start=qd, n_turns=2)
     redirect_stdout(devnull) do # dynamic_aperture prints its progress
       dynamic_aperture(fodo; n_r=3, n_theta=3, deltas=[0.0], max_sig_x=1, max_sig_y=1, emit_1=1e-9, emit_2=1e-9, n_turns=1)
     end

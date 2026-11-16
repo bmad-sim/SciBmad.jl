@@ -55,7 +55,7 @@ particle coordinates be the same, and observe the difference in the output $x$-c
 ```{code-cell} julia
 v0 = repeat([1e-3 0 0 0 0 1e-3], 10, 1)
 res = track(fodo, v0=v0)
-res.v[:,1,end] # output x-coordinates
+res.v[:,1,1,end] # output x-coordinates
 ```
 
 In one parallelized tracking run, we have effectively simulated 10 different beamlines. This
@@ -82,7 +82,7 @@ And `track` again:
 ```{code-cell} julia
 v0 = repeat([1e-3 0 0 0 0 1e-3], n_particles*10, 1)
 res = track(fodo, v0=v0)
-res.v[:,1,end] # output x-coordinates
+res.v[:,1,1,end] # output x-coordinates
 ```
 
 ## Limitations

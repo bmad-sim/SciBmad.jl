@@ -46,7 +46,7 @@ track(bl, v0=zeros(1, 6))
 
 ```{code-cell} julia
 d.tracking_method = SolenoidKick()
-track(bl, v0=[1e-3 0 0 0 0 0]).v[1,:,end]
+track(bl, v0=[1e-3 0 0 0 0 0]).v[1,:,1,end]
 ```
 
 (track.steps)=
