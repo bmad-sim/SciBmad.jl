@@ -312,25 +312,28 @@ function twiss(
   beta_gamma_ref = Vector{Float64}(undef, length(s)) # Store the reference energy at each step
   t_ref = Vector{eltype(s)}(undef, length(s)) # Store the reference time at each step (type of the lengths, e.g. TPS for parametric lengths)
 
-  # If the GTPSA truncation order is uniform, then we can 
-  # cache the maps between saved points and concatenate them
-  # In the closed case, we need to do one pass to compute a, 
-  # and another pass to push a. If uniform, a can be pushed with cached maps
-  # else, a is tracked again. Note that the first pass will tell you 
-  # if there is damping or not for the rest of the Twiss.
-
-  # So each element will have the output of factorise with canonise level
-  # set accordingly. 
+  # The maps are tracked with track, which saves them at the rows (the steps step_save) with the
+  # reference there. If the GTPSA truncation order is uniform, the identity is tracked once: the
+  # maps from the start to the rows, the last one the one-turn map, give a and its value at every
+  # row (a composed with them). Else a is computed from the one-turn map, then tracked itself.
+  locations = (s, idxs, names, kinds)
   maps = nothing
   r_and_tunes = nothing
+  tr = nothing
   if isnothing(a_initial)
-    # Determine:
+    eye = _twiss_make_identity(v0_and_coast[1], init, Val{coast}(), Val{spin}())
     if _check_cachable(GTPSA_descriptor)
-      # also fills beta_gamma_ref, t_ref
-      a_initial, r_and_tunes, maps = _compute_periodic_a_and_cache!(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}(), step_save, beta_gamma_ref, t_ref, in_body_coordinates)
+      tr = _twiss_track(eye, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
+                        in_body_coordinates)
+      maps = _twiss_maps(eye, tr)
+      m_turn = maps[end]
     else
-      a_initial, r_and_tunes = _compute_periodic_a(bl, v0_and_coast[1], init, rf_on, batch_index, Val{coast}(), Val{spin}(), zero(s[1]))
+      tr0 = _twiss_track(eye, bl, rf_on, batch_index, zero(s[1]), (similar(s, 0), Int[], String[],
+                         String[]), Int[], in_body_coordinates)
+      m_turn = _twiss_map(eye, view(tr0.bunch.v, 1, :), _view_q(tr0.bunch.q))
     end
+    a, r, tunes = _a_r_tunes(m_turn)
+    a_initial, r_and_tunes = a, (r, tunes)
   end
 
   if isnothing(damping)
@@ -342,12 +345,17 @@ function twiss(
 
   a_initial = factorise(a_initial; canonise=canonise, damping=isnothing(damp) ? false : true).a
 
-  # Now we push 
+  # a at every row: a composed with the maps to the rows, or tracked
   if isnothing(maps)
-    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a!(bl, rf_on, batch_index, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
+    tr = _twiss_track(a_initial, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
+                      in_body_coordinates)
+    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(tr, a_initial, canonise,
+                                                                       phase, damp, coast)
   else
-    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
+    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(maps, a_initial, canonise,
+                                                                       phase, damp, coast)
   end
+  _twiss_reference!(beta_gamma_ref, t_ref, tr)
 
   twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes)
 
@@ -491,41 +499,61 @@ function _twiss_make_identity(v0, init, ::Val{coast}, ::Val{spin}) where {coast,
   return DAMap(init=init, nv=nv, np=np, v0=view(v0, :, 1:nv), v_matrix=I, q=(spin ? I : nothing))
 end
 
-function _twiss_setmap!(map, coords)
-  nv = NNF.nvars(map)
-  NNF.setray!(map.v, v=reshape(coords.v, :))
-  
-  # Reset coords back to identity
-  # This should not touch delta if e.g. delta-dependent twiss:
-  for i in 1:nv
-    TI.clear!(coords.v[i])
-  end
-  NNF.setray!(view(coords.v, 1:nv), scalar=NNF.getscalar(map), v_matrix=I)
-
-  # Handle spin too:
+# The map with the coordinates v (and quaternion q, or nothing) of a map like template, e.g.
+# saved by track
+function _twiss_map(template, v, q)
+  map = zero(template)
+  NNF.setray!(map.v, v=v)
   if !isnothing(map.q)
-    NNF.setquat!(map.q, q=reshape(coords.q, :))
-    for i in 1:4
-      TI.clear!(coords.q[i])
-    end
-    TI.seti!(coords.q[1], 1, 0)
+    NNF.setquat!(map.q, q=q)
   end
   return map
 end
+_view_q(q, j) = isnothing(q) ? nothing : view(q, 1, :, j, 2)
+# The maps saved by track at the rows (with m: from the start)
+_twiss_maps(m, tr) = [_twiss_map(m, view(tr.v, 1, :, j, 2), _view_q(tr.q, j)) for j in axes(tr.v, 3)]
 
-function _twiss_track!(eye, cbs, bl, rf_on, batch_index, t_ref0)
-  if NNF.nvars(eye) == 5
-    v = reshape([(i < 5 ? eye.v0[i]+copy(eye.v[i]) : copy(eye.v[i])) for i in 1:6], 1, 6)
-  else
-    v = reshape([eye.v0[i]+copy(eye.v[i]) for i in 1:6], 1, 6)
+# The reference at the rows, saved by track
+function _twiss_reference!(beta_gamma_ref, t_ref, tr)
+  beta_gamma_ref .= view(tr.beta_gamma_ref, :, 2)
+  t_ref .= view(tr.t_ref, :, 2)
+  return nothing
+end
+
+# The functions at every row from a at the start: composed with the maps to the rows, or a itself
+# tracked (saved at the rows by track)
+function _twiss_push_a(maps_or_tr, a_initial, canonise, phase, damp, coast)
+  tracked = maps_or_tr isa TrackingResult
+  n = tracked ? size(maps_or_tr.v, 3) : length(maps_or_tr)
+  fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(n, a_initial,
+                                                                               phase, damp)
+  for j in 1:n
+    a = tracked ? _twiss_map(a_initial, view(maps_or_tr.v, 1, :, j, 2), _view_q(maps_or_tr.q, j)) :
+                  maps_or_tr[j] ∘ a_initial
+    _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j,
+                  coast)
   end
-  q = isnothing(eye.q) ? nothing : [copy(eye.q[1]) copy(eye.q[2]) copy(eye.q[3]) copy(eye.q[4])]
+  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
+end
+_view_q(q) = isnothing(q) ? nothing : view(q, 1, :)
+
+# Tracks the map m (its coordinates: the orbit plus the map) through bl with track, saving it at the
+# rows (locations, at the steps step_save) with the reference there. (Always with the reference,
+# so that all of twiss's tracking compiles the same kernels)
+function _twiss_track(m, bl, rf_on, batch_index, t_ref0, locations, step_save, in_body_coordinates)
+  if NNF.nvars(m) == 5
+    v = reshape([(i < 5 ? m.v0[i]+copy(m.v[i]) : copy(m.v[i])) for i in 1:6], 1, 6)
+  else
+    v = reshape([m.v0[i]+copy(m.v[i]) for i in 1:6], 1, 6)
+  end
+  q = isnothing(m.q) ? nothing : [copy(m.q[1]) copy(m.q[2]) copy(m.q[3]) copy(m.q[4])]
   # t_ref must hold the type of the lengths
   p_over_q_ref = bl.p_over_q_ref isa TimeDependentParam ? bl.p_over_q_ref(0) : bl.p_over_q_ref
-  b0 = Bunch(v=v, q=q, callbacks=cbs, t_ref=t_ref0, species=bl.species_ref,
-             p_over_q_ref=p_over_q_ref)
-  track(bl; bunch=b0, at=[], rf_on, batch_start=batch_index)
-  return b0
+  b0 = Bunch(v=v, q=q, t_ref=t_ref0, species=bl.species_ref, p_over_q_ref=p_over_q_ref)
+  config = TrackingConfig(; in_body_coordinates, rf_on, batch_start=batch_index,
+                          save_reference=true, use_KA=false)
+  n_steps_turn = isempty(step_save) ? 0 : last(step_save)
+  return _track(bl, b0, config, nothing, 1, locations, step_save, n_steps_turn, Val(true))
 end
 
 function _a_r_tunes(m::DAMap)
@@ -550,73 +578,6 @@ function _a_r_tunes(m::DAMap)
   end
 end
 
-function _compute_periodic_a(bl::Beamline, v0, init, rf_on, batch_index, ::Val{coast}, ::Val{spin}, t_ref0) where {coast, spin}
-  eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
-  b0 = _twiss_track!(eye, (), bl, rf_on, batch_index, t_ref0)
-  _twiss_setmap!(eye, b0.coords)
-  a, r, tunes = _a_r_tunes(eye)
-  return a, (r, tunes)
-end
-
-function _twiss_cache_preallocate(step_save, map::T) where {T<:DAMap}
-  maps = Vector{T}(undef, length(step_save))
-  for i in 1:length(step_save)
-    if i == 1 && step_save[1] == 0
-      maps[1] = one(map)
-      NNF.setscalar!(maps[1], map.v0)
-    else
-      maps[i] = zero(map) # Preallocate
-    end
-  end
-  return maps
-end
-
-function _twiss_cache_make_callback(_step_save, _beta_gamma_ref, _t_ref, _in_body_coordinates, _maps)
-  # Note: need to handle the first element differently
-  if first(_step_save) == 0
-    _cur_step_save_idx = 2
-  else
-    _cur_step_save_idx = 1
-  end
-  let step_save=_step_save, maps=_maps, curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(_cur_step_save_idx), beta_gamma_ref=_beta_gamma_ref, t_ref=_t_ref, in_body_coordinates=_in_body_coordinates
-    return (i, coords, p) -> begin
-      curstep[] += 1
-      if cur_step_save_idx[] <= length(step_save) && curstep[] == step_save[cur_step_save_idx[]] # Store the current map
-        map = maps[cur_step_save_idx[]]
-        if !in_body_coordinates
-          transforms_out!(i, coords, p)
-        end
-        _twiss_setmap!(map, coords)
-        beta_gamma_ref[cur_step_save_idx[]] = p.beta_gamma_ref
-        t_ref[cur_step_save_idx[]] = p.t_ref
-        if !in_body_coordinates
-          transforms_in!(i, coords, p)
-        end
-        cur_step_save_idx[] += 1
-      end
-    end
-  end
-end
-
-function _compute_periodic_a_and_cache!(bl::Beamline, v0, init, rf_on, batch_index, ::Val{coast}, ::Val{spin}, step_save, beta_gamma_ref, t_ref, in_body_coordinates) where {coast, spin}
-  eye = _twiss_make_identity(v0, init, Val{coast}(), Val{spin}())
-  maps = _twiss_cache_preallocate(step_save, eye)
-  cb = _twiss_cache_make_callback(step_save, beta_gamma_ref, t_ref, in_body_coordinates, maps)
-  _twiss_track!(eye, (cb,), bl, rf_on, batch_index, zero(t_ref[1]))
-  m_turn = eye
-  for map in maps
-    m_turn = map ∘ m_turn
-  end
-  a, r, tunes = _a_r_tunes(m_turn)
-  if first(step_save) == 0
-    b0 = Bunch(v=zeros(0,6)) # empty bunch just to compute initial reference energy
-    BTBL.resolve_reference!(b0, Beamlines.trygetproperty(bl, :species_ref), Beamlines.trygetproperty(bl, :p_over_q_ref), false)
-    beta_gamma_ref[1] = Beamlines.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
-    t_ref[1] = 0
-  end
-  return a, (r, tunes), maps
-end
-
 function canonise_phase_damp(GTPSA_descriptor, coast, damping)
   desc = unsafe_load(GTPSA_descriptor.desc)
   mo = desc.mo
@@ -638,13 +599,22 @@ function canonise_phase_damp(GTPSA_descriptor, coast, damping)
   return canonise, phase, damp
 end
 
-function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j)
+# The functions at row j from a, the map from the start: the phases (and damping) are those from
+# the start, the oscillation phases (all but the slip of a coasting beam) mod 1, so unwrapped
+# against the previous row (whose phase differs by less than half a turn)
+function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j,
+                       coast)
   damping = !isnothing(damp)
+  _clear!(phase)
+  damping && _clear!(damp)
   facj = factorise(a; canonise=canonise, phase=phase, damp=damp, damping=damping)
   fac[j] = facj
-  phi1[j] = j != 1 ? copy(phase[1]) : zero(phase[1])
-  phi2[j] = j != 1 ? copy(phase[2]) : zero(phase[2])
-  phi3_or_slip[j] = j != 1 ? copy(phase[3]) : zero(phase[3])
+  for (k, phi) in enumerate((phi1, phi2, phi3_or_slip))
+    phi[j] = j != 1 ? copy(phase[k]) : zero(phase[k])
+    if j != 1 && (k <= 2 || !coast)
+      phi[j] += round(TI.scalar(phi[j-1]) - TI.scalar(phi[j]))
+    end
+  end
   if damping
     damp1[j] = j != 1 ? copy(damp[1]) : zero(damp[1])
     damp2[j] = j != 1 ? copy(damp[2]) : zero(damp[2])
@@ -653,40 +623,16 @@ function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, ca
   return
 end
 
-function _twiss_make_callback(_step_save, initial_step_save_idx, _in_body_coordinates, _map, _fac, _canonise, _phase, _phi1, _phi2, _phi3_or_slip, _damp, _damp1, _damp2, _damp3, _beta_gamma_ref, _t_ref)
-  # stupid let block bc the compiler is very stupid:
-  let step_save=_step_save, in_body_coordinates=_in_body_coordinates, fac=_fac, canonise=_canonise, phase=_phase, 
-    phi1=_phi1, phi2=_phi2, phi3_or_slip=_phi3_or_slip, damp=_damp, damp1=_damp1, damp2=_damp2, damp3=_damp3,
-    curstep=curstep=Ref{Int}(0), cur_step_save_idx=Ref{Int}(initial_step_save_idx), map=_map, beta_gamma_ref=_beta_gamma_ref, t_ref=_t_ref
-    
-    return (i, coords, p) -> begin
-      curstep[] += 1
-      j = cur_step_save_idx[]
-      if j <= length(step_save) && curstep[] == step_save[j]
-        if !in_body_coordinates
-          transforms_out!(i, coords, p)
-        end
-        _twiss_setmap!(map, coords)
-        _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, map, canonise, phase, damp, j)
-        # Reset coords with canonised a:
-        aj = fac[j].a
-        beta_gamma_ref[j] = p.beta_gamma_ref
-        t_ref[j] = p.t_ref
-        for k in 1:6
-          TI.copy!(coords.v[k], aj.v[k])
-        end
-        if !isnothing(map.q)
-          for k in 1:4
-            TI.copy!(coords.q[k], aj.q[k])
-          end
-        end
-        if !in_body_coordinates
-          transforms_in!(i, coords, p)
-        end
-        cur_step_save_idx[] += 1
-      end
+# (in place: the TPS of an MVector can't be replaced)
+function _clear!(x)
+  for k in eachindex(x)
+    if isbits(x[k])
+      x[k] = zero(x[k])
+    else
+      TI.clear!(x[k])
     end
   end
+  return x
 end
 
 function _twiss_make_base_columns(n, a::T, phase, damp) where {T}
@@ -706,43 +652,6 @@ function _twiss_make_base_columns(n, a::T, phase, damp) where {T}
     damp1 = nothing
     damp2 = nothing
     damp3 = nothing
-  end
-  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
-end
-
-function _twiss_push_a!(bl, rf_on, batch_index, step_save, a_initial, canonise, phase, damp, beta_gamma_ref, t_ref, in_body_coordinates)
-  fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
-  # Have to treat 0 specially:
-  if first(step_save) == 0
-    _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a_initial, canonise, phase, damp, 1) 
-    a_initial = fac[1].a
-    b0 = Bunch(v=zeros(0,6)) # empty bunch just to compute initial reference energy
-    BTBL.resolve_reference!(b0, Beamlines.trygetproperty(bl, :species_ref), Beamlines.trygetproperty(bl, :p_over_q_ref), false)
-    beta_gamma_ref[1] = Beamlines.R_to_beta_gamma(b0.species, b0.p_over_q_ref)
-    t_ref[1] = 0
-    initial_step_save_idx = 2
-  else
-    initial_step_save_idx = 1
-  end
-  cb = _twiss_make_callback(step_save, initial_step_save_idx, in_body_coordinates, a_initial, fac, canonise, phase, phi1, phi2, phi3_or_slip, damp, damp1, damp2, damp3, beta_gamma_ref, t_ref)
-  _twiss_track!(a_initial, (cb,), bl, rf_on, batch_index, zero(t_ref[1]))
-  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
-end
-
-function _twiss_push_a_with_cache(maps, step_save, a_initial, canonise, phase, damp)
-  fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(length(step_save), a_initial, phase, damp)
-  a = a_initial
-  # Have to treat 0 specially:
-  if first(step_save) == 0
-    _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, 1) 
-    a = fac[1].a
-  end
-  # Now push around, note end is always included
-  for j in 1:length(maps)
-    map = maps[j]
-    a = map ∘ a
-    _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j) 
-    a = fac[j].a
   end
   return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end

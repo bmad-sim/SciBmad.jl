@@ -159,10 +159,15 @@ using Test
       end
       return ref, step0
     end
-    # steps of the rows: step of the location, the end of the beamline n_steps
+    # steps of the rows: step of the location, the end of the beamline n_steps. The first slot
+    # holds the initial particles at every location, then every m-th turn
     function matches(r, ref, step0, steps; m=1)
-      for p in 1:size(v0, 1), (l, step) in enumerate(steps), t in 1:m:n_turns
-        j = div(t-1, m) + 1
+      for p in 1:size(v0, 1), (l, step) in enumerate(steps)
+        isequal((r.v[p,:,l,1], r.q[p,:,l,1], r.state[p,l,1]),
+                (v0[p,:], [1.0, 0, 0, 0], BeamTracking.STATE_ALIVE)) || return false
+      end
+      for p in 1:size(v0, 1), (l, step) in enumerate(steps), t in m:m:n_turns
+        j = div(t, m) + 1
         if t == 1 && step < step0 # not reached yet
           all(isnan, r.v[p,:,l,j]) && r.state[p,l,j] == BeamTracking.STATE_PREBORN || return false
         else
@@ -176,7 +181,7 @@ using Test
     for start in (1, 4)
       ref, step0 = reference(start)
       plain = track(bl; v0, n_turns, spin=true, start)
-      @test plain.v0 == v0 && plain.v[:,:,1,end] == plain.bunch.v && plain.index == [-1]
+      @test plain.v[:,:,1,1] == v0 && plain.v[:,:,1,end] == plain.bunch.v && plain.index == [-1]
       @test matches(plain, ref, step0, [n_steps])
       @test 0 < count(!=(BeamTracking.STATE_ALIVE), plain.bunch.state) < size(v0, 1)
       for kw in ((;), (; use_KA=true, use_explicit_SIMD=false), (; use_explicit_SIMD=false))

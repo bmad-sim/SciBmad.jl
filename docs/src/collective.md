@@ -63,7 +63,7 @@ n_particles = 1000
 v0 = randn(n_particles, 6) .* [1e-4 1e-5 1e-5 1e-6 1e-3 1e-4]
 res = track(fodo, v0=v0, weight=1e10/n_particles, n_turns=100)
 
-println("Energy spread before: ", std(res.v0[:,6]))
+println("Energy spread before: ", std(res.v[:,6,1,1]))
 println("Energy spread after:  ", std(res.v[:,6,1,end]))
 ```
 

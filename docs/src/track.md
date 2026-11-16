@@ -53,9 +53,10 @@ description of all settings, see the [`TrackingConfig`](#configuration-settings)
 Next, we have a tensor `state`, which corresponds to each particle's state at each location
 and saved turn. A turn ends at the end of the beamline, and by default the only location is the
 end of the beamline, so the particles are saved at the end of each turn. For example, particle
-1's state at (the end of) turn 3 is indexed with `res.state[1,1,3]`. The initial particle
-states/coordinates are stored separately, in `state0`, `v0` (and `q0`). The values of `state`
-are 8-bit integers that correspond to the following constants defined in `BeamTracking`:
+1's state at (the end of) turn 3 is indexed with `res.state[1,1,4]` (**note:** 1 must be added
+to the turn number, because `res` also stores the initial particle states/coordinates). The
+values of `state` are 8-bit integers that correspond to the following constants defined in
+`BeamTracking`:
 
 ```julia
 const STATE_PREBORN                 = 0x0
@@ -75,7 +76,9 @@ is "lost" in tracking, its phase space coordinates are frozen at the point where
 
 Then we have a tensor `v` which contains each particle's phase space coordinates at each
 location and saved turn. The indexing of this tensor is described in the output. For example,
-particle 1's phase space coordinates at the end of turn 5 are indexed with `res.v[1,:,1,5]`.
+particle 1's phase space coordinates at the end of turn 5 are indexed with `res.v[1,:,1,6]`
+(**again note:** 1 must be added to the turn number, because `res` also stores the initial
+particle states/coordinates, at every location).
 
 The particles can also be saved at other locations, given to `track` with `at` as for
 [`twiss`](twiss.md): elements (or their beamline indexes) for their beginnings, s-ranges for
@@ -93,11 +96,21 @@ res.s
 The tracking can also start at the beginning of another element, given with `start`. The first
 turn then goes from there to the end of the beamline (for example, `n_turns=1` tracks through
 the rest of a linac), and the locations before the start are not reached in the first turn, so
-they are `NaN` there (with `state` `0x0`):
+they are `NaN` there (with `state` `0x0`; the first turn is the second slot, after the initial
+particles):
 
 ```{code-cell} julia
 res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], start=qd)
-res.v[1,:,:,1]
+res.v[1,:,:,2]
+```
+
+The reference time and energy at the locations can be saved too, with `save_reference=true`:
+they are then in `res.t_ref` and `res.beta_gamma_ref` (indexed as `[location, saved turn]`, as
+the callbacks below see them). This makes the tracking slower, so it is off by default:
+
+```{code-cell} julia
+res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], save_reference=true)
+res.t_ref
 ```
 
 Finally we have `bunch`, which contains the full `Bunch` structure at the end of tracking.
@@ -128,7 +141,8 @@ res = track(fodo, v0=v0, n_turns=10, spin=true)
 Our `TrackingResult` now has an extra tensor `q`, which contains each particle's spin
 quaternion from the beginning up to each saved turn. Similar to the phase space coordinates
 indexing, particle 1's spin quaternion from the beginning up through turn 5 can be indexed
-as `res.q[1,:,1,5]` (the initial quaternions are in `q0`).
+as `res.q[1,:,1,6]` (**again note:** 1 must be added to the turn number, because `res` also
+stores the initial particle quaternion).
 
 To compute a particle's spin 3-vector at each turn given some initial spin direction, we can
 use the post-processing function `track_spin`:
