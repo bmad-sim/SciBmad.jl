@@ -410,6 +410,8 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
     return t
   end
   table = similar(v, Int, n_steps_turn)
+  # (a copy on the host for runs_at outside of the kernels, if the table is on a GPU)
+  host_table = table isa Array ? nothing : zeros(Int, n_steps_turn)
   slots = similar(v, Int, 2) # slots of the turn and of the next turn in the saved data (or 0)
   # (on the CPU through pointers: arrays in the callback would be GC-rooted at every integration
   # step, 5-7% slower for 1 to 10 particles on ESR, and the state only at the locations through one
@@ -417,18 +419,19 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
   state_ref = Ref(_TrackSaveState(_kernel_array(slots), i_begin, in_body_coordinates,
                                   _kernel_array(v_data), _kernel_array(q_data),
                                   _kernel_array(state_data)))
-  cb = _track_make_callback(_kernel_array(table), _kernel_state(state_ref, v))
+  cb = _TrackCallback(_kernel_array(table), _kernel_array(host_table), _kernel_state(state_ref, v))
   # Always tracked with the callback (also without locations), appended to those of the bunch, so
   # that all tracking compiles the kernels with it
   coords = BeamTracking.Coords(state, v, q, bunch.coords.weight, (bunch.coords.callbacks..., cb))
   b = Bunch(bunch.species, bunch.p_over_q_ref, bunch.t_ref, coords)
 
   table_key = nothing
-  t = @elapsed GC.@preserve table slots v_data q_data state_data state_ref for i in 1:n_turns
+  t = @elapsed GC.@preserve table host_table slots v_data q_data state_data state_ref for i in 1:n_turns
     copyto!(slots, [slot_of_turn(i), slot_of_turn(i+1)])
     key = (slot_of_turn(i) != 0, i_begin != 0 && slot_of_turn(i+1) != 0)
     if key != table_key # (changes at most a few times)
       copyto!(table, table_of(key...))
+      isnothing(host_table) || copyto!(host_table, table_of(key...))
       table_key = key
     end
     track!(b, i == 1 && first_chain > 1 ? chains[first_chain:end] : chains; groupsize, use_KA,
@@ -488,22 +491,34 @@ _kernel_state(r::Base.RefValue, v) = r[]
 _load_state(s::Ptr) = unsafe_load(s)
 _load_state(s) = s
 
-function _track_make_callback(_table, _state)
-  let table=_table, state=_state
-    # Inlined into the integration steps, with the rarely taken saving outlined. At a step without
-    # a location, only the table is read
-    return @inline (i, coords, p) -> begin
-      step = p.step
-      n = length(table)
-      @inbounds if step <= n
-        l = table[step]
-        if l != 0
-          _track_save_at_step!(i, coords, p, _load_state(state), l, step == n)
-        end
-      end
-      return nothing
+# The recording callback of track. It saves at the steps where table[step] != 0 (see _track), and
+# only those through runs_at: the integration then has no code for it where it does not run
+struct _TrackCallback{T,H,S}
+  table::T
+  host_table::H # the table on the host if table is on a GPU (for runs_at outside of the kernels)
+  state::S
+end
+
+BeamTracking.Adapt.adapt_structure(to, cb::_TrackCallback) =
+  _TrackCallback(BeamTracking.Adapt.adapt(to, cb.table), nothing,
+                 BeamTracking.Adapt.adapt(to, cb.state))
+
+@inline function BeamTracking.runs_at(cb::_TrackCallback, step)
+  table = isnothing(cb.host_table) ? cb.table : cb.host_table
+  return step <= length(table) && @inbounds(table[step]) != 0
+end
+
+@inline function (cb::_TrackCallback)(i, coords, p)
+  step = p.step
+  table = cb.table
+  n = length(table)
+  @inbounds if step <= n
+    l = table[step]
+    if l != 0
+      _track_save_at_step!(i, coords, p, _load_state(cb.state), l, step == n)
     end
   end
+  return nothing
 end
 
 # At a step with location l (or -1, see _track), the last step of the turn if last
@@ -583,10 +598,10 @@ Base.unsafe_convert(::Type{Ptr{T}}, a::_PtrArray{T}) where {T} = a.ptr
 # A SIMD lane of particles (the first index) at once
 @inline Base.getindex(a::_PtrArray{T}, i::BeamTracking.SIMD.VecRange{M}, I::Int...) where {T,M} =
   BeamTracking.SIMD.vload(BeamTracking.SIMD.Vec{M,T},
-                          a.ptr + (LinearIndices(a)[i.i, I...] - 1)*sizeof(T))
+                          a.ptr + (@inbounds(LinearIndices(a)[i.i, I...]) - 1)*sizeof(T))
 @inline function Base.setindex!(a::_PtrArray{T}, x::BeamTracking.SIMD.Vec{M,T},
                                 i::BeamTracking.SIMD.VecRange{M}, I::Int...) where {T,M}
-  BeamTracking.SIMD.vstore(x, a.ptr + (LinearIndices(a)[i.i, I...] - 1)*sizeof(T))
+  BeamTracking.SIMD.vstore(x, a.ptr + (@inbounds(LinearIndices(a)[i.i, I...]) - 1)*sizeof(T))
   return a
 end
 
