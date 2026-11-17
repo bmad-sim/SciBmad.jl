@@ -103,46 +103,7 @@ function _deriv_orders(e, memo)
   return (Pair{Knob,Int}[], 0)
 end
 
-# Thrown when the rows of a TwissExpr are (or may be) too far apart in phase
-struct _StalePhaseRows <: Exception
-  tw::TwissExpr
-end
-
-_is_phase_leaf(l::_TwissLeaf) = l.index == 0 ? (l.col in ("q1", "q2") && l.mono == (0, 0, 0, 0)) :
-                                 l.col in ("phi1", "phi2")
-
-# Chooses the elements whose rows keep consecutive rows at most 0.2 turns of phase apart (more
-# only across a single element), from the phases at the beginning of every element (one ordinary
-# twiss of the whole beamline)
-function _refresh_phase_rows!(tw::TwissExpr)
-  bl = getfield(tw, :bl)
-  n = length(bl.line)
-  c1 = TwissColumn(tw, "phi1")
-  c2 = TwissColumn(tw, "phi2")
-  leaves = Any[(_leaf(c, (i, 0)) for c in (c1, c2) for i in 1:n)..., c1[end], c2[end]]
-  vals = _evaluate(leaves, Knob[], false; phase_rows=false)[1]
-  phi1 = [view(vals, 1:n); vals[2n+1]]
-  phi2 = [view(vals, n+1:2n); vals[2n+2]]
-  rows = getfield(tw, :phase_rows)
-  empty!(rows)
-  last = 1
-  gap = 0.0
-  for j in 2:n
-    # (the row of element j is needed if the next one would be too far from the last row)
-    if max(phi1[j+1] - phi1[last], phi2[j+1] - phi2[last]) > 0.2
-      push!(rows, j)
-      gap = max(gap, phi1[j] - phi1[last], phi2[j] - phi2[last])
-      last = j
-    end
-  end
-  gap = max(gap, phi1[n+1] - phi1[last], phi2[n+1] - phi2[last])
-  getfield(tw, :phase_rows_n)[] = n
-  getfield(tw, :phase_gap)[] = gap
-  return tw
-end
-
 mutable struct _EvalState
-  phase_rows::Symbol # :off, :check (throw _StalePhaseRows if they are too far apart) or :use
   seeds::Vector{Knob}
   x0::Vector{Float64}
   pvars::Any # the knobs' variables in the parameter-only Descriptor (nothing: no derivatives)
@@ -288,17 +249,8 @@ function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
   bl = getfield(tw, :bl)
   cols = unique!(String[l.col for l in g.leaves if l.index != 0 && l.col != "s"])
   needmaps = any(l -> l.index != 0 && l.col in _MAP_COLS, g.leaves)
-  entrances = Int[l.index for l in g.leaves if l.index > 0 && l.step == 0]
-  phases = st.phase_rows != :off && any(_is_phase_leaf, g.leaves)
-  if phases
-    if st.phase_rows == :check && getfield(tw, :phase_rows_n)[] != length(bl.line)
-      throw(_StalePhaseRows(tw))
-    end
-    append!(entrances, getfield(tw, :phase_rows))
-    union!(cols, ("phi1", "phi2"))
-  end
   at = Any[]
-  append!(at, unique!(sort!(entrances)))
+  append!(at, unique!(sort!(Int[l.index for l in g.leaves if l.index > 0 && l.step == 0])))
   inner = unique!(sort!(Int[l.index for l in g.leaves if l.step > 0]))
   needend = any(l -> l.index == -1, g.leaves)
   s, L, n = (isempty(inner) && !needend) ? (Float64[], Float64[], Int[]) : _line_steps(bl)
@@ -315,13 +267,6 @@ function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
   t = twiss(bl; at=at, cols=cols, base_cols=["index", "s"], GTPSA_descriptor=D,
             as_taylor_series=(!isnothing(pzero) || needmaps), kw...)
   df = t.df
-  if phases && st.phase_rows == :check
-    # (rows further apart than when they were chosen, or going backwards: choose them again)
-    limit = max(0.35, min(getfield(tw, :phase_gap)[] + 0.1, 0.48))
-    for phi in (df.phi1, df.phi2), r in 2:length(phi)
-      -0.05 < scalar(phi[r]) - scalar(phi[r-1]) < limit || throw(_StalePhaseRows(tw))
-    end
-  end
   rows = Dict{Int,Vector{Int}}()
   for (r, i) in enumerate(df.index)
     push!(get!(rows, i, Int[]), r)
@@ -391,21 +336,7 @@ function _knobs(ks)
 end
 
 # Values of the expressions and, if jac, their derivatives in the knobs vary
-function _evaluate(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool; phase_rows::Bool=true)
-  phase_rows || return _evaluate_once(exprs, vary, jac, :off)
-  for attempt in 1:2
-    try
-      return _evaluate_once(exprs, vary, jac, :check)
-    catch err
-      err isa _StalePhaseRows || rethrow()
-      _refresh_phase_rows!(err.tw)
-    end
-  end
-  # (an element with more than a third of a turn of phase advance: nothing more can be done)
-  return _evaluate_once(exprs, vary, jac, :use)
-end
-
-function _evaluate_once(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool, phase_rows::Symbol)
+function _evaluate(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool)
   for e in exprs
     e isa Union{LatticeExpr,Real} || error("Expected expressions (LatticeExpr), got a " *
       "$(typeof(e)). (A vector of expressions compared with `==` to a plain vector of " *
@@ -444,21 +375,7 @@ function _evaluate_once(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool, phase
   V = n + maximum(max(getfield(g.tw, :order), maximum(_leaf_order, g.leaves)) for g in c.groups;
                   init=1)
   x0 = Float64[_knob_value(k) for k in seeds]
-  # With derivatives, the rows added for the phases would each cost a parametric normal form.
-  # Tunes and phases are then computed without the rows (so only modulo 1), and their integer
-  # parts are taken from an evaluation without derivatives
-  phase_leaves = Any[]
-  phase_ref = Float64[]
-  if n > 0 && phase_rows != :off
-    for g in c.groups
-      append!(phase_leaves, filter(_is_phase_leaf, g.leaves))
-    end
-    if !isempty(phase_leaves)
-      phase_ref = _evaluate(phase_leaves, Knob[], false)[1]
-      phase_rows = :off
-    end
-  end
-  st = _EvalState(phase_rows, seeds, x0, nothing, IdDict{Any,Any}(), IdDict{Any,Any}())
+  st = _EvalState(seeds, x0, nothing, IdDict{Any,Any}(), IdDict{Any,Any}())
   desc_old = GTPSA.desc_current
   pzero = nothing
   try
@@ -491,9 +408,6 @@ function _evaluate_once(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool, phase
     end
   finally
     GTPSA.desc_current = desc_old
-  end
-  for (l, ref) in zip(phase_leaves, phase_ref)
-    st.vals[l] += round(ref - scalar(st.vals[l]))
   end
   vals = Vector{Float64}(undef, length(exprs))
   J = jac ? zeros(length(exprs), length(vary)) : nothing

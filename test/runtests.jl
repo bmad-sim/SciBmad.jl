@@ -466,8 +466,7 @@ using Test
     @test v ≈ [t.beta1[end], t.alpha2[end]] rtol=1e-11
     @test close_to(J, fdjac(e, [@knob(q3.Kn1), @knob(qd.Kn1)]))
 
-      # Tunes and phases keep their integer parts whatever rows are used (6 cells: twiss with few
-      # rows gives them modulo 1)
+      # Tunes and phases with their whole turns, whatever rows are used (6 cells)
     qf6 = Quadrupole(Kn1=1.2, L=0.5)
     qd6 = Quadrupole(Kn1=-1.1, L=0.5)
     cells = Beamline(repeat([qf6, d, b, qd6, d, b], 6); species_ref=Species("electron"),
@@ -476,7 +475,7 @@ using Test
     t6 = TwissExpr(cells)
     e = [t6.q1, t6.q2, t6.phi1[30] - t6.phi1[3]]
     ref = [t.q1, t.q2, t.phi1[findfirst(==(30), t.index)] - t.phi1[findfirst(==(3), t.index)]]
-    @test ref[1] > 1 && twiss(cells; at=[]).q1 < 0.5
+    @test ref[1] > 1
     @test value(e) ≈ ref rtol=1e-12
     v, J = value_and_jacobian(e, [@knob(qf6.Kn1), @knob(qd6.Kn1)])
     @test v ≈ ref rtol=1e-11
@@ -693,6 +692,118 @@ using Test
     tc = twiss(cell; chrom=2, at=[])
     @test tc.dq1 == tc.q1[delta=1] && tc.dq2 == tc.q2[delta=1]
     @test tc.dq1 ≈ value(te.dq1) rtol=1e-12
+  end
+
+  @testset "Phases and tunes with few rows" begin
+      # The phases of a row are known modulo 1 from its normal form; whole turns come from the
+      # linear maps at every integration step when the rows are not all steps. A ring of 5 cells
+      # with tunes of 0.97 and 0.79: rows half a turn and more apart. The rows of a twiss with few
+      # rows equal those of the full table bitwise (6D and coasting, orders, spin, an open line),
+      # and so do the tunes; with GTPSA parameters also the derivatives
+    qf = Quadrupole(Kn1=1.2, L=0.5)
+    d = Drift(L=0.1)
+    cellp = [qf, Sextupole(Kn2=1.2, L=0.2), SBend(L=1.2, angle=pi/132, n_steps=4), d,
+             Quadrupole(Kn1=-1.1, L=0.5, tilt=0.01), Sextupole(Kn2=-1.2, L=0.2),
+             SBend(L=1.2, angle=pi/132, n_steps=4), d, Marker()]
+    ring = Beamline([repeat(cellp, 5)..., HKicker(Kn0L=2e-4), RFCavity(L=1e-2, voltage=1e7,
+                    rf_frequency=1e9, zero_phase=PhaseRef.AboveTransition)];
+                    species_ref=Species("electron"), E_ref=18e9)
+    num(x) = x isa AmplitudeDependentValue ? scalar(x.taylor_series) : x
+    a = twiss(ring; rf_on=false, cols=["a"], as_taylor_series=true, at=[1]).a[1]
+    for kw in ((;), (rf_on=false,), (rf_on=false, order=2), (rf_on=false, chrom=2), (spin=true,),
+               (rf_on=false, a_initial=a))
+      full = twiss(ring; kw...)
+      @test num(full.q1) > 0.9 && num(full.q2) > 0.7
+      for at in (Any[], Any[20], Any[3, 40, ring.line[45]], Any[(3.0, 3.5), 30])
+        few = twiss(ring; at, kw...)
+        @test (num(few.q1), num(few.q2)) == (num(full.q1), num(full.q2))
+        for r in 1:size(few.df, 1)
+          j = findfirst(k -> full.index[k] == few.index[r] && full.s[k] == few.s[r], 1:length(full.s))
+          @test (few.phi1[r], few.phi2[r], few.beta1[r]) == (full.phi1[j], full.phi2[j], full.beta1[j])
+        end
+      end
+    end
+    D = Descriptor(fill(2, 6), 2, [1, 1], 1)
+    qf.Kn1 = 1.2 + params(D)[1]
+    d.L = 0.1 + params(D)[2]
+    full = twiss(ring; GTPSA_descriptor=D)
+    few = twiss(ring; GTPSA_descriptor=D, at=[40])
+    qf.Kn1 = 1.2
+    d.L = 0.1
+    scalarize!(ring)
+    j = findfirst(==(40), full.index)
+    coefs(t) = [t[i] for i in 0:GTPSA.numcoefs(t)-1]
+    @test coefs(few.phi1[1]) == coefs(full.phi1[j]) && scalar(few.phi1[1]) > 0.5
+    @test coefs(few.q1.taylor_series) == coefs(full.q1.taylor_series)
+  end
+
+  @testset "Twiss of a part of the beamline (start, stop)" begin
+      # Without a_initial: the periodic Twiss of the part by itself (the middle cell of three
+      # equals the cell alone). With a_initial: the open line from start (equal to the rows of
+      # the open Twiss of the whole line, started with its a at start). s and index are those of
+      # the whole beamline, the last row is the beginning of stop
+    @elements begin
+      qf = Quadrupole(Kn1=1.2, L=0.5)
+      sf = Sextupole(Kn2=1.2, L=0.2)
+      d = Drift(L=0.1)
+      b = SBend(L=1.2, angle=pi/132, n_steps=3)
+      qd = Quadrupole(Kn1=-1.1, L=0.5)
+      q3 = Quadrupole(Kn1=0.3, L=0.4)
+      q4 = Quadrupole(Kn1=-0.25, L=0.4)
+    end
+    cellp = [qf, sf, b, d, qd, b, d]
+    n = length(cellp)
+    cell = Beamline(cellp; species_ref=Species("electron"), pc_ref=18e9)
+    ring = Beamline([repeat(cellp, 3)..., q3, d, q4, d]; species_ref=Species("electron"),
+                    pc_ref=18e9)
+    tc = twiss(cell)
+    tp = twiss(ring; start=n+1, stop=2n+1)
+    @test tp.q1 ≈ tc.q1 rtol=1e-13
+    @test tp.q2 ≈ tc.q2 rtol=1e-13
+    @test tp.beta1 ≈ tc.beta1 rtol=1e-12
+    @test tp.dx ≈ tc.dx rtol=1e-11
+    @test tp.phi2 ≈ tc.phi2 rtol=1e-12 atol=1e-13
+    @test tp.index[1] == n+1 && tp.index[end] == 2n+1 && tp.name[end] == "qf"
+    @test tp.s ≈ tc.s .+ ring.line[n+1].s
+    @test tp.beta1[ring.line[n+5]] == tp.beta1[findfirst(==(n+5), tp.index)]
+    ts = twiss(ring; start=n+2, stop=2n+2) # the cell started one element later: the same tunes
+    @test ts.q1 ≈ tc.q1 rtol=1e-12
+    @test !isapprox(ts.beta1[1], tc.beta1[1]; rtol=1e-3)
+    @test ts.beta1[1] ≈ tc.beta1[2] rtol=1e-11
+    a0 = twiss(cell; cols=["a"], as_taylor_series=true, at=[1]).a[1]
+    full = twiss(ring; a_initial=a0, cols=["a", "beta1", "alpha2", "dx", "phi1"],
+                 as_taylor_series=true)
+    i1, i2 = 3n+1, 3n+4
+    j1 = findfirst(==(i1), full.index)
+    j2 = findfirst(==(i2), full.index)
+    to = twiss(ring; a_initial=full.a[j1], start=i1, stop=ring.line[i2])
+    @test to.index[1] == i1 && to.index[end] == i2
+    @test to.beta1 ≈ scalar.(full.beta1[j1:j2]) rtol=1e-11
+    @test to.alpha2 ≈ scalar.(full.alpha2[j1:j2]) rtol=1e-10
+    @test to.dx ≈ scalar.(full.dx[j1:j2]) rtol=1e-10
+    @test to.phi1 ≈ scalar.(full.phi1[j1:j2]) .- scalar(full.phi1[j1]) rtol=1e-10 atol=1e-12
+    @test to.beta1[ring.line[i2]] == to.beta1[end]
+    @test twiss(ring; a_initial=full.a[j1], start=i1, stop=i2, at=[i1+1, i2, q4]).index ==
+          [i1+1, i2-1, i2]
+    te = twiss(ring; a_initial=full.a[j1], start=i1) # to the end of the beamline
+    @test te.index[end] == -1
+    @test te.beta1[end] ≈ scalar(full.beta1[end]) rtol=1e-11
+    @test_throws ErrorException twiss(ring; start=5, stop=3)
+    @test_throws ErrorException twiss(ring; start=qf) # placed several times
+      # As expressions: [end] and [begin] are those of the part
+    tw = TwissExpr(ring; a_initial=full.a[j1], start=i1, stop=i2)
+    e = [tw.beta1[end], tw.alpha1[end], tw.beta2[q4], tw.phi1[end] - tw.phi1[begin]]
+    v, J = value_and_jacobian(e, [@knob(q3.Kn1), @knob(q4.Kn1)])
+    @test v[1:2] ≈ [to.beta1[end], to.alpha1[end]] rtol=1e-12
+    fd_part = zeros(4, 2)
+    for (k, q) in enumerate((q3, q4))
+      q.Kn1 += 1e-6
+      vp = value(e)
+      q.Kn1 -= 2e-6
+      fd_part[:, k] = (vp .- value(e)) ./ 2e-6
+      q.Kn1 += 1e-6
+    end
+    @test all(abs.(J .- fd_part) .<= 1e-6 .* (abs.(fd_part) .+ 1e-3))
   end
 
   @testset "Phase trombone" begin

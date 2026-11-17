@@ -136,19 +136,13 @@ struct TwissExpr
   bl::Beamline
   kwargs::Dict{Symbol,Any}
   order::Int
-  # Elements whose rows are added when tunes or phases are used, so that consecutive rows are
-  # less than half a turn of phase apart (twiss unwraps the phases row by row), and the number
-  # of elements of the Beamline when they were chosen (-1: not yet)
-  phase_rows::Vector{Int}
-  phase_rows_n::Base.RefValue{Int}
-  phase_gap::Base.RefValue{Float64} # largest phase advance between them when they were chosen
 end
 
 function TwissExpr(bl::Beamline; order::Integer=0, chrom::Integer=0, kwargs...)
   for k in (:at, :cols, :base_cols, :as_taylor_series, :GTPSA_descriptor)
     haskey(kwargs, k) && error("TwissExpr sets `$k` itself from the expressions used")
   end
-  return TwissExpr(bl, Dict{Symbol,Any}(kwargs), max(order, chrom), Int[], Ref(-1), Ref(0.0))
+  return TwissExpr(bl, Dict{Symbol,Any}(kwargs), max(order, chrom))
 end
 
 const _TWISS_SUMMARY = (:q1, :q2, :q3, :etac, :alphac, :qspin, :damp1, :damp2, :damp3)
@@ -243,7 +237,10 @@ end
 
 struct _End end
 Base.lastindex(::TwissColumn) = _End()
-Base.firstindex(::TwissColumn) = 1
+function Base.firstindex(c::TwissColumn) # the beginning of the beamline, or of `start`
+  start = get(getfield(c.tw, :kwargs), :start, nothing)
+  return isnothing(start) ? 1 : _twiss_element_index(getfield(c.tw, :bl), start, "start")
+end
 
 """
     ExprVector
@@ -299,8 +296,14 @@ end
 _leaf(c::TwissColumn, loc) = _TwissLeaf(c.tw, c.col, loc[1], loc[2], (0, 0, 0, 0))
 _one_or_vector(leaves) = length(leaves) == 1 ? only(leaves) : ExprVector(leaves)
 
-Base.getindex(c::TwissColumn, ::_End) = _leaf(c, (-1, 0))
-Base.getindex(c::TwissColumn, ::_End, pos) = _leaf(c, (-1, 0))
+# The end of the beamline, or of the part of it given with `stop`
+function Base.getindex(c::TwissColumn, ::_End)
+  bl = getfield(c.tw, :bl)
+  stop = get(getfield(c.tw, :kwargs), :stop, nothing)
+  i = isnothing(stop) ? length(bl.line) + 1 : _twiss_element_index(bl, stop, "stop")
+  return _leaf(c, i > length(bl.line) ? (-1, 0) : (i, 0))
+end
+Base.getindex(c::TwissColumn, e::_End, pos) = c[e]
 function Base.getindex(c::TwissColumn, sel::Union{Integer,LatElement})
   bl = getfield(c.tw, :bl)
   return _one_or_vector(LatticeExpr[_leaf(c, (i, 0)) for i in _element_indexes(bl, sel)])
