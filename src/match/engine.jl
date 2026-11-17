@@ -267,10 +267,6 @@ function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
   t = twiss(bl; at=at, cols=cols, base_cols=["index", "s"], GTPSA_descriptor=D,
             as_taylor_series=(!isnothing(pzero) || needmaps), kw...)
   df = t.df
-  rows = Dict{Int,Vector{Int}}()
-  for (r, i) in enumerate(df.index)
-    push!(get!(rows, i, Int[]), r)
-  end
   for l in g.leaves
     if l.index == 0
       haskey(t.summ.sdict, Symbol(l.col)) || error("twiss did not compute `$(l.col)` here " *
@@ -278,17 +274,11 @@ function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
       st.vals[l] = _to_p(t.summ.sdict[Symbol(l.col)], l.mono, pzero)
       continue
     end
-    rs = rows[l.index]
-    r = rs[1]
     if l.step > 0
       l.step < n[l.index] || error("$(l): the number of integration steps of the element " *
         "changed since the expression was written")
-      sl = s[l.index] + l.step*L[l.index]/n[l.index]
-      r = rs[argmin([abs(scalar(df.s[k]) - sl) for k in rs])]
-      abs(scalar(df.s[r]) - sl) <= 1e-3*L[l.index]/n[l.index] ||
-        error("$(l): no twiss row at s = $sl") # unreachable unless the rows are assembled wrongly
     end
-    x = df[r, l.col]
+    x = df[_twiss_row(t, (l.index, l.step)), l.col]
     if l.col in _MAP_COLS
       st.maps[l] = x
     else

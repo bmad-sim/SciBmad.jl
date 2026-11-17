@@ -50,7 +50,8 @@ fodo = Beamline([qf, sf, d, b, d, qd, sd, d, b, d],
 ```
 
 First we need a way to refer to the Twiss quantities of `fodo`. `TwissExpr` gives exactly that: it
-takes the same arguments as [`twiss`](twiss.md), but nothing is computed yet.
+takes the same arguments as [`twiss`](twiss.md), and its quantities are read exactly like those of
+the result of `twiss`, but nothing is computed yet.
 
 ```{code-cell} julia
 tw = TwissExpr(fodo)
@@ -95,23 +96,14 @@ You do not need to set any truncation order: each quantity knows the order it ne
 
 ## Quantities and Locations
 
-Every summary value and every scalar column of [`twiss`](twiss.md) is available from a `TwissExpr`.
-A column is indexed with a location:
-
-| Expression | Meaning |
-|---|---|
-| `tw.q1`, `tw.q2`, `tw.q3`, `tw.etac`, `tw.alphac`, `tw.qspin` | Summary values |
-| `tw.dq1`, `tw.dq2` | Chromaticities, short for `tw.q1[delta=1]` and `tw.q2[delta=1]` |
-| `tw.q1[J1=1]` | A term of an amplitude-dependent value, as for `getterm` |
-| `tw.beta1[qd]`, `tw.beta1[6]` | At the beginning of an element, or of the element with that beamline index |
-| `tw.beta1[qd, :exit]` | At the end of the element |
-| `tw.beta1[b, :]` | At every integration step of the element, both ends included |
-| `tw.beta1[end]`, `tw.beta1[begin]` | At the end and the beginning of the beamline |
-| `tw.beta1["q*"]` | At the elements found by name, see [Searching by Name](beamline.md) |
-| `tw.beta1[(2.0, 10.0)]`, `tw.beta1[:]` | At every integration step in an s-range, or of the whole beamline |
-
-Chromatic derivatives (`tw.dbeta1[qd]`, `tw.dx_2[1]`) and the `h` terms (`tw.h3000[1]`) work as
-the columns of `twiss` do. The `h` terms are complex numbers, so use `abs`, `real` or `imag` of them.
+Every summary value and every scalar column of [`twiss`](twiss.md) is available from a `TwissExpr`,
+at the same locations and written in the same way as for the result of `twiss` (see
+[Reading the results](twiss.md)): `tw.q1`, `tw.dq1`, `tw.q1[J1=1]`, `tw.beta1[qd]`,
+`tw.beta1[6]`, `tw.beta1[qd, :exit]`, `tw.beta1[b, :]`, `tw.beta1[end]`, `tw.beta1["q*"]`,
+`tw.beta1[(2.0, 10.0)]`, and so on. Chromatic derivatives (`tw.dbeta1[qd]`, `tw.dx_2[1]`) and the
+`h` terms (`tw.h3000[1]`) too; the `h` terms are complex numbers, so use `abs`, `real` or `imag` of
+them. Unlike for `twiss`, you do not need to choose truncation orders or rows: each quantity
+knows what it needs.
 
 These expressions can be combined with ordinary arithmetic and functions. For example, the square
 of the beta function at `qd` minus five times the average of the alpha function through the bends:

@@ -58,6 +58,10 @@ quadrupoles = fodo[x -> x.kind == "Quadrupole"];
 # Compute the periodic Twiss parameters
 tw = twiss(fodo)
 
+# Read the results: the tunes, and beta1 at the beginning and at the end of qd
+tw.q1, tw.q2
+tw.beta1[qd], tw.beta1[qd, :exit]
+
 #=
   Compute only specific periodic Twiss parameters
   "beta1" = horizontal-like beta
@@ -79,7 +83,7 @@ print(tw.q2)
     0.054013300010008765 - 0.008253153240321371 δ
 =#
 # Get the y-chromaticity
-chromy = getterm(tw.q2, delta=1)
+chromy = tw.dq2 # the same as getterm(tw.q2, delta=1)
 
 # Resonance driving terms h3000, h2100, require order=2
 tw = twiss(fodo, cols=["h3000", "h2100"], order=2)
@@ -199,6 +203,24 @@ the beta functions, alpha functions, coupling matrix, phase advances/slip, close
 (crab) dispersions at _all integration steps_ in a
 [`DataFrame`](https://dataframes.juliadata.org/stable/) struct.
 
+The values for the whole ring, such as the tunes, are properties of `tw`, and so is every column
+of the table, which is read at locations of the beamline: at the beginning of an element, at its
+end, at every integration step inside it, at the end of the beamline, ...
+
+```{code-cell} julia
+tw.q1               # 0.0549
+tw.beta1[qd]        # 10.13 at the beginning of qd
+tw.beta1[qd, :exit] # 10.13 at the end of qd
+tw.beta1[b]         # [12.93, 10.52] b is in the beamline twice
+tw.beta1[end]       # 13.41 at the end of the beamline
+```
+
+A whole column is a column of the table, so it can for example be plotted against `s` with
+`lines(tw.s, tw.beta1)` (using [CairoMakie](https://docs.makie.org/stable/)). All the ways to
+give a location are listed in [Reading the results](twiss.md). They are the same everywhere in
+SciBmad: later, when matching, the same expressions are used as targets (see
+[Matching and Optimization](optimize.md)).
+
 If only a subset of quantities is needed, the `cols` keyword restricts the computation (and
 the columns returned) to exactly what you ask for, which can save computation time:
 
@@ -263,6 +285,9 @@ is the coefficient of `δ¹`:
 chromy = getterm(tw.q2, delta=1)
 ```
 
+The chromaticities also have the short names `tw.dq1` and `tw.dq2`, and the same terms can be
+written `tw.q2[delta=1]`.
+
 The same mechanism extends naturally to purely amplitude-dependent tune shifts (once `order`
 is raised high enough to resolve them), using the `J1` and `J2` keyword arguments to extract
 coefficients of `J₁`/`J₂`.
@@ -281,7 +306,8 @@ shifts with amplitude.
 
 We can extract any monomial of the nonlinear effective Hamiltonian by simply setting the `order` of `twiss` appropriately
 (must be at least one less than the total order of the monomial). And, if the beam is
-coasting, we can take chromatic derivatives as described before.
+coasting, we can take chromatic derivatives as described before. The variables and factors of
+$h$ are given in [Resonance driving terms and detuning](twiss.md).
 
 ```{code-cell} julia
 # Resonance driving terms h3000, h2100, require order=2

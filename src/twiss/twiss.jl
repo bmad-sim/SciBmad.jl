@@ -61,7 +61,9 @@ General function to compute the (parametric and nonlinear) Twiss parameters of a
 Returns a `Twiss` struct that contains the (amplitude-dependent) (spin) tunes/slip, and a 
 dataframe of the Twiss parameters at each specified integration step. By default, lattice 
 functions of the Sagan-Rubin/Edwards-Teng coupling formalism are computed in the dataframe 
-at every integration step.
+at every integration step. The columns are read at locations of the beamline, e.g. 
+`tw.beta1[qd]` at the beginning of the element `qd` (see [`TwissColumnVector`](@ref)), and the 
+whole table is `tw.df`.
 
 The `cols` keyword argument can be set to customize what quantities will be computed and 
 stored as columns in the returned dataframe. E.g., 
@@ -330,7 +332,8 @@ function twiss(
   end
 
   # Assemble locations. Note that start and end of the Beamline are ALWAYS included
-  s, names, kinds, idxs, step_save, include_start, include_end = _twiss_assemble_locations(bl, at)
+  s, names, kinds, idxs, step_save, include_start, include_end, ele_steps =
+    _twiss_assemble_locations(bl, at)
   beta_gamma_ref = Vector{Float64}(undef, length(s)) # Store the reference energy at each step
   t_ref = Vector{eltype(s)}(undef, length(s)) # Store the reference time at each step (type of the lengths, e.g. TPS for parametric lengths)
 
@@ -451,7 +454,10 @@ function twiss(
   # q1, q2, slip factor eta_c, momentum compaction alpha_c, [q3, qspin]
   # only thing is with 3d motion, need to compute 
   summ = _twiss_summ(twi, cache)
-  return Twiss(summ, df, bl)
+  # The row of each location (beamline index, step in the element) in the table
+  sel = (include_start ? 1 : 2):(include_end ? length(s) : length(s)-1)
+  rows = Dict{Tuple{Int,Int},Int}((idxs[k], ele_steps[k]) => r for (r, k) in enumerate(sel))
+  return Twiss(summ, df, bl, 1, nothing, rows)
 end
 
 # The index of the single element of bl given as an element (also the one it was made from) or a
@@ -517,7 +523,10 @@ function _twiss_part_table(tw, bl, i_start, i_stop, s_start)
   if hasproperty(df, :s)
     df.s .+= s_start
   end
-  return Twiss(tw.summ, df, bl)
+  stop = i_stop <= length(bl.line) ? i_stop : nothing
+  rows = Dict{Tuple{Int,Int},Int}((i == -1 ? something(stop, -1) : i + i_start - 1, k) => r
+                                  for ((i, k), r) in getfield(tw, :rows))
+  return Twiss(tw.summ, df, bl, i_start, stop, rows)
 end
 
 function co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
@@ -545,6 +554,7 @@ function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
   kinds = Vector{String}(undef, 0)
   idxs = Vector{Int}(undef, 0)
   step_save = Vector{Int}(undef, 0)
+  ele_steps = Vector{Int}(undef, 0) # the step of each location within its element
 
   # As a guess assume length equal to number of beamline elements + 1
   # This makes the typical Twiss case hopefully faster
@@ -554,6 +564,7 @@ function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
   sizehint!(kinds, n_ele+1)
   sizehint!(idxs, n_ele+1)
   sizehint!(step_save, n_ele)
+  sizehint!(ele_steps, n_ele)
 
   scur = 0f0
   step_cur = 0
@@ -575,13 +586,14 @@ function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
     # Check which steps are inside any of the ranges
     found = false
     s_ele = scur # element entrance
-    for _ in 1:n_steps
+    for k in 0:n_steps-1
       if any(x -> x[1] <= scur < x[2], at_ranges)
         push!(stmp, scur)
         push!(names, name)
         push!(kinds, kind)
         push!(idxs, idx)
         push!(step_save, step_cur)
+        push!(ele_steps, k)
         found = true
       end
       step_cur += 1
@@ -602,6 +614,7 @@ function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
         push!(kinds, kind)
         push!(idxs, idx)
         push!(step_save, step_cur-n_steps)
+        push!(ele_steps, 0)
     end
   end
 
@@ -611,6 +624,7 @@ function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
   push!(kinds, "-"^3)
   push!(idxs, -1)
   push!(step_save, step_cur)
+  push!(ele_steps, 0)
 
   # Now resolve type of s:
   s = typeof(scur).(stmp)
@@ -622,7 +636,7 @@ function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
   # (a selected element gives the row at its entrance)
   include_end = any(x->x[1]<=scur<=x[2], at_ranges)
 
-  return s, names, kinds, idxs, step_save, include_start, include_end
+  return s, names, kinds, idxs, step_save, include_start, include_end, ele_steps
 end
 
 function _check_cachable(GTPSA_descriptor)

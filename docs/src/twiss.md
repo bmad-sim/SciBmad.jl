@@ -20,13 +20,10 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
-```{docstring} twiss
-```
-
-## Reading the results
-
-The values for the whole ring (tunes, momentum compaction, ...) are properties of the result,
-and so is every column of the table:
+`twiss` computes the Twiss parameters of a beamline: values for the whole ring, such as the tunes,
+and a table of the lattice functions (beta functions, phase advances, dispersion, closed orbit,
+...) along the beamline. By default these are the periodic functions of a ring, at every
+integration step:
 
 ```{code-cell} julia
 @elements begin
@@ -37,26 +34,58 @@ and so is every column of the table:
 end
 fodo = Beamline([qf, d, b, d, qd, d, b, d], species_ref=Species("electron"), pc_ref=18e9)
 tw = twiss(fodo)
-tw.q1 # 0.14865227408668
 ```
 
-A column such as `tw.beta1` is a vector with one entry per row of the table: `tw.beta1[1]` is the
-first row (the beginning of the beamline) and `tw.beta1[end]` the last (its end). A column can
-also be indexed with the elements of the beamline:
+## Reading the results
+
+The values for the whole ring are properties of the result, for example the tunes:
+
+```{code-cell} julia
+tw.q1, tw.q2 # (0.14865227408668, 0.1274197024658691)
+```
+
+Every column of the table is a property too, and is read at locations of the beamline:
 
 ```{code-cell} julia
 tw.beta1[qd]        # 6.695 at the beginning of qd
+tw.beta1[5]         # 6.695 at the beginning of the element with beamline index 5 (qd)
 tw.beta1[qd, :exit] # 6.695 at its end (the beginning of the next element)
 tw.beta1[qd, :]     # [6.695, 6.538, 6.695] at every integration step of qd, both ends included
 tw.beta1[d]         # [14.56, 8.177, 6.695, 12.14] d is in the beamline four times
 tw.beta1["q*"]      # [14.56, 6.695] at the elements whose names start with q
+tw.beta1[end]       # 14.56 at the end of the beamline
 ```
 
+All the ways to give a location:
+
+| Location | Meaning |
+|---|---|
+| `tw.beta1[qd]`, `tw.beta1[5]` | At the beginning of an element, or of the element with that beamline index |
+| `tw.beta1[qd, :exit]` | At the end of the element (the beginning of the next one) |
+| `tw.beta1[qd, :]` | At every integration step of the element, both ends included |
+| `tw.beta1[qd, 1]` | One integration step after the beginning of the element |
+| `tw.beta1[begin]`, `tw.beta1[end]` | At the beginning and the end of the beamline |
+| `tw.beta1["q*"]` | At the elements found by name, see [Searching by Name](beamline.md) |
+| `tw.beta1[[qf, qd]]`, `tw.beta1[2:4]` | At each of these elements |
+| `tw.beta1[(2.0, 6.0)]`, `tw.beta1[:]` | At every integration step in an s-range, or of the whole beamline |
+
 An element that is in the beamline several times gives one value per placement, in beamline
-order, and names (as for [searching by name](beamline.md)) always give a vector. The rows must be
-in the table: with `at` (for example `twiss(fodo, at=[qd])`), only the elements given there can
-be used. The whole table is the `DataFrame` `tw.df`, with the beamline index, name, kind and `s`
-of each row.
+order, and names, vectors and ranges always give a vector. These locations are the same
+everywhere in SciBmad: the expressions used for matching are written in exactly the same way
+(see [](#optimize)).
+
+A column used as a whole is the column of the table, so it can be plotted or computed with
+directly:
+
+```julia
+using CairoMakie
+lines(tw.s, tw.beta1)       # the beta function along the beamline
+maximum(tw.beta1)           # 14.56
+tw.dx ./ sqrt.(tw.beta1)    # [1.059, 1.059, ...] at every row
+```
+
+The whole table is the `DataFrame` `tw.df`, with the beamline index, name, kind and `s` of each
+row.
 
 The chromaticities are `tw.dq1` and `tw.dq2`. They need `chrom` (or `order`) of at least 2, and
 no synchrotron motion (`rf_on=false` if there are RF cavities):
@@ -66,8 +95,35 @@ twc = twiss(fodo, chrom=2)
 twc.dq1, twc.dq2 # (-0.10506231945773534, -0.1180234082730797)
 ```
 
-The same element indexing is used to write targets for matching ([](#optimize)), where however an
-integer is a beamline index and not a row of the table.
+With `chrom` or `order` of 2 or more, the tunes are Taylor series in δ and in the amplitudes
+(see the [Quickstart](quickstart.md)), and `tw.q1[delta=2]` or `tw.q1[J1=1]` is one of their
+terms (the same as `getterm(tw.q1, delta=2)`). The term of δⁿ needs `chrom` of at least n+1, and
+the term of J₁ or J₂ `order` of at least 3; a term that the truncation does not resolve is 0:
+
+```{code-cell} julia
+twiss(fodo, chrom=3).q1[delta=2] # 1.652
+```
+
+```{code-cell} julia
+twiss(fodo, order=3).q1[J1=1] # 0.6817
+```
+
+## Choosing rows and columns
+
+By default `twiss` computes a standard set of columns at every integration step. `cols` chooses
+the columns (all of them are listed in the reference at the end of this page), and `at` the rows:
+elements (or their beamline indexes) for their beginnings, and s-ranges for every integration step
+in them. Only these locations can then be read, and computing fewer rows is faster. With `at=[]`
+only the values for the whole ring are computed:
+
+```{code-cell} julia
+twiss(fodo, at=[]).q1                    # 0.14865227408668
+twiss(fodo, at=[qd], cols=["beta1"]).beta1[qd] # 6.695
+```
+
+`start` and `stop` compute only a part of the beamline, from the beginning of `start` to the
+beginning of `stop` (for example one cell of a ring); `tw.beta1[begin]` and `tw.beta1[end]` are
+then those of the part.
 
 ## Open lattices
 
@@ -157,3 +213,11 @@ tw.h3000[1], 0.01*β^1.5/(12*sqrt(2))*cis(-3φ)
 ```
 
 The column `h<ijklmn>` needs `order` of at least $i+j+k+l+m+n-1$.
+
+## Reference
+
+```{docstring} twiss
+```
+
+```{docstring} TwissColumnVector
+```

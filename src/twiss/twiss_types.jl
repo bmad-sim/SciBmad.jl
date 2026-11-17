@@ -26,8 +26,11 @@ struct Twiss
   summ::TwissSummary
   df::DataFrame         # s-dependent quantities
   bl::Union{Beamline,Nothing} # the Beamline, to find the rows of its elements
+  start::Int                  # the beamline index of its beginning (of `start`)
+  stop::Union{Int,Nothing}    # the beamline index of `stop` (nothing: the end of the beamline)
+  rows::Dict{Tuple{Int,Int},Int} # the row of each location (beamline index, step in the element)
 end
-Twiss(summ, df) = Twiss(summ, df, nothing)
+Twiss(summ, df) = Twiss(summ, df, nothing, 1, nothing, Dict{Tuple{Int,Int},Int}())
 
 function Base.getproperty(tw::Twiss, s::Symbol)
   if s == :df
@@ -61,68 +64,74 @@ Base.propertynames(tw::Twiss) = vcat(propertynames(tw.summ), propertynames(tw.df
 """
     TwissColumnVector
 
-A column of a `Twiss` table (e.g. `tw.beta1`): a vector with one entry per row of the table,
-which can also be indexed with elements of the beamline:
+A column of a `Twiss` table (e.g. `tw.beta1`), indexed with locations of the beamline exactly as
+the columns of a [`TwissExpr`](@ref):
 
-- `tw.beta1[i]`, `tw.beta1[end]`, `tw.beta1[2:5]`: rows of the table, as for any vector
-- `tw.beta1[ele]`: at the beginning of the element `ele`. An element that is in the beamline
-  several times gives a vector with one entry per placement, in beamline order
-- `tw.beta1[ele, :exit]`: at the end of the element (the beginning of the next one)
-- `tw.beta1[ele, :]`: at every integration step of the element, both ends included
-- `tw.beta1["q*"]`, `tw.beta1[r"..."]`: at the beginning of the elements found by name, as for
-  `findelements` (always a vector)
+- `tw.beta1[qd]`, `tw.beta1[5]`: at the beginning of the element `qd`, or of the element with
+  beamline index 5. An element that is in the beamline several times gives a vector with one
+  entry per placement, in beamline order
+- `tw.beta1[begin]`, `tw.beta1[end]`: at the beginning and the end of the beamline (or of the part
+  of it given with `start` and `stop`)
+- `tw.beta1[qd, :exit]`: at the end of the element (the beginning of the next one)
+- `tw.beta1[qd, :]`: at every integration step of the element, both ends included
+- `tw.beta1[qd, 2]`: two integration steps after the beginning of the element
+- `tw.beta1["q*"]`, `tw.beta1[r"..."]`, `tw.beta1[[qf, qd]]`, `tw.beta1[2:5]`: at the beginning
+  of the elements found by name (as for `findelements`), or of each element given (a vector)
+- `tw.beta1[(2.0, 10.0)]`, `tw.beta1[:]`: at every integration step in an s-range (and the end
+  of the beamline if the range contains it), or of the whole beamline
 
-The rows must be in the table (they are with the default `at`). The same locations are
-used by [`TwissExpr`](@ref), where however an integer is a beamline index (here it is a row).
+The table must have rows at these locations (it has with the default `at`). The column also
+iterates over all rows of the table, in order, and broadcasts (`tw.dbeta1 ./ tw.beta1`) as a
+vector of them; `collect(tw.beta1)` (or `tw.df.beta1`) is that vector.
 """
-struct TwissColumnVector{T,V<:AbstractVector{T}} <: AbstractVector{T}
+struct TwissColumnVector{T,V<:AbstractVector{T}}
   v::V
   tw::Twiss
 end
+Base.length(c::TwissColumnVector) = length(c.v)
 Base.size(c::TwissColumnVector) = size(c.v)
-Base.IndexStyle(::Type{<:TwissColumnVector}) = IndexLinear()
-Base.@propagate_inbounds Base.getindex(c::TwissColumnVector, i::Int) = c.v[i]
-Base.@propagate_inbounds Base.setindex!(c::TwissColumnVector, x, i::Int) = (c.v[i] = x; c)
+Base.eltype(::Type{<:TwissColumnVector{T}}) where {T} = T
+Base.iterate(c::TwissColumnVector, state...) = iterate(c.v, state...)
+Base.broadcastable(c::TwissColumnVector) = c.v
+Base.collect(c::TwissColumnVector) = collect(c.v)
+# (comparisons are of all rows, with another column or a vector)
+Base.:(==)(a::TwissColumnVector, b::TwissColumnVector) = a.v == b.v
+Base.:(==)(a::TwissColumnVector, b::AbstractVector) = a.v == b
+Base.:(==)(a::AbstractVector, b::TwissColumnVector) = a == b.v
+Base.isapprox(a::TwissColumnVector, b::TwissColumnVector; kw...) = isapprox(a.v, b.v; kw...)
+Base.isapprox(a::TwissColumnVector, b::AbstractVector; kw...) = isapprox(a.v, b; kw...)
+Base.isapprox(a::AbstractVector, b::TwissColumnVector; kw...) = isapprox(a, b.v; kw...)
+Base.firstindex(c::TwissColumnVector) = getfield(c.tw, :start)
+Base.lastindex(::TwissColumnVector) = _End()
 
-# The rows of the table at the beginning of the element with beamline index i (-1: the end of
-# the beamline), in the order of its integration steps
-function _twiss_rows(c::TwissColumnVector, i)
-  df = c.tw.df
-  hasproperty(df, :index) || error("The Twiss table has no `index` column (see `base_cols`)")
-  rows = findall(==(i), df.index)
-  isempty(rows) && error("The Twiss table has no row ", i == -1 ? "at the end of the beamline" :
-                         "of element $i", ": include it with `at`")
-  return rows
-end
-
-function _twiss_element_indexes(c::TwissColumnVector, sel)
-  bl = c.tw.bl
+function Base.getindex(c::TwissColumnVector, args...)
+  tw = c.tw
+  bl = getfield(tw, :bl)
   isnothing(bl) && error("This Twiss table does not know its Beamline")
-  return _element_indexes(bl, sel)
+  locs, one = _column_locations(bl, getfield(tw, :stop), args...)
+  vals = [c.v[_twiss_row(tw, l)] for l in locs]
+  return one ? only(vals) : vals
 end
 
-function Base.getindex(c::TwissColumnVector, sel::LatElement)
-  vals = [c.v[first(_twiss_rows(c, i))] for i in _twiss_element_indexes(c, sel)]
-  return length(vals) == 1 ? only(vals) : vals
+# The row of the table at location (i, k): k integration steps after the beginning of the element
+# with beamline index i (-1: the end of the beamline)
+function _twiss_row(tw::Twiss, (i, k))
+  r = get(getfield(tw, :rows), (i, k), 0)
+  r == 0 && error("The Twiss table has no row ", i == -1 ? "at the end of the beamline" :
+                  k == 0 ? "at the beginning of element $i" : "at step $k of element $i",
+                  ": include it with `at`")
+  return r
 end
-Base.getindex(c::TwissColumnVector, sel::Union{AbstractString,Regex}) =
-  [c.v[first(_twiss_rows(c, i))] for i in _twiss_element_indexes(c, sel)]
-function Base.getindex(c::TwissColumnVector, sel::Union{LatElement,AbstractString,Regex},
-                       pos::Union{Symbol,AbstractString,Colon})
-  idxs = _twiss_element_indexes(c, sel)
-  n = length(c.tw.bl.line)
-  pos isa AbstractString && (pos = Symbol(pos))
-  exit_row(i) = first(_twiss_rows(c, i == n ? -1 : i + 1))
-  if pos isa Colon || pos == :all
-    return reduce(vcat, [c.v[[_twiss_rows(c, i); exit_row(i)]] for i in idxs])
-  elseif pos == :exit
-    vals = [c.v[exit_row(i)] for i in idxs]
-  elseif pos == :entrance
-    vals = [c.v[first(_twiss_rows(c, i))] for i in idxs]
-  else
-    error("Unknown position $(repr(pos)): use :entrance, :exit or :")
-  end
-  return sel isa LatElement && length(vals) == 1 ? only(vals) : vals
+
+function Base.show(io::IO, c::TwissColumnVector)
+  print(io, "TwissColumnVector(")
+  show(io, c.v)
+  print(io, ")")
+end
+function Base.show(io::IO, m::MIME"text/plain", c::TwissColumnVector)
+  println(io, length(c.v), "-row column of a Twiss table (index it with locations of the ",
+          "beamline; collect it for a Vector of all rows):")
+  Base.print_array(io, c.v)
 end
 
 function Base.show(io::IO, tw::Twiss)

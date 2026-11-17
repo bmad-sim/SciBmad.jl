@@ -27,6 +27,14 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 TPSAInterface = "575459ea-959c-4603-9b15-d63fb6693033"
 
+[weakdeps]
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+
+[extensions]
+SciBmadMakieExt = "Makie"
+SciBmadRecipesBaseExt = "RecipesBase"
+
 [compat]
 ADTypes = "1"
 AtomicAndPhysicalConstants = "0.12"
@@ -40,10 +48,12 @@ ForwardDiff = "0.10,1"
 FundamentalFrequencies = "0.1.2"
 GTPSA = "1.5.6"
 KernelAbstractions = "0.9, 0.10"
-NonlinearNormalForm = "0.5.4"
+Makie = "0.24"
+NonlinearNormalForm = "0.5.5"
 OrderedCollections = "1.8.2, 2"
 PrecompileTools = "1.2.1"
 PrettyTables = "3.4"
+RecipesBase = "1"
 Reexport = "1.2.2"
 StaticArrays = "1.9.14"
 Statistics = "1"

@@ -208,8 +208,8 @@ using Test
     tw = twiss(cell; at=[(0.2, 0.4)], cols=["beta1"])
     tall = twiss(cell; cols=["beta1"])
     # (the one-turn map is composed from the maps between the rows, so it rounds differently)
-    @test tw.s == [0.25, 0.375]
-    @test tw.beta1 ≈ tall.beta1[3:4] rtol=1e-14
+    @test tw.df.s == [0.25, 0.375]
+    @test tw.df.beta1 ≈ tall.df.beta1[3:4] rtol=1e-14
   end
 
   @testset "Open-lattice Twiss (a_initial)" begin
@@ -228,11 +228,10 @@ using Test
       to = twiss(ring; rf_on, a_initial=a)
       @test isodd(SciBmad.NonlinearNormalForm.nvars(a)) == !rf_on
       @test isnothing(a.q) == !spin
-      for c in propertynames(tw)
-        c == :qspin && continue # The spin tune is a one-turn quantity
-        x = getproperty(tw, c)
+      for c in names(tw.df) # (the summary values, e.g. the spin tune, are one-turn quantities)
+        x = tw.df[!, c]
         x isa AbstractVector{<:Real} || continue
-        @test getproperty(to, c) ≈ x atol=1e-11
+        @test to.df[!, c] ≈ x atol=1e-11
       end
     end
 
@@ -246,8 +245,9 @@ using Test
     to = twiss(bl; a_initial=m ∘ a)
     quad = (k -> [1 0; -k 1.0], k -> [1 0; k 1.0]) # Thin quadrupole in x and y
     for (p, β0, α0, β, α, ϕ, βp) in (
-        (1, tw.beta1[1], tw.alpha1[1] + K*tw.beta1[1], to.beta1, to.alpha1, to.phi1, tw.beta1),
-        (2, r^2*tw.beta2[1], tw.alpha2[1], to.beta2, to.alpha2, to.phi2, tw.beta2))
+        (1, tw.beta1[1], tw.alpha1[1] + K*tw.beta1[1], to.df.beta1, to.df.alpha1, to.df.phi1,
+         tw.df.beta1),
+        (2, r^2*tw.beta2[1], tw.alpha2[1], to.df.beta2, to.df.alpha2, to.df.phi2, tw.df.beta2))
       γ0 = (1 + α0^2)/β0
       T = [1 0; 0 1.0]
       for (i, m) in enumerate([quad[p](0.8), [1 1; 0 1.0], quad[p](-0.7), [1 1; 0 1.0]])
@@ -366,13 +366,13 @@ using Test
       push!(e, tw.etac, tw.alphac) # (with RF and parameters they lacked the factor sin(2π q3))
       rf_on && push!(e, tw.q3)
       t = twiss(ring; rf_on)
-      r3 = [findall(==(3), t.index); findfirst(==(4), t.index)] # the 4 steps of b and its end
+      r3 = [findall(==(3), t.df.index); findfirst(==(4), t.df.index)] # the 4 steps of b, its end
       @test length(r3) == 5
       v = value(e)
-      @test v[1:4] ≈ [t.q1, t.q2, t.beta1[findfirst(==(5), t.index)], t.beta2[end]] rtol=1e-12
-      @test v[8] ≈ sum(t.beta1[r3])/5 rtol=1e-12
-      @test v[9] ≈ maximum(t.beta2) rtol=1e-12
-      @test v[13] ≈ t.beta1[1]^2 - 5*sum(t.alpha1[r3])/5 rtol=1e-12
+      @test v[1:4] ≈ [t.q1, t.q2, t.df.beta1[findfirst(==(5), t.df.index)], t.df.beta2[end]] rtol=1e-12
+      @test v[8] ≈ sum(t.df.beta1[r3])/5 rtol=1e-12
+      @test v[9] ≈ maximum(t.df.beta2) rtol=1e-12
+      @test v[13] ≈ t.df.beta1[1]^2 - 5*sum(t.df.alpha1[r3])/5 rtol=1e-12
       v2, J = value_and_jacobian(e, knobs)
       @test v2 ≈ v rtol=1e-11
       @test close_to(J, fdjac(e, knobs))
@@ -400,14 +400,14 @@ using Test
     ks = [@knob(sf.Kn2), @knob(sd.Kn2), @knob(qf.Kn1)]
     v, J = value_and_jacobian(e, ks)
     t3 = twiss(ring; rf_on=false, order=3, cols=["dbeta1", "dx_2"], at=[1, 5])
-    @test v ≈ [t3.q1[delta=1], t3.q2[delta=1], t3.q1[delta=2], t3.dbeta1[2], t3.dx_2[1],
+    @test v ≈ [t3.q1[delta=1], t3.q2[delta=1], t3.q1[delta=2], t3.df.dbeta1[2], t3.df.dx_2[1],
                t3.q1[J1=1]] rtol=1e-9
     @test close_to(J, fdjac(e, ks; h=1e-5))
     @test v[1] ≈ twiss(ring; rf_on=false, chrom=2, at=[]).q1[delta=1] rtol=1e-9
       # h terms are complex
     th = twiss(ring; rf_on=false, order=2, cols=["h3000", "h2100"], at=[1, 5])
     @test value([abs(tc.h3000[1]), real(tc.h2100[5]), imag(tc.h2100[5]), abs2(tc.h3000[1])]) ≈
-          [abs(th.h3000[1]), real(th.h2100[2]), imag(th.h2100[2]), abs2(th.h3000[1])] rtol=1e-10
+          [abs(th.df.h3000[1]), real(th.df.h2100[2]), imag(th.df.h2100[2]), abs2(th.df.h3000[1])] rtol=1e-10
     @test_throws ErrorException value(tc.h3000[1])
       # Their derivatives, also in knobs that change the linear optics (the quadrupole) and the
       # closed orbit (the kicker): the Courant-Snyder map of h depends on the parameters
@@ -458,7 +458,7 @@ using Test
     v, J = value_and_jacobian(e, ks)
     a = twiss(cell, cols=["a"], as_taylor_series=true, at=[1]).a[1]
     t = twiss(line, a_initial=a)
-    @test v[1:5] ≈ [t.beta1[end], t.alpha1[end], t.beta2[3], t.dx[end], t.phi1[end]] rtol=1e-11
+    @test v[1:5] ≈ [t.df.beta1[end], t.df.alpha1[end], t.df.beta2[3], t.df.dx[end], t.df.phi1[end]] rtol=1e-11
     @test close_to(J, fdjac(e, ks))
     tf = TwissExpr(line; a_initial=a)
     e = [tf.beta1[end], tf.alpha2[end]]
@@ -474,7 +474,8 @@ using Test
     t = twiss(cells)
     t6 = TwissExpr(cells)
     e = [t6.q1, t6.q2, t6.phi1[30] - t6.phi1[3]]
-    ref = [t.q1, t.q2, t.phi1[findfirst(==(30), t.index)] - t.phi1[findfirst(==(3), t.index)]]
+    ref = [t.q1, t.q2, t.df.phi1[findfirst(==(30), t.df.index)] -
+           t.df.phi1[findfirst(==(3), t.df.index)]]
     @test ref[1] > 1
     @test value(e) ≈ ref rtol=1e-12
     v, J = value_and_jacobian(e, [@knob(qf6.Kn1), @knob(qd6.Kn1)])
@@ -610,13 +611,13 @@ using Test
     to = twiss(bl; order=2, cols=cols)
     @test abs(tc.dx[1]) > 1 # dispersion at the start
     for c in cols
-      @test getproperty(tc, Symbol(c)) ≈ getproperty(to, Symbol(c)) rtol=1e-9
+      @test tc.df[!, c] ≈ to.df[!, c] rtol=1e-9
     end
     @test [tc.q1[delta=1], tc.q2[delta=1]] ≈ [to.q1[delta=1], to.q2[delta=1]] rtol=1e-10
     t3 = twiss(bl; chrom=3, cols=["dbeta1_2", "dx_3"], at=[1, 5])
     o3 = twiss(bl; order=3, cols=["dbeta1_2", "dx_3"], at=[1, 5])
-    @test t3.dbeta1_2 ≈ o3.dbeta1_2 rtol=1e-9
-    @test t3.dx_3 ≈ o3.dx_3 rtol=1e-9
+    @test t3.df.dbeta1_2 ≈ o3.df.dbeta1_2 rtol=1e-9
+    @test t3.df.dx_3 ≈ o3.df.dx_3 rtol=1e-9
     @test [t3.q1[delta=2], t3.q2[delta=2]] ≈ [o3.q1[delta=2], o3.q2[delta=2]] rtol=1e-9
       # From the one-turn matrix around the closed orbit, by differences (its variables have names
       # not used below: a function in a testset shares the testset's variables)
@@ -662,10 +663,10 @@ using Test
     @test [grad(tp.q1)[1], grad(tp.q2)[1]] ≈ (fp .- fm) ./ 2e-6 rtol=1e-7
   end
 
-  @testset "Twiss table indexed with elements" begin
-      # A column of the table indexed with elements gives the values at their rows: the same as
-      # the TwissExpr at the same location (an element placed twice gives a vector), and the
-      # chromaticities dq1, dq2
+  @testset "Twiss table indexed with locations" begin
+      # A column of the table is indexed with locations exactly as a TwissExpr (an integer is a
+      # beamline index) and gives the values of the rows of the table there (found here by hand
+      # from its index column); it iterates and broadcasts over all rows. The chromaticities
     @elements begin
       qf = Quadrupole(Kn1=0.36, L=0.5)
       sf = Sextupole(Kn2=1.2, L=0.2)
@@ -676,18 +677,31 @@ using Test
     cell = Beamline([qf, sf, b, d, qd, b, d]; species_ref=Species("electron"), pc_ref=18e9)
     tw = twiss(cell)
     te = TwissExpr(cell)
-    @test tw.beta1 isa AbstractVector{Float64} && tw.beta1 == tw.df.beta1
-    @test tw.beta1[3] == tw.df.beta1[3] && tw.beta1[end] == tw.df.beta1[end] # rows, as before
-    @test tw.beta1[qd] == value(te.beta1[qd]) == tw.df.beta1[findfirst(==(5), tw.df.index)]
-    @test tw.beta1[qd, :exit] == value(te.beta1[qd, :exit])
-    @test tw.beta1[qd, :exit] == tw.beta1[cell[6]][1] # the beginning of the next element
-    @test tw.beta1[b] == value(te.beta1[b]) && length(tw.beta1[b]) == 2 # placed twice
-    @test tw.beta1[b, :exit] == value(te.beta1[b, :exit])
-    @test tw.beta1[b, :] == value(te.beta1[b, :]) && length(tw.beta1[b, :]) == 8
-    @test tw.beta1["q*"] == value(te.beta1["q*"]) == [tw.beta1[qf], tw.beta1[qd]]
+    df = tw.df
+    rows_of(i) = findall(==(i), df.index) # the rows of element i, in the order of its steps
+    first_row(i) = first(rows_of(i))
+    @test collect(tw.beta1) == df.beta1 && maximum(tw.beta1) == maximum(df.beta1)
+    @test tw.beta1 == df.beta1 && tw.beta1 ≈ twiss(cell; cols=["beta1"]).beta1
+    @test tw.dx ./ tw.beta1 == df.dx ./ df.beta1 && length(tw.beta1) == size(df, 1)
+    @test tw.beta1[4] == df.beta1[first_row(4)] != df.beta1[4] # a beamline index, not a row
+    @test tw.beta1[qd] == df.beta1[first_row(5)]
+    @test tw.beta1[qd, :exit] == df.beta1[first_row(6)]
+    @test tw.beta1[b] == df.beta1[[first_row(3), first_row(6)]] # placed twice
+    @test tw.beta1[b, :] == df.beta1[[rows_of(3); first_row(4); rows_of(6); first_row(7)]]
+    @test tw.beta1[b, 2] == df.beta1[[rows_of(3)[3], rows_of(6)[3]]]
+    @test tw.beta1[2:3] == tw.beta1[[sf, cell[3]]] == df.beta1[[first_row(2), first_row(3)]]
+    @test tw.beta1[(1.0, 1.8)] == df.beta1[findall(x -> 1.0 <= x < 1.8, df.s)]
+    @test tw.beta1[:] == df.beta1
+    @test tw.beta1[begin] == df.beta1[1] && tw.beta1[end] == df.beta1[end]
     @test tw.beta1[cell[7], :exit] == tw.beta1[end]
     @test tw.name["Sextupole::*"] == ["sf"]
+    for loc in Any[(3,), (qd,), (qd, :exit), (b,), (b, :), (b, 2), (2:3,), ([sf, cell[3]],),
+                   ((1.0, 1.8),), (:,), ("q*",)]
+      @test tw.beta1[loc...] == value(te.beta1[loc...])
+    end
+    @test tw.beta1[begin] == value(te.beta1[begin]) && tw.beta1[end] == value(te.beta1[end])
     @test_throws ErrorException twiss(cell; at=[1]).beta1[qd] # the row is not in the table
+    @test_throws ErrorException twiss(cell; at=[3]).beta1[b, 1]
     @test_throws ErrorException tw.dq1 # needs order 2
     tc = twiss(cell; chrom=2, at=[])
     @test tc.dq1 == tc.q1[delta=1] && tc.dq2 == tc.q2[delta=1]
@@ -720,9 +734,10 @@ using Test
         @test (num(few.q1), num(few.q2)) == (num(full.q1), num(full.q2))
         @test keys(few.summ.sdict) == keys(full.summ.sdict)
         @test all(num(few.summ.sdict[k]) == num(full.summ.sdict[k]) for k in keys(full.summ.sdict))
-        for r in 1:size(few.df, 1)
-          j = findfirst(k -> full.index[k] == few.index[r] && full.s[k] == few.s[r], 1:length(full.s))
-          @test (few.phi1[r], few.phi2[r], few.beta1[r]) == (full.phi1[j], full.phi2[j], full.beta1[j])
+        fe, fu = few.df, full.df
+        for r in 1:size(fe, 1)
+          j = findfirst(k -> fu.index[k] == fe.index[r] && fu.s[k] == fe.s[r], 1:length(fu.s))
+          @test (fe.phi1[r], fe.phi2[r], fe.beta1[r]) == (fu.phi1[j], fu.phi2[j], fu.beta1[j])
         end
       end
     end
@@ -734,9 +749,8 @@ using Test
     qf.Kn1 = 1.2
     d.L = 0.1
     scalarize!(ring)
-    j = findfirst(==(40), full.index)
     coefs(t) = [t[i] for i in 0:GTPSA.numcoefs(t)-1]
-    @test coefs(few.phi1[1]) == coefs(full.phi1[j]) && scalar(few.phi1[1]) > 0.5
+    @test coefs(few.phi1[40]) == coefs(full.phi1[40]) && scalar(few.phi1[40]) > 0.5
     @test coefs(few.q1.taylor_series) == coefs(full.q1.taylor_series)
   end
 
@@ -763,38 +777,40 @@ using Test
     tp = twiss(ring; start=n+1, stop=2n+1)
     @test tp.q1 ≈ tc.q1 rtol=1e-13
     @test tp.q2 ≈ tc.q2 rtol=1e-13
-    @test tp.beta1 ≈ tc.beta1 rtol=1e-12
-    @test tp.dx ≈ tc.dx rtol=1e-11
-    @test tp.phi2 ≈ tc.phi2 rtol=1e-12 atol=1e-13
-    @test tp.index[1] == n+1 && tp.index[end] == 2n+1 && tp.name[end] == "qf"
-    @test tp.s ≈ tc.s .+ ring.line[n+1].s
-    @test tp.beta1[ring.line[n+5]] == tp.beta1[findfirst(==(n+5), tp.index)]
+    @test tp.df.beta1 ≈ tc.df.beta1 rtol=1e-12
+    @test tp.df.dx ≈ tc.df.dx rtol=1e-11
+    @test tp.df.phi2 ≈ tc.df.phi2 rtol=1e-12 atol=1e-13
+    @test tp.df.index[1] == n+1 && tp.df.index[end] == 2n+1 && tp.df.name[end] == "qf"
+    @test tp.df.s ≈ tc.df.s .+ ring.line[n+1].s
+    @test tp.beta1[ring.line[n+5]] == tp.beta1[n+5] == tp.df.beta1[findfirst(==(n+5), tp.df.index)]
+    @test tp.beta1[begin] == tp.df.beta1[1] && tp.beta1[end] == tp.df.beta1[end]
     ts = twiss(ring; start=n+2, stop=2n+2) # the cell started one element later: the same tunes
     @test ts.q1 ≈ tc.q1 rtol=1e-12
-    @test !isapprox(ts.beta1[1], tc.beta1[1]; rtol=1e-3)
-    @test ts.beta1[1] ≈ tc.beta1[2] rtol=1e-11
+    @test !isapprox(ts.df.beta1[1], tc.df.beta1[1]; rtol=1e-3)
+    @test ts.df.beta1[1] ≈ tc.df.beta1[2] rtol=1e-11
     a0 = twiss(cell; cols=["a"], as_taylor_series=true, at=[1]).a[1]
     full = twiss(ring; a_initial=a0, cols=["a", "beta1", "alpha2", "dx", "phi1"],
                  as_taylor_series=true)
     i1, i2 = 3n+1, 3n+4
-    j1 = findfirst(==(i1), full.index)
-    j2 = findfirst(==(i2), full.index)
-    to = twiss(ring; a_initial=full.a[j1], start=i1, stop=ring.line[i2])
-    @test to.index[1] == i1 && to.index[end] == i2
-    @test to.beta1 ≈ scalar.(full.beta1[j1:j2]) rtol=1e-11
-    @test to.alpha2 ≈ scalar.(full.alpha2[j1:j2]) rtol=1e-10
-    @test to.dx ≈ scalar.(full.dx[j1:j2]) rtol=1e-10
-    @test to.phi1 ≈ scalar.(full.phi1[j1:j2]) .- scalar(full.phi1[j1]) rtol=1e-10 atol=1e-12
+    fu = full.df
+    j1 = findfirst(==(i1), fu.index)
+    j2 = findfirst(==(i2), fu.index)
+    to = twiss(ring; a_initial=full.a[i1], start=i1, stop=ring.line[i2])
+    @test to.df.index[1] == i1 && to.df.index[end] == i2
+    @test to.df.beta1 ≈ scalar.(fu.beta1[j1:j2]) rtol=1e-11
+    @test to.df.alpha2 ≈ scalar.(fu.alpha2[j1:j2]) rtol=1e-10
+    @test to.df.dx ≈ scalar.(fu.dx[j1:j2]) rtol=1e-10
+    @test to.df.phi1 ≈ scalar.(fu.phi1[j1:j2]) .- scalar(fu.phi1[j1]) rtol=1e-10 atol=1e-12
     @test to.beta1[ring.line[i2]] == to.beta1[end]
-    @test twiss(ring; a_initial=full.a[j1], start=i1, stop=i2, at=[i1+1, i2, q4]).index ==
+    @test twiss(ring; a_initial=full.a[i1], start=i1, stop=i2, at=[i1+1, i2, q4]).df.index ==
           [i1+1, i2-1, i2]
-    te = twiss(ring; a_initial=full.a[j1], start=i1) # to the end of the beamline
-    @test te.index[end] == -1
+    te = twiss(ring; a_initial=full.a[i1], start=i1) # to the end of the beamline
+    @test te.df.index[end] == -1
     @test te.beta1[end] ≈ scalar(full.beta1[end]) rtol=1e-11
     @test_throws ErrorException twiss(ring; start=5, stop=3)
     @test_throws ErrorException twiss(ring; start=qf) # placed several times
       # As expressions: [end] and [begin] are those of the part
-    tw = TwissExpr(ring; a_initial=full.a[j1], start=i1, stop=i2)
+    tw = TwissExpr(ring; a_initial=full.a[i1], start=i1, stop=i2)
     e = [tw.beta1[end], tw.alpha1[end], tw.beta2[q4], tw.phi1[end] - tw.phi1[begin]]
     v, J = value_and_jacobian(e, [@knob(q3.Kn1), @knob(q4.Kn1)])
     @test v[1:2] ≈ [to.beta1[end], to.alpha1[end]] rtol=1e-12
@@ -914,7 +930,7 @@ using Test
     # Selecting the last element gives only its entrance row, at the same s as in the full table
     n = length(cell().line)
     t3 = twiss(cell(); at=[n], cols=["beta1"])
-    @test t3.index == [n] && t3.s[1] == t2.s[findfirst(==(n), t2.index)]
+    @test t3.df.index == [n] && t3.s[n] == t2.df.s[findfirst(==(n), t2.df.index)]
     # twiss does not mutate the user's initial guess
     g = [1e-3 0 0 0 0 0.0]; g0 = copy(g)
     twiss(cell(); v0=g, at=[])

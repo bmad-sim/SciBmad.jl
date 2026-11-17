@@ -323,7 +323,24 @@ values kept alive for the save). With it off the kernels' native code is identic
   trees are evaluated with these (`_peval`); `deriv` is `GTPSA.deriv` there.
 - Rows: a location is (beamline index, step); the end of an element is the beginning of the next
   (-1: the end of the beamline). Beginnings are requested by index, interior steps by an s-range
-  over the element, the end by `(s_end - δ, Inf)`; the rows of the result are found by index and s.
+  over the element, the end by `(s_end - δ, Inf)`; the rows of the result are found with
+  `Twiss.rows` (below).
+- Locations are the same for `TwissExpr` and `twiss` tables (maintainer, Nov 2026: "everything in
+  TwissExpr accessible identically in regular twiss"): `_column_locations(bl, stop, args...)` in
+  `expressions.jl` turns any index (integer = beamline index, element, name, vector, range,
+  `[ele, :exit]`, `[ele, :]`, `[ele, k]`, s-range, `:`, `begin`/`end` of the beamline or of
+  `start`/`stop`) into locations (beamline index, step in the element) and says whether it is one
+  value. `twiss` stores the row of every location of its table (`Twiss.rows`, from the step of
+  each row within its element, which `_twiss_assemble_locations` returns last), with `start` and
+  `stop`; `_twiss_row(tw, loc)` finds a row (also for the engine, replacing its search by s;
+  `value`/`value_and_jacobian` bitwise unchanged). A table column (`TwissColumnVector`) is
+  therefore not an `AbstractVector` (an integer is not a row): it iterates, broadcasts, compares
+  (`==`, `≈`) and displays as the vector of all rows; `collect(tw.beta1)` or `tw.df.beta1` is that
+  vector. Plotting it works through package extensions (`SciBmadMakieExt`:
+  `Makie.convert_single_argument`; `SciBmadRecipesBaseExt`: a type recipe for Plots), checked with
+  CairoMakie 0.24 and Plots. Tests compare expressions with raw rows (`t.df.beta1[r]`) to stay
+  independent of the shared code. The docs present this once, in `twiss.md` ("Reading the
+  results"); the Quickstart introduces it and `optimize.md` refers to it.
 - Tunes and phases: `twiss` unwraps the phases row by row, so with few rows they are only known
   modulo 1 (`twiss(ring; at=[])` gives the tunes in (-0.5, 0.5]). When `q1`, `q2`, `phi1` or
   `phi2` are used, the engine adds rows (`phase_rows` of the `TwissExpr`: elements at most 0.2
@@ -586,6 +603,12 @@ Open items:
   uses a `BatchParam` `t_ref`), and `twiss` would need each length's `batch_index` element for `s`. 
   A batched `dynamic_aperture` will be a separate function (its particles are initialized on a grid 
   and pushed differently).
+- A term of an amplitude-dependent value that the truncation does not resolve is silently 0 in a
+  `twiss` table (`twiss(fodo, chrom=2).q1[delta=2]`, `twiss(fodo, order=2).q1[J1=1]`; δⁿ needs
+  `chrom` n+1, J `order` 3; `TwissExpr` chooses the orders itself). The name `TwissColumnVector`
+  is kept although the column is no longer a vector. `Experimental` (`one-torus.jl`, `coord == 0`
+  with `ais`) uses `tw.table.a[1]`, which does not exist (`tw.df`). `max_one_torus(…;
+  verbose=false)` still prints every turn.
 - Unknown entries of `at` are ignored silently; `_dampdec` returns an `Int` 0 without radiation; 
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.
