@@ -337,7 +337,8 @@ function twiss(
   # The maps are tracked with track, which saves them at the rows (the steps step_save) with the
   # reference there. If the GTPSA truncation order is uniform, the identity is tracked once: the
   # maps from the start to the rows, the last one the one-turn map, give a and its value at every
-  # row (a composed with them). Else a is computed from the one-turn map, then tracked itself.
+  # row (a composed with them). Else a is computed from the one-turn map, and the tracking of its
+  # fixed point a0 (below) gives a at the rows too. With a_initial, a_initial is tracked.
   locations = (s, idxs, names, kinds)
   maps = nothing
   r_and_tunes = nothing
@@ -350,6 +351,7 @@ function twiss(
   sparse = length(step_save) < n_steps_total + 1
   no_locations = (similar(s, 0), Int[], String[], String[])
   tr_steps = nothing
+  a0_rows = nothing
   if isnothing(a_initial)
     eye = _twiss_make_identity(v0_and_coast[1], init, Val{coast}(), Val{spin}())
     if _check_cachable(GTPSA_descriptor)
@@ -375,12 +377,23 @@ function twiss(
       # orbit lacks terms (e.g. x^2) that the fixed point's dependence on δ and on parameters
       # turns into terms of lower order in x, so a is only right to first order in them. Tracking
       # the fixed point itself (a0, a translation) loses nothing: the one-turn map around it
-      # gives a again, with the error of the fixed point squared each time (a Newton iteration)
+      # gives a again, with the error of the fixed point squared each time (a Newton iteration).
+      # The last tracking saves a0 at the rows: composed with inv(a0) ∘ a, which has no constant
+      # part (so nothing is lost either), it gives a there
       mo = unsafe_load(GTPSA_descriptor.desc).mo
-      for _ in 1:ceil(Int, log2(mo))
+      n_refine = ceil(Int, log2(mo))
+      for k in 1:n_refine
         a0 = factorise(a).a0
-        tr0 = _twiss_track(a0, bl, rf_on, batch_index, zero(s[1]), (similar(s, 0), Int[], String[],
-                           String[]), Int[], in_body_coordinates, delta_orbit)
+        if k < n_refine
+          tr0 = _twiss_track(a0, bl, rf_on, batch_index, zero(s[1]), no_locations, Int[],
+                             in_body_coordinates, delta_orbit)
+        else
+          tr = _twiss_track(a0, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
+                            in_body_coordinates, delta_orbit)
+          maps = _twiss_maps(a0, tr, axes(tr.v, 3))
+          a0_rows = a0
+          tr0 = tr
+        end
         m0 = inv(a0) ∘ _twiss_map(a0, view(tr0.bunch.v, 1, :), _view_q(tr0.bunch.q))
         b, r, tunes = _a_r_tunes(m0)
         a = a0 ∘ b
@@ -413,14 +426,16 @@ function twiss(
     turns = _twiss_turns(tr_steps, a_initial, step_save)
   end
 
-  # a at every row: a composed with the maps to the rows, or tracked
+  # a at every row: the maps to the rows (from the start, or the tracked a0) composed with a (or
+  # inv(a0) ∘ a), or a itself tracked
   if isnothing(maps)
     tr = _twiss_track(a_initial, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
                       in_body_coordinates, delta_orbit)
     fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(tr, a_initial, canonise,
                                                                        phase, damp, coast, turns)
   else
-    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(maps, a_initial, canonise,
+    a_right = isnothing(a0_rows) ? a_initial : inv(a0_rows) ∘ a_initial
+    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(maps, a_right, canonise,
                                                                        phase, damp, coast, turns)
   end
   _twiss_reference!(beta_gamma_ref, t_ref, tr, tr === tr_steps ? step_save .+ 1 : axes(tr.v, 3))
@@ -837,6 +852,12 @@ end
 
 function _twiss_summ(twi, cache)
   j = length(twi.s)
+  # The caches hold the last row of the table, which is not the end if the table does not include it
+  empty!(cache.map)
+  empty!(cache.tps)
+  empty!(cache.float)
+  empty!(cache.matrix)
+  empty!(cache.vf)
   q1 = _phi1(j, twi, cache, Val{true}())
   coast = iscoasting(twi)
   oper = x -> (TI.is_tps_type(typeof(x)) isa TI.IsTPSType ? AmplitudeDependentValue(x, coast) : x)

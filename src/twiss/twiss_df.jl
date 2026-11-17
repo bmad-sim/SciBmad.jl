@@ -44,19 +44,35 @@ function _twiss_df(colnames, twi, include_start, include_end, ::Val{as_taylor_se
   return _twiss_df_loop(df, cols, twi, cache, shift, Val{as_taylor_series}()), cache
 end
 
+# The rows in blocks, column by column: one dynamic call per column and block (per cell it is a
+# slow lookup, as the columns are different functions). The caches hold the intermediate results
+# of one row, shared by its columns: each row of a block has its own
 function _twiss_df_loop(df, cols, twi, cache, shift, ::Val{as_taylor_series}) where {as_taylor_series}
   nrows, ncols = size(df)
-  for row in 2:(nrows-shift)
-    # The caches hold the intermediate results of one row, shared by its columns
-    empty!(cache.map)
-    empty!(cache.tps)
-    empty!(cache.float)
-    empty!(cache.matrix)
-    empty!(cache.vf)
+  caches = [TwissCache(build_cache(valtype(cache.map)), build_cache(valtype(cache.tps)),
+                       build_cache(valtype(cache.float)), build_cache(valtype(cache.matrix)),
+                       build_cache(valtype(cache.vf)), cache.persistent_matrix,
+                       cache.persistent_map, cache.persistent_cmap) for _ in 1:64]
+  for block in Iterators.partition(2:(nrows-shift), length(caches))
+    for c in caches
+      empty!(c.map)
+      empty!(c.tps)
+      empty!(c.float)
+      empty!(c.matrix)
+      empty!(c.vf)
+    end
     for col in 1:ncols
-      df[row+shift,col] = @noinline (cols[col])(row, twi, cache, Val{as_taylor_series}())
+      _twiss_df_column!(df[!,col], cols[col], twi, caches, block, shift, Val{as_taylor_series}())
     end
   end
   return df
+end
+
+function _twiss_df_column!(v, col::F, twi, caches, block, shift,
+                           ::Val{as_taylor_series}) where {F,as_taylor_series}
+  for (k, row) in enumerate(block)
+    v[row+shift] = @noinline col(row, twi, caches[k], Val{as_taylor_series}())
+  end
+  return v
 end
 

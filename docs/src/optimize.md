@@ -283,8 +283,9 @@ measured response matrix with quadrupole strengths.
 
 ## Using Other Optimizers
 
-`match!` uses a Gauss-Newton method with Levenberg-Marquardt steps where needed, which finds the
-nearest solution. Like every such method it can stop at a point that cannot be improved by small
+`match!` uses the Levenberg-Marquardt method of
+[BatchSolve](https://mattsignorelli.github.io/BatchSolve.jl/dev/guide/), which finds the nearest
+solution. Like every such method it can stop at a point that cannot be improved by small
 changes although a solution exists elsewhere; a better starting point, bounds on the knobs, or a
 global optimizer then help. For
 anything else, `MatchProblem` provides what the many optimization packages of Julia ask for:

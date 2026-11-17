@@ -229,7 +229,11 @@ plainly what was not verified and what could be wrong. Never present unverified 
    of `twiss`'s tracking compiles the same kernels; the Bunch `t_ref = zero(s[1])` holds parametric
    lengths). Uniform truncation orders: the identity is tracked once, the saved maps are the maps
    from the start to the rows (`_twiss_maps`), the last one the one-turn map, which gives `a`
-   (`normal`) and the tunes. Otherwise the one-turn map gives `a`, which is tracked itself.
+   (`normal`) and the tunes. Otherwise the one-turn map gives `a`, and the last tracking of the
+   fixed point `a0` (see 4.) is saved at the rows: `a` there is the tracked `a0` composed with
+   inv(`a0`) ∘ `a`, which has no constant part in the oscillating variables, so the missing x²
+   terms of the tracked map only give x² terms, which are truncated anyway (Nov 2026; before, `a`
+   was tracked once more). With an `a_initial` it is tracked itself.
    `beta_gamma_ref` and `t_ref` of the rows come from the result.
 4. `factorise` (NNF) of `a`, then `_twiss_push_a`: per row `a = map ∘ a` (or the tracked `a`) and
    `factorise` (canonise level from `canonise_phase_damp`; 0 at order 1) with fresh phases: the
@@ -255,7 +259,12 @@ plainly what was not verified and what could be wrong. Never present unverified 
    (dq1/dkqf 0.572409 against 0.572409 from tracking, 0.5566 before), also in 6D. Cost: ESR
    `chrom=2` 683 -> 774 ms (`order=2`: 1300 ms). Test "Chromatic and parametric functions with a
    parameter dependent closed orbit" (12 of 16 fail without the refinement). Uniform orders (as
-   `value_and_jacobian` uses) never needed it.
+   `value_and_jacobian` uses) never needed it. Taking the rows from the last tracking of `a0`
+   (3.) instead of tracking `a` once more: ESR `chrom=2` 775 -> 690 ms, with 5 rows 337 -> 258 ms;
+   round-off against tracking `a` (10 cases: `chrom` 2 and 3, coupled, spin, `delta0`, sparse
+   `at`, parameters with the variables at order 1, 6D, ESR: ≤ 1.4e-12 of each column's scale),
+   and as close to `order=2` as before (1e-15 to 2.5e-13); composing with `a` instead of
+   inv(`a0`) ∘ `a` fails 17 of 27 checks of that test.
    **δ of a coasting beam (`delta0`):** in the maps δ is a parameter without a value (their sixth
    component has no constant part). `_twiss_track` adds the δ of the orbit to the tracked sixth
    coordinate, `_twiss_map` takes it off the tracked map again, and `TwissInternal.delta0` gives
@@ -266,9 +275,17 @@ plainly what was not verified and what could be wrong. Never present unverified 
    as a displacement.) Tested against tracking and the expansion in δ from δ = 0, orders 1 and 2
    and `chrom=2`.
 5. `_twiss_df`: evaluates every column for every row. The caches in `TwissCache` hold one row's 
-   intermediate results (`a1_mat`, H/B matrices, …) shared by its columns; they are emptied at the 
-   start of each row (`persistent_*` caches live for the whole table).
-6. `_twiss_summ`: tunes, `etac`, `alphac`, spin tune, damping.
+   intermediate results (`a1_mat`, H/B matrices, …) shared by its columns (`persistent_*` caches
+   live for the whole table). The rows go in blocks of 64, column by column (`_twiss_df_column!`,
+   a function barrier on the column function), each row of a block with its own caches: one
+   dynamic call per column and block. Per cell, the 26 column functions at one call site missed
+   Julia's call-site cache and took the slow method lookup (Nov 2026: ESR table 39.6 -> 11.2 ms,
+   88 -> 30 MB, `twiss` 251 -> 214 ms; bitwise on 18 cases; first calls unchanged within their
+   spread, 17 s ESR without the workload).
+6. `_twiss_summ`: tunes, `etac`, `alphac`, spin tune, damping, at the end row. It empties the row
+   caches first: they hold the last row of the table, and with RF the 6D `etac`/`alphac` used `B3`
+   of that row when the table did not end at the end (4.4e-5 relative on a test ring; fixed Nov
+   2026, test "Phases and tunes with few rows" compares all summary values).
 
 Callbacks get `(i, coords, p)` with a `TrackPoint` `p` (`p.s` and `p.step` from the beginning of 
 the Beamline, `p.t_ref`, `p.beta_gamma_ref`, `p.last_ds_step`, `p.last_g`); `twiss` uses 
@@ -372,6 +389,12 @@ values kept alive for the save). With it off the kernels' native code is identic
   which goes to zero with the step) for h3000, h2100, h1020, h1011, h2200, h4000, dh2000, dh3000
   with a kicked orbit and coupling, and for 6D terms. Without parameters the code path is the
   previous one (bitwise).
+  Convention (checked numerically, documented in `twiss.md`): the map is exp(:h:) first, then the
+  rotation; h is in z₁ = (x̃+ip̃)/√2 = √J e^{-iφ}, z₂ its conjugate; to first order a thin normal
+  multipole adds KnL Re(x+iy)^{n+1}/(n+1)! with x = √(β₁/2)(z₁e^{-iφ₁} + z₂e^{iφ₁}), φ the phase
+  advance from the row to it: h3000 = K2L β^{3/2} e^{-3iφ}/(12√2), h2100 = 3× that with
+  e^{-iφ}, h1020 = -K2L β₁^{1/2} β₂ e^{-i(φ₁+2φ₂)}/(4√2), h2200 = K3L β²/16, h4000 = K3L β²
+  e^{-4iφ}/96 (all to 6 digits at several positions).
 - `etac` and `alphac` with RF: `B3[5,6] sin(2π q3)`. The branch with GTPSA parameters (maximum
   order above 1) lacked the sine: -0.666 instead of 0.0205 on a small ring. Fixed; values and
   derivatives in quadrupole strengths, a length and the RF voltage agree with differences.
@@ -452,7 +475,9 @@ not help at order 2). Phases of `twiss` at order 1: closed orbit 18 ms, tracking
 `push` ~120 ms (mostly `factorise`: 14 µs and ~300 allocations per row), table 56 ms. Through
 `track` (Nov 2026; 267-274 -> 261-265 ms, `chrom=2` 692-720 -> 658-676 ms): closed orbit 15 ms,
 tracking the identity 46 ms (3 ms of it saving the rows), maps 3 ms, composing 4 ms, `factorise`
-per row 155 ms, table ~60 ms.
+per row 155 ms, table ~60 ms. Nov 17 2026 (profile of 233 ms): `factorise` 36% (its two
+vector-field exponentials of a coasting beam 17%), tracking 23%, table 20% -> after the blocked
+table 214 ms (table 11 ms); `chrom=2`: `factorise` 30%, tracking 26%, table 17%, 690 ms.
 
 Fixed on the way (with tests): rows after the first started with the previous row's cache (with 
 `base_cols=String[]` row 2 repeated row 1, 2.5% off in a FODO); `twiss(…; spin=true)` NaN for an 
@@ -531,8 +556,14 @@ Open items:
   further gains need structural changes. A separate order-1 path based on Duals (GPU batchable) is 
   planned as its own implementation: don't build it as part of other work. The `chrom=2` case 
   (order 2) has not been profiled yet.
-- `twiss` table: one dynamic call per cell (~17 ms of ~42 ms on ESR). Specializing the row loop on 
-  the column set removes it but compiles per column set (5 s for the default set): rejected.
+- `twiss` table: was one dynamic call per cell; now per column and block of rows (`twiss` 5.).
+  Specializing the row loop on the column set compiles per column set (5 s for the default set):
+  rejected.
+- `factorise` returns `r` (the inverse of the canoniser), which `twiss` never uses: 6 ms of ESR's
+  245 ms (2.3%) at order 1, 3.4% of `chrom=2` (`inv(r_cs)` at canonise 1). Skipping it needs an
+  NNF option (an API decision).
+- `coast_check` and the Newton of `find_closed_orbit` compute the same Jacobian at the zero orbit
+  (~3% of ESR `twiss`); sharing it needs BatchSolve's `newton!` to take a starting Jacobian.
 - Closed orbit: `coast_check` and Newton compute the same Jacobian (~8 ms on ESR). Prepared tracking 
   does not help `find_closed_orbit` on ESR: it tracks each coordinate type (numbers, and Duals for 
   each Jacobian) once (Newton converges in one step from the zero guess), and preparing costs 

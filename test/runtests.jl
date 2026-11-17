@@ -699,7 +699,8 @@ using Test
       # linear maps at every integration step when the rows are not all steps. A ring of 5 cells
       # with tunes of 0.97 and 0.79: rows half a turn and more apart. The rows of a twiss with few
       # rows equal those of the full table bitwise (6D and coasting, orders, spin, an open line),
-      # and so do the tunes; with GTPSA parameters also the derivatives
+      # and so do the tunes and the other summary values (the 6D etac and alphac used B3 of the
+      # last row of the table instead of the end); with GTPSA parameters also the derivatives
     qf = Quadrupole(Kn1=1.2, L=0.5)
     d = Drift(L=0.1)
     cellp = [qf, Sextupole(Kn2=1.2, L=0.2), SBend(L=1.2, angle=pi/132, n_steps=4), d,
@@ -717,6 +718,8 @@ using Test
       for at in (Any[], Any[20], Any[3, 40, ring.line[45]], Any[(3.0, 3.5), 30])
         few = twiss(ring; at, kw...)
         @test (num(few.q1), num(few.q2)) == (num(full.q1), num(full.q2))
+        @test keys(few.summ.sdict) == keys(full.summ.sdict)
+        @test all(num(few.summ.sdict[k]) == num(full.summ.sdict[k]) for k in keys(full.summ.sdict))
         for r in 1:size(few.df, 1)
           j = findfirst(k -> full.index[k] == few.index[r] && full.s[k] == few.s[r], 1:length(full.s))
           @test (few.phi1[r], few.phi2[r], few.beta1[r]) == (full.phi1[j], full.phi2[j], full.beta1[j])
