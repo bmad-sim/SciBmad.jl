@@ -17,9 +17,13 @@ SciBmad is a new open source, high-performance, CPU/GPU compatible, polymorphic,
 
 ## Project Status
 
-SciBmad development is progressing rapidly. Features included in the current state of the project (0.7.0) and currently being planned for later releases are:
+SciBmad development is progressing rapidly. Features included in the current state of the project (0.8.0) and currently being planned for later releases are:
 
-### Current Release 0.7
+### Current Release 0.8
+- Matching and optimization: targets on any Twiss quantity (tunes, chromaticities, beta functions, dispersion, resonance driving terms, amplitude-dependent tunes, ...) at any location, varied by any element parameter, with exact derivatives from a single Taylor-mapped Twiss calculation (no finite differences)
+- Values and exact derivatives of any Twiss quantity with respect to any lattice parameter for use with any external optimizer (`value_and_jacobian`)
+- One way to read results everywhere: Twiss columns, tracking results and optimization targets are indexed by element, name, position inside elements, and turn (e.g. `tw.beta1[qd]`, `res.x[qd, turn=10]`)
+- Particle coordinates saved at any element or at any integration step inside elements, with tracking starting at any element
 - CPU/GPU parallelized 6D symplectic particle tracking including spin and radiation
 - Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything, including element lengths
 - Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
@@ -34,7 +38,8 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - CPU/GPU parallelized Levenberg-Marquardt
 - CPU/GPU parallelized and differentiable symplectic tracking through arbitrary electromagnetic fields (implicit integration)
 - Choice of tracking method per element: drift-kick, matrix-kick, bend-kick, and solenoid-kick symplectic integrators of order 2 to 10, exact maps, Runge-Kutta, and implicit symplectic integration
-- Twiss functions at every integration step (inside elements)
+- Twiss functions at every integration step (inside elements), and of any part of a beamline
+- Truncation orders for Taylor-mapped Twiss chosen automatically from the requested quantities
 - Resonance driving terms/detune coefficients (including parameter dependence) included in Twiss
 - Context-switching for evaluation of deferred expressions for accelerator parameters
 - Open lattice Twiss functions given initial normalizing transformation
@@ -43,9 +48,10 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Splitting elements into slices, so that collective effects can be applied several times inside an element
 - Exact electric dipole tracking
 - Bmad-style element searches by name, with wild cards, ranges, and regular expressions
+- Results plot directly with Makie and Plots (e.g. `lines(tw.s, tw.beta1)`)
+- Usable from Python through [juliacall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/)
 
 ### Features in Future Releases
-- Easy optimization interface
 - Generalized gradient field description
 - Wakefields
 - Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strong-strong beam beam)
@@ -68,6 +74,7 @@ SciBmad consists of a set of modular packages:
 - **[`Beamlines`](https://github.com/bmad-sim/Beamlines.jl):** Defines accelerator lattices in a fast, flexible, fully-polymorphic, and differentiable way, providing both eagerly- and lazily-evaluated deferred expressions for interdependent parameters
 - **[`NonlinearNormalForm`](https://github.com/bmad-sim/NonlinearNormalForm.jl):** Map-based perturbation theory of differential-algebraic maps, which may include spin and large damping, using Lie algebraic methods
 - **[`FundamentalFrequencies`](https://github.com/bmad-sim/FundamentalFrequencies.jl):** GPU-batchable Numerical Analysis of Fundamental Frequencies (NAFF)
+- **[`BatchSolve`](https://github.com/mattsignorelli/BatchSolve.jl):** Batched root finding and least squares (Newton, Levenberg-Marquardt) for many problems at once on the CPU and GPU
 - **[`AtomicAndPhysicalConstants`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl):** Library providing physical constants and properties for any atomic or subatomic particle for use in simulations
 
 ## Paper and Citation

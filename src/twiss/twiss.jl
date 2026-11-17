@@ -62,7 +62,7 @@ Returns a `Twiss` struct that contains the (amplitude-dependent) (spin) tunes/sl
 dataframe of the Twiss parameters at each specified integration step. By default, lattice 
 functions of the Sagan-Rubin/Edwards-Teng coupling formalism are computed in the dataframe 
 at every integration step. The columns are read at locations of the beamline, e.g. 
-`tw.beta1[qd]` at the beginning of the element `qd` (see [`TwissColumnVector`](@ref)), and the 
+`tw.beta1[qd]` at the beginning of the element `qd` (see [`TwissColumn`](@ref)), and the 
 whole table is `tw.df`.
 
 The `cols` keyword argument can be set to customize what quantities will be computed and 
@@ -75,7 +75,8 @@ will compute only the horizontal-like beta function. We can also specify so-call
 ```julia
 tw = twiss(bl; cols=["beta1", "h3000"], order=2)
 ```
-where the total order of the `twiss` call has also been set appropriately to compute `h3000`.
+where the total order of the `twiss` call has also been set appropriately to compute `h3000` 
+(without `order` and `chrom`, the orders that the columns need are chosen).
 
 An arbitrary order chromatic derivative of any scalar-valued column can be taken using the 
 syntax `d<column>_<order>`. If `order==1`, then the `_1` can be omitted. E.g., the linear and 
@@ -107,8 +108,10 @@ keyword arguments:
 - `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the Twiss tracking and calculation. Default is `true`
 - `order::Integer`: TPSA truncation order for all phase space coordinates used in the Twiss 
-    calculation, default is 1
-- `chrom::Integer`: TPSA truncation order for only δ, default is `order`
+    calculation. If neither `order` nor `chrom` is given, both are chosen from `cols` (as 
+    [`TwissExpr`](@ref) does): 1 for the default columns, higher for chromatic derivatives 
+    (`chrom`) and resonance driving terms (`order`). Default is 1 if only `chrom` is given
+- `chrom::Integer`: TPSA truncation order for only δ, default is `order` if `order` is given
 - `GTPSA_descriptor::Union{Descriptor,Nothing}`: Custom GTPSA `Descriptor` to use for the Twiss 
     calculation, required to provide to do parametric normal form and lattice function 
     calculations. Default is `Descriptor([order, order, order, order, order, chrom], max(order,chrom))`.
@@ -221,8 +224,8 @@ function twiss(
   rf_on::Bool = true,
 
   # GTPSA truncation order sets:
-  order::Integer = 1,
-  chrom::Integer = order,
+  order::Union{Nothing,Integer} = nothing,
+  chrom::Union{Nothing,Integer} = nothing,
   GTPSA_descriptor::Union{Descriptor,Nothing} = nothing,
 
   #start::Union{Integer,LatElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
@@ -293,6 +296,19 @@ function twiss(
     end
   end
 
+  # Without `order` and `chrom`, the truncation orders are those the columns need (as TwissExpr
+  # chooses them); with synchrotron motion both are the same
+  explicit_orders = !isnothing(order) || !isnothing(chrom)
+  if explicit_orders
+    order = something(order, 1)
+    chrom = something(chrom, order)
+  else
+    order, chrom = _twiss_auto_orders(cols)
+    if !coast
+      order = chrom = max(order, chrom)
+    end
+  end
+
   if !isnothing(a_initial)
     if !isnothing(GTPSA_descriptor) && GTPSA.getdesc(first(a_initial.v)) != GTPSA_descriptor
       error("Specified `GTPSA_descriptor` disagrees with that of `a_initial`")
@@ -309,7 +325,7 @@ function twiss(
     storedesc = GTPSA.desc_current
     GTPSA_descriptor = Descriptor([order, order, order, order, order, chrom], max(order,chrom))
     GTPSA.desc_current = storedesc # Don't reset the global
-  elseif chrom != 1 || order != 1
+  elseif explicit_orders
     @info "`GTPSA_descriptor` has been explicitly provided: ignoring `order`/`chrom` inputs"
   end
 
@@ -342,7 +358,7 @@ function twiss(
   # maps from the start to the rows, the last one the one-turn map, give a and its value at every
   # row (a composed with them). Else a is computed from the one-turn map, and the tracking of its
   # fixed point a0 (below) gives a at the rows too. With a_initial, a_initial is tracked.
-  locations = (s, idxs, names, kinds)
+  locations = (s, idxs, names, kinds, ele_steps)
   maps = nothing
   r_and_tunes = nothing
   tr = nothing
@@ -352,7 +368,7 @@ function twiss(
   # tracking at every step for that (tr_steps); else the identity is tracked once more at order 1
   n_steps_total = last(step_save)
   sparse = length(step_save) < n_steps_total + 1
-  no_locations = (similar(s, 0), Int[], String[], String[])
+  no_locations = (similar(s, 0), Int[], String[], String[], Int[])
   tr_steps = nothing
   a0_rows = nothing
   if isnothing(a_initial)
@@ -366,12 +382,12 @@ function twiss(
       else
         tr = _twiss_track(eye, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
                           in_body_coordinates, delta_orbit)
-        maps = _twiss_maps(eye, tr, axes(tr.v, 3))
+        maps = _twiss_maps(eye, tr, axes(tr.data.v, 3))
       end
       m_turn = maps[end]
     else
-      tr0 = _twiss_track(eye, bl, rf_on, batch_index, zero(s[1]), (similar(s, 0), Int[], String[],
-                         String[]), Int[], in_body_coordinates, delta_orbit)
+      tr0 = _twiss_track(eye, bl, rf_on, batch_index, zero(s[1]), no_locations, Int[],
+                         in_body_coordinates, delta_orbit)
       m_turn = _twiss_map(eye, view(tr0.bunch.v, 1, :), _view_q(tr0.bunch.q))
     end
     a, r, tunes = _a_r_tunes(m_turn)
@@ -393,7 +409,7 @@ function twiss(
         else
           tr = _twiss_track(a0, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
                             in_body_coordinates, delta_orbit)
-          maps = _twiss_maps(a0, tr, axes(tr.v, 3))
+          maps = _twiss_maps(a0, tr, axes(tr.data.v, 3))
           a0_rows = a0
           tr0 = tr
         end
@@ -442,7 +458,8 @@ function twiss(
     fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(maps, a_right, canonise,
                                                                        phase, damp, coast, turns)
   end
-  _twiss_reference!(beta_gamma_ref, t_ref, tr, tr === tr_steps ? step_save .+ 1 : axes(tr.v, 3))
+  _twiss_reference!(beta_gamma_ref, t_ref, tr,
+                    tr === tr_steps ? step_save .+ 1 : axes(tr.data.v, 3))
 
   twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes, delta_orbit)
 
@@ -639,6 +656,27 @@ function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
   return s, names, kinds, idxs, step_save, include_start, include_end, ele_steps
 end
 
+# The truncation orders (order, chrom) that the columns need, as TwissExpr chooses them
+# (_col_order): driving terms (and their δ-derivatives) need all variables to that order, the other
+# columns (chromatic derivatives, Montague functions) only δ
+function _twiss_auto_orders(cols)
+  order = 1
+  chrom = 1
+  for col in cols
+    n = try
+      _col_order(col)
+    catch # not a column of TwissExpr (e.g. a matrix): order 1, or twiss reports it
+      1
+    end
+    if occursin(r"^d?h[0-9]{4,6}(?:_[1-9])?$", col)
+      order = max(order, n)
+    else
+      chrom = max(chrom, n)
+    end
+  end
+  return order, max(order, chrom)
+end
+
 function _check_cachable(GTPSA_descriptor)
   # check if we can cache_and_concat: the maps from the start composed with a lose no term if
   # all phase space variables have the maximum order (a has no constant part, so a term of total
@@ -679,12 +717,13 @@ function _twiss_map(template, v, q)
 end
 _view_q(q, j) = isnothing(q) ? nothing : view(q, 1, :, j, 2)
 # The maps saved by track at its locations js (with m: from the start)
-_twiss_maps(m, tr, js) = [_twiss_map(m, view(tr.v, 1, :, j, 2), _view_q(tr.q, j)) for j in js]
+_twiss_maps(m, tr, js) = [_twiss_map(m, view(tr.data.v, 1, :, j, 2), _view_q(tr.data.q, j))
+                          for j in js]
 
 # The reference at the rows (the locations js of track), saved by track
 function _twiss_reference!(beta_gamma_ref, t_ref, tr, js)
-  beta_gamma_ref .= view(tr.beta_gamma_ref, js, 2)
-  t_ref .= view(tr.t_ref, js, 2)
+  beta_gamma_ref .= view(tr.data.beta_gamma_ref, js, 2)
+  t_ref .= view(tr.data.t_ref, js, 2)
   return nothing
 end
 
@@ -703,7 +742,7 @@ function _twiss_turns(tr_steps, a, step_save)
     previous = atan(A[2k-1,2k], A[2k-1,2k-1])/(2*pi)
     row = 2 # (the first row is the start)
     for step in 1:last(step_save)
-      x = tr_steps.v[1, 2k-1, step+1, 2]
+      x = tr_steps.data.v[1, 2k-1, step+1, 2]
       a1 = 0.0
       a2 = 0.0
       for m in 1:nv
@@ -726,12 +765,13 @@ end
 # The functions at every row from a at the start: composed with the maps to the rows, or a itself
 # tracked (saved at the rows by track)
 function _twiss_push_a(maps_or_tr, a_initial, canonise, phase, damp, coast, turns)
-  tracked = maps_or_tr isa TrackingResult
-  n = tracked ? size(maps_or_tr.v, 3) : length(maps_or_tr)
+  tracked = maps_or_tr isa TrackResult
+  n = tracked ? size(maps_or_tr.data.v, 3) : length(maps_or_tr)
   fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(n, a_initial,
                                                                                phase, damp)
   for j in 1:n
-    a = tracked ? _twiss_map(a_initial, view(maps_or_tr.v, 1, :, j, 2), _view_q(maps_or_tr.q, j)) :
+    a = tracked ? _twiss_map(a_initial, view(maps_or_tr.data.v, 1, :, j, 2),
+                             _view_q(maps_or_tr.data.q, j)) :
                   maps_or_tr[j] ∘ a_initial
     _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j,
                   coast, turns)
@@ -755,7 +795,7 @@ function _twiss_track(m, bl, rf_on, batch_index, t_ref0, locations, step_save, i
   # t_ref must hold the type of the lengths
   p_over_q_ref = bl.p_over_q_ref isa TimeDependentParam ? bl.p_over_q_ref(0) : bl.p_over_q_ref
   b0 = Bunch(v=v, q=q, t_ref=t_ref0, species=bl.species_ref, p_over_q_ref=p_over_q_ref)
-  config = TrackingConfig(; in_body_coordinates, rf_on, batch_start=batch_index,
+  config = TrackConfig(; in_body_coordinates, rf_on, batch_start=batch_index,
                           save_reference=true, use_KA=false, scalar_params)
   n_steps_turn = isempty(step_save) ? 0 : last(step_save)
   return _track(bl, b0, config, nothing, 0, locations, step_save, n_steps_turn, Val(true))
@@ -902,7 +942,7 @@ function _twiss_summ(twi, cache)
     if !(TI.is_tps_type(typeof(q1)) isa TI.IsTPSType) && !coast
       qspin = scalar(qspin)
     else
-      qspin = AmplitudeDependentValue(qspin, coast)
+      qspin = AmplitudeDependentValue(qspin, coast, 0)
     end
     summ[:qspin] = qspin
   end

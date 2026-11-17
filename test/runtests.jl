@@ -163,15 +163,17 @@ using Test
     # holds the initial particles at every location, then every m-th turn
     function matches(r, ref, step0, steps; m=1)
       for p in 1:size(v0, 1), (l, step) in enumerate(steps)
-        isequal((r.v[p,:,l,1], r.q[p,:,l,1], r.state[p,l,1]),
+        isequal((r.data.v[p,:,l,1], r.data.q[p,:,l,1], r.data.state[p,l,1]),
                 (v0[p,:], [1.0, 0, 0, 0], BeamTracking.STATE_ALIVE)) || return false
       end
       for p in 1:size(v0, 1), (l, step) in enumerate(steps), t in m:m:n_turns
         j = div(t, m) + 1
         if t == 1 && step < step0 # not reached yet
-          all(isnan, r.v[p,:,l,j]) && r.state[p,l,j] == BeamTracking.STATE_PREBORN || return false
+          all(isnan, r.data.v[p,:,l,j]) && r.data.state[p,l,j] == BeamTracking.STATE_PREBORN ||
+            return false
         else
-          isequal((r.v[p,:,l,j], r.q[p,:,l,j], r.state[p,l,j]), ref[(p, t, step)]) || return false
+          isequal((r.data.v[p,:,l,j], r.data.q[p,:,l,j], r.data.state[p,l,j]), ref[(p, t, step)]) ||
+            return false
         end
       end
       return true
@@ -181,12 +183,13 @@ using Test
     for start in (1, 4)
       ref, step0 = reference(start)
       plain = track(bl; v0, n_turns, spin=true, start)
-      @test plain.v[:,:,1,1] == v0 && plain.v[:,:,1,end] == plain.bunch.v && plain.index == [-1]
+      @test plain.data.v[:,:,1,1] == v0 && plain.data.v[:,:,1,end] == plain.bunch.v &&
+            plain.index == [-1]
       @test matches(plain, ref, step0, [n_steps])
       @test 0 < count(!=(BeamTracking.STATE_ALIVE), plain.bunch.state) < size(v0, 1)
       for kw in ((;), (; use_KA=true, use_explicit_SIMD=false), (; use_explicit_SIMD=false))
         r = track(bl; v0, n_turns, spin=true, at=:, start, kw...)
-        @test size(r.v, 3) == n_steps + 1 && r.index[end] == -1
+        @test size(r.data.v, 3) == n_steps + 1 && r.index[end] == -1
         @test matches(r, ref, step0, all_steps)
         # saving does not change the tracking
         @test isequal(r.bunch.v, plain.bunch.v) && isequal(r.bunch.q, plain.bunch.q)
@@ -210,6 +213,48 @@ using Test
     # (the one-turn map is composed from the maps between the rows, so it rounds differently)
     @test tw.df.s == [0.25, 0.375]
     @test tw.df.beta1 ≈ tall.df.beta1[3:4] rtol=1e-14
+  end
+
+  @testset "Tracking results read at locations" begin
+      # res.x etc. are read at the locations of twiss (by default the end of the beamline), for a
+      # turn (its number) and a particle, from the saved arrays res.data
+    qf = Quadrupole(L=0.5, Kn1=0.36, n_steps=2)
+    qd = Quadrupole(L=0.5, Kn1=-0.36)
+    d = Drift(L=1.0)
+    bl = Beamline([qf, d, qd, d]; species_ref=Species("electron"), pc_ref=1e9)
+    v0 = [1e-3 0 0 0 0 0; 0 2e-4 1e-3 0 0 1e-4]
+    res = track(bl; v0, n_turns=4, save_every_n_turns=2, spin=true, save_reference=true,
+                at=[qd, (0.0, 0.6), (3.0, Inf)])
+    D = res.data
+    loc(i, s) = findfirst(l -> res.index[l] == i && res.s[l] == s, eachindex(res.s))
+    lend, lqd, lqf1 = loc(-1, 3.0), loc(3, 1.5), loc(1, 0.25)
+    @test res.turns == [0, 2, 4] && size(D.v, 4) == 3
+    @test res.x[end] == D.v[:, 1, lend, :]
+    @test_throws ErrorException res.x[] # several locations: one must be given
+    @test res.pz[end, turn=2] == D.v[:, 6, lend, 2] &&
+          res.pz[end, turn=4, particle=2] == D.v[2, 6, lend, 3]
+    @test res.y[qd, turn=4] == res.y[3, turn=4] == D.v[:, 3, lqd, 3]
+    @test res.x[qf, 1, particle=2] == D.v[2, 1, lqf1, :]
+    @test res.px[d, :exit, turn=2] == D.v[:, 2, [lqd, lend], 2] # d is placed twice
+    @test res.x[qf, :, turn=4, particle=1] == D.v[1, 1, [loc(1, 0.0), lqf1, loc(2, 0.5)], 3]
+    @test res.x[(0.0, 0.6), turn=0] == v0[:, 1] .* ones(1, 3)
+    @test res.v[qd, particle=1, turn=2] == D.v[1, :, lqd, 2]
+    @test res.q[end, turn=4] == D.q[:, :, lend, 3] && res.state[end, turn=4] == D.state[:, lend, 3]
+    @test res.t_ref[qd, turn=2] == D.t_ref[lqd, 2] &&
+          res.beta_gamma_ref[end] == D.beta_gamma_ref[lend, :]
+    @test res.x[end, turn=:, particle=:] == res.x[end]
+    @test res.x[end, turn=[4, 0], particle=2:2] == D.v[2:2, 1, lend, [3, 1]]
+    @test res.y[qd, turn=0:2:4, particle=1] == D.v[1, 3, lqd, :]
+    @test_throws ErrorException res.x[end, turn=3] # not saved
+    @test_throws ErrorException res.x[end, turn=0:1:2]
+    @test_throws ErrorException res.x[d, turn=2] # the beginning of d is not saved
+    plain = track(bl; v0)
+    @test plain.x[turn=1] == plain.bunch.v[:, 1] && plain.x[turn=0] == v0[:, 1]
+    @test_throws ErrorException plain.q[]
+    @test_throws ErrorException plain.t_ref[]
+    one = track(bl; v0, n_turns=2, at=[qd]) # the only saved location need not be given
+    @test one.x[turn=1] == one.x[qd, turn=1] == one.data.v[:, 1, 1, 2]
+    @test_throws ErrorException track(bl; v0, at=[]).x[]
   end
 
   @testset "Open-lattice Twiss (a_initial)" begin
@@ -408,7 +453,13 @@ using Test
     th = twiss(ring; rf_on=false, order=2, cols=["h3000", "h2100"], at=[1, 5])
     @test value([abs(tc.h3000[1]), real(tc.h2100[5]), imag(tc.h2100[5]), abs2(tc.h3000[1])]) ≈
           [abs(th.df.h3000[1]), real(th.df.h2100[2]), imag(th.df.h2100[2]), abs2(th.df.h3000[1])] rtol=1e-10
-    @test_throws ErrorException value(tc.h3000[1])
+      # Their values and derivatives are complex, but not as targets
+    @test value(tc.h3000[1]) ≈ th.df.h3000[1] rtol=1e-10
+    v, J = value_and_jacobian(tc.h3000[1], [@knob(sf.Kn2), @knob(qf.Kn1)])
+    vr, Jr = value_and_jacobian([real(tc.h3000[1]), imag(tc.h3000[1])],
+                                [@knob(sf.Kn2), @knob(qf.Kn1)])
+    @test v ≈ vr[1] + im*vr[2] && J ≈ Jr[1, :] .+ im .* Jr[2, :] && abs(imag(v)) > 1e-3
+    @test_throws ErrorException match!(vary=[@knob(sf.Kn2)], targets=[tc.h3000[1] == 0])
       # Their derivatives, also in knobs that change the linear optics (the quadrupole) and the
       # closed orbit (the kicker): the Courant-Snyder map of h depends on the parameters
     e = [real(tc.h3000[1]), imag(tc.h2100[5]), abs(tc.h2200[1]), real(tc.dh2000[1])]
@@ -629,8 +680,8 @@ using Test
         mt_vp[1,mt_j] += 1e-6
         mt_vm = copy(mt_co)
         mt_vm[1,mt_j] -= 1e-6
-        mt_M[:,mt_j] = (track(bl; v0=mt_vp).v[1,1:4,1,end] .-
-                        track(bl; v0=mt_vm).v[1,1:4,1,end]) ./ 2e-6
+        mt_M[:,mt_j] = (track(bl; v0=mt_vp).data.v[1,1:4,1,end] .-
+                        track(bl; v0=mt_vm).data.v[1,1:4,1,end]) ./ 2e-6
       end
       return sort(filter(>(0), angle.(SciBmad.LinearAlgebra.eigvals(mt_M)) ./ 2pi))
     end
@@ -649,7 +700,7 @@ using Test
       @test td.dx[1] ≈ tc.dx[1] + 1e-4*o4.dx_2[1] + 0.5e-8*o4.dx_3[1] rtol=1e-9
     end
     td = twiss(bl; delta0=1e-4, chrom=2, at=[])
-    @test td.q1[delta=1] ≈ o4.q1[delta=1] + 2e-4*o4.q1[delta=2] + 3e-8*o4.q1[delta=3] rtol=1e-8
+    @test td.q1[delta=1] ≈ o4.q1[delta=1] + 1e-4*o4.q1[delta=2] + 0.5e-8*o4.q1[delta=3] rtol=1e-8
     @test abs(mode_tunes(1e-4)[2] - mode_tunes(0.0)[2]) > 1e-6
       # A parameter that moves the closed orbit, with the variables at order 1
     f() = (t = twiss(bl; at=[]); [t.q1, t.q2])
@@ -693,7 +744,8 @@ using Test
     @test tw.beta1[(1.0, 1.8)] == df.beta1[findall(x -> 1.0 <= x < 1.8, df.s)]
     @test tw.beta1[:] == df.beta1
     @test tw.beta1[begin] == df.beta1[1] && tw.beta1[end] == df.beta1[end]
-    @test tw.beta1[cell[7], :exit] == tw.beta1[end]
+    @test tw.beta1[cell[7], :exit] == tw.beta1[end] == tw.beta1[end, :exit]
+    @test tw.beta1[begin, :exit] == tw.beta1[sf] && value(te.beta1[begin, :exit]) == tw.beta1[sf]
     @test tw.name["Sextupole::*"] == ["sf"]
     for loc in Any[(3,), (qd,), (qd, :exit), (b,), (b, :), (b, 2), (2:3,), ([sf, cell[3]],),
                    ((1.0, 1.8),), (:,), ("q*",)]
@@ -706,6 +758,69 @@ using Test
     tc = twiss(cell; chrom=2, at=[])
     @test tc.dq1 == tc.q1[delta=1] && tc.dq2 == tc.q2[delta=1]
     @test tc.dq1 ≈ value(te.dq1) rtol=1e-12
+  end
+
+  @testset "Truncation orders from the columns, unresolved terms" begin
+      # Without order and chrom, twiss takes the orders the columns need (as TwissExpr): the same
+      # tables as with them given. A term of a tune that the truncation does not resolve is an
+      # error (it was silently zero or inexact); the resolved ones equal those of order 6
+    @elements begin
+      qf = Quadrupole(Kn1=0.36, L=0.5)
+      sf = Sextupole(Kn2=1.2, L=0.2)
+      d = Drift(L=0.1)
+      b = SBend(L=1.2, angle=pi/132)
+      qd = Quadrupole(Kn1=-0.36, L=0.5, Ks1=1e-3)
+      sd = Sextupole(Kn2=-1.2, L=0.2)
+      oc = Multipole(Kn3L=50.0)
+    end
+    fodo = Beamline([qf, sf, b, d, qd, sd, b, d, oc]; species_ref=Species("electron"), pc_ref=18e9)
+    for (cols, kw) in ((["h3000"], (order=2,)), (["dx_2", "dbeta1"], (chrom=2,)),
+                       (["h2200", "beta1"], (order=3,)), (["w1", "dbeta1_2"], (chrom=3,)))
+      @test twiss(fodo; cols).df == twiss(fodo; cols, kw...).df
+    end
+    t6 = twiss(fodo; order=6, at=[])
+    for (term, ok, bad) in (((delta=1,), (chrom=2,), (order=1,)),
+                            ((delta=2,), (chrom=3,), (chrom=2,)),
+                            ((J1=1,), (order=3,), (order=2,)),
+                            ((delta=1, J1=1), (order=4,), (order=3,)),
+                            ((J1=1, J2=1), (order=5,), (order=4, chrom=5)))
+      @test getterm(twiss(fodo; at=[], ok...).q1; term...) ≈ getterm(t6.q1; term...) rtol=1e-8
+      @test_throws ErrorException getterm(twiss(fodo; at=[], bad...).q1; term...)
+    end
+    @test_throws ErrorException twiss(fodo; order=2, at=[]).q1[J1=1]
+      # The spin tune comes from the constant part of the spin map: its terms need one order less
+    t6 = twiss(fodo; order=6, at=[], spin=true)
+    for (term, ok, bad) in (((delta=1,), (order=1,), ()), ((delta=2,), (chrom=2,), (order=1,)),
+                            ((J1=1,), (order=2,), (order=1, chrom=2)),
+                            ((delta=1, J1=1), (order=3,), (order=1, chrom=3)),
+                            ((J1=2,), (order=4,), (order=3, chrom=4)))
+      @test getterm(twiss(fodo; at=[], spin=true, ok...).qspin; term...) ≈
+            getterm(t6.qspin; term...) rtol=1e-8
+      bad == () || @test_throws ErrorException getterm(twiss(fodo; at=[], spin=true, bad...).qspin;
+                                                       term...)
+    end
+      # Indexing gives a derivative (the coefficient of getterm times the factorials), in tables
+      # and in TwissExpr alike; dq1_n is q1[delta=n]
+    t5 = twiss(fodo; order=5, at=[])
+    te = TwissExpr(fodo)
+    @test t5.q1[delta=2] == 2*getterm(t5.q1; delta=2) && t5.q2[delta=3] == 6*getterm(t5.q2; delta=3)
+    @test t5.q1[J1=2] == 2*getterm(t5.q1; J1=2) && t5.q1[J1=1, J2=1] == getterm(t5.q1; J1=1, J2=1)
+    @test t5.dq1 == t5.dq1_1 == t5.q1[delta=1] && t5.dq1_2 == t5.q1[delta=2]
+    @test t5.dq2_3 == t5.q2[delta=3]
+    @test value([te.q1[delta=2], te.dq1_2, te.q1[J1=2], te.dq2_3, te.q1[delta=1, J1=1]]) ≈
+          [t5.q1[delta=2], t5.q1[delta=2], t5.q1[J1=2], t5.q2[delta=3],
+           t5.q1[delta=1, J1=1]] rtol=1e-8
+    @test_throws ErrorException te.dq1[J1=1] # (it was q1[J1=1], without the δ)
+      # TwissExpr takes the order a term needs, for the spin tune one less than for the tunes
+    tes = TwissExpr(fodo; spin=true)
+    t6s = twiss(fodo; order=6, at=[], spin=true)
+    @test SciBmad._leaf_order(tes.qspin[delta=1, J1=1]) == 3 &&
+          SciBmad._leaf_order(tes.q1[delta=1, J1=1]) == 4 &&
+          SciBmad._leaf_order(tes.qspin[delta=1]) == 1
+    @test value([tes.qspin[delta=1], tes.qspin[delta=2], tes.qspin[J1=1],
+                 tes.qspin[delta=1, J1=1]]) ≈
+          [t6s.qspin[delta=1], t6s.qspin[delta=2], t6s.qspin[J1=1],
+           t6s.qspin[delta=1, J1=1]] rtol=1e-8
   end
 
   @testset "Phases and tunes with few rows" begin
@@ -868,7 +983,7 @@ using Test
     beta(δ) = (1 + δ)/sqrt((1 + δ)^2 + tilde_m^2)
     function dz(δ)
       co = find_closed_orbit(ring; v0=[0.0 0 0 0 0 δ]).v0
-      return track(ring; v0=copy(co)).v[1,5,1,end] - co[1,5]
+      return track(ring; v0=copy(co)).data.v[1,5,1,end] - co[1,5]
     end
     rel_dt(δ) = -dz(δ)/beta(δ)*beta(0.0)/L
     rel_dl(δ) = -dz(δ)/L + beta(δ)/beta(0.0) - 1
@@ -878,7 +993,7 @@ using Test
     for (f, tps) in ((rel_dt, t4.etac), (rel_dl, t4.alphac))
       c = (V \ f.(δs)) ./ h .^ (0:deg) # c[k+1] is the coefficient of δ^k of the fit
       for (k, rtol) in zip(0:3, (1e-9, 1e-7, 1e-5, 1e-3))
-        @test tps[delta=k] ≈ (k + 1)*c[k+2] rtol=rtol
+        @test getterm(tps, delta=k) ≈ (k + 1)*c[k+2] rtol=rtol # (the coefficient of δ^k)
       end
     end
     # With a parameter (the quadrupole strength): at order 1 the same values, at order 2 also 
@@ -936,7 +1051,7 @@ using Test
     twiss(cell(); v0=g, at=[])
     @test g == g0
     # track accepts a weight vector
-    @test track(cell(); v0=zeros(3, 6), weight=ones(3)) isa TrackingResult
+    @test track(cell(); v0=zeros(3, 6), weight=ones(3)) isa TrackResult
     # getterm with all orders 0 keeps the constant term
     @elements begin
       qf = Quadrupole(Kn1=DefExpr(c -> c.kqf), L=0.5); dd = Drift(L=1.2); qd = Quadrupole(Kn1=-0.36, L=0.5)

@@ -198,7 +198,7 @@ plainly what was not verified and what could be wrong. Never present unverified 
   image). Bitwise equal to the kernels (coasting and not, batches, BatchParams, Float32, twiss, 
   dynamic_aperture); broadcasts are faster than the POCL kernels on the CPU (0.7 vs 1.6 µs, 1000 
   particles). Upstream reproducer and reply: `~/scibmad-release/windows-lts-issue.md`.
-- `src/track.jl`: `track`, `TrackingConfig`, `TrackingResult`, `track_spin`. `track` and 
+- `src/track.jl`: `track`, `TrackConfig`, `TrackResult`, `track_spin`. `track` and 
   `dynamic_aperture` build the kernel chains once per call (`BTBL.prepare`) and run them every 
   turn with `track!(bunch, chains; <launch keywords>)` (bitwise equal to `track!` per turn); 
   `track`'s `elapsed_time` excludes building them (about one turn of one particle).
@@ -296,6 +296,19 @@ the column of the turn (0 if not saved, set before each turn); the location wher
 copied before the turn (no callback runs at step 0). It always tracks with this callback (also 
 with `at=[]`), so `track`, `twiss` and `dynamic_aperture` compile the same kernels. Saved: the 
 initial particles (column 1, at every location), then every `save_every_n_turns`-th turn.
+Reading a `TrackResult` (Nov 2026, maintainer's choices): `res.x` … `res.pz`, `res.v`,
+`res.q`, `res.state`, `res.t_ref`, `res.beta_gamma_ref` are `TrackColumn`s read at the
+locations of `twiss` (same `_column_locations`; no location = the only saved location, an error
+if several were saved) with the
+keywords `turn` (the turn number, 0 = initial) and `particle`: `res.x[qd, turn=2, particle=1]`.
+Julia indexing takes keywords after a comma (`a[i, k=1]`), not a semicolon, and lowers `end`
+with several indexes or keywords to `lastindex(a, 1)` (all column types define it). `TrackResult.rows`
+maps (beamline index, step in the element) to the location number (from
+`_twiss_assemble_locations`, whose last output is the step within the element); `res.turns` lists
+the saved turns. The saved arrays moved to `res.data` (`res.data.v[particle, coordinate,
+location, saved turn]`, …; breaking) and are what internal code uses (`twiss` reads `tr.data`).
+`track_spin(res.q, s0)` accepts the column. Tested against `res.data` ("Tracking results read at
+locations"; shifting the turn mapping fails 5 of 16).
 `save_reference=true` also saves `p.t_ref` and `p.beta_gamma_ref` at the locations (one value per
 location and turn, written by particle 1; per particle with `BatchParam`s, returned as
 `BatchParam`s). It is off by default: the reference time is then computed at every integration
@@ -333,7 +346,7 @@ values kept alive for the save). With it off the kernels' native code is identic
   value. `twiss` stores the row of every location of its table (`Twiss.rows`, from the step of
   each row within its element, which `_twiss_assemble_locations` returns last), with `start` and
   `stop`; `_twiss_row(tw, loc)` finds a row (also for the engine, replacing its search by s;
-  `value`/`value_and_jacobian` bitwise unchanged). A table column (`TwissColumnVector`) is
+  `value`/`value_and_jacobian` bitwise unchanged). A table column (`TwissColumn`) is
   therefore not an `AbstractVector` (an integer is not a row): it iterates, broadcasts, compares
   (`==`, `≈`) and displays as the vector of all rows; `collect(tw.beta1)` or `tw.df.beta1` is that
   vector. Plotting it works through package extensions (`SciBmadMakieExt`:
@@ -557,17 +570,52 @@ Open items:
 - `twiss` should not assemble its rows itself (`_twiss_assemble_locations`): `track` resolves `at`
   already (it calls the same function), so `twiss` can take the locations from `track`. Remove
   it from `twiss` (not done yet).
-- After the `track`/`twiss` rework (Nov 2026), still to do: rerun the notebooks (`examples/`; the
-  location index of `TrackingResult`: Julia's `res.v[:, :, end]` and `track_spin(res.q, …)[1, 2,
-  end]` still work with the default single location, the Python notebook's `[0, 1, -1]` through
-  the Julia bridge is unverified); check Julia 1.13 (CI's other version); measure the precompile
-  workload's effect on the first `twiss` call (below). BeamTracking's `test/performance_test.jl`
+- After the `track`/`twiss` rework (Nov 2026): notebooks rerun (Nov 17; `track_spin(res.q, …)`
+  is (particle, component, location, turn): the spin notebooks index `[1, 2, 1, :]`; the
+  Python `nonlinear-twiss` notebook, legacy for SciBmad < 0.5.0, was removed);
+  Julia 1.13 suite as 1.10 (725 passed, 4 broken). BeamTracking's `test/performance_test.jl`
   still allows 2 allocations per prepared chain, now 5 per ESR turn in total: a bound independent
   of the number of elements would catch a regression of the boxed `Coords`.
-- First call of `twiss` on ESR (no precompile workload) 14.7-14.9 -> 16.7-17.1 s since `twiss`
-  tracks with `track`. Not more kernels (the tracking compiles faster than with the old
-  callbacks); the extra host-side compile was not found (the row loop behind a function barrier
-  did not change it). Not measured with the workload.
+- First calls with the precompile workload (Nov 17 2026, Julia 1.10, M4, fresh processes; build
+  149 s, 13.1 GB peak, 625 MB image), ESR: `twiss` 0.99 s (run 0.42), `chrom=2` 1.72 (0.70),
+  `find_closed_orbit` 0.73 (0.02), `track` 0.09, reading a `TrackResult` 0.22, `match!` (docs
+  FODO) 1.19, `value_and_jacobian` 1.93 (0.21), `dynamic_aperture` 4.9 (0.13). `main` (0.7.1,
+  BeamTracking 0.9.2) in the same way: `find_closed_orbit` 0.83, `twiss` 1.14, `track` 0.08,
+  `dynamic_aperture` 1.92. Without the workload `twiss` was 16.7-17.1 s (14.7-14.9 s before
+  `twiss` tracked with `track`; the extra host-side compile was not found).
+  - KernelAbstractions 0.10 (also on `main`): the closed-orbit kernels are compiled through
+    POCL/SPIR-V on the first call instead of coming from the image: `find_closed_orbit` 0.73 s,
+    with KA 0.9.48 0.02 s (`twiss` 0.99 -> 0.25 s).
+  - `dynamic_aperture` first call (coasting rings, e.g. the ESR test lattice, whose 18
+    cavities leave it coasting) was 4.9 s: its batched closed orbits evaluate the residual in
+    Float64 with plain `track!` of a Bunch (DI's sparse `value_and_jacobian!` calls f! for the
+    value, then the Jacobian with Duals: two trackings per Newton iteration), which `main`'s
+    workload covered with `track!(b, fodo)`. The workload now runs `dynamic_aperture` with
+    `delta_dependent_orbits=true` (the user-facing path; `track!` itself stays out): first call
+    0.90 s (`main` 1.92 s), batched closed orbits 4.17 -> 0.05 s; image 624.9 -> 678.2 MB
+    (`main` 665 MB), build 129-133 s and 13.1-13.2 GB either way. Not done: BatchSolve's
+    AutoBatch taking the value from the Dual pass would make the Float64 tracking (and its
+    image cost) unnecessary and save one tracking per batched iteration.
+  - GPU tracking (Nov 17 2026, Metal, tapered ESR v6.3.1 with radiation, Float32): it was
+    host-bound, ~1 s per turn for 2,000 and for 20,000 particles alike, because `launch!` waited
+    for each of the 6,271 kernels of a turn. BeamTracking now waits once at the end of `track!`
+    (`synchronize_launches`): 0.147 s per turn for 2,000, 0.155 s for 20,000 particles; bitwise
+    equal (prepared and plain tracking, `track` at locations with transforms and the reference,
+    `dynamic_aperture`, IBS, whose statistics are read on the host between kernels: Metal waits
+    for the queue before host access). The `track` callback then cost +88% at 20,000 particles:
+    `_track_copy!`/`_track_reference!` were `@noinline` calls, which cost registers in GPU kernels
+    even where not taken. `_call_or_inline` keeps the call on the CPU (`_PtrArray`, `Array`: CPU
+    code and the image unchanged, 624.9 MB) and inlines on GPU arrays: +14% (0.177 s). The GPU
+    `dynamic_aperture` example: 1.25-1.34 -> 0.205 s per turn (0.7: 1.03-1.09 s). The remaining
+    14% was taken apart (20,000 particles, interleaved, medians +-1%): an empty callback +0.4%;
+    the per-step check with any store in its branch +4.7-5.8% (also with `j` captured by value
+    instead of `slot[1]`, and with an empty `location_of_step`); the full save +13.6-14.1%, with
+    or without the transform code. Likely the compiler must assume the stores alias the
+    coordinates (not proven). Not removable inside the kernel (a runtime flag leaves the code in);
+    only by tracking without the callback when no location is inside an element (segments of
+    chains, copies between them), which adds a kernel set: not done.
+    Measure GPU changes interleaved in one process: separate processes scattered by 10-30% while
+    the tracking was host-bound.
 - `factorise` speed: the remaining cost is ~19 temporary maps per call (inversions, compositions, 
   `exp!` work maps; sharing the two `exp!` calls' work maps would save ~2) and GTPSA arithmetic; 
   further gains need structural changes. A separate order-1 path based on Duals (GPU batchable) is 
@@ -603,12 +651,38 @@ Open items:
   uses a `BatchParam` `t_ref`), and `twiss` would need each length's `batch_index` element for `s`. 
   A batched `dynamic_aperture` will be a separate function (its particles are initialized on a grid 
   and pushed differently).
-- A term of an amplitude-dependent value that the truncation does not resolve is silently 0 in a
-  `twiss` table (`twiss(fodo, chrom=2).q1[delta=2]`, `twiss(fodo, order=2).q1[J1=1]`; δⁿ needs
-  `chrom` n+1, J `order` 3; `TwissExpr` chooses the orders itself). The name `TwissColumnVector`
-  is kept although the column is no longer a vector. `Experimental` (`one-torus.jl`, `coord == 0`
+- `twiss` without `order` and `chrom` takes the orders the columns need (`_twiss_auto_orders`,
+  from `_col_order` as `TwissExpr`): driving terms raise `order`, the other columns `chrom`; with
+  synchrotron motion both. Default columns: order 1 (bitwise unchanged). Summary values (e.g. the
+  chromaticities) still need `chrom` given. A term of an amplitude-dependent value that the
+  truncation does not resolve is an error (`_adv_get`; before silently 0 or inexact): δ-terms need
+  the maximum order 1+delta+2ΣJ and δ to order delta, amplitude terms all phase space variables to
+  that order (with mixed orders J1·J2 was 5e-7 off). Checked on 90 term/setting combinations
+  against order 6: every accepted value agrees, 29 formerly silent wrong values are errors, 2 right
+  ones (δ·J1 with mixed orders) are rejected. `getterm` of a plain number (order 1) explains.
+  The spin tune comes from the constant part of the spin map, so its terms need one order less
+  (`degree0` = 0 in `AmplitudeDependentValue`, 1 otherwise): measured on a coasting and a 6D ring
+  (11 terms, 14 settings), the rule accepts only exact values and rejects every wrong one; with
+  the orbital rule `getterm(qspin, delta=1, J1=1)` at order 3 was rejected (nonlinear-twiss
+  notebook). Damping has no amplitude terms (no nonlinear normal form with damping).
+  `TwissExpr` takes the same order (`_leaf_order`; tested, one order lower fails 2 checks).
+  Terms (maintainer, Nov 2026): indexing an amplitude-dependent value gives a derivative,
+  `q1[delta=2]` = ∂²q1/∂δ² (the coefficient times the factorials; first-order terms are
+  unchanged), in tables and `TwissExpr` (factor in `_to_p`), consistent with `dx_n`; `getterm`
+  stays the Taylor coefficient (as printed). `dq1_n`, `dq2_n` = `q[delta=n]` in both;
+  `te.dq1[J1=1]` is an error (it silently gave q1[J1=1], dropping the δ). `value` and
+  `value_and_jacobian` return complex values and Jacobians for complex expressions (h terms);
+  targets and `minimize` still need `abs`/`real`/`imag`. Idea, not done: split a complex target or
+  `minimize` expression into its real and imaginary parts automatically (smooth residuals; `abs`
+  has a kink at 0) — measure against `abs` on a sextupole match first. The table column type
+  is `TwissColumn` (was `TwissColumnVector`; `TwissExpr`'s internal one is `_TwissExprColumn`),
+  and the tracking types are `TrackResult`, `TrackConfig`, `TrackColumn` (Nov 2026). `Experimental` (`one-torus.jl`, `coord == 0`
   with `ais`) uses `tw.table.a[1]`, which does not exist (`tw.df`). `max_one_torus(…;
   verbose=false)` still prints every turn.
+- Future task (known, not urgent): `MatrixKick` is not differentiable at quadrupole strength 0 (the
+  kernel takes √K): a knob on a quadrupole with `Kn1 == 0` aborts Julia in GTPSA
+  (`sqrt(+0.0000E+00)`, no exception), e.g. `value_and_jacobian([tw.q1], [@knob(q0.Kn1)])`. The
+  map is analytic in K; GTPSA's `sincu`-type functions would avoid the square root.
 - Unknown entries of `at` are ignored silently; `_dampdec` returns an `Int` 0 without radiation; 
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.
@@ -626,11 +700,25 @@ Open items:
     time). Bmad's lcavity (`this_energy_kick` in `track_a_lcavity.f90`) does the same; tracked 
     alone, the kick rotates exactly 2x the Thomas-BMT angle as dE → 0, and with half the field 
     it matches to the trapezoidal error. Reported to Bmad; fix both after confirmation.
+- Python (juliacall) cannot index with keywords: `res.x[turn=3]` has no Python syntax, so
+  Python users read `np.asarray(res.data.v)[particle, coordinate, location, saved turn]`
+  (documented in `installation.md`, "Using SciBmad from Python"). Twiss columns work
+  (`tw.beta1[jl.qd]`). Idea (maintainer, Nov 2026: in the Python wrapper, no Julia changes; not
+  done, untested): `res.x[qd, turn=3]` is `getindex(res.x, qd; turn=3)`, and juliacall passes
+  Python keywords as Julia keywords, so `jl.getindex(res.x, jl.qd, turn=3, particle=1)` should
+  work as is. The wrapper would wrap result objects so that `res.x(qd, turn=3)` and
+  `tw.beta1(qd, "exit")` call it, translating a name for `end`, `slice(None)`/"all" to a Julia
+  colon, Python ranges/lists to Julia vectors, strings like "exit" to symbols.
 - Notebooks (`examples/julia`) are rerun with `jupyter nbconvert --to notebook --execute --inplace` 
   (condamatt env) and `JUPYTER_PATH=<scratch>/jupyter`, holding a kernelspec with the notebooks' 
   kernel name that runs a scratch environment (plus Plots, CairoMakie, LaTeXStrings, Metal, IJulia), 
   so the notebook metadata and `~/Library/Jupyter` stay unchanged. Check every number quoted in 
   the markdown against the new output (orbit-response quoted a stale dy/dtilt, 3% off).
+  IJulia ≥ 1.34 has no `src/kernel.jl`: the kernelspec runs `-e "import IJulia;
+  IJulia.run_kernel()" {connection_file}`. The Python notebooks run through juliacall with
+  `PYTHON_JULIAPKG_PROJECT=<env>`, `PYTHON_JULIAPKG_OFFLINE=yes`, `PYTHON_JULIAPKG_EXE=<julia>`;
+  PythonCall in that env must be juliacall's version (0.9.31 for condamatt's juliacall; with a
+  newer one Python fails to start: "initialization of math did not return an extension module").
 
 ### Writing docs
 

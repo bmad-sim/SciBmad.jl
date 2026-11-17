@@ -96,12 +96,16 @@ twc.dq1, twc.dq2 # (-0.10506231945773534, -0.1180234082730797)
 ```
 
 With `chrom` or `order` of 2 or more, the tunes are Taylor series in δ and in the amplitudes
-(see the [Quickstart](quickstart.md)), and `tw.q1[delta=2]` or `tw.q1[J1=1]` is one of their
-terms (the same as `getterm(tw.q1, delta=2)`). The term of δⁿ needs `chrom` of at least n+1, and
-the term of J₁ or J₂ `order` of at least 3; a term that the truncation does not resolve is 0:
+(see the [Quickstart](quickstart.md)), and indexing gives their derivatives: `tw.q1[delta=2]` is
+$\partial^2 q_1/\partial\delta^2$ (also written `tw.dq1_2`), `tw.q1[J1=1]` is
+$\partial q_1/\partial J_1$ and `tw.q1[delta=1, J1=1]` is
+$\partial^2 q_1/\partial\delta\partial J_1$. `getterm(tw.q1, delta=2)` is instead the
+coefficient of δ² in the Taylor series as it is printed: the derivative divided by 2!. A
+derivative of order n in δ needs `chrom` of at least n+1, and one in J₁ or J₂ `order` of at least
+3; asking for one that the truncation does not resolve is an error:
 
 ```{code-cell} julia
-twiss(fodo, chrom=3).q1[delta=2] # 1.652
+twiss(fodo, chrom=3).q1[delta=2] # 3.304
 ```
 
 ```{code-cell} julia
@@ -120,6 +124,11 @@ only the values for the whole ring are computed:
 twiss(fodo, at=[]).q1                    # 0.14865227408668
 twiss(fodo, at=[qd], cols=["beta1"]).beta1[qd] # 6.695
 ```
+
+The truncation orders are chosen from the columns: `twiss(fodo, cols=["dx_2"])` uses `chrom=2`
+and `twiss(fodo, cols=["h3000"])` uses `order=2`. `order` and `chrom` (or a `GTPSA_descriptor`)
+can still be given, for example for the chromaticities alone, which no column asks for:
+`twiss(fodo, chrom=2, at=[]).dq1`.
 
 `start` and `stop` compute only a part of the beamline, from the beginning of `start` to the
 beginning of `stop` (for example one cell of a ring); `tw.beta1[begin]` and `tw.beta1[end]` are
@@ -219,5 +228,5 @@ The column `h<ijklmn>` needs `order` of at least $i+j+k+l+m+n-1$.
 ```{docstring} twiss
 ```
 
-```{docstring} TwissColumnVector
+```{docstring} TwissColumn
 ```

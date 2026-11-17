@@ -113,13 +113,14 @@ to continue the Twiss functions of another beamline.
 
 ## Quantities
 - Summary values: `tw.q1`, `tw.q2`, `tw.q3`, `tw.etac`, `tw.alphac`, `tw.qspin`, `tw.damp1`, ...
-  A term of an amplitude-dependent value is selected as for `getterm`, e.g. `tw.q1[delta=1]`;
-  `tw.dq1` and `tw.dq2` are short for the chromaticities `tw.q1[delta=1]` and `tw.q2[delta=1]`.
+  A derivative of an amplitude-dependent value is selected as for the result of `twiss`, e.g.
+  `tw.q1[delta=2]` (∂²q1/∂δ²) or `tw.q1[J1=1]`; `tw.dq1` and `tw.dq2` are short for the
+  chromaticities `tw.q1[delta=1]` and `tw.q2[delta=1]`, `tw.dq1_n` for `tw.q1[delta=n]`.
 - Columns: `tw.<column>[location]` for every scalar column of `twiss`, including chromatic
   derivatives (`tw.dbeta1`, `tw.dx_2`) and `tw.h<ijkl>`.
 
 ## Locations
-The same as for the columns of the result of `twiss` (see [`TwissColumnVector`](@ref)):
+The same as for the columns of the result of `twiss` (see [`TwissColumn`](@ref)):
 - `tw.beta1[ele]`, `tw.beta1[7]`: the beginning of the element (or of the element with that
   beamline index). An element placed several times gives a vector.
 - `tw.beta1[ele, :exit]`: the end of the element.
@@ -158,7 +159,7 @@ struct _TwissLeaf <: LatticeExpr
   mono::NTuple{4,Int} # (delta, J1, J2, J3) of a summary value
 end
 
-struct TwissColumn
+struct _TwissExprColumn
   tw::TwissExpr
   col::String
 end
@@ -169,21 +170,21 @@ Base.propertynames(tw::TwissExpr) = [_TWISS_SUMMARY..., :dq1, :dq2,
 function Base.getproperty(tw::TwissExpr, key::Symbol)
   if key in _TWISS_SUMMARY
     return _TwissLeaf(tw, String(key), 0, 0, (0, 0, 0, 0))
-  elseif key == :dq1
-    return _TwissLeaf(tw, "q1", 0, 0, (1, 0, 0, 0))
-  elseif key == :dq2
-    return _TwissLeaf(tw, "q2", 0, 0, (1, 0, 0, 0))
+  elseif (m = match(r"^dq([12])(?:_([1-9]))?$", String(key))) !== nothing
+    # The chromaticities dq1, dq2 and their derivatives dq1_n = ∂ⁿq1/∂δⁿ
+    n = isnothing(m.captures[2]) ? 1 : parse(Int, m.captures[2])
+    return _TwissLeaf(tw, "q" * m.captures[1], 0, 0, (n, 0, 0, 0))
   end
   col = String(key)
   _col_order(col) # errors for an unknown column
-  return TwissColumn(tw, col)
+  return _TwissExprColumn(tw, col)
 end
 
 Base.show(io::IO, tw::TwissExpr) = print(io, "TwissExpr of a Beamline with ",
   length(getfield(tw, :bl).line), " elements", isempty(getfield(tw, :kwargs)) ? "" :
   " (" * join(("$k=$(v isa LatticeExpr || v isa Number || v isa Bool ? v : typeof(v))"
                for (k, v) in getfield(tw, :kwargs)), ", ") * ")")
-Base.show(io::IO, c::TwissColumn) = print(io, "TwissExpr column ", c.col,
+Base.show(io::IO, c::_TwissExprColumn) = print(io, "TwissExpr column ", c.col,
                                           " (index it with a location, e.g. [ele] or [end])")
 
 const _MATRIX_COLS = ("N", "Vi", "H1", "H2", "H3", "B1", "B2", "B3", "E1", "E2", "E3")
@@ -223,8 +224,11 @@ end
 
 function _leaf_order(l::_TwissLeaf)
   if l.index == 0
+    # (the degree of the map terms that give the term, as in _adv_get: the spin tune comes from the
+    # constant part of the spin map, one order less than the orbital tunes)
     delta, J1, J2, J3 = l.mono
-    return l.mono == (0, 0, 0, 0) ? 1 : delta + 2*(J1 + J2 + J3) + 1
+    degree0 = l.col == "qspin" ? 0 : 1
+    return l.mono == (0, 0, 0, 0) ? 1 : max(1, degree0 + delta + 2*(J1 + J2 + J3))
   end
   return _col_order(l.col)
 end
@@ -233,16 +237,19 @@ end
 function Base.getindex(l::_TwissLeaf; delta::Integer=0, J1::Integer=0, J2::Integer=0,
                        J3::Integer=0)
   l.index == 0 || error("Only summary values (q1, q2, ...) have terms in delta, J1, J2, J3")
+  l.mono == (0, 0, 0, 0) || error("$(l) is already a derivative: give all of them at once, e.g. " *
+                                  "tw.q1[delta=1, J1=1]")
   return _TwissLeaf(l.tw, l.col, 0, 0, (delta, J1, J2, J3))
 end
 
 struct _End end
-Base.lastindex(::TwissColumn) = _End()
-function Base.firstindex(c::TwissColumn) # the beginning of the beamline, or of `start`
+# (with more than one index, e.g. beta1[end, :exit], `end` is lastindex(c, 1))
+Base.lastindex(::_TwissExprColumn, d...) = _End()
+function Base.firstindex(c::_TwissExprColumn, d...) # the beginning of the beamline, or of `start`
   start = get(getfield(c.tw, :kwargs), :start, nothing)
   return isnothing(start) ? 1 : _twiss_element_index(getfield(c.tw, :bl), start, "start")
 end
-function _stop_index(c::TwissColumn) # the beamline index of `stop` (nothing: the end)
+function _stop_index(c::_TwissExprColumn) # the beamline index of `stop` (nothing: the end)
   stop = get(getfield(c.tw, :kwargs), :stop, nothing)
   return isnothing(stop) ? nothing : _twiss_element_index(getfield(c.tw, :bl), stop, "stop")
 end
@@ -343,7 +350,7 @@ function _column_locations(bl, stop, range::Tuple{Real,Real})
   return locs, false
 end
 
-function Base.getindex(c::TwissColumn, args...)
+function Base.getindex(c::_TwissExprColumn, args...)
   locs, one = _column_locations(getfield(c.tw, :bl), _stop_index(c), args...)
   leaves = LatticeExpr[_TwissLeaf(c.tw, c.col, l[1], l[2], (0, 0, 0, 0)) for l in locs]
   return one ? only(leaves) : ExprVector(leaves)

@@ -168,7 +168,9 @@ function _to_p(a::AmplitudeDependentValue, mono4, pzero)
           "off with `rf_on=false`), or use `J3`")
   end
   varmono = a.coast ? (J1, J1, J2, J2, 0, delta) : (J1, J1, J2, J2, J3, J3)
-  return _to_p(a.taylor_series, varmono, pzero)
+  # (a derivative: the coefficient times the factorials)
+  return factorial(delta)*factorial(J1)*factorial(J2)*factorial(J3) *
+         _to_p(a.taylor_series, varmono, pzero)
 end
 
 # Copy of the Taylor series t in the Descriptor of zer (terms it does not have are dropped)
@@ -233,8 +235,8 @@ function _check_open_line(bl, a::DAMap, kw)
     v[7+j, j] -= 1e-6
   end
   res = track(bl; v0=v, scalar_params=true, rf_on=get(kw, :rf_on, true))
-  out = view(res.v, :, :, 1, size(res.v, 4))
-  alive = view(res.state, :, 1, size(res.state, 3))
+  out = view(res.data.v, :, :, 1, size(res.data.v, 4))
+  alive = view(res.data.state, :, 1, size(res.data.state, 3))
   if !all(isfinite, out) || any(!=(BeamTracking.STATE_ALIVE), alive)
     error("The initial orbit of the open line is lost or not finite at its end")
   end
@@ -326,7 +328,7 @@ function _knobs(ks)
 end
 
 # Values of the expressions and, if jac, their derivatives in the knobs vary
-function _evaluate(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool)
+function _evaluate(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool; complex_ok::Bool=false)
   for e in exprs
     e isa Union{LatticeExpr,Real} || error("Expected expressions (LatticeExpr), got a " *
       "$(typeof(e)). (A vector of expressions compared with `==` to a plain vector of " *
@@ -399,12 +401,15 @@ function _evaluate(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool)
   finally
     GTPSA.desc_current = desc_old
   end
-  vals = Vector{Float64}(undef, length(exprs))
-  J = jac ? zeros(length(exprs), length(vary)) : nothing
-  for (i, e) in enumerate(exprs)
-    r = _peval(e, st)
-    scalar(r) isa Real || error("The expression $(e) is complex (e.g. an h term): use " *
-                                "`abs`, `real` or `imag` of it")
+  # Complex values (e.g. h terms) are values (complex_ok), but not residuals of a match
+  rs = Any[_peval(e, st) for e in exprs]
+  i = findfirst(r -> !(scalar(r) isa Real), rs)
+  isnothing(i) || complex_ok || error("The expression $(exprs[i]) is complex (e.g. an h term): " *
+                                      "a target or `minimize` needs `abs`, `real` or `imag` of it")
+  T = isnothing(i) ? Float64 : ComplexF64
+  vals = Vector{T}(undef, length(exprs))
+  J = jac ? zeros(T, length(exprs), length(vary)) : nothing
+  for (i, r) in enumerate(rs)
     vals[i] = scalar(r)
     if jac && r isa TPS
       J[i, :] .= view(GTPSA.gradient(r), 1:length(vary))
@@ -418,11 +423,12 @@ end
     value(exprs::AbstractArray)
 
 The current value of the expression ([`LatticeExpr`](@ref)) `expr`, or of each expression of an
-array. Each [`TwissExpr`](@ref) used is computed with one `twiss` call, only at the locations and
-with the columns the expressions use.
+array (complex for an `h` term). Each [`TwissExpr`](@ref) used is computed with one `twiss`
+call, only at the locations and with the columns the expressions use.
 """
-value(e::Union{LatticeExpr,Real}) = _evaluate(Any[e], Knob[], false)[1][1]
-value(e::AbstractArray) = reshape(_evaluate(_flatten_exprs(e), Knob[], false)[1], size(e))
+value(e::Union{LatticeExpr,Real}) = _evaluate(Any[e], Knob[], false; complex_ok=true)[1][1]
+value(e::AbstractArray) =
+  reshape(_evaluate(_flatten_exprs(e), Knob[], false; complex_ok=true)[1], size(e))
 
 """
     value_and_jacobian(exprs, knobs) -> (values, jacobian)
@@ -438,11 +444,11 @@ truncated power series (GTPSA) of one `twiss` call per [`TwissExpr`](@ref), with
 orders the expressions need, and the lattice is restored afterwards.
 """
 function value_and_jacobian(e::Union{LatticeExpr,Real}, knobs)
-  vals, J = _evaluate(Any[e], _knobs(knobs), true)
+  vals, J = _evaluate(Any[e], _knobs(knobs), true; complex_ok=true)
   return vals[1], J[1, :]
 end
 function value_and_jacobian(e::AbstractArray, knobs)
-  vals, J = _evaluate(_flatten_exprs(e), _knobs(knobs), true)
+  vals, J = _evaluate(_flatten_exprs(e), _knobs(knobs), true; complex_ok=true)
   return reshape(vals, size(e)), J
 end
 function value_and_jacobian(e, knobs, x)

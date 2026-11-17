@@ -101,8 +101,8 @@ at the same locations and written in the same way as for the result of `twiss` (
 [Reading the results](twiss.md)): `tw.q1`, `tw.dq1`, `tw.q1[J1=1]`, `tw.beta1[qd]`,
 `tw.beta1[6]`, `tw.beta1[qd, :exit]`, `tw.beta1[b, :]`, `tw.beta1[end]`, `tw.beta1["q*"]`,
 `tw.beta1[(2.0, 10.0)]`, and so on. Chromatic derivatives (`tw.dbeta1[qd]`, `tw.dx_2[1]`) and the
-`h` terms (`tw.h3000[1]`) too; the `h` terms are complex numbers, so use `abs`, `real` or `imag` of
-them. Unlike for `twiss`, you do not need to choose truncation orders or rows: each quantity
+`h` terms (`tw.h3000[1]`) too. The `h` terms are complex numbers: `value` gives them as such, but a
+target or `minimize` needs `abs`, `real` or `imag` of them. Unlike for `twiss`, you do not need to choose truncation orders or rows: each quantity
 knows what it needs.
 
 These expressions can be combined with ordinary arithmetic and functions. For example, the square

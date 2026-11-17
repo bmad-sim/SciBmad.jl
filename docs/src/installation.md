@@ -91,6 +91,33 @@ import Pkg; Pkg.add("CUDA")
 
 The SciBmad distribution includes the CairoMakie and GLMakie packages from the [Makie](https://docs.makie.org/stable/) ecosystem, and [Plots](https://docs.juliaplots.org/stable/). Our personal preference is Makie.
 
+## Using SciBmad from Python
+
+SciBmad can also be used from Python through
+[juliacall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/), which runs Julia inside
+Python. Install it with `pip install juliacall`, add SciBmad once with
+
+```python
+import juliapkg
+juliapkg.add("SciBmad", "7bf6e793-a2ec-421f-8700-d1465381ee80")
+```
+
+and load it in your scripts or notebooks:
+
+```python
+from juliacall import Main as jl
+jl.seval("using SciBmad")
+```
+
+The first time, juliacall installs Julia and SciBmad, which takes a while. Julia functions are
+then called through `jl`, e.g. `tw = jl.twiss(ring)`, and Julia code without a Python equivalent,
+such as `@elements`, is run with `jl.seval("...")`. Results are Julia objects:
+`np.asarray(tw.beta1)` gives a column as a NumPy array, and `tw.beta1[jl.qd]` its value at the
+beginning of the element `qd`. Python has no keywords in indexing, so tracking results are read
+from their arrays instead: `np.asarray(res.data.v)[particle, coordinate, location, saved turn]`
+(counting from 0). Pass NumPy arrays to SciBmad as Julia arrays, e.g. `jl.Array(v0)`, for
+performance. The [examples](examples-index.md) include Python notebooks.
+
 ## Next Steps
 
 Once SciBmad is installed, head to the [Quickstart Guide](quickstart.md).

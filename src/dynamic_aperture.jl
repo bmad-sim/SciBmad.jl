@@ -36,7 +36,7 @@ second index corresponds to that in `deltas`.
 - `output_file`: If provided, then a file containing the initial particle coordinates (w.r.t. 
     the closed orbit(s)) as rows, with the last column specifying the particle state at the 
     end of tracking, will be written to the file. Default is `nothing`.
-- `track_kwargs...`: Any of the settings in `TrackingConfig` except for `n_turns` and 
+- `track_kwargs...`: Any of the settings in `TrackConfig` except for `n_turns` and 
     `save_every_n_turns` may be provided to configure the tracking.
 """
 function dynamic_aperture(

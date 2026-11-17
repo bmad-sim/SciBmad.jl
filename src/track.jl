@@ -1,5 +1,5 @@
 """
-    struct TrackingConfig
+    struct TrackConfig
 
 Defines configuration settings for a particles tracking run.
 
@@ -47,7 +47,7 @@ Defines configuration settings for a particles tracking run.
 - `use_explicit_SIMD::Bool`: If `true`, uses `SciBmad`'s explicit CPU SIMD tracking, which
     often guarantees vectorization of tracking on the CPU. Default is `!use_KA`
 """
-@kwdef struct TrackingConfig
+@kwdef struct TrackConfig
   n_turns::Int                          = 1
   save_every_n_turns::Int               = 1
   in_body_coordinates::Bool             = false
@@ -64,7 +64,7 @@ Defines configuration settings for a particles tracking run.
   use_explicit_SIMD::Bool               = !use_KA
 end
 
-function Base.show(io::IO, config::TrackingConfig)
+function Base.show(io::IO, config::TrackConfig)
   fields = fieldnames(typeof(config))
   width = maximum(length, String.(fields))
   println(io, nameof(typeof(config)))
@@ -75,85 +75,218 @@ function Base.show(io::IO, config::TrackingConfig)
 end
 
 """
-    struct TrackingResult{L,S,V,Q,TR,BG}
+    struct TrackResult
 
-Contains all information for a given particle tracking run.
+Contains all information for a given particle tracking run. The particles are read at locations
+of the beamline (given as for the columns of `twiss`; without a location, the only saved
+location, by default the end of the beamline), for a saved turn and a particle:
+
+```julia
+res.x[turn=2]                     # x of all particles after turn 2 (at the only saved location)
+res.x[turn=2, particle=1]         # of particle 1
+res.x[]                           # [particle, saved turn]
+res.px[qd, turn=2]                # at the beginning of the element qd (see `at` in `track`)
+res.v[qd, :exit, particle=1]      # all six coordinates at its end: [coordinate, saved turn]
+```
 
 ## Properties
-- `config`: A `TrackingConfig` struct containing configuration settings
-- `elapsed_time`: The tracking execution time in seconds 
-- `s`: The s of each location where the particles are saved (see `at` in `track`), in the order
-    of the `location` index of `state`, `v` and `q`
-- `index`: The beamline index of the element of each location (`-1` for the end of the
-    beamline)
-- `name`: The name of the element of each location
-- `kind`: The kind of the element of each location
-- `state`: A tensor of particle states at each location and saved turn (the first holds the
-    initial particles at every location)
-- `v`: A tensor of particle phase space coordinates at each location and saved turn
-- `q`: If spin tracking was enabled, a tensor of particle quaternions at each location and
-    saved turn
-- `t_ref`: The reference time at each location and saved turn, as the callbacks see it (a
-    `BatchParam` if the reference time of the `Bunch` is one)
-- `beta_gamma_ref`: The reference energy (beta*gamma) at each location and saved turn, as the
-    callbacks see it (a `BatchParam` if the reference momentum is one)
-- `bunch`: The `Bunch` at the end of tracking
+- `x`, `px`, `y`, `py`, `z`, `pz`: the coordinates, `v`: all six (the coordinate is the second
+  index), `q`: the spin quaternions if spin was tracked, `state`: the state of the particles
+  (`STATE_ALIVE`, ...), `t_ref`, `beta_gamma_ref`: the reference time and energy (one value per
+  location and turn) if `save_reference=true`. See [`TrackColumn`](@ref) for how they are read
+- `turns`: the saved turns (turn 0: the initial coordinates)
+- `s`, `index`, `name`, `kind`: the s, the beamline index (`-1` for the end of the beamline), the
+  name and the kind of the element of each saved location
+- `data`: the saved arrays, indexed by location number (in the order of `s`) and saved turn (1:
+  the initial coordinates): `state[particle, location, saved turn]`,
+  `v[particle, coordinate, location, saved turn]`, `q[particle, quaternion, location, saved turn]`
+  (or `nothing`), `t_ref[location, saved turn]` and `beta_gamma_ref[location, saved turn]` (or
+  `nothing`; per particle with `BatchParam`s: a `BatchParam` for each location and turn)
+- `config`: the `TrackConfig`, `elapsed_time`: the tracking time in seconds, `bunch`: the
+  `Bunch` at the end of tracking
 """
-struct TrackingResult{L,S,V,Q,TR,BG}
-  config::TrackingConfig
+struct TrackResult{L,D}
+  config::TrackConfig
   elapsed_time::Float64 # in seconds
   s::L
   index::Vector{Int}
   name::Vector{String}
   kind::Vector{String}
-  state::S
-  v::V
-  q::Q
-  t_ref::TR
-  beta_gamma_ref::BG
+  data::D        # (state, v, q, t_ref, beta_gamma_ref): the saved arrays
   bunch::Bunch
+  bl::Beamline
+  rows::Dict{Tuple{Int,Int},Int} # the location number of each (beamline index, step in element)
 end
 
-function Base.show(io::IO, res::TrackingResult)
-  println(io, typeof(res), ":")
-  config=res.config
-  fields = fieldnames(typeof(config))
-  width = maximum(length, String.(fields))
+const _TRACK_COLUMNS = (:x, :px, :y, :py, :z, :pz, :v, :q, :state, :t_ref, :beta_gamma_ref)
+
+function Base.getproperty(res::TrackResult, key::Symbol)
+  key in _TRACK_COLUMNS && return TrackColumn(res, key)
+  if key === :turns
+    config = getfield(res, :config)
+    return collect(0:config.save_every_n_turns:config.n_turns)
+  end
+  return getfield(res, key)
+end
+
+Base.propertynames(::TrackResult) = (_TRACK_COLUMNS..., :turns, :s, :index, :name, :kind,
+                                        :data, :config, :elapsed_time, :bunch)
+
+function Base.show(io::IO, res::TrackResult)
+  n_particles, n_locations, n_slots = size(getfield(res, :data).state)
+  print(io, "TrackResult(", n_particles, n_particles == 1 ? " particle, " : " particles, ",
+        n_locations, n_locations == 1 ? " location, " : " locations, ", n_slots, " saved turns)")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", res::TrackResult)
+  data = getfield(res, :data)
+  config = getfield(res, :config)
+  n_particles = size(data.state, 1)
+  turns = res.turns
+  single = length(getfield(res, :index)) == 1 # (then the location can be left out)
+  loc = single ? "" : "location, "
+  println(io, "TrackResult of ", n_particles, n_particles == 1 ? " particle:" : " particles:")
   println(io, "config:")
+  fields = fieldnames(TrackConfig)
+  width = maximum(length ∘ String, fields)
   for field in fields
-    println(io, " ", rpad(String(field), width), " = ", repr(getproperty(config, field)))
+    println(io, " ", rpad(String(field), width), " = ", repr(getfield(config, field)))
   end
   println(io)
-  println(io, "elapsed_time = ", res.elapsed_time, " seconds")
+  println(io, "elapsed_time = ", getfield(res, :elapsed_time), " seconds")
   println(io)
-  if res.config.save_every_n_turns == 1
-    turnstr = "turn+1"
-  else
-    turnstr = "Int(turn/$(res.config.save_every_n_turns))+1"
+  dims(x) = "[" * join(("1:$n" for n in size(x)), ", ") * "]"
+  rows = Tuple{String,String}[
+    ("turns", (length(turns) > 6 ? "$(first(turns)):$(config.save_every_n_turns):$(last(turns))" :
+               string(turns)) * ": the saved turns (0: initial coordinates)"),
+    ("s, index, name, kind", "the saved locations: " * _track_locations_string(res)),
+    ("state", "particle state codes, read as state[location, turn=n, particle=i]" *
+              (single ? " (one saved location: it can be left out)" : "")),
+    ("x, px, y, py, z, pz", "the coordinates, e.g. x[" * loc * "turn=n, particle=i]"),
+    ("v", "all six coordinates, e.g. v[" * loc * "turn=n, particle=i]")]
+  isnothing(data.q) ||
+    push!(rows, ("q", "spin quaternions (track_spin turns them into spin vectors)"))
+  isnothing(data.t_ref) ||
+    push!(rows, ("t_ref, beta_gamma_ref", "reference time and energy, e.g. t_ref[" * loc *
+                 "turn=n]"))
+  push!(rows, ("data", "the saved arrays (saved turn 1: initial coordinates):"))
+  order = (state="[particle, location, saved turn]",
+           v="[particle, coordinate, location, saved turn]",
+           q="[particle, quaternion, location, saved turn]", t_ref="[location, saved turn]",
+           beta_gamma_ref="[location, saved turn]")
+  for k in keys(data)
+    x = getfield(data, k)
+    isnothing(x) && continue
+    push!(rows, (" " * "$k$(dims(x))", ndims(x) == 3 && k !== :state ?
+                                        "[particle, location, saved turn]" : getfield(order, k)))
   end
-  n_particles = size(res.state, 1)
-  n_locations = size(res.state, 2)
-  n_saved_turns = size(res.state, 3)
-  println(io, "s, index, name, kind:\tLocations (s, beamline index, name, kind of the element)")
-  println(io, "state[1:$n_particles, 1:$n_locations, 1:$n_saved_turns]:\tStates indexable as\t\t ",
-          "state[particle, location, $(turnstr)]")
-  println(io, "v[1:$n_particles, 1:6, 1:$n_locations, 1:$n_saved_turns]:",
-          "\tPhase space coords indexable as\t v[particle, coordinate, location, $(turnstr)]")
-  if !isnothing(res.q)
-    println(io, "q[1:$n_particles, 1:4, 1:$n_locations, 1:$n_saved_turns]:",
-            "\tQuaternions indexable as\t q[particle, quat_coordinate, location, $(turnstr)]")
+  push!(rows, ("bunch", "the Bunch at the end of tracking"))
+  w = max(22, maximum(length(r[1]) for r in rows) + 1)
+  for (k, (name, text)) in enumerate(rows)
+    print(io, rpad(name, w), text)
+    k < length(rows) && println(io)
   end
-  println(io, "")
-  if !isnothing(res.t_ref)
-    println(io, "t_ref, beta_gamma_ref[1:$n_locations, 1:$n_saved_turns]:",
-            "\tReference indexable as\t t_ref[location, $(turnstr)]")
-  end
-  println(io, "bunch:\tBunch at the end of tracking")
-  return
+end
+
+# The saved locations by name and s (the first and last of many)
+function _track_locations_string(res)
+  idxs, names, s = getfield(res, :index), getfield(res, :name), getfield(res, :s)
+  loc(l) = (idxs[l] == -1 ? "the end of the beamline" : names[l]) *
+           " (s = $(round(scalar(s[l]), sigdigits=6)))"
+  n = length(idxs)
+  n <= 6 && return join((loc(l) for l in 1:n), ", ")
+  return "$n locations, from $(loc(1)) to $(loc(n))"
 end
 
 """
-    track(bl::Beamline; kwargs...) -> TrackingResult
+    TrackColumn
+
+A quantity of a [`TrackResult`](@ref) (e.g. `res.x`), read at locations of the beamline as
+the columns of `twiss` (see [`TwissColumn`](@ref)), and for a saved turn and a particle given
+with the keywords `turn` (the turn number, 0 for the initial coordinates) and `particle`,
+written after the location (or alone):
+
+- `res.x[]`: without a location, at the only saved location (by default the end of the
+  beamline; with several saved locations, one must be given), `[particle, saved turn]`
+- `res.x[turn=n]`: all particles after turn `n`, `res.x[turn=n, particle=i]`: one number.
+  `turn` and `particle` can also be `:` (all, as without them), a range or a vector
+- `res.x[qd, turn=n]`, `res.x[5, ...]`, `res.x[qd, :exit, ...]`, `res.x[end, ...]`: at the
+  beginning of `qd` (or of the element with beamline index 5), at its end, at the end of the
+  beamline
+- `res.x[qd, :]`, `res.x["q*"]`, `res.x[(2.0, 6.0)]`: at several locations: their index comes
+  after the particle (`[particle, location, saved turn]`)
+
+`res.v` and `res.q` have the coordinate or quaternion component as the index after the particle,
+and `t_ref` and `beta_gamma_ref` no particle index (unless they are per particle). The
+locations must have been saved (see `at` in [`track`](@ref)).
+"""
+struct TrackColumn{R<:TrackResult}
+  res::R
+  name::Symbol
+end
+
+# (with more than one index, e.g. x[end, turn=2], `end` is lastindex(c, 1))
+Base.firstindex(::TrackColumn, d...) = 1
+Base.lastindex(::TrackColumn, d...) = _End()
+
+function Base.getindex(c::TrackColumn, args...;
+                       turn::Union{Nothing,Colon,Integer,AbstractVector{<:Integer}}=nothing,
+                       particle=nothing)
+  res = c.res
+  raw, k = _track_raw(getfield(res, :data), c.name)
+  if isempty(args) # the only saved location
+    n = length(getfield(res, :index))
+    n == 1 || error(n == 0 ? "No locations were saved (`at=[]`)" : "$n locations were saved: " *
+                    "give one, e.g. $(c.name)[qd, turn=n] or $(c.name)[end, turn=n]")
+    L = 1
+  else
+    locs, one = _column_locations(getfield(res, :bl), nothing, args...)
+    ls = [_track_location(res, l) for l in locs]
+    L = one ? only(ls) : ls
+  end
+  config = getfield(res, :config)
+  S = isnothing(turn) || turn isa Colon ? (:) : turn isa Integer ? _track_slot(config, turn) :
+      [_track_slot(config, n) for n in turn]
+  P = isnothing(particle) ? (:) : particle
+  I = ndims(raw) == 2 ? (L, S) : ndims(raw) == 3 ? (P, L, S) : (P, something(k, :), L, S)
+  # (one value: through a copy, also from a GPU array)
+  return all(i -> i isa Integer, I) ? Array(view(raw, I...))[] : raw[I...]
+end
+
+function Base.show(io::IO, c::TrackColumn)
+  print(io, "TrackColumn `", c.name, "` (read it with locations, `turn` and `particle`)")
+end
+
+# The saved array of the quantity name, and the coordinate (for x, ..., pz)
+function _track_raw(data, name)
+  k = findfirst(==(name), (:x, :px, :y, :py, :z, :pz))
+  isnothing(k) || return data.v, k
+  raw = getfield(data, name)
+  isnothing(raw) && error(name === :q ? "The spin was not tracked (`spin=true`)" :
+                          "The reference was not saved (`save_reference=true`)")
+  return raw, nothing
+end
+
+# The location number of (i, k): k integration steps after the beginning of the element with
+# beamline index i (-1: the end of the beamline)
+function _track_location(res, (i, k))
+  l = get(getfield(res, :rows), (i, k), 0)
+  l == 0 && error("The particles were not saved ", i == -1 ? "at the end of the beamline" :
+                  k == 0 ? "at the beginning of element $i" : "at step $k of element $i",
+                  ": include it with `at`")
+  return l
+end
+
+# The saved turn (slot) of turn n
+function _track_slot(config, n)
+  m = config.save_every_n_turns
+  0 <= n <= config.n_turns && n % m == 0 ||
+    error("Turn $n was not saved (the saved turns are 0:$m:$(config.n_turns))")
+  return n ÷ m + 1
+end
+
+"""
+    track(bl::Beamline; kwargs...) -> TrackResult
 
 All-encompassing function to track particles through the beamline `bl` using the configured 
 settings specified by the keyword arguments `kwargs`.
@@ -220,7 +353,7 @@ settings specified by the keyword arguments `kwargs`.
 - `config`: Instead of specifying `n_turns`, `save_every_n_turns`, `in_body_coordinates`,
     `save_reference`, `scalar_params`,
     `ramp_particle_energy_without_rf`, `ramp_update_each_particle`, `verbose`, `groupsize`, 
-    `use_cpu_multithreading`, `use_KA`, and `use_explicit_SIMD`, a single `TrackingConfig` 
+    `use_cpu_multithreading`, `use_KA`, and `use_explicit_SIMD`, a single `TrackConfig` 
     struct can be provided instead. Setting any of these keyword arguments will override 
     that in `config`.
 """
@@ -263,7 +396,7 @@ function track(
     start::Union{Integer,LatElement}=1,
     at::Union{Nothing,Colon,AbstractVector}=nothing,
 
-    config=TrackingConfig(use_KA=!(KA.get_backend(bunch.v) isa KA.CPU)),
+    config=TrackConfig(use_KA=!(KA.get_backend(bunch.v) isa KA.CPU)),
     
     # Tracking customization kwargs:
     n_turns                         = config.n_turns,
@@ -284,7 +417,7 @@ function track(
     use_explicit_SIMD               = config.use_explicit_SIMD,
   )  
 
-  newconfig = TrackingConfig(
+  newconfig = TrackConfig(
     n_turns,
     save_every_n_turns,
     in_body_coordinates,
@@ -324,22 +457,25 @@ function track(
   if at isa AbstractVector && isempty(at) # nothing to save (1.5 ms less on ESR than resolving it)
     loc_s, loc_names, loc_kinds, loc_idxs = Float64[], String[], String[], Int[]
     loc_steps = Int[]
+    loc_ele_steps = Int[]
     n_steps_turn = 0
   else
-    s, names, kinds, idxs, step_save, include_start, include_end = _twiss_assemble_locations(bl,
-                                                                     isnothing(at) ? [] : at)
+    s, names, kinds, idxs, step_save, include_start, include_end, ele_steps =
+      _twiss_assemble_locations(bl, isnothing(at) ? [] : at)
     include_end |= isnothing(at)
     sel = (include_start ? 1 : 2):(include_end ? length(s) : length(s)-1)
     loc_s, loc_names, loc_kinds, loc_idxs = s[sel], names[sel], kinds[sel], idxs[sel]
     loc_steps = step_save[sel]
+    loc_ele_steps = ele_steps[sel]
     n_steps_turn = last(step_save)
   end
   # Function barrier for Bunch and groupsize (needs special handling for KA)
-  locations = (loc_s, loc_idxs, loc_names, loc_kinds)
+  locations = (loc_s, loc_idxs, loc_names, loc_kinds, loc_ele_steps)
   return @noinline _track(bl, bunch, newconfig, groupsize == 0 ? nothing : groupsize, step_start,
                           locations, loc_steps, n_steps_turn, Val(save_reference))
 end
 
+# locations are the s, beamline index, name, kind and step within the element of each location.
 # loc_steps are the steps (tracking callbacks) of the locations in a turn, counted from the
 # beginning of the beamline (step 0), and n_steps_turn is the number of steps of a turn (the end of
 # the beamline). The first turn begins after step_start steps. The locations are saved by a
@@ -454,9 +590,12 @@ function _track(bl, bunch, config, groupsize, step_start, locations, loc_steps, 
   bunch.t_ref = b.t_ref
   bunch.s = b.s
   bunch.step = b.step
-  return TrackingResult(config, t, locations..., state_data, v_data, q_data,
-                        _reference_result(t_data, bunch.t_ref, batch_start),
-                        _reference_result(bg_data, _beta_gamma_ref(bunch), batch_start), bunch)
+  loc_s, loc_idxs, loc_names, loc_kinds, loc_ele_steps = locations
+  rows = Dict{Tuple{Int,Int},Int}((loc_idxs[l], loc_ele_steps[l]) => l for l in eachindex(loc_idxs))
+  saved = (; state=state_data, v=v_data, q=q_data,
+           t_ref=_reference_result(t_data, bunch.t_ref, batch_start),
+           beta_gamma_ref=_reference_result(bg_data, _beta_gamma_ref(bunch), batch_start))
+  return TrackResult(config, t, loc_s, loc_idxs, loc_names, loc_kinds, saved, bunch, bl, rows)
 end
 
 function _track_make_callback(_slot, _location_of_step, _in_body_coordinates, _v_data, _q_data,
@@ -497,7 +636,7 @@ end
 # (aligned elements, the exits) the kernels then keep only p.step
 @inline function _track_save!(i, coords, p, in_body_coordinates, v_data, q_data, state_data,
                               t_data, bg_data, l, j)
-  _track_copy!(i, coords, v_data, q_data, state_data, l, j)
+  _call_or_inline(_track_copy!, v_data, i, coords, v_data, q_data, state_data, l, j)
   _track_reference!(i, p, t_data, bg_data, l, j)
   if !in_body_coordinates
     saved = BeamTracking.Coords(_slot(state_data, l, j), _slot(v_data, l, j),
@@ -507,7 +646,7 @@ end
   return nothing
 end
 
-@noinline function _track_copy!(i, coords, v_data, q_data, state_data, l, j)
+@inline function _track_copy!(i, coords, v_data, q_data, state_data, l, j)
   @inbounds begin
     state_data[i,l,j] = coords.state[i]
     for k in 1:6
@@ -527,9 +666,9 @@ end
 # mod1(i + batch_start - 1, length of the batch))
 # (if saved: without, p.t_ref and p.beta_gamma_ref are not used, so not computed in the kernels)
 @inline _track_reference!(i, p, t_data, bg_data, l, j) =
-  _track_reference!(i, p.t_ref, p.beta_gamma_ref, t_data, bg_data, l, j)
+  _call_or_inline(_track_reference!, t_data, i, p.t_ref, p.beta_gamma_ref, t_data, bg_data, l, j)
 @inline _track_reference!(i, p, ::Nothing, ::Nothing, l, j) = nothing
-@noinline function _track_reference!(i, t, bg, t_data, bg_data, l, j)
+@inline function _track_reference!(i, t, bg, t_data, bg_data, l, j)
   _track_reference!(i, t, t_data, l, j)
   _track_reference!(i, bg, bg_data, l, j)
   return nothing
@@ -620,6 +759,11 @@ end
 _kernel_array(a::Array{T}) where {T} = isbitstype(T) ? _PtrArray(pointer(a), size(a)) : a
 _kernel_array(a) = a
 
+# The saving is a call on the CPU (the callback is in every kernel). In GPU kernels a call costs
+# registers also where it is not taken (ESR on Metal: ~20% per turn), so there it is inlined
+@inline _call_or_inline(f, ::Union{_PtrArray,Array}, args...) = @noinline f(args...)
+@inline _call_or_inline(f, _, args...) = f(args...)
+
 # The saved coordinates at location l and slot j (the last two dimensions of a)
 @inline function _slot(a::_PtrArray{T,N}, l, j) where {T,N}
   sz = Base.front(Base.front(a.size))
@@ -650,6 +794,12 @@ function track_spin(q::AbstractArray, s0::AbstractVecOrMat)
   s = similar(q, (size(q, 1), 3, size(q)[3:end]...))
   track_spin!(s, q, s0)
   return s
+end
+
+# (the q of a TrackResult)
+function track_spin(q::TrackColumn, s0::AbstractVecOrMat)
+  q.name === :q || error("track_spin needs the quaternions `res.q`")
+  return track_spin(_track_raw(getfield(q.res, :data), :q)[1], s0)
 end
 
 """

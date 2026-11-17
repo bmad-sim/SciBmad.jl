@@ -285,8 +285,10 @@ is the coefficient of `δ¹`:
 chromy = getterm(tw.q2, delta=1)
 ```
 
-The chromaticities also have the short names `tw.dq1` and `tw.dq2`, and the same terms can be
-written `tw.q2[delta=1]`.
+The chromaticities also have the short names `tw.dq1` and `tw.dq2`. Indexing gives derivatives:
+`tw.q2[delta=1]` is the chromaticity too, and `tw.q2[delta=2]` (or `tw.dq2_2`) is
+$\partial^2 q_2/\partial\delta^2$, which is 2! times the coefficient that `getterm` gives (see
+[Reading the results](twiss.md)).
 
 The same mechanism extends naturally to purely amplitude-dependent tune shifts (once `order`
 is raised high enough to resolve them), using the `J1` and `J2` keyword arguments to extract
@@ -363,6 +365,18 @@ n_particles = 10
 res = track(fodo, v0=rand(n_particles, 6).*1e-5, n_turns=10, spin=true)
 ```
 
+The particles are saved at the end of the beamline after every turn (turn 0 holds the initial
+coordinates), and are read by turn and particle:
+
+```{code-cell} julia
+res.x[turn=10]               # x of all particles after turn 10
+res.x[turn=:, particle=1]    # x of particle 1 at turns 0 to 10
+```
+
+To save them at other places, give the elements (or positions inside elements) with `at`, and
+read them with the element first, as for the Twiss results, e.g. `res.x[qd, turn=10]`. See the
+[Track](track.md) page.
+
 On the CPU, all tracking will automatically be parallelized using single instruction,
 multiple data (SIMD) if your hardware supports it. CPU multithreading can also be enabled by
 starting Julia with threads, and setting `use_cpu_multithreading=true`. For more details,
@@ -388,3 +402,26 @@ res = track(fodo, v0=v0, n_turns=10, spin=true)
 ```
 
 For more details, see the [GPU Parallelization](#gpuparallel) section of the manual.
+
+## Where to Go Next
+
+This guide only scratched the surface. The rest of the documentation covers:
+
+- [Matching and Optimization](optimize.md): match tunes, beta functions, chromaticities,
+  resonance driving terms and more, at any location, by varying any element parameter, with
+  exact derivatives; or get the values and derivatives of any Twiss quantity for your own
+  optimizer
+- [Twiss](twiss.md): all the Twiss columns, reading them at elements and inside elements, Twiss
+  of a part of a beamline and of open lines, resonance driving terms and detuning
+- [Parametric Normal Form](parametric-nf.md): Twiss quantities and tunes as Taylor series in
+  magnet strengths, lengths or any other parameter
+- [Track](track.md): saving particles anywhere, other species, 32-bit coordinates, CPU and GPU
+  parallelization; with [Tracking Methods](tracking-methods.md) per element,
+  [Collective Effects](collective.md) (intrabeam scattering), [time-dependent
+  parameters](timedependent.md) and [batches](batch.md) of lattice parameters
+- The [closed orbit](co.md), [dynamic aperture](dynamic-aperture.md) and
+  [frequency map analysis](fma.md), all of which run on GPUs
+- Lattices: [elements](element.md), [beamlines](beamline.md), [deferred
+  expressions](defexpr.md) for interdependent parameters, and [definition tools](def-tools.md)
+  such as phase trombones
+- [Examples](examples-index.md): complete Jupyter notebooks in Julia and Python

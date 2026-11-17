@@ -45,14 +45,16 @@ function Base.getproperty(tw::Twiss, s::Symbol)
     if haskey(summ.sdict, s)
       return summ.sdict[s]
     elseif hasproperty(df, s)
-      return TwissColumnVector(getproperty(df, s), tw)
-    elseif s == :dq1 || s == :dq2 # the chromaticities
-      q = summ.sdict[s == :dq1 ? :q1 : :q2]
+      return TwissColumn(getproperty(df, s), tw)
+    elseif (m = match(r"^dq([12])(?:_([1-9]))?$", String(s))) !== nothing
+      # The chromaticities dq1, dq2 and their derivatives dq1_n = ∂ⁿq1/∂δⁿ
+      q = summ.sdict[m.captures[1] == "1" ? :q1 : :q2]
+      n = isnothing(m.captures[2]) ? 1 : parse(Int, m.captures[2])
       if !(q isa AmplitudeDependentValue) || !q.coast
-        error("The chromaticity `$s` needs `chrom` (or `order`) of at least 2 and a coasting " *
-              "beam (`rf_on=false` if there are RF cavities)")
+        error("The chromaticity `$s` needs `chrom` (or `order`) of at least $(n+1) and a " *
+              "coasting beam (`rf_on=false` if there are RF cavities)")
       end
-      return getterm(q, delta=1)
+      return q[delta=n]
     else
       error("Twiss does not have $s")
     end
@@ -62,7 +64,7 @@ end
 Base.propertynames(tw::Twiss) = vcat(propertynames(tw.summ), propertynames(tw.df))
 
 """
-    TwissColumnVector
+    TwissColumn
 
 A column of a `Twiss` table (e.g. `tw.beta1`), indexed with locations of the beamline exactly as
 the columns of a [`TwissExpr`](@ref):
@@ -84,27 +86,28 @@ The table must have rows at these locations (it has with the default `at`). The 
 iterates over all rows of the table, in order, and broadcasts (`tw.dbeta1 ./ tw.beta1`) as a
 vector of them; `collect(tw.beta1)` (or `tw.df.beta1`) is that vector.
 """
-struct TwissColumnVector{T,V<:AbstractVector{T}}
+struct TwissColumn{T,V<:AbstractVector{T}}
   v::V
   tw::Twiss
 end
-Base.length(c::TwissColumnVector) = length(c.v)
-Base.size(c::TwissColumnVector) = size(c.v)
-Base.eltype(::Type{<:TwissColumnVector{T}}) where {T} = T
-Base.iterate(c::TwissColumnVector, state...) = iterate(c.v, state...)
-Base.broadcastable(c::TwissColumnVector) = c.v
-Base.collect(c::TwissColumnVector) = collect(c.v)
+Base.length(c::TwissColumn) = length(c.v)
+Base.size(c::TwissColumn) = size(c.v)
+Base.eltype(::Type{<:TwissColumn{T}}) where {T} = T
+Base.iterate(c::TwissColumn, state...) = iterate(c.v, state...)
+Base.broadcastable(c::TwissColumn) = c.v
+Base.collect(c::TwissColumn) = collect(c.v)
 # (comparisons are of all rows, with another column or a vector)
-Base.:(==)(a::TwissColumnVector, b::TwissColumnVector) = a.v == b.v
-Base.:(==)(a::TwissColumnVector, b::AbstractVector) = a.v == b
-Base.:(==)(a::AbstractVector, b::TwissColumnVector) = a == b.v
-Base.isapprox(a::TwissColumnVector, b::TwissColumnVector; kw...) = isapprox(a.v, b.v; kw...)
-Base.isapprox(a::TwissColumnVector, b::AbstractVector; kw...) = isapprox(a.v, b; kw...)
-Base.isapprox(a::AbstractVector, b::TwissColumnVector; kw...) = isapprox(a, b.v; kw...)
-Base.firstindex(c::TwissColumnVector) = getfield(c.tw, :start)
-Base.lastindex(::TwissColumnVector) = _End()
+Base.:(==)(a::TwissColumn, b::TwissColumn) = a.v == b.v
+Base.:(==)(a::TwissColumn, b::AbstractVector) = a.v == b
+Base.:(==)(a::AbstractVector, b::TwissColumn) = a == b.v
+Base.isapprox(a::TwissColumn, b::TwissColumn; kw...) = isapprox(a.v, b.v; kw...)
+Base.isapprox(a::TwissColumn, b::AbstractVector; kw...) = isapprox(a.v, b; kw...)
+Base.isapprox(a::AbstractVector, b::TwissColumn; kw...) = isapprox(a, b.v; kw...)
+# (with more than one index, e.g. beta1[end, :exit], `end` is lastindex(c, 1))
+Base.firstindex(c::TwissColumn, d...) = getfield(c.tw, :start)
+Base.lastindex(::TwissColumn, d...) = _End()
 
-function Base.getindex(c::TwissColumnVector, args...)
+function Base.getindex(c::TwissColumn, args...)
   tw = c.tw
   bl = getfield(tw, :bl)
   isnothing(bl) && error("This Twiss table does not know its Beamline")
@@ -123,12 +126,12 @@ function _twiss_row(tw::Twiss, (i, k))
   return r
 end
 
-function Base.show(io::IO, c::TwissColumnVector)
-  print(io, "TwissColumnVector(")
+function Base.show(io::IO, c::TwissColumn)
+  print(io, "TwissColumn(")
   show(io, c.v)
   print(io, ")")
 end
-function Base.show(io::IO, m::MIME"text/plain", c::TwissColumnVector)
+function Base.show(io::IO, m::MIME"text/plain", c::TwissColumn)
   println(io, length(c.v), "-row column of a Twiss table (index it with locations of the ",
           "beamline; collect it for a Vector of all rows):")
   Base.print_array(io, c.v)
