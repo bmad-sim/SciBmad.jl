@@ -23,6 +23,52 @@ ENV["LINES"] = 30
 ```{docstring} twiss
 ```
 
+## Reading the results
+
+The values for the whole ring (tunes, momentum compaction, ...) are properties of the result,
+and so is every column of the table:
+
+```{code-cell} julia
+@elements begin
+  qf = Quadrupole(Kn1=0.36, L=0.5)
+  d = Drift(L=1.0)
+  qd = Quadrupole(Kn1=-0.36, L=0.5, n_steps=2)
+  b = SBend(L=2.0, angle=pi/20)
+end
+fodo = Beamline([qf, d, b, d, qd, d, b, d], species_ref=Species("electron"), pc_ref=18e9)
+tw = twiss(fodo)
+tw.q1 # 0.14865227408668
+```
+
+A column such as `tw.beta1` is a vector with one entry per row of the table: `tw.beta1[1]` is the
+first row (the beginning of the beamline) and `tw.beta1[end]` the last (its end). A column can
+also be indexed with the elements of the beamline:
+
+```{code-cell} julia
+tw.beta1[qd]        # 6.695 at the beginning of qd
+tw.beta1[qd, :exit] # 6.695 at its end (the beginning of the next element)
+tw.beta1[qd, :]     # [6.695, 6.538, 6.695] at every integration step of qd, both ends included
+tw.beta1[d]         # [14.56, 8.177, 6.695, 12.14] d is in the beamline four times
+tw.beta1["q*"]      # [14.56, 6.695] at the elements whose names start with q
+```
+
+An element that is in the beamline several times gives one value per placement, in beamline
+order, and names (as for [searching by name](beamline.md)) always give a vector. The rows must be
+in the table: with `at` (for example `twiss(fodo, at=[qd])`), only the elements given there can
+be used. The whole table is the `DataFrame` `tw.df`, with the beamline index, name, kind and `s`
+of each row.
+
+The chromaticities are `tw.dq1` and `tw.dq2`. They need `chrom` (or `order`) of at least 2, and
+no synchrotron motion (`rf_on=false` if there are RF cavities):
+
+```{code-cell} julia
+twc = twiss(fodo, chrom=2)
+twc.dq1, twc.dq2 # (-0.10506231945773534, -0.1180234082730797)
+```
+
+The same element indexing is used to write targets for matching ([](#optimize)), where however an
+integer is a beamline index and not a row of the table.
+
 ## Open lattices
 
 By default `twiss` computes the periodic Twiss functions of a ring. For a line that is not 

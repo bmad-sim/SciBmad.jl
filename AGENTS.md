@@ -403,7 +403,7 @@ values kept alive for the save). With it off the kernels' native code is identic
 
 - `factorise(a; canonise, phase, damp, damping)` returns `(a0, a1, a2, a, r)` (plus `as` with spin): 
   canonise 0 = linear (order 1), 1 = linear with parameters, 2 = nonlinear. `twiss` uses `a`, `a0`, 
-  `a1`, `a2`, `as`, never `r`. At order 1 it runs the general machinery (map inversions, compositions, 
+  `a1`, `a2`, `as`, never `r` (it calls it with `compute_r=Val(false)`). At order 1 it runs the general machinery (map inversions, compositions, 
   two vector-field exponentials for coasting beams in `_factorise`); the cost is many small 
   allocating steps.
 - `normal`: the spin part rotates the closed-orbit spin axis `n0` onto ŷ; for `n0 = ±ŷ` exactly 
@@ -559,9 +559,20 @@ Open items:
 - `twiss` table: was one dynamic call per cell; now per column and block of rows (`twiss` 5.).
   Specializing the row loop on the column set compiles per column set (5 s for the default set):
   rejected.
-- `factorise` returns `r` (the inverse of the canoniser), which `twiss` never uses: 6 ms of ESR's
-  245 ms (2.3%) at order 1, 3.4% of `chrom=2` (`inv(r_cs)` at canonise 1). Skipping it needs an
-  NNF option (an API decision).
+- Checked as necessary in the TrackPoint PR (Nov 2026, ESR, Julia 1.10): BeamTracking's
+  `LaunchOptions` (without it the keywords that `track` passes allocate per chain: 4,901
+  allocations and 0.52-0.54 instead of 0.42-0.46 ms per turn for one particle; equal without
+  keywords and at 100 particles); the lazy `p.t_ref` (eager: ~5% slower for one particle, bitwise
+  equal); SciBmad's `_PtrArray` (3-6% for 1 and 10 particles). `PreKernelChain.step_exit` is used
+  by `track`'s `start`; `s_exit` and setting the Bunch's position after prepared tracking are only
+  for consistency with plain tracking (tested in "Callback steps", read by nothing else): kept
+  (maintainer, Nov 2026). The precompile workload no longer has `track!` of a Bunch: `track!` is
+  not exposed to users, and `track` always tracks with its callback (other kernels), so it is
+  not to be restored (maintainer, Nov 2026).
+- `factorise(…; compute_r=Val(false))` (NNF, Nov 2026) leaves out `r` (an inverse of the
+  canoniser, which `twiss` never uses; still computed at canonise 2 for the phase of a coasting
+  beam). A `Val`, so that the result type is inferred. `twiss` uses it: bitwise (29 cases), ESR
+  217-227 -> 210-211 ms, `chrom=2` 690-700 -> 662-665 ms.
 - `coast_check` and the Newton of `find_closed_orbit` compute the same Jacobian at the zero orbit
   (~3% of ESR `twiss`); sharing it needs BatchSolve's `newton!` to take a starting Jacobian.
 - Closed orbit: `coast_check` and Newton compute the same Jacobian (~8 ms on ESR). Prepared tracking 

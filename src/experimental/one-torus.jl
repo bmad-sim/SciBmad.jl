@@ -124,8 +124,10 @@ function dynamic_aperture(
   turns_survivedt .= n_turns+1
 
   b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
+  # The kernel chains of the elements are built once for all turns
+  chains = SciBmad.BTBL.prepare(b0, bl; scalar_params=true)
   for i in 1:n_turns
-    track(bl; bunch=b0, at=[], scalar_params=true)
+    track!(b0, chains)
     @. turns_survivedt = ifelse(b0.coords.state != BeamTracking.STATE_ALIVE && turns_survivedt == n_turns+1, i, turns_survivedt)
     if verbose
       print("\rFinished turn $i out of $n_turns")

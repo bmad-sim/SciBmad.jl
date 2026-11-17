@@ -383,7 +383,7 @@ function twiss(
       mo = unsafe_load(GTPSA_descriptor.desc).mo
       n_refine = ceil(Int, log2(mo))
       for k in 1:n_refine
-        a0 = factorise(a).a0
+        a0 = factorise(a; compute_r=Val{false}()).a0
         if k < n_refine
           tr0 = _twiss_track(a0, bl, rf_on, batch_index, zero(s[1]), no_locations, Int[],
                              in_body_coordinates, delta_orbit)
@@ -409,7 +409,8 @@ function twiss(
   # Determine canonization level
   canonise, phase, damp = canonise_phase_damp(GTPSA_descriptor, coast, damping)
 
-  a_initial = factorise(a_initial; canonise=canonise, damping=isnothing(damp) ? false : true).a
+  a_initial = factorise(a_initial; canonise=canonise, damping=isnothing(damp) ? false : true,
+                        compute_r=Val{false}()).a
 
   turns = nothing
   if sparse
@@ -743,7 +744,7 @@ function _twiss_track(m, bl, rf_on, batch_index, t_ref0, locations, step_save, i
   config = TrackingConfig(; in_body_coordinates, rf_on, batch_start=batch_index,
                           save_reference=true, use_KA=false, scalar_params)
   n_steps_turn = isempty(step_save) ? 0 : last(step_save)
-  return _track(bl, b0, config, nothing, 1, locations, step_save, n_steps_turn, Val(true))
+  return _track(bl, b0, config, nothing, 0, locations, step_save, n_steps_turn, Val(true))
 end
 
 function _a_r_tunes(m::DAMap)
@@ -799,7 +800,8 @@ function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, ca
   damping = !isnothing(damp)
   _clear!(phase)
   damping && _clear!(damp)
-  facj = factorise(a; canonise=canonise, phase=phase, damp=damp, damping=damping)
+  facj = factorise(a; canonise=canonise, phase=phase, damp=damp, damping=damping,
+                   compute_r=Val{false}())
   fac[j] = facj
   for (k, phi) in enumerate((phi1, phi2, phi3_or_slip))
     phi[j] = j != 1 ? copy(phase[k]) : zero(phase[k])
@@ -831,9 +833,9 @@ end
 
 function _twiss_make_base_columns(n, a::T, phase, damp) where {T}
   if !isnothing(a.q)
-    fac = Vector{@NamedTuple{as::T, a0::T, a1::T, a2::T, a::T, r::T}}(undef, n)
+    fac = Vector{@NamedTuple{as::T, a0::T, a1::T, a2::T, a::T}}(undef, n)
   else
-    fac = Vector{@NamedTuple{a0::T, a1::T, a2::T, a::T, r::T}}(undef, n)
+    fac = Vector{@NamedTuple{a0::T, a1::T, a2::T, a::T}}(undef, n)
   end
   phi1 = Vector{eltype(phase)}(undef, n)
   phi2 = Vector{eltype(phase)}(undef, n)

@@ -311,6 +311,13 @@ function track(
     start = only(ks)
   end
   1 <= start <= length(bl.line) || error("start must be a beamline index of an element")
+  # The steps of the turn before the start element (counted as for the locations)
+  if start > 1
+    _, _, _, start_idxs, start_steps = _twiss_assemble_locations(bl, [start])
+    step_start = start_steps[findfirst(==(start), start_idxs)]
+  else
+    step_start = 0
+  end
   # Locations where the particles are saved, as in twiss (the first entry is the beginning of the
   # beamline unless steps of the first element are in an s-range, the last the end of the beamline)
   # (by default only the end of the beamline)
@@ -329,14 +336,15 @@ function track(
   end
   # Function barrier for Bunch and groupsize (needs special handling for KA)
   locations = (loc_s, loc_idxs, loc_names, loc_kinds)
-  return @noinline _track(bl, bunch, newconfig, groupsize == 0 ? nothing : groupsize, start,
+  return @noinline _track(bl, bunch, newconfig, groupsize == 0 ? nothing : groupsize, step_start,
                           locations, loc_steps, n_steps_turn, Val(save_reference))
 end
 
 # loc_steps are the steps (tracking callbacks) of the locations in a turn, counted from the
 # beginning of the beamline (step 0), and n_steps_turn is the number of steps of a turn (the end of
-# the beamline). The locations are saved by a callback during the turns, as in twiss
-function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_steps_turn,
+# the beamline). The first turn begins after step_start steps. The locations are saved by a
+# callback during the turns, as in twiss
+function _track(bl, bunch, config, groupsize, step_start, locations, loc_steps, n_steps_turn,
                 ::Val{save_reference}) where {save_reference}
   state = bunch.coords.state
   v     = bunch.coords.v
@@ -378,14 +386,13 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
   chains = BTBL.prepare(bunch, bl; scalar_params, rf_on, ramp_particle_energy_without_rf,
                         ramp_update_each_particle, batch_start)
 
-  if start > 1
-    # The first turn begins with the first chain of the start element, after step_start steps of
-    # the turn. The locations before are not reached in the first turn
-    chain_steps, chain_ele = _chain_steps(bl)
-    length(chain_steps) == length(chains) ||
-      error("The number of chains differs from that of the slices")
-    first_chain = findfirst(==(start), chain_ele)
-    step_start = sum(view(chain_steps, 1:first_chain-1))
+  # (the steps of the chains, counted by BeamTracking, must be those of the locations)
+  n_steps_turn == 0 || isempty(chains) || last(chains).step_exit == n_steps_turn ||
+    error("The steps of the chains differ from those of the locations")
+  if step_start > 0
+    # The first turn begins with the first chain of the start element: the first that ends after
+    # step_start steps of the turn. The locations before are not reached in the first turn
+    first_chain = findfirst(pc -> pc.step_exit > step_start, chains)
     j = slot_of_turn(1)
     if j != 0
       ls = 1:count(<(step_start), loc_steps) # (the locations are ordered in s)
@@ -399,7 +406,6 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
     end
   else
     first_chain = 1
-    step_start = 0
   end
 
   # location_of_step[p.step] is 0, or the location the callback saves at that step. The callback
@@ -451,25 +457,6 @@ function _track(bl, bunch, config, groupsize, start, locations, loc_steps, n_ste
   return TrackingResult(config, t, locations..., state_data, v_data, q_data,
                         _reference_result(t_data, bunch.t_ref, batch_start),
                         _reference_result(bg_data, _beta_gamma_ref(bunch), batch_start), bunch)
-end
-
-# The number of steps (tracking callbacks) of each chain of bl, i.e. n_steps for each of the
-# n_slices of each element (as counted in _twiss_assemble_locations), and the beamline index of the
-# element of each chain
-function _chain_steps(bl)
-  chain_steps = Int[]
-  chain_ele = Int[]
-  for (k, ele) in enumerate(bl.line)
-    up = (ele.UniversalParams)::UniversalParams
-    if up.L isa DefExpr
-      up = Beamlines.deval(up, bl.context)
-    end
-    for _ in 1:up.n_slices
-      push!(chain_steps, up.n_steps)
-      push!(chain_ele, k)
-    end
-  end
-  return chain_steps, chain_ele
 end
 
 function _track_make_callback(_slot, _location_of_step, _in_body_coordinates, _v_data, _q_data,
