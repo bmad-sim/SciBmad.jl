@@ -386,7 +386,7 @@ function twiss(
   # q1, q2, slip factor eta_c, momentum compaction alpha_c, [q3, qspin]
   # only thing is with 3d motion, need to compute 
   summ = _twiss_summ(twi, cache)
-  return Twiss(summ, df)
+  return Twiss(summ, df, bl)
 end
 
 function co_and_coast(bl, v0, rf_on, coast_tol, batch_index)

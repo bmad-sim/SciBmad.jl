@@ -535,12 +535,16 @@ using Test
       # An inequality that holds moves nothing; one that does not is brought to its limit
     res = match!(vary=[kf, kd], targets=[tw.beta1[1] <= 20])
     @test res.converged && res.iterations == 0
-    res = match!(vary=[kf, kd], targets=[tw.q1 == 0.2, maximum(tw.beta1[:]) <= 6])
-    t = twiss(cell)
-    @test res.converged
-    @test t.q1 ≈ 0.2 atol=1e-8
-    @test maximum(t.beta1) ≈ 6 atol=1e-7
-    undo!(res)
+      # (the weight makes the residual of the beta function comparable with that of the tune)
+    for solver in (:levenberg_marquardt, :gauss_newton)
+      res = match!(vary=[kf, kd]; solver, targets=[tw.q1 == 0.2,
+                   Target(maximum(tw.beta1[:]); upper=6, weight=0.02)])
+      t = twiss(cell)
+      @test res.converged
+      @test t.q1 ≈ 0.2 atol=1e-8
+      @test maximum(t.beta1) ≈ 6 atol=1e-6
+      undo!(res)
+    end
       # More knobs than targets, and more targets than knobs (least squares: the gradient of the
       # squared residuals vanishes there, and not at the start)
     res = match!(vary=[kf, kd, @knob(d.L)], targets=[tw.q1 == 0.2, tw.q2 == 0.15])
@@ -553,10 +557,19 @@ using Test
     @test sqrt(sum(abs2, J'*r)) < 1e-5*sqrt(sum(abs2, J)*sum(abs2, r))
     @test sqrt(sum(abs2, J0'*r0)) > 0.1*sqrt(sum(abs2, J0)*sum(abs2, r0))
     undo!(res)
-      # A step into an unstable lattice is shortened (the first step for 0.49 overshoots)
-    res = match!(vary=[kf, kd], targets=[tw.q1 == 0.49, tw.q2 == 0.49])
-    @test res.converged && any(diff(res.history) .> -0.9 .* res.history[1:end-1])
+      # A step into an unstable lattice is rejected and a shorter one taken (the first step for
+      # tunes of 0.49 overshoots: more evaluations than improvements), with both solvers
+    for solver in (:levenberg_marquardt, :gauss_newton)
+      res = match!(vary=[kf, kd]; solver, targets=[tw.q1 == 0.49, tw.q2 == 0.49])
+      @test res.converged && length(res.history) < res.evaluations
+      undo!(res)
+    end
+      # The previous solver (Gauss-Newton steps from the SVD) gives the same tunes
+    res = match!(vary=[kf, kd], targets=[tw.q1 == 0.2, tw.q2 == 0.15], solver=:gauss_newton)
+    @test res.converged
+    @test res.x ≈ x_tunes rtol=1e-7
     undo!(res)
+    @test_throws ErrorException match!(vary=[kf], targets=[tw.q1 == 0.2], solver=:newton)
       # minimize
     res = match!(vary=[kf, kd], minimize=[tw.beta1[1] - 8, tw.beta2[1] - 12])
     t = twiss(cell; at=[1])
@@ -648,6 +661,38 @@ using Test
     qf.Kn1 = 0.36 + params(D)[1]
     tp = twiss(bl; GTPSA_descriptor=D, at=[])
     @test [grad(tp.q1)[1], grad(tp.q2)[1]] ≈ (fp .- fm) ./ 2e-6 rtol=1e-7
+  end
+
+  @testset "Twiss table indexed with elements" begin
+      # A column of the table indexed with elements gives the values at their rows: the same as
+      # the TwissExpr at the same location (an element placed twice gives a vector), and the
+      # chromaticities dq1, dq2
+    @elements begin
+      qf = Quadrupole(Kn1=0.36, L=0.5)
+      sf = Sextupole(Kn2=1.2, L=0.2)
+      d = Drift(L=0.1)
+      b = SBend(L=1.2, angle=pi/132, n_steps=3)
+      qd = Quadrupole(Kn1=-0.36, L=0.5)
+    end
+    cell = Beamline([qf, sf, b, d, qd, b, d]; species_ref=Species("electron"), pc_ref=18e9)
+    tw = twiss(cell)
+    te = TwissExpr(cell)
+    @test tw.beta1 isa AbstractVector{Float64} && tw.beta1 == tw.df.beta1
+    @test tw.beta1[3] == tw.df.beta1[3] && tw.beta1[end] == tw.df.beta1[end] # rows, as before
+    @test tw.beta1[qd] == value(te.beta1[qd]) == tw.df.beta1[findfirst(==(5), tw.df.index)]
+    @test tw.beta1[qd, :exit] == value(te.beta1[qd, :exit])
+    @test tw.beta1[qd, :exit] == tw.beta1[cell[6]][1] # the beginning of the next element
+    @test tw.beta1[b] == value(te.beta1[b]) && length(tw.beta1[b]) == 2 # placed twice
+    @test tw.beta1[b, :exit] == value(te.beta1[b, :exit])
+    @test tw.beta1[b, :] == value(te.beta1[b, :]) && length(tw.beta1[b, :]) == 8
+    @test tw.beta1["q*"] == value(te.beta1["q*"]) == [tw.beta1[qf], tw.beta1[qd]]
+    @test tw.beta1[cell[7], :exit] == tw.beta1[end]
+    @test tw.name["Sextupole::*"] == ["sf"]
+    @test_throws ErrorException twiss(cell; at=[1]).beta1[qd] # the row is not in the table
+    @test_throws ErrorException tw.dq1 # needs order 2
+    tc = twiss(cell; chrom=2, at=[])
+    @test tc.dq1 == tc.q1[delta=1] && tc.dq2 == tc.q2[delta=1]
+    @test tc.dq1 ≈ value(te.dq1) rtol=1e-12
   end
 
   @testset "Phase trombone" begin

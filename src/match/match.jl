@@ -255,22 +255,33 @@ Given a `Beamline`, `targets` (and `minimize`) may be functions of its `TwissExp
 match!(cell; vary=[@knob(qf.Kn1), @knob(qd.Kn1)], targets = tw -> [tw.q1 == 0.25, tw.q2 == 0.25])
 ```
 
-The derivatives are exact (see [`value_and_jacobian`](@ref)). The solver takes
-Gauss-Newton steps from the singular value decomposition of the Jacobian, and damped
-(Levenberg-Marquardt) steps where such a step does not reduce the residuals or the lattice has no
-solution (e.g. it is unstable), so there may be fewer, as many, or more targets than knobs. Knobs stay
-within their bounds, and `<=` and `>=` targets only count while they are violated. To use another
-optimizer, see [`MatchProblem`](@ref).
+The derivatives are exact (see [`value_and_jacobian`](@ref)). The solver is the
+Levenberg-Marquardt method of `BatchSolve` (`BatchSolve.levenberg_marquardt!`): steps that do
+not reduce the residuals, or where the lattice has no solution (e.g. it is unstable), are
+rejected and shorter ones taken, so there may be fewer, as many, or more targets than knobs.
+Knobs stay within their bounds and step limits, and `<=` and `>=` targets only count while they
+are violated. Like every such method it finds a nearby solution: targets of very different size
+(a tune and a beta function) should get `weight`s that make their residuals comparable. To use
+another optimizer, see [`MatchProblem`](@ref).
 
 ## Keyword arguments
 - `maxiter`: Maximum number of iterations, default is `50`
-- `rcond`: Singular values of the Jacobian below `rcond` times the largest are ignored (knob
-    combinations the targets do not respond to). Default is `1e-10`
-- `verbose`: If `true`, prints the sum of squared residuals at each iteration. Default is `false`
+- `verbose`: If `true`, prints the progress of the solver at each iteration. Default is `false`
+- `solver`: `:levenberg_marquardt` (default), or `:gauss_newton`: Gauss-Newton steps from the
+    singular value decomposition of the Jacobian (their halves, quarters and eighths, then
+    damped steps, where a step does not reduce the residuals)
+- `rcond`: For `solver=:gauss_newton`, singular values of the Jacobian below `rcond` times the
+    largest are ignored (knob combinations the targets do not respond to). Default is `1e-10`
 
 Returns a [`MatchResult`](@ref). A `continue` with `match!(res)` starts from the current lattice.
 """
-function match!(prob::MatchProblem; maxiter::Integer=50, rcond::Real=1e-10, verbose::Bool=false)
+function match!(prob::MatchProblem; maxiter::Integer=50, verbose::Bool=false,
+                solver::Symbol=:levenberg_marquardt, rcond::Real=1e-10)
+  if solver == :levenberg_marquardt
+    return _match_levenberg_marquardt!(prob, maxiter, verbose)
+  elseif solver != :gauss_newton
+    error("Unknown solver $(repr(solver)): use :levenberg_marquardt or :gauss_newton")
+  end
   t_start = time()
   knobs = prob.knobs
   lower, upper = prob.lower, prob.upper
@@ -403,6 +414,74 @@ function match!(prob::MatchProblem; maxiter::Integer=50, rcond::Real=1e-10, verb
   end
   converged = nt > 0 ? met(raw) : status == "no further improvement possible"
   return MatchResult(prob, converged, status, iterations, evaluations, time() - t_start, x0, x,
+                     raw, history)
+end
+
+# match! with the Levenberg-Marquardt method of BatchSolve. The residuals and their Jacobian come
+# from one evaluation, so the Jacobian is taken at the trial points (trial_jac); an evaluation
+# that fails (e.g. an unstable lattice) is a non-finite residual, which rejects the step
+function _match_levenberg_marquardt!(prob::MatchProblem, maxiter, verbose)
+  t_start = time()
+  knobs = prob.knobs
+  x0 = prob.x
+  lower, upper = prob.lower, prob.upper
+  all(lower .<= x0 .<= upper) || error("A knob starts outside of its bounds")
+  maxstep = Float64[k.step for k in knobs]
+  evaluations = Ref(0)
+  history = Float64[]
+  seen_x = Vector{Float64}[] # the last points evaluated and the values of the expressions there
+  seen_vals = Vector{Float64}[]
+  function evaluate!(y, J, x)
+    evaluations[] += 1
+    try
+      setknobs!(prob, x)
+      vals, Jx = _evaluate(prob.exprs, knobs, !isnothing(J))
+      push!(seen_x, copy(x))
+      push!(seen_vals, copy(vals))
+      length(seen_x) > 4 && (popfirst!(seen_x); popfirst!(seen_vals))
+      _residuals!(prob, vals, Jx)
+      y .= vals
+      isnothing(J) || (J .= Jx)
+      cost = sum(abs2, vals)
+      (isempty(history) || cost < history[end]) && push!(history, cost)
+    catch err
+      err isa InterruptException && (setknobs!(prob, x0); rethrow())
+      if evaluations[] == 1
+        setknobs!(prob, x0)
+        error("match!: the targets cannot be computed at the starting values of the knobs (",
+              sprint(showerror, err), "). Start from a lattice that has a solution.")
+      end
+      y .= NaN
+      isnothing(J) || (J .= NaN)
+    end
+    return nothing
+  end
+  y = zeros(length(prob.exprs))
+  jac = zeros(length(prob.exprs), length(knobs))
+  # Converged when the residuals are below the tightest tolerance (then every target is met),
+  # else at a point that small steps do not improve
+  abstol = minimum((t.tol*t.weight for t in prob.targets); init=Inf)
+  abstol = isempty(prob.minimize) && isfinite(abstol) ? abstol : 0.0
+  sol = BatchSolve.levenberg_marquardt!((y, x) -> evaluate!(y, nothing, x), evaluate!, y, jac,
+          copy(x0); maxiter, verbose, abstol, reltol=1e-12, gradtol=1e-9, trial_jac=true,
+          lower=any(isfinite, lower) ? lower : nothing, upper=any(isfinite, upper) ? upper : nothing,
+          maxstep=any(isfinite, maxstep) ? maxstep : nothing)
+  x = sol.u
+  setknobs!(prob, x)
+  k = findlast(==(x), seen_x)
+  raw = isnothing(k) ? _evaluate(prob.exprs, knobs, false)[1] : seen_vals[k]
+  met = all(abs(raw[i] - clamp(raw[i], t.lower, t.upper)) <= t.tol
+            for (i, t) in enumerate(prob.targets))
+  nt = length(prob.targets)
+  if sol.retcode == RETCODE_MAXITER
+    status = "maximum number of iterations"
+  elseif nt > 0 && met
+    status = "all targets met"
+  else
+    status = "no further improvement possible"
+  end
+  converged = nt > 0 ? met : sol.retcode == RETCODE_SUCCESS
+  return MatchResult(prob, converged, status, sol.iters, evaluations[], time() - t_start, x0, x,
                      raw, history)
 end
 
