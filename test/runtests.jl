@@ -643,6 +643,73 @@ using Test
     @test_throws ErrorException match!(vary=[kf, Knob(qf, :Kn1)], targets=[tw.q1 == 0.2])
   end
 
+  @testset "Knobs on vectors, function knobs, display of many knobs" begin
+      # A vector variable of the context is one knob per entry: the same values, derivatives and
+      # match as two variables, and the vector itself is the same afterwards
+    @elements begin
+      qf = Quadrupole(Kn1=DefExpr(c -> c.k[1]), L=0.5)
+      qd = Quadrupole(Kn1=DefExpr(c -> c.k[2]), L=0.5)
+      d = Drift(L=1.0)
+      b = SBend(L=1.2, angle=pi/132)
+    end
+    vring = Beamline([qf, d, b, qd, d, b]; species_ref=Species("electron"), pc_ref=18e9)
+    vring.context.k = [0.36, -0.36]
+    @elements begin
+      qf2 = Quadrupole(Kn1=DefExpr(c -> c.kf), L=0.5)
+      qd2 = Quadrupole(Kn1=DefExpr(c -> c.kd), L=0.5)
+    end
+    sring = Beamline([qf2, d, b, qd2, d, b]; species_ref=Species("electron"), pc_ref=18e9)
+    sring.context.kf = 0.36
+    sring.context.kd = -0.36
+    tv = TwissExpr(vring)
+    ts = TwissExpr(sring)
+    k = vring.context.k
+    kv = @knob vring.context.k
+    @test [x.name for x in SciBmad._knobs([kv])] == ["k[1]", "k[2]"]
+    v, J = value_and_jacobian([tv.q1, tv.beta1[4]], [kv])
+    vs, Js = value_and_jacobian([ts.q1, ts.beta1[4]], [@knob(sring.context.kf),
+                                                        @knob(sring.context.kd)])
+    @test v == vs && J == Js
+    @test vring.context.k === k && k == [0.36, -0.36]
+    @test value_and_jacobian([tv.q1], [@knob(vring.context.k[2])])[2] == J[1:1, 2:2]
+    @test value_and_jacobian([tv.q1], [vring.context => :k])[2] == J[1:1, :]
+    ka = Any[0.36, -0.36] # (a vector that could hold the Taylor series is not written)
+    vring.context.k = ka
+    @test value_and_jacobian([tv.q1, tv.beta1[4]], [kv]) == (v, J)
+    @test vring.context.k === ka && all(x -> x isa Float64, ka)
+    vring.context.k = k
+    res = match!(vary=[kv], targets=[tv.q1 == 0.07, tv.q2 == 0.06])
+    ress = match!(vary=[@knob(sring.context.kf), @knob(sring.context.kd)],
+                  targets=[ts.q1 == 0.07, ts.q2 == 0.06])
+    @test res.converged && res.x == ress.x
+    @test vring.context.k === k && k == ress.x
+    @test occursin("k[2]", sprint(show, res))
+    @test_throws ErrorException value(deriv(tv.q1, kv)) # (one entry, not the vector)
+
+      # The display in the REPL shows as many knobs as fit, print shows all of them
+    vring.context.c = zeros(40)
+    prob = MatchProblem(vary=[@knob(vring.context.c)], targets=[tv.q1 == 0.07])
+    r = SciBmad.MatchResult(prob, true, "all targets met", 0, 1, 0.0, zeros(40), zeros(40),
+                            [0.07], [0.0])
+    full = sprint(print, r)
+    short = sprint(show, MIME"text/plain"(), r; context=(:limit=>true, :displaysize=>(20, 80)))
+    @test occursin("c[40]", full) && !occursin("more", full)
+    @test !occursin("c[40]", short) && occursin("more", short) && count('\n', short) <= 20
+    @test sprint(show, MIME"text/plain"(), r) == full # (not limited)
+
+      # A function knob may set element parameters: they are numbers again afterwards
+    @elements begin
+      qa = Quadrupole(Kn1=0.36, L=0.5)
+      qb = Quadrupole(Kn1=0.36, L=0.5)
+      qc = Quadrupole(Kn1=-0.36, L=0.5)
+    end
+    fring = Beamline([qa, d, qc, d, qb, d, qc, d]; species_ref=Species("electron"), pc_ref=18e9)
+    fam = Knob(() -> qa.Kn1, v -> (qa.Kn1 = v; qb.Kn1 = v); name="qa and qb")
+    v, J = value_and_jacobian([TwissExpr(fring).q1], [fam])
+    @test qa.Kn1 isa Float64 && qb.Kn1 isa Float64
+    @test twiss(fring).q1 ≈ v[1] rtol=1e-13 # (plain twiss runs: it aborted Julia before)
+  end
+
   @testset "Chromatic and parametric functions with a parameter dependent closed orbit" begin
       # With phase space variables below the maximum order (chrom above order, or GTPSA parameters
       # with the variables at order 1), the one-turn map around the closed orbit lacks the terms

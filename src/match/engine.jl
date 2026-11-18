@@ -116,6 +116,9 @@ function _knob_value(k::Knob)
   if x isa DefExpr
     error("Knob $(k.name) is a deferred expression. Vary what it depends on instead " *
           "(e.g. a variable of the Beamline's context).")
+  elseif x isa AbstractVector
+    error("Knob $(k.name) is a vector: give one entry (e.g. `@knob obj.property[1]`), or vary " *
+          "it in match!/value_and_jacobian, where it is one knob per entry.")
   elseif !(x isa Union{AbstractFloat,Integer,Rational})
     error("Knob $(k.name) holds a $(typeof(x)), not a plain number. If it is left over from " *
           "a parametric calculation, use `scalarize!` first.")
@@ -318,9 +321,21 @@ end
 
 _flatten_exprs(e::Union{LatticeExpr,Real}) = Any[e]
 _flatten_exprs(e::AbstractArray) = Any[x for x in e]
-_knobs(k::Union{Knob,Pair}) = Knob[Knob(k)]
+_knobs(k::Union{Knob,Pair}) = _knobs((k,))
 function _knobs(ks)
-  knobs = Knob[Knob(k) for k in ks]
+  knobs = Knob[]
+  for k in Iterators.map(Knob, ks)
+    # (a knob on a vector of numbers is one knob per entry)
+    x = isnothing(k.prop) || k.index != 0 ? nothing : _getknob(k)
+    if x isa AbstractVector
+      for i in eachindex(x)
+        push!(knobs, Knob(k.obj, k.prop, i, nothing, nothing, string(k.name, "[", i, "]"),
+                          k.lower, k.upper, k.step))
+      end
+    else
+      push!(knobs, k)
+    end
+  end
   for i in eachindex(knobs), j in 1:i-1
     _sameknob(knobs[i], knobs[j]) && error("Knob $(knobs[i].name) is given twice")
   end
@@ -381,7 +396,16 @@ function _evaluate(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool; complex_ok
     GTPSA.desc_current = D
     dk = params(D)
     dzero = zero(first(vars(D)))
+    # Vectors with varied entries hold the Taylor series in copies, and get the original back
+    saved = Tuple{Any,Symbol,Any}[]
     try
+      for (i, k) in enumerate(seeds)
+        if k.index != 0 && !any(s -> s[1] === k.obj && s[2] === k.prop, saved)
+          a = getproperty(k.obj, k.prop)
+          push!(saved, (k.obj, k.prop, a))
+          setproperty!(k.obj, k.prop, copyto!(similar(a, typeof(x0[i] + dk[i])), a))
+        end
+      end
       for (i, k) in enumerate(seeds)
         _setknob!(k, x0[i] + dk[i])
       end
@@ -394,8 +418,17 @@ function _evaluate(exprs::Vector{Any}, vary::Vector{Knob}, jac::Bool; complex_ok
     finally
       # (with D still current: a number set next to a TPS is converted with the current one)
       for (i, k) in enumerate(seeds)
-        _setknob!(k, x0[i])
+        k.index == 0 && _setknob!(k, x0[i])
         _scalarize_knob!(k.obj)
+      end
+      for (obj, prop, a) in saved
+        setproperty!(obj, prop, a)
+      end
+      # A function knob may have set parameters of any element (which then hold Taylor series)
+      if any(k -> isnothing(k.prop), seeds)
+        for g in c.groups, ele in getfield(g.tw, :bl).line
+          scalarize!(ele)
+        end
       end
     end
   finally

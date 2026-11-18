@@ -404,6 +404,23 @@ values kept alive for the save). With it off the kernels' native code is identic
   `value` 0.17 -> 0.00 s; a tune match on ESR 2.0 s either way (its run time). Cost (two runs
   each, Julia 1.10): precompile 174-179 s both, binary 602 -> 608 MB, peak memory 13.8 and
   15.8 GB before, 16.2 and 15.4 GB now (the spread between runs is larger than the difference).
+- Knobs on vectors (maintainer, Nov 2026): `@knob ring.context.coilstrengths` is one knob per
+  entry (`Knob.index`; `_knobs` expands it, names `coilstrengths[i]`, the same bounds);
+  `@knob obj.prop[i]` is one entry. `_setknob!` writes an entry in place when the vector can
+  hold the value, else into a promoted copy. `_evaluate` replaces each vector with varied entries
+  by a copy holding the Taylor series and puts the original object back afterwards (writing
+  numbers back into the Taylor-series vector would leave the `DefExpr`s returning Taylor series,
+  and the next plain tracking aborts in GTPSA). Bitwise equal to separate scalar variables
+  (values, Jacobian, `match!`).
+- Function knobs (`Knob(get, set)`) may set element parameters the engine does not know about:
+  after evaluating with one, every element of the evaluated beamlines is `scalarize!`d (ESR:
+  1.8 ms). Before (Nov 2026), the elements kept Taylor-series parameters and the next plain
+  `twiss` aborted Julia ("descriptors differ").
+- `MatchResult` display: the REPL (`text/plain` with `:limit`) fits each table into the terminal
+  height; `print` (two-argument `show`) shows every row (was 30 rows always).
+  Test "Knobs on vectors, function knobs, display of many knobs" (negative controls: without
+  putting the vector back 2 fail and 3 error, without the copy 1 fails, without the element
+  reset Julia aborts).
 
 ### Columns: facts found by differentiating them (Nov 2026)
 

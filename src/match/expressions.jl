@@ -16,13 +16,20 @@ Base.isequal(a::LatticeExpr, b::LatticeExpr) = a === b
 
 """
     Knob(obj, property; lower=-Inf, upper=Inf, step=Inf, name)
+    Knob(obj, property, index; lower=-Inf, upper=Inf, step=Inf, name)
     Knob(get, set; lower=-Inf, upper=Inf, step=Inf, name="knob")
     @knob obj.property lower=... upper=...
+    @knob obj.property[index] lower=... upper=...
 
 Something that can be varied: the `property` of `obj` (a `LatElement`, a `Context`, a
 `Controller`, or anything else with `obj.property` to get and set a number), or a pair of
 functions `get()` and `set(value)`. `lower` and `upper` are the bounds used by `match!` and
 `step` the largest change per iteration.
+
+If the property is a vector of numbers (e.g. a variable of a `Context` holding the strengths of
+several correctors), the knob stands for one knob per entry, named `property[1]`,
+`property[2]`, ..., with the same bounds: `match!`, `value_and_jacobian` and `setknobs!` vary
+each entry. `index` (or `@knob obj.property[index]`) is one entry alone.
 
 A `Knob` is also a [`LatticeExpr`](@ref), so it can be used in expressions and targets.
 
@@ -30,11 +37,14 @@ A `Knob` is also a [`LatticeExpr`](@ref), so it can be used in expressions and t
 ```julia
 k1 = Knob(qf, :Kn1; lower=0, upper=1)
 k2 = @knob ring.context.kqd
+k3 = @knob ring.context.coilstrengths # one knob per entry of the vector
+k4 = @knob ring.context.coilstrengths[2]
 ```
 """
 struct Knob <: LatticeExpr
   obj::Any
   prop::Union{Symbol,Nothing}
+  index::Int # an entry of a vector property, or 0: the property itself
   get::Any
   set::Any
   name::String
@@ -43,14 +53,14 @@ struct Knob <: LatticeExpr
   step::Float64
 end
 
-function Knob(obj, prop::Union{Symbol,AbstractString}; lower=-Inf, upper=Inf, step=Inf,
-              name=_knob_name(obj, Symbol(prop)))
+function Knob(obj, prop::Union{Symbol,AbstractString}, index::Integer=0; lower=-Inf, upper=Inf,
+              step=Inf, name=_knob_name(obj, Symbol(prop), index))
   lower <= upper || error("Knob $name: lower must be <= upper")
-  return Knob(obj, Symbol(prop), nothing, nothing, name, lower, upper, step)
+  return Knob(obj, Symbol(prop), Int(index), nothing, nothing, name, lower, upper, step)
 end
 function Knob(get::Function, set::Function; lower=-Inf, upper=Inf, step=Inf, name="knob")
   lower <= upper || error("Knob $name: lower must be <= upper")
-  return Knob(nothing, nothing, get, set, name, lower, upper, step)
+  return Knob(nothing, nothing, 0, get, set, name, lower, upper, step)
 end
 Knob(p::Pair; kwargs...) = Knob(p.first, p.second; kwargs...)
 Knob(k::Knob) = k
@@ -60,25 +70,56 @@ function _knob_name(obj::LatElement, prop)
   name = (obj.UniversalParams::UniversalParams).name
   return isempty(name) ? String(prop) : name * "." * String(prop)
 end
+_knob_name(obj, prop, index) = index == 0 ? _knob_name(obj, prop) :
+                                            string(_knob_name(obj, prop), "[", index, "]")
 
-_getknob(k::Knob) = isnothing(k.prop) ? k.get() : getproperty(k.obj, k.prop)
-_setknob!(k::Knob, v) = isnothing(k.prop) ? k.set(v) : setproperty!(k.obj, k.prop, v)
+function _getknob(k::Knob)
+  isnothing(k.prop) && return k.get()
+  x = getproperty(k.obj, k.prop)
+  return k.index == 0 ? x : x[k.index]
+end
+function _setknob!(k::Knob, v)
+  if isnothing(k.prop)
+    k.set(v)
+  elseif k.index == 0
+    setproperty!(k.obj, k.prop, v)
+  else
+    # An entry of a vector: in place if the vector can hold v, else in a copy that can
+    a = getproperty(k.obj, k.prop)
+    T = promote_type(eltype(a), typeof(v))
+    if T === eltype(a)
+      a[k.index] = v
+    else
+      b = copyto!(similar(a, T), a)
+      b[k.index] = v
+      setproperty!(k.obj, k.prop, b)
+    end
+  end
+  return nothing
+end
 _sameknob(a::Knob, b::Knob) = isnothing(a.prop) ? a.set === b.set :
-                              (a.obj === b.obj && a.prop === b.prop)
+                              (a.obj === b.obj && a.prop === b.prop && a.index == b.index)
 
 """
     @knob obj.property [lower=...] [upper=...] [step=...] [name=...]
+    @knob obj.property[index] [lower=...] [upper=...] [step=...] [name=...]
 
-The same as `Knob(obj, :property; lower=..., upper=..., step=..., name=...)`.
+The same as `Knob(obj, :property; lower=..., upper=..., step=..., name=...)`, or with `index`,
+`Knob(obj, :property, index; ...)`.
 """
 macro knob(ex, kws...)
+  index = 0
+  if ex isa Expr && ex.head == :ref && length(ex.args) == 2
+    index = esc(ex.args[2])
+    ex = ex.args[1]
+  end
   (ex isa Expr && ex.head == :. && length(ex.args) == 2 && ex.args[2] isa QuoteNode) ||
-    error("@knob expects `object.property`")
+    error("@knob expects `object.property` or `object.property[index]`")
   kwargs = map(kws) do kw
     (kw isa Expr && kw.head == :(=)) || error("@knob expects keyword arguments `name=value`")
     Expr(:kw, kw.args[1], esc(kw.args[2]))
   end
-  return :(Knob($(esc(ex.args[1])), $(ex.args[2]); $(kwargs...)))
+  return :(Knob($(esc(ex.args[1])), $(ex.args[2]), $index; $(kwargs...)))
 end
 
 # A function of expressions (and numbers)

@@ -93,6 +93,11 @@ The SciBmad distribution includes the CairoMakie and GLMakie packages from the [
 
 ## Using SciBmad from Python
 
+:::{note}
+The Python interface is still early in development. For now, we encourage using SciBmad from
+Julia.
+:::
+
 SciBmad can also be used from Python through
 [juliacall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/), which runs Julia inside
 Python. Install it with `pip install juliacall`, add SciBmad once with

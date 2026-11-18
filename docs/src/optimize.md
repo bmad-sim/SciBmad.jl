@@ -189,6 +189,8 @@ A knob is any parameter that can be set with `object.parameter = value`:
 @knob qf.Kn1 lower=0 upper=0.6         # with bounds
 @knob d.L                              # also lengths
 @knob ring.context.kqf                 # a variable used by deferred expressions
+@knob ring.context.coilstrengths       # a vector variable: one knob per entry
+@knob ring.context.coilstrengths[2]    # one entry of it
 ```
 
 `@knob qf.Kn1` is the same as `Knob(qf, :Kn1)`. Setting a parameter of an element changes it
@@ -209,6 +211,11 @@ res = match!(vary = [@knob(fodo.context.kq)], targets = [tw.q1 == 0.25])
 qf.Kn1 = 0.3804445782410782
 qd.Kn1 = -0.3805887076051259
 ```
+
+A variable can also be a vector, e.g. the strengths of many correctors, each set by a deferred
+expression such as `DefExpr(c -> c.coilstrengths[3])`. `@knob(ring.context.coilstrengths)` then
+varies every entry; the result lists them as `coilstrengths[1]`, `coilstrengths[2]`, ... (as
+many as fit in the terminal; `print(res)` shows all of them).
 
 `step` limits how much a knob may change in one iteration (`@knob qf.Kn1 step=0.01`). A knob is
 also an expression, so it can appear in targets: `@knob(qf.Kn1) + @knob(qd.Kn1) <= 0.05`.

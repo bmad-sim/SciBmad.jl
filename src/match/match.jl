@@ -199,7 +199,17 @@ Sets the knobs back to their values before the `match!` that returned `res`.
 undo!(res::MatchResult) = (setknobs!(res.problem, res.x0); res)
 
 _num(x) = string(round(x; sigdigits=10))
-function Base.show(io::IO, res::MatchResult)
+# print shows every row; the display in the REPL (limited) fits the tables into the terminal
+Base.show(io::IO, res::MatchResult) = _show_result(io, res, typemax(Int))
+function Base.show(io::IO, ::MIME"text/plain", res::MatchResult)
+  get(io, :limit, false) || return _show_result(io, res, typemax(Int))
+  prob = res.problem
+  ntables = (isempty(prob.targets) ? 0 : 1) + (isempty(prob.minimize) ? 0 : 1) + 1
+  # (the terminal less the first line, a header and a "more" line per table, and the prompt)
+  maxrows = max(3, (displaysize(io)[1] - 4 - 2*ntables) ÷ ntables)
+  return _show_result(io, res, maxrows)
+end
+function _show_result(io::IO, res::MatchResult, maxrows)
   prob = res.problem
   println(io, res.converged ? "Match converged" : "Match NOT converged", " (", res.status, "): ",
           res.iterations, " iterations, ", res.evaluations, " evaluations, ",
@@ -209,18 +219,18 @@ function Base.show(io::IO, res::MatchResult)
     rows = [(t.name, _num(res.values[i]), _goal(t),
              abs(res.values[i] - clamp(res.values[i], t.lower, t.upper)) <= t.tol ? "yes" : "NO")
             for (i, t) in enumerate(prob.targets)]
-    _print_table(io, ("Target", "value", "goal", "met"), rows)
+    _print_table(io, ("Target", "value", "goal", "met"), rows, maxrows)
   end
   if !isempty(prob.minimize)
     rows = [(repr(e), _num(res.values[nt+i])) for (i, e) in enumerate(prob.minimize)]
-    _print_table(io, ("Minimized", "value"), rows)
+    _print_table(io, ("Minimized", "value"), rows, maxrows)
   end
   rows = [(k.name, _num(res.x0[i]), _num(res.x[i]), _num(k.lower), _num(k.upper))
           for (i, k) in enumerate(prob.knobs)]
-  _print_table(io, ("Knob", "before", "after", "lower", "upper"), rows)
+  _print_table(io, ("Knob", "before", "after", "lower", "upper"), rows, maxrows)
   return
 end
-function _print_table(io, header, rows; maxrows=30)
+function _print_table(io, header, rows, maxrows)
   shown = length(rows) > maxrows ? rows[1:maxrows] : rows
   w = [maximum(length, (header[j], (r[j] for r in shown)...)) for j in eachindex(header)]
   println(io, " ", rstrip(join((rpad(header[j], w[j]) for j in eachindex(header)), "  ")))
