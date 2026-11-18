@@ -232,6 +232,9 @@ function _check_open_line(bl, a::DAMap, kw)
     v0[1, 1:length(a.v0)] .= a.v0
     length(a.v0) == 5 && (v0[1, 6] = get(kw, :delta0, 0.0))
   end
+  _check_open_line(bl, v0, kw)
+end
+function _check_open_line(bl, v0::Matrix, kw)
   v = repeat(v0, 13)
   for j in 1:6
     v[1+j, j] += 1e-6
@@ -269,6 +272,9 @@ function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
   end
   kw = Dict{Symbol,Any}(k => _kwarg_value(v, st, dzero) for (k, v) in getfield(tw, :kwargs))
   get(kw, :a_initial, nothing) isa DAMap && _check_open_line(bl, kw[:a_initial], kw)
+  if !isnothing(get(kw, :initial, nothing)) # (the orbit of initial, its values as numbers)
+    _check_open_line(bl, first(_initial_v0(kw[:initial], get(kw, :delta0, nothing))), kw)
+  end
   t = twiss(bl; at=at, cols=cols, base_cols=["index", "s"], GTPSA_descriptor=D,
             as_taylor_series=(!isnothing(pzero) || needmaps), kw...)
   df = t.df
@@ -320,7 +326,7 @@ function _peval(e::_Deriv, st)
 end
 
 _flatten_exprs(e::Union{LatticeExpr,Real}) = Any[e]
-_flatten_exprs(e::AbstractArray) = Any[x for x in e]
+_flatten_exprs(e::AbstractArray) = Any[x for x in vec(e)] # (a matrix too, e.g. of derivatives)
 _knobs(k::Union{Knob,Pair}) = _knobs((k,))
 function _knobs(ks)
   knobs = Knob[]

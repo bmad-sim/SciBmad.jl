@@ -98,9 +98,9 @@ keyword arguments:
     indexes, and/or tuples of s-ranges specifying where to compute the Twiss parameters.
 - `start`, `stop`: Elements (or their beamline indexes) to compute the Twiss parameters of only
     a part of the beamline: from the beginning of `start` (default: the first element) to the
-    beginning of `stop` (default: the end of the beamline). Without `a_initial` these are the
-    periodic Twiss parameters of that part by itself (e.g. of one cell of a ring), with
-    `a_initial` those of an open line that starts at `start`. `s` and `index` in the table are
+    beginning of `stop` (default: the end of the beamline). Without `initial` or `a_initial`
+    these are the periodic Twiss parameters of that part by itself (e.g. of one cell of a ring),
+    with them those of an open line that starts at `start`. `s` and `index` in the table are
     those of the whole beamline, phases are counted from `start`, and the last row is the
     beginning of `stop`.
 - `in_body_coordinates::Bool`: If `true` Twiss parameters inside misaligned elements are not
@@ -115,17 +115,30 @@ keyword arguments:
 - `GTPSA_descriptor::Union{Descriptor,Nothing}`: Custom GTPSA `Descriptor` to use for the Twiss 
     calculation, required to provide to do parametric normal form and lattice function 
     calculations. Default is `Descriptor([order, order, order, order, order, chrom], max(order,chrom))`.
+- `initial`: The Twiss parameters at the start of an "open" line (e.g. a transfer line), by name:
+    `beta1`, `beta2` (required), `alpha1`, `alpha2`, the coupling `c11`, `c12`, `c21`, `c22`, the
+    dispersion `dx`, `dpx`, `dy`, `dpy`, and the orbit `x`, `px`, `y`, `py`, `z`, `pz` (all 0 if
+    not given; `pz` is δ, else `delta0`), with the meanings of the columns of the same names.
+    A `NamedTuple`, a `Dict` (with `Symbol` or `String` keys), a `Context` (whose variables can
+    then be knobs of a match), or a row of another table (`tw.df[end, :]`; its other columns are
+    ignored). The values may be Taylor series in GTPSA parameters, not in the phase space
+    variables or δ. The beam has no synchrotron motion: RF cavities with voltage need
+    `rf_on=false` (or a 6D `a_initial`).
+    Default is `nothing`, to compute the periodic ("closed") lattice Twiss functions
 - `a_initial::Union{DAMap,Nothing}`: A `DAMap` of the initial transformation from normal form 
-    coordinates to laboratory coordinates, to compute "open" lattice Twiss functions. Default is 
-    `nothing`, to compute the periodic ("closed") lattice Twiss functions
+    coordinates to laboratory coordinates, to compute "open" lattice Twiss functions (instead of
+    `initial`). A coasting `a_initial` (without synchrotron motion) also needs `rf_on=false` if
+    the line has RF cavities with voltage. Default is `nothing`
 - `damping::Union{Bool,Nothing}`: Specifies if radiation damping is included. Default is `nothing`,
     which will auto-detect from `a_initial` or the periodic `a`.
 - `delta0`: If the beam is coasting (no longitudinal oscillations), then the Twiss parameters will 
     be computed around this delta-dependent orbit. Else, this will be an initial guess for the 
     6D closed orbit calculation. Default is `0.`. If `a_initial` is provided then this will be ignored, 
-    UNLESS `a_initial` is coasting, in which case this will set the value for δ. 
+    UNLESS `a_initial` is coasting, in which case this will set the value for δ. With `initial`, it
+    is δ if `initial` has no `pz`.
 - `v0`: Initial guess for the closed orbit finder if `a_initial` is not provided, else setting this 
-    will override the orbit expansion origin coordinates in `a_initial.v0`.
+    will override the orbit expansion origin coordinates in `a_initial.v0`. Not with `initial`,
+    which gives the orbit.
 - `spin::Bool`: If `true`, spin is included in the Twiss calculation. Default is `false`, or `true` if 
     `a_initial` includes spin.
 - `base_cols`: A vector of "base columns", that will always be included in the Twiss dataframe regardless 
@@ -191,6 +204,11 @@ linear dispersion).
 - `c21`    : [2,1] component of the Sagan-Rubin coupling matrix C
 - `c22`    : [2,2] component of the Sagan-Rubin coupling matrix C
 - `gammac` : Coupling factor of the Sagan-Rubin coupling formalism
+- `r<ij>`  : Component [i,j] (i, j from 1 to 6) of the linear transfer matrix from the start of
+    the table (the beginning of the beamline, `start`, or the start of an open line) to the
+    row: ∂zᵢ/∂zⱼ, with z = (x, px, y, py, z, pz) at the row and zⱼ at the start, around the orbit
+- `m<ij>`  : Component [i,j] of the one-turn matrix at the row (periodic tables only: from the row
+    once around the ring, or around the part from `start` to `stop`, back to the row)
 - `w1a`    : Horizontal-like Montague function "a" component, requires `chrom > 1` and/or `order > 1`
 - `w2a`    : Vertical-like Montague function "a" component, requires `chrom > 1` and/or `order > 1`
 - `w1b`    : Horizontal-like Montague function "b" component, requires `chrom > 1` and/or `order > 1`
@@ -228,25 +246,13 @@ function twiss(
   chrom::Union{Nothing,Integer} = nothing,
   GTPSA_descriptor::Union{Descriptor,Nothing} = nothing,
 
-  #start::Union{Integer,LatElement,Nothing} = nothing, # TODO: Nothing means compute periodic  
+  initial                           = nothing,
   a_initial::Union{Nothing,DAMap}   = nothing, 
   damping::Union{Nothing,Bool} = nothing, # nothing = auto-detect from a_initial
 
   # Initial input, CO guess if periodic, initial orbit if not periodic
-  delta0::Number=0.,
-  v0::Matrix     = (if isnothing(a_initial)
-        [0. 0. 0. 0. 0. delta0]
-    else
-      t = zeros(1,6)
-      if length(a_initial.v0) == 5
-        t[1:5] .= a_initial.v0
-        t[6] = delta0
-      else
-        t[:] .= a_initial.v0
-      end
-      t
-    end
-  ), 
+  delta0::Union{Nothing,Number} = nothing, # (0 unless initial has pz)
+  v0::Union{Nothing,Matrix} = nothing, # (from delta0 or a_initial, below)
 
   # The lattice functions to compute
   spin::Bool      = isnothing(a_initial) ? false : !isnothing(a_initial.q),
@@ -264,15 +270,45 @@ function twiss(
     # indexes of the whole one
     part, at_part, i_start, i_stop, s_start = _twiss_part(bl, start, stop, at)
     tw = twiss(part; at=at_part, in_body_coordinates, rf_on, order, chrom, GTPSA_descriptor,
-               a_initial, damping, delta0, v0, spin, base_cols, cols, as_taylor_series, coast_tol,
-               symplectic_tol, batch_index)
+               initial, a_initial, damping, delta0, v0, spin, base_cols, cols, as_taylor_series,
+               coast_tol, symplectic_tol, batch_index)
     return _twiss_part_table(tw, bl, i_start, i_stop, s_start)
   end
 
-  if isnothing(a_initial)
-    v0_and_coast = co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
+  if !isnothing(initial)
+    # The start of an open line by its Twiss parameters: a_initial is made from them below (with
+    # the Descriptor), the orbit is v0
+    isnothing(a_initial) || error("Give either `initial` or `a_initial`, not both")
+    isnothing(v0) || error("`initial` gives the initial orbit (`x`, `px`, ...): `v0` is not used")
+    spin && error("`initial` has no spin: for spin use `a_initial`")
+    v0, desc_initial = _initial_v0(initial, delta0)
+    if isnothing(GTPSA_descriptor)
+      GTPSA_descriptor = desc_initial
+    elseif !isnothing(desc_initial) && desc_initial != GTPSA_descriptor
+      error("Specified `GTPSA_descriptor` disagrees with that of the values of `initial`")
+    end
+    v0_and_coast = (v0, true)
   else
-    v0_and_coast = (v0, isodd(NNF.nvars(a_initial))) 
+    delta0 = something(delta0, 0.0)
+    if isnothing(v0)
+      v0 = [0. 0. 0. 0. 0. delta0]
+      if !isnothing(a_initial)
+        v0[1:length(a_initial.v0)] .= a_initial.v0
+      end
+    end
+    if isnothing(a_initial)
+      v0_and_coast = co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
+    else
+      v0_and_coast = (v0, isodd(NNF.nvars(a_initial)))
+    end
+  end
+  # An open line started without synchrotron motion (initial, a coasting a_initial): its maps
+  # can't hold the energy change of a cavity, which would be lost silently
+  if (!isnothing(initial) || !isnothing(a_initial)) && v0_and_coast[2] && rf_on &&
+     any(ele -> !isnothing(ele.RFParams) && !(ele.voltage isa Number && iszero(ele.voltage)),
+         bl.line)
+    error("`initial` and a coasting `a_initial` describe a beam without synchrotron motion, " *
+          "and this line has RF cavities with voltage: use `rf_on=false`, or a 6D `a_initial`")
   end
 
   coast = v0_and_coast[2]
@@ -295,6 +331,14 @@ function twiss(
       cols = vcat(cols, ["n0x", "n0y", "n0z", "dnx", "dny", "dnz"])
     end
   end
+
+  # Only the orbit asked for (for a coasting beam also its derivatives in δ, as the dispersion):
+  # the rows only need the translation to the fixed point (see _twiss_push_a)
+  orbit_only = !spin && all(c -> _orbit_col(c, coast), Iterators.flatten((base_cols, cols)))
+  # The transfer matrix from the start and the one-turn matrix (r and m columns) need the map
+  # from the start to every row
+  transfer = any(c -> occursin(r"^d?[rm][1-6][1-6](?:_[1-9])?$", c),
+                 Iterators.flatten((base_cols, cols)))
 
   # Without `order` and `chrom`, the truncation orders are those the columns need (as TwissExpr
   # chooses them); with synchrotron motion both are the same
@@ -337,6 +381,9 @@ function twiss(
   end
 
   init = TI.InitGTPSA{GTPSA.Dynamic,Descriptor}(; dynamic_descriptor=GTPSA_descriptor)
+  if !isnothing(initial)
+    a_initial = _twiss_initial_map(initial, init)
+  end
 
   # Check if output are TPSA in parameters (delta excluded)
   if isnothing(as_taylor_series)
@@ -432,8 +479,10 @@ function twiss(
                         compute_r=Val{false}()).a
 
   turns = nothing
-  if sparse
-    if isnothing(tr_steps)
+  if sparse || orbit_only
+    if isnothing(tr_steps) && !sparse && !isnothing(maps) && isnothing(a0_rows)
+      tr_steps = tr # (the identity, tracked to every step)
+    elseif isnothing(tr_steps)
       storedesc = GTPSA.desc_current
       init1 = TI.InitGTPSA{GTPSA.Dynamic,Descriptor}(; dynamic_descriptor=Descriptor(6, 1))
       GTPSA.desc_current = storedesc
@@ -451,17 +500,18 @@ function twiss(
   if isnothing(maps)
     tr = _twiss_track(a_initial, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
                       in_body_coordinates, delta_orbit)
-    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(tr, a_initial, canonise,
-                                                                       phase, damp, coast, turns)
+    fac, a0s, transfers, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 =
+      _twiss_push_a(tr, a_initial, canonise, phase, damp, coast, turns, orbit_only, transfer)
   else
     a_right = isnothing(a0_rows) ? a_initial : inv(a0_rows) ∘ a_initial
-    fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_push_a(maps, a_right, canonise,
-                                                                       phase, damp, coast, turns)
+    fac, a0s, transfers, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 =
+      _twiss_push_a(maps, a_right, canonise, phase, damp, coast, turns, orbit_only, transfer)
   end
   _twiss_reference!(beta_gamma_ref, t_ref, tr,
                     tr === tr_steps ? step_save .+ 1 : axes(tr.data.v, 3))
 
-  twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes, delta_orbit)
+  twi = TwissInternal(s, names, kinds, idxs, beta_gamma_ref, t_ref, fac, a0s, transfers, phi1,
+                      phi2, phi3_or_slip, damp1, damp2, damp3, r_and_tunes, delta_orbit)
 
   # Finally, construct the summ and the dataframe (with provided columns)
   # And post-process with the provided columns
@@ -659,6 +709,12 @@ end
 # The truncation orders (order, chrom) that the columns need, as TwissExpr chooses them
 # (_col_order): driving terms (and their δ-derivatives) need all variables to that order, the other
 # columns (chromatic derivatives, Montague functions) only δ
+# A column that only needs the orbit (see orbit_only in twiss). For a coasting beam z and the map
+# a0 are not: factorise canonises a first, which changes the dependence of their time-like row on δ
+_orbit_col(col, coast) = col in ("index", "name", "kind", "s", "x", "px", "y", "py", "pz") ||
+                         (coast ? occursin(r"^d(?:x|px|y|py)(?:_[1-9])?$", col) :
+                                  col in ("z", "a0"))
+
 function _twiss_auto_orders(cols)
   order = 1
   chrom = 1
@@ -700,6 +756,94 @@ function _twiss_make_identity(v0, init, ::Val{coast}, ::Val{spin}) where {coast,
     np += 1
   end
   return DAMap(init=init, nv=nv, np=np, v0=view(v0, :, 1:nv), v_matrix=I, q=(spin ? I : nothing))
+end
+
+# The Twiss parameters that `initial` (see twiss) can give
+const _INITIAL_KEYS = (:beta1, :alpha1, :beta2, :alpha2, :c11, :c12, :c21, :c22, :dx, :dpx, :dy,
+                       :dpy, :x, :px, :y, :py, :z, :pz)
+
+# A value of initial (a NamedTuple, a Dict with Symbol or String keys, e.g. from Python, a Context,
+# a table row), or default
+function _initial_get(initial, name::Symbol, default)
+  if initial isa AbstractDict
+    haskey(initial, name) && return initial[name]
+    haskey(initial, String(name)) && return initial[String(name)]
+    return default
+  end
+  return name in propertynames(initial) ? getproperty(initial, name) : default
+end
+
+# The initial orbit of `initial` (numbers: the values of Taylor series, whose parameter dependence
+# goes into the map), and the Descriptor of its Taylor series (nothing if none)
+function _initial_v0(initial, delta0)
+  names = initial isa AbstractDict ? Symbol.(keys(initial)) : propertynames(initial)
+  for k in names # (other columns of a table row are ignored, e.g. name and phi1; typos are not)
+    k in _INITIAL_KEYS || haskey(_TWISS_FCN_MAP, String(k)) ||
+      (try _col_order(String(k)); true catch; false end) || # (e.g. dbeta1, dx_2, h3000)
+      error("`initial` has no parameter `$k`")
+  end
+  for k in (:beta1, :beta2)
+    isnothing(_initial_get(initial, k, nothing)) && error("`initial` needs `beta1` and `beta2`")
+  end
+  pz = _initial_get(initial, :pz, nothing)
+  !isnothing(pz) && !isnothing(delta0) && error("Give δ either as `pz` of `initial` or `delta0`")
+  orbit = (_initial_get(initial, :x, 0.0), _initial_get(initial, :px, 0.0),
+           _initial_get(initial, :y, 0.0), _initial_get(initial, :py, 0.0),
+           _initial_get(initial, :z, 0.0), something(pz, delta0, 0.0))
+  v0 = Float64[scalar(o) for _ in 1:1, o in orbit]
+  desc = nothing
+  for k in _INITIAL_KEYS
+    v = _initial_get(initial, k, 0.0)
+    v isa TPS || continue
+    isnothing(desc) && (desc = GTPSA.getdesc(v))
+    GTPSA.getdesc(v) == desc || error("The values of `initial` have different GTPSA Descriptors")
+  end
+  return v0, desc
+end
+
+# The map a from normal form coordinates to the coordinates at the start of an open line with the
+# Twiss parameters of `initial`, without synchrotron motion (δ a parameter). As the a of a periodic
+# twiss, it starts at the origin of the normal form coordinates and the orbit is its constant part.
+# a = a0 ∘ a1: a0 the translation to the orbit, linear in δ by the dispersion (with the time-like
+# correction of factorise), a1 linear in x, px, y, py: A = V N, with N the normalizing
+# Courant-Snyder matrices (N11 = sqrt(beta), N21 = -alpha/sqrt(beta), N12 = 0, N22 = 1/N11) and V
+# the inverse of the Vi of the Sagan-Rubin coupling matrix C (see _Vi), [g I C; -C⁺ g I] with
+# g = sqrt(1 - det C), as twiss computes these columns from a
+function _twiss_initial_map(initial, init)
+  id = _twiss_make_identity(zeros(1, 6), init, Val{true}(), Val{false}())
+  xi = id.v
+  vals = Dict(k => _initial_get(initial, k, 0.0) for k in _INITIAL_KEYS)
+  vals[:pz] = 0.0 # (δ: v0)
+  for (k, v) in vals
+    if v isa TPS
+      GTPSA.getdesc(v) == GTPSA.getdesc(xi[1]) ||
+        error("`initial`: `$k` is a Taylor series of another Descriptor than the twiss")
+      any(i -> !iszero(TI.deriv(v, i)), 1:6) && error("`initial`: `$k` may depend on GTPSA " *
+        "parameters, not on the phase space variables or δ (give the dispersion as `dx`, ...)")
+      vals[k] = zero(xi[1]) # (the type of the twiss, e.g. from a TPS with a static Descriptor)
+      TI.copy_tps!(vals[k], v)
+    end
+  end
+  c11, c12, c21, c22 = vals[:c11], vals[:c12], vals[:c21], vals[:c22]
+  detc = c11*c22 - c12*c21
+  scalar(detc) < 1 || error("`initial`: the coupling matrix has a determinant >= 1")
+  g = sqrt(1 - detc)
+  # (Any: a literal with Taylor series would convert the zeros with GTPSA.desc_current)
+  V = Any[g 0 c11 c12; 0 g c21 c22; -c22 c12 g 0; c21 -c11 0 g]
+  b1, b2 = sqrt(vals[:beta1]), sqrt(vals[:beta2])
+  N = Any[b1 0 0 0; -vals[:alpha1]/b1 1/b1 0 0; 0 0 b2 0; 0 0 -vals[:alpha2]/b2 1/b2]
+
+  a0 = one(id)
+  a1 = one(id)
+  orbit = (:x, :px, :y, :py, :z)
+  for k in 1:4
+    o = vals[orbit[k]]
+    eta = vals[(:dx, :dpx, :dy, :dpy)[k]]
+    TI.copy_tps!(a0.v[k], xi[k] + o + eta*xi[6])
+    TI.copy_tps!(a1.v[k], sum(sum(V[k, l]*N[l, m] for l in 1:4)*xi[m] for m in 1:4))
+  end
+  TI.copy_tps!(a0.v[5], xi[5] + vals[:z])
+  return NNF.factorise_a0(a0) ∘ a1
 end
 
 # The map with the coordinates v (and quaternion q, or nothing) of a map like template, e.g.
@@ -763,20 +907,46 @@ function _twiss_turns(tr_steps, a, step_save)
 end
 
 # The functions at every row from a at the start: composed with the maps to the rows, or a itself
-# tracked (saved at the rows by track)
-function _twiss_push_a(maps_or_tr, a_initial, canonise, phase, damp, coast, turns)
+# tracked (saved at the rows by track). With only the orbit asked for (orbit_only), the rows only
+# need a0 (the translation to the fixed point, as factorise gives it), and only the first and the
+# last are factorised (for the summary; the last one's phases are unwrapped with turns, and the
+# longitudinal one against the first row). With transfer, also the map from the start to every
+# row around the fixed point at the start (for the r columns): a (before factorise canonises it)
+# composed with the inverse of a at the first row without its translation (which has no constant
+# part, so that nothing is lost when the variables have lower orders than the parameters)
+function _twiss_push_a(maps_or_tr, a_initial, canonise, phase, damp, coast, turns, orbit_only,
+                       transfer)
   tracked = maps_or_tr isa TrackResult
   n = tracked ? size(maps_or_tr.data.v, 3) : length(maps_or_tr)
   fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(n, a_initial,
                                                                                phase, damp)
+  a0s = Vector{typeof(a_initial)}(undef, n)
+  transfers = Vector{typeof(a_initial)}(undef, transfer ? n : 0)
+  a_start_inv = nothing
   for j in 1:n
     a = tracked ? _twiss_map(a_initial, view(maps_or_tr.data.v, 1, :, j, 2),
                              _view_q(maps_or_tr.data.q, j)) :
                   maps_or_tr[j] ∘ a_initial
-    _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j,
-                  coast, turns)
+    if transfer
+      if j == 1
+        shift = one(a)
+        for p in 1:NNF.nvars(a)
+          t = _linear_coefficient(a.v[p], 0, NNF.nvars(a))
+          shift.v[p] += t - scalar(t)
+        end
+        a_start_inv = inv(inv(shift) ∘ a)
+      end
+      transfers[j] = a ∘ a_start_inv
+    end
+    if orbit_only && 1 < j < n
+      a0s[j] = factorise_a0(a)
+    else
+      _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp,
+                    j, coast, turns; jprev=orbit_only ? 1 : j - 1)
+      a0s[j] = fac[j].a0
+    end
   end
-  return fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
+  return fac, a0s, transfers, phi1, phi2, phi3_or_slip, damp1, damp2, damp3
 end
 _view_q(q) = isnothing(q) ? nothing : view(q, 1, :)
 
@@ -846,11 +1016,11 @@ end
 
 # The functions at row j from a, the map from the start: the phases (and damping) are those from
 # the start, the oscillation phases (all but the slip of a coasting beam) mod 1. Whole turns are
-# added so that the phase is next to that of the previous row (which differs by less than half a
-# turn if the rows are all integration steps), or for the transverse modes next to the phase
+# added so that the phase is next to that of the previous row jprev (which differs by less than
+# half a turn if the rows are all integration steps), or for the transverse modes next to the phase
 # advance turns[k][j] followed through every step (if given: rows that may be further apart)
 function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp, j,
-                       coast, turns)
+                       coast, turns; jprev=j-1)
   damping = !isnothing(damp)
   _clear!(phase)
   damping && _clear!(damp)
@@ -862,7 +1032,7 @@ function _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, ca
     if j != 1 && k <= 2 && !isnothing(turns)
       phi[j] += round(turns[k][j] - TI.scalar(phi[j]))
     elseif j != 1 && (k <= 2 || !coast)
-      phi[j] += round(TI.scalar(phi[j-1]) - TI.scalar(phi[j]))
+      phi[j] += round(TI.scalar(phi[jprev]) - TI.scalar(phi[j]))
     end
   end
   if damping

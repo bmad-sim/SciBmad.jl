@@ -150,7 +150,7 @@ function Base.show(io::IO, tw::Twiss)
   show(io, df; eltypes=true, column_labels = [names(df), units], reserved_display_lines = 2+count+4)
 end
 
-struct TwissInternal{T,F,P,D,R}
+struct TwissInternal{T,F,M,P,D,R}
   s::Vector{T}
   name::Vector{String}
   kind::Vector{String}
@@ -158,6 +158,8 @@ struct TwissInternal{T,F,P,D,R}
   beta_gamma_ref::Vector{Float64}
   t_ref::Vector{T}
   fac::F
+  a0::Vector{M} # the translation to the fixed point at every row (the orbit)
+  transfer::Vector{M} # the map from the start to every row (only if r columns are asked for)
   phi1::P
   phi2::P
   phi3_or_slip::P
@@ -168,13 +170,13 @@ struct TwissInternal{T,F,P,D,R}
   delta0::Float64 # δ of the orbit of a coasting beam
 end
 
-ndiffs(twi::TwissInternal) = NNF.ndiffs(twi.fac[1].a)
-nparams(twi::TwissInternal) = NNF.nparams(twi.fac[1].a)
-nvars(twi::TwissInternal) = NNF.nvars(twi.fac[1].a)
-nhvars(twi::TwissInternal) = NNF.nhvars(twi.fac[1].a)
-iscoasting(twi::TwissInternal) = NNF.iscoasting(twi.fac[1].a)
-maxord(twi::TwissInternal) = NNF.maxord(twi.fac[1].a)
-noi(twi::TwissInternal, i) = unsafe_load(unsafe_load(GTPSA.getdesc(first(twi.fac[1].a.v)).desc).no, i)
+ndiffs(twi::TwissInternal) = NNF.ndiffs(twi.a0[1])
+nparams(twi::TwissInternal) = NNF.nparams(twi.a0[1])
+nvars(twi::TwissInternal) = NNF.nvars(twi.a0[1])
+nhvars(twi::TwissInternal) = NNF.nhvars(twi.a0[1])
+iscoasting(twi::TwissInternal) = NNF.iscoasting(twi.a0[1])
+maxord(twi::TwissInternal) = NNF.maxord(twi.a0[1])
+noi(twi::TwissInternal, i) = unsafe_load(unsafe_load(GTPSA.getdesc(first(twi.a0[1].v)).desc).no, i)
 
 struct TwissCache{M,T,F,A,VF,CM}
  map::M

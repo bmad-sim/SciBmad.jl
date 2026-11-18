@@ -117,8 +117,10 @@ twiss(fodo, order=3).q1[J1=1] # 0.6817
 By default `twiss` computes a standard set of columns at every integration step. `cols` chooses
 the columns (all of them are listed in the reference at the end of this page), and `at` the rows:
 elements (or their beamline indexes) for their beginnings, and s-ranges for every integration step
-in them. Only these locations can then be read, and computing fewer rows is faster. With `at=[]`
-only the values for the whole ring are computed:
+in them. Only these locations can then be read, and computing fewer rows is faster. Asking only for
+the orbit (`x`, `px`, `y`, `py`, `pz`; with RF cavities also `z`, without them the dispersion) is
+faster too, since then none of the optics is computed at the rows. With `at=[]` only the values for
+the whole ring are computed:
 
 ```{code-cell} julia
 twiss(fodo, at=[]).q1                    # 0.14865227408668
@@ -137,10 +139,10 @@ then those of the part.
 ## Open lattices
 
 By default `twiss` computes the periodic Twiss functions of a ring. For a line that is not 
-periodic, such as a transfer line, give the Twiss functions at its start with `a_initial`: the 
-map `a` from normal form coordinates to laboratory coordinates. The `a` of a periodic lattice is 
-the `a` column of its `twiss` table. Here the periodic Twiss functions of a FODO cell continue 
-into a line that starts with the cell:
+periodic, such as a transfer line, give the Twiss parameters at its start with `initial`, by the
+names of the columns: `beta1` and `beta2` (required), `alpha1`, `alpha2`, the dispersion `dx`,
+`dpx`, `dy`, `dpy`, the coupling `c11`, `c12`, `c21`, `c22`, and the orbit `x`, `px`, `y`, `py`,
+`z`, `pz` (all zero if not given):
 
 ```{code-cell} julia
 @elements begin
@@ -149,16 +151,34 @@ into a line that starts with the cell:
   qd = Quadrupole(Kn1=-0.36, L=0.5)
   q3 = Quadrupole(Kn1=0.2, L=0.5)
 end
-cell = Beamline([qf, d, qd, d], species_ref=Species("electron"), pc_ref=18e9)
-a = twiss(cell, cols=["a"], as_taylor_series=true, at=[1]).a[1]
-
 line = Beamline([qf, d, qd, d, q3, d], species_ref=Species("electron"), pc_ref=18e9)
+twl = twiss(line, initial=(beta1=10.0, alpha1=-1.0, beta2=5.0, alpha2=0.5, dx=0.2))
+twl.beta1[end] # 12.30
+```
+
+`initial` can also be a `Dict` (for example a Python dictionary), or a row of another table, to
+continue the Twiss functions of a ring into a line that starts with one of its cells:
+
+```{code-cell} julia
+cell = Beamline([qf, d, qd, d], species_ref=Species("electron"), pc_ref=18e9)
+twc = twiss(cell)
+twiss(line, initial=twc.df[1, :], cols=["beta1", "alpha1", "beta2", "alpha2"])
+```
+
+Through the first four elements these are the periodic Twiss functions of the cell. The values
+may also be Taylor series in GTPSA parameters, to see how the Twiss functions along the line change
+with them (see [](#pnf)). `initial` describes a beam without synchrotron motion, so a line
+with RF cavities needs `rf_on=false`. For a start with synchrotron motion, spin, or nonlinear
+terms, give instead the map `a` from normal form coordinates to laboratory coordinates as
+`a_initial`. The `a` of a periodic lattice is the `a` column of its `twiss` table:
+
+```{code-cell} julia
+a = twiss(cell, cols=["a"], as_taylor_series=true, at=[1]).a[1]
 twiss(line, a_initial=a, cols=["beta1", "alpha1", "beta2", "alpha2"])
 ```
 
-Through the first four elements these are the periodic Twiss functions of the cell. The same 
-works for matching: the Twiss functions at the end of the line can be matched to a target as in 
-[](#optimize), with `a_initial` given to `twiss`.
+The same works for matching: the Twiss functions at the end of the line can be matched to a target
+as in [](#optimize), and the Twiss parameters at the start can be knobs themselves (see there).
 
 ## Resonance driving terms and detuning (`h` columns)
 

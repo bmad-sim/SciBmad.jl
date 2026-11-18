@@ -10,15 +10,15 @@ function _twiss_df(colnames, twi, include_start, include_end, ::Val{as_taylor_se
   end
   row1 = Vector{Any}(undef, ncols)
 
-  map_cache = build_cache(typeof(twi.fac[1].a))
-  tps_cache = build_cache(typeof(first(twi.fac[1].a.v)))
+  map_cache = build_cache(typeof(twi.a0[1]))
+  tps_cache = build_cache(typeof(first(twi.a0[1].v)))
   float_cache = build_cache(Float64)
   matrix_cache = build_cache(Matrix{Float64})
-  vf_cache = build_cache(complex(typeof(zero(VectorField, twi.fac[1].a))))
+  vf_cache = build_cache(complex(typeof(zero(VectorField, twi.a0[1]))))
 
   persistent_matrix_cache = build_cache(Matrix{Float64})
-  persistent_map_cache = build_cache(typeof(twi.fac[1].a))
-  persistent_cmap_cache = build_cache(complex(typeof(twi.fac[1].a)))
+  persistent_map_cache = build_cache(typeof(twi.a0[1]))
+  persistent_cmap_cache = build_cache(complex(typeof(twi.a0[1])))
 
   cache = TwissCache(map_cache, tps_cache, float_cache, matrix_cache, vf_cache, persistent_matrix_cache, persistent_map_cache, persistent_cmap_cache)
   for i in 1:ncols

@@ -36,6 +36,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
 
 **Optics and nonlinear analysis**
 - Twiss functions, linear and nonlinear (Lie series normal form methods), including spin and radiation
+- Linear transfer matrices and one-turn matrices at every location
 - Twiss functions anywhere: at every integration step inside elements, for a part of a beamline,
   and for open lattices given the initial optics
 - Resonance driving terms and amplitude-dependent tunes
@@ -46,6 +47,8 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Matching of any Twiss quantity (e.g. tunes, chromaticities, beta functions, Montague functions,
   resonance driving terms, the invariant spin field, amplitude-dependent tunes) at any location, by varying any lattice
   parameter, with exact derivatives computed by automatic differentiation
+- Orbit correction and fitting of measured orbit response matrices (e.g. finding gradient errors)
+  as matches, with any number of correctors
 - Values and exact derivatives of any Twiss quantity, to use with any other optimizer
   (`value_and_jacobian`)
 - Everything differentiable (forwards/backwards/Taylor mode) with respect to anything,
@@ -53,7 +56,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
 
 **Lattices**
 - Interdependent parameters through lazily-evaluated deferred expressions, with switchable
-  contexts
+  contexts in which values can be tried and restored (e.g. turn the RF off and back on)
 - Arbitrary placements and orientations of elements
 - Bmad-style element searches by name, with wild cards, ranges and regular expressions
 

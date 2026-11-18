@@ -220,11 +220,80 @@ many as fit in the terminal; `print(res)` shows all of them).
 `step` limits how much a knob may change in one iteration (`@knob qf.Kn1 step=0.01`). A knob is
 also an expression, so it can appear in targets: `@knob(qf.Kn1) + @knob(qd.Kn1) <= 0.05`.
 
+## Orbit Correction
+
+The closed orbit is a Twiss quantity like any other (`tw.x[bpm]`, `tw.y[bpm]`, ...), so orbit
+correction is a match too. Here is a ring of ten cells, each with a misaligned quadrupole, a
+horizontal corrector and a BPM. The strengths of all correctors come from one vector variable of
+the context, `kicks` (and gradient errors of the quadrupoles from another, `dk`, used below):
+
+```{code-cell} julia
+ncell = 10
+offsets = 1e-4 .* [0.8, -1.2, 0.3, 1.5, -0.6, 0.9, -1.1, 0.2, 1.3, -0.4] # in m
+elements = LatElement[]
+bpms = LatElement[]
+for i in 1:ncell
+  bpm = Marker()
+  push!(bpms, bpm)
+  append!(elements, [Quadrupole(Kn1=DefExpr(c -> 0.36 + c.dk[i]), L=0.5, x_offset=offsets[i]),
+                     Multipole(Kn0L=DefExpr(c -> c.kicks[i])), Drift(L=0.2), bpm,
+                     SBend(L=6.5, angle=pi/ncell), Drift(L=0.2),
+                     Quadrupole(Kn1=-0.36, L=0.5), Drift(L=0.2),
+                     SBend(L=6.5, angle=pi/ncell), Drift(L=0.2)])
+end
+ring = Beamline(elements; species_ref=Species("electron"), pc_ref=18e9);
+ring.context.kicks = zeros(ncell);
+ring.context.dk = zeros(ncell);
+
+twr = TwissExpr(ring)
+orbit = [twr.x[bpm] for bpm in bpms]
+maximum(abs, value(orbit)) # 5.8e-4 m at the BPMs
+```
+
+`minimize` makes the orbit at the BPMs as small as possible (in the least-squares sense), varying
+every corrector:
+
+```{code-cell} julia
+res = match!(vary = [@knob(ring.context.kicks)], minimize = orbit)
+maximum(abs, value(orbit)) # 3e-15 m
+```
+
+Only the orbit is computed for this (none of the optics at the BPMs), which is faster. The closed
+orbit needs stable linear optics: if the errors make the ring unstable, correct the orbit first
+with the sextupoles turned off, then turn them on in steps.
+
+The orbit response matrix, the change of the orbit at each BPM per kick of each corrector, is a
+matrix of derivatives (`deriv`, see "Values and Derivatives" below), here with respect to the
+entries of `kicks`:
+
+```{code-cell} julia
+R = [deriv(twr.x[bpm], Knob(ring.context, :kicks, j)) for bpm in bpms, j in 1:ncell]
+```
+
+A measured response matrix can then be fitted, as in LOCO. It depends on the focusing of the ring,
+not on the misalignments (they shift the orbit, but not its response to a kick, as long as there
+are no sextupoles), so it is fitted with gradient errors. Here the "measurement" is the response
+matrix of the ring with the gradient errors `dk_true`, and the model, which starts without them,
+finds them again:
+
+```{code-cell} julia
+dk_true = 1e-3 .* [1.0, -2.0, 0.5, 1.5, -1.0, 0.8, -0.3, 2.0, -1.2, 0.4]
+ring.context.dk = copy(dk_true)
+R_measured = value(R)
+ring.context.dk = zeros(ncell)
+
+res = match!(vary = [@knob(ring.context.dk)], targets = vec(R .== R_measured))
+maximum(abs, ring.context.dk - dk_true) # 8e-13: the errors are found again
+```
+
+Further knobs fit the same way, for example quadrupole tilts for the coupling (with the vertical
+orbit in the matrix) and the calibrations of the BPMs and correctors.
+
 ## Lines That Are Not Periodic
 
 For a transfer line, a linac, or a section of a ring by itself, give the Twiss functions at its
-start with `a_initial` (see [Open lattices](twiss.md)). This can be the `a` of another
-`TwissExpr`, so that the line continues from another beamline. Here a line of four quadrupoles
+start with `initial` or `a_initial` (see [Open lattices](twiss.md)). `a_initial` can be the `a` of
+another `TwissExpr`, so that the line continues from another beamline. Here a line of four quadrupoles
 follows the FODO cell, and is matched to a waist with beta functions of 10 m at its end:
 
 ```{code-cell} julia
@@ -251,6 +320,18 @@ varied in the same match. A whole ring can be built this way piece by piece: mat
 then a dispersion suppressor that follows it (`tl.dx[end] == 0, tl.dpx[end] == 0`), then the
 straight section that follows the suppressor, and finally the tunes and chromaticities of the
 complete ring.
+
+The Twiss parameters at the start can be knobs too: give `initial` as a `Context`, and vary its
+variables. Here, with the quadrupoles as matched above, the beam at the start of the line that
+ends in a waist with beta functions of 5 m:
+
+```{code-cell} julia
+ini = Context(beta1=10.0, alpha1=0.0, beta2=10.0, alpha2=0.0)
+ti = TwissExpr(line; initial=ini)
+res = match!(vary    = [@knob(ini.beta1), @knob(ini.alpha1), @knob(ini.beta2), @knob(ini.alpha2)],
+             targets = [ti.beta1[end] == 5, ti.beta2[end] == 5,
+                        ti.alpha1[end] == 0, ti.alpha2[end] == 0])
+```
 
 ## Values and Derivatives
 

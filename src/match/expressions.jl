@@ -150,7 +150,9 @@ are set from the expressions. The truncation orders are chosen from the quantiti
 can be given to use a higher one.
 
 `a_initial` may be the `a` of another `TwissExpr`, e.g. `TwissExpr(line; a_initial=tw.a[end])`,
-to continue the Twiss functions of another beamline.
+to continue the Twiss functions of another beamline. `initial` may be a `Context`, whose variables
+can then be knobs, e.g. to match the Twiss parameters at the start of a line:
+`ini = Context(beta1=10.0, beta2=10.0)`, `TwissExpr(line; initial=ini)`, `@knob(ini.beta1)`.
 
 ## Quantities
 - Summary values: `tw.q1`, `tw.q2`, `tw.q3`, `tw.etac`, `tw.alphac`, `tw.qspin`, `tw.damp1`, ...

@@ -23,6 +23,7 @@ All are local clones in `~/.julia/dev` (local branches may be ahead of GitHub):
 - `BatchSolve` (batched Newton), `FundamentalFrequencies` (NAFF), `AtomicAndPhysicalConstants`.
 
 Versions are coupled: SciBmad 0.7 needs BeamTracking 0.9, Beamlines 0.12, AtomicAndPhysicalConstants 0.12.
+SciBmad 0.8 will need Beamlines 0.13 (contexts without the global stack, below).
 
 ## How to work here
 
@@ -274,6 +275,70 @@ plainly what was not verified and what could be wrong. Never present unverified 
    right but counted the orbit twice in `x` and broke order 2: the normal form takes that constant
    as a displacement.) Tested against tracking and the expansion in δ from δ = 0, orders 1 and 2
    and `chrom=2`.
+   **Orbit-only rows (Nov 2026, maintainer: the same machinery for `twiss` and `TwissExpr`):** the
+   orbit is `TwissInternal.a0[j]` (its own vector; `fac` holds the rest of `factorise`). When all
+   columns only need the orbit (`_orbit_col`: base columns, `x`, `px`, `y`, `py`, `pz`; 6D also
+   `z` and `a0`; a coasting beam also `dx` … `dpy`, `dx_n`; not spin), the rows between the first
+   and the last only get `factorise_a0` (NNF: the first factor of `factorise`, the same code), and
+   the last row's tunes get their whole turns from `_twiss_turns` (with rows at every step and
+   uniform orders from the identity tracking already done, else the order-1 tracking of sparse
+   rows); the longitudinal phase is unwrapped against the first row (`jprev`). Bitwise equal to the
+   full path in every column and summary value (18 cases: coasting with dispersion and `dx_2`, 6D
+   with `z` and `a0`, `delta0`, sparse rows, uniform and mixed parameter orders, an open line, the
+   ESR; a wrong `a0` at the rows fails 15). For a coasting beam `z` and `a0` must take the full
+   path: `factorise` canonises `a` first, and the canoniser's time-like row has a δ term, which
+   changes their δ and parameter dependence (their values agree). ESR: orbit 210 -> 147 ms,
+   orbit with `dx_2` (`chrom=2`) 690 -> 385 ms; `value_and_jacobian` of the orbit at 40 BPMs in
+   40 correctors (vector knob) 168 -> 65 ms. Next (not done): unstable linear optics (the start
+   from `normal(m, 0)`, Newton rounds for higher orders, summary `NaN`).
+   **`initial` (Nov 2026, maintainer's choices):** the start of an open line by name, the names of
+   the columns (`beta1`, `beta2` required; `alpha1`, `alpha2`, `c11` … `c22`, `dx` … `dpy`, `x`
+   … `z`, `pz` = δ, else `delta0`; giving both, or `v0`, or `a_initial`, is an error). Anything
+   with names: NamedTuple, Dict (Symbol or String keys: a Python dict through juliacall works,
+   checked), a `Context` (its variables are then knobs of `TwissExpr`; the engine's
+   `_check_open_line` takes the orbit from `_initial_v0`), a table row (other column names are
+   ignored, unknown names are errors, via `_col_order`). `_twiss_initial_map` builds a coasting
+   `a` = `factorise_a0`(orbit + η δ) ∘ (A = V N) and the rest is the `a_initial` path. **The `a` of
+   `twiss` starts at the normal form origin (`v0` = 0) and the orbit is its constant part**
+   (building it around the orbit as `v0` lost the orbit: β off by 0.19 with a kicked orbit). Values
+   may be Taylor series in parameters (copied into the twiss TPS type: a static-Descriptor TPS
+   plus a dynamic one is a MethodError), not in the variables or δ (error). The linear optics can
+   only depend on parameters if the total order is ≥ 2 (x·p): Descriptor(6,1,np,1) gives numbers,
+   as before. RF cavities with voltage and `rf_on` are an error, for `initial` and a coasting
+   `a_initial` alike (maintainer): the coasting map drops the energy change (an off-crest cavity:
+   pz 0 instead of 2e-4, β1 off by 2.5e-4 and 3.7e-4). Zero-voltage cavities are allowed (the
+   ESR test lattice has 20). Verified: periodic row 1 -> open twiss of a coupled ring
+   (c11 0.78, dy 0.5) with a kicked orbit at δ = 1e-3 to 8e-14 (C negated: 1.6 off, transposed:
+   0.12; the testset fails 20 of 100 with C transposed), thin-quadrupole Courant-Snyder, start/stop,
+   `chrom=2` against differences in δ, parametric c12 and x against differences, `TwissExpr`
+   `value` bitwise equal to `twiss`, its Jacobian in six initial values and a strength against
+   differences (≤ 7e-9), `match!` of the start to a waist. Testset "Open-line Twiss from initial
+   Twiss parameters"; the bitwise suite is unchanged (the `v0`/`delta0` defaults moved into the
+   body).
+   **Transfer matrix columns `r11` … `r66` (Nov 2026):** r_ik = ∂z_i/∂z_k from the start of the
+   table (Xsuite's `r_ij` convention, checked in its source). Only when asked for, the push loop
+   stores per row `a_j ∘ inv(ã_1)` (`TwissInternal.transfer`), with `a` before `factorise`
+   canonises it (the canonised `fac[j].a` include the rotation by the phase advance) and `ã_1` the
+   first row's `a` without its parameter-dependent translation (a pure translation: a coasting
+   `a0` also changes z with x and px). That is the map around the fixed point for the parameters,
+   and the inverse has no constant part, so mixed orders lose nothing (composing the uncentred map
+   with the translation afterwards lost the x² feed-down: dr11/dδ -0.116 instead of -0.065). Numbers
+   without parameters are `NNF.jacobian`; with parameters or a coasting δ Taylor series
+   (`_linear_coefficient`), and the δ column of a coasting beam r_i6 = η_i - Σ r_ik η0_k (η0 from
+   `transfer[1]`, not `a0[1]`: with `a0` r56 was 3.9e-5 off). Checked against central differences of
+   tracking (values to ~1e-9, the differences' own error in z; cases coasting, 6D, sparse rows,
+   mixed orders, `start` with `a_initial`, open line), symplecticity 9e-16, d r12/dKn1 with an orbit
+   that moves (twiss and `TwissExpr`) and the δ dependence of r11, r12, r16, r56 (mixed and uniform
+   orders) against differences; testset "Transfer matrix columns" (uncentred: 10 of 15 fail;
+   η0 from `a0`: 1 fails). **One-turn matrix `m11` … `m66`** (periodic tables only): M(s) =
+   R(s) R(end) R(s)⁻¹; with parameters from the centred maps without their constant parts
+   (`cj ∘ center(T_end) ∘ inv(cj)`), and for a coasting δ m_i6 = η_i − Σ m_ik η_k plus, in z, the
+   δ-derivative of the slip per turn (z of the fixed point is not periodic: without it m56 was
+   4.5e-2 off). Checked against one turn of tracking from the row (`start` at the row, turn 2),
+   m at the first row = r at the end (9e-16), a periodic part, d m12/dKn1, δ dependence of m11,
+   m16, m52, m56 (no slip term: 4 of 27 fail; R⁻¹ R(end) R: 3 fail).
+   **NNF trap:** `copy` of a coasting `DAMap` shares the δ row (`v[6]`) with the original, so
+   writing into the copy's `v[6]` changes the original.
 5. `_twiss_df`: evaluates every column for every row. The caches in `TwissCache` hold one row's 
    intermediate results (`a1_mat`, H/B matrices, …) shared by its columns (`persistent_*` caches
    live for the whole table). The rows go in blocks of 64, column by column (`_twiss_df_column!`,
@@ -446,8 +511,34 @@ values kept alive for the save). With it off the kernels' native code is identic
   order above 1) lacked the sine: -0.666 instead of 0.0205 on a small ring. Fixed; values and
   derivatives in quadrupole strengths, a length and the RF voltage agree with differences.
 
+### Contexts (Beamlines 0.13, Nov 2026)
+
+- `GLOBAL_CONTEXTS` is gone (it could not override a Beamline's own value: a context looked at its
+  own variables first). Each `Context` has a `saved` stack: `push!(c; k=v, ...)` sets values and
+  remembers the old ones (or that a variable was new), `pop!(c)` restores, `withvalues(f, c; ...)`
+  restores in `finally`, also what `f` pushed and did not pop. A typed context coerces all values
+  before setting any. `merge`/`copy` start with nothing saved.
+- Lookup is the context's own variables only. Elements not in a Beamline (and a `DefExpr` called
+  without a context, `deval` without one) use `DEFAULT_CONTEXT` (maintainer's choice, instead of
+  an error); BeamTracking's `track!` of a single element too. `NULL_CONTEXT` stays as the empty
+  context the members of a Branch/Lattice store.
+- DataStructures is no longer a Beamlines dependency. Checked: Beamlines (1,486 + 3,718),
+  BeamTracking (all) and SciBmad suites; the twiss bitwise suite; the `defexpr.md` page and Beamlines'
+  quickstart blocks as scripts. SciBmad, BeamTracking's src and the matching engine never used
+  the stack. Julia 1.10 and 1.13.
+- **Julia 1.13.3 bug:** a `while` loop inside a `finally` block segfaults when the `try` block
+  throws (plain Julia: `try return f() finally while length(v) > n; pop!(v) end end` with
+  `f() = error()`; also without `return`; 1.10 is fine). A function called from `finally` that
+  runs the loop works: `withvalues` uses `_pop_to!`. Don't write loops in `finally` blocks.
+
 ### NonlinearNormalForm facts
 
+- `factorise_a0(a)` (Nov 2026, NNF after 0.5.5, exported): `factorise`'s first factor `a0` alone
+  (`a ∘ zero(a)` plus the identity; for a coasting beam with the time-like correction), the code
+  `_factorise` itself calls (bitwise; NNF tests check it against `factorise(a).a0`). Note that
+  `factorise` applies it to the canonised `a`. `normal(m, 0)` returns only the first-order
+  parameter-dependent fixed point (`-(M_x - I)⁻¹ M_p`, before any eigen-decomposition): it needs
+  no stable optics.
 - `factorise(a; canonise, phase, damp, damping)` returns `(a0, a1, a2, a, r)` (plus `as` with spin): 
   canonise 0 = linear (order 1), 1 = linear with parameters, 2 = nonlinear. `twiss` uses `a`, `a0`, 
   `a1`, `a2`, `as`, never `r` (it calls it with `compute_r=Val(false)`). At order 1 it runs the general machinery (map inversions, compositions, 
@@ -707,7 +798,8 @@ Open items:
   all pages are done (README, `lattices/RCSV5S0.jl` too). `coordinates.md` no longer describes 
   what SciBmad does not have (floor coordinates, `FloorParams`, `Girder`, `Fork`, reversed 
   elements, reflection patches); it keeps the frame math the misalignment sections use. 
-  `twiss.md` has an open-lattice example (`a_initial`, tested in "Open-lattice Twiss"). 
+  `twiss.md` has an open-lattice example (`initial` and `a_initial`, tested in "Open-lattice Twiss"
+  and "Open-line Twiss from initial Twiss parameters").
   Open for the maintainer:
   - A showcase draft (README gallery, first-look example, Speed section, a Performance page with
     figures) is on the local branch `docs-showcase`, not for release; figure data and scripts in

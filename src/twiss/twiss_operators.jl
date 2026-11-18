@@ -7,8 +7,8 @@ throwunreachable() = error("Unreachable error hit, please submit a minimal worki
 
 @inline _a(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a, NNF.VARS_CPARAM)
 @inline _a(j, twi, cache, ::Val{true}) = twi.fac[j].a
-@inline _a0(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a0, NNF.VARS_CPARAM)
-@inline _a0(j, twi, cache, ::Val{true}) = twi.fac[j].a0
+@inline _a0(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.a0[j], NNF.VARS_CPARAM)
+@inline _a0(j, twi, cache, ::Val{true}) = twi.a0[j]
 @inline _a1(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a1, NNF.VARS_CPARAM)
 @inline _a1(j, twi, cache, ::Val{true}) = twi.fac[j].a1
 @inline _a2(j, twi, cache, ::Val{false}) = NNF.jacobian(twi.fac[j].a2, NNF.VARS_CPARAM)
@@ -312,6 +312,113 @@ end
 @inline _c21(j, twi, cache, ::Val{as_tps}) where {as_tps} = _ckl(j, twi, cache, Val{as_tps}(), 21)
 @inline _c22(j, twi, cache, ::Val{as_tps}) where {as_tps} = _ckl(j, twi, cache, Val{as_tps}(), 22)
 
+# The linear transfer matrix from the start of the table to row j: r_ik = ∂z_i/∂z_k of the
+# coordinates at the start, around the orbit, from the map from the start around the fixed point
+# at the start (twi.transfer). Like the orbit, a Taylor series in the parameters (and in δ of a
+# coasting beam) if there are any, then around the fixed point for those parameters. For δ of a
+# coasting beam (at fixed coordinates at the start): r_i6 = η_i - Σ_k r_ik η0_k, with η and η0
+# the derivatives in δ of the fixed point at the row and at the start
+const _R_SYMS = [Symbol("r", i, k) for i in 1:6, k in 1:6]
+@inline function _rik(j, twi, cache, ::Val{as_tps}, i, k) where {as_tps}
+  sym = _R_SYMS[i, k]
+  if haskey(cache.matrix, :rmat)
+    return cache.matrix[:rmat][i, k]
+  elseif haskey(cache.tps, sym)
+    return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
+  end
+  m = twi.transfer[j]
+  if !iscoasting(twi) && ndiffs(twi) == 6
+    R = NNF.jacobian(m, NNF.VARS)
+    cache.matrix[:rmat] = R
+    return R[i, k]
+  end
+  nv = nvars(twi)
+  for p in 1:6, q in 1:nv
+    cache.tps[_R_SYMS[p, q]] = _linear_coefficient(m.v[p], q, nv)
+  end
+  if nv < 6 # (δ of a coasting beam)
+    # (at the start the map is the translation to the fixed point itself, as in transfer: a0 of a
+    # coasting beam would also change z with x and px)
+    eta0 = [TI.deriv(_linear_coefficient(twi.transfer[1].v[q], 0, nv), 6) for q in 1:nv]
+    for p in 1:nv
+      r = TI.deriv(_linear_coefficient(m.v[p], 0, nv), 6)
+      for q in 1:nv
+        r -= cache.tps[_R_SYMS[p, q]]*eta0[q]
+      end
+      cache.tps[_R_SYMS[p, 6]] = r
+    end
+    cache.tps[_R_SYMS[6, 6]] = one(m.v[6])
+  end
+  return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
+end
+
+# The one-turn matrix at row j of a periodic table: M(s) = R(s) R(end) R(s)⁻¹ (R: the r columns,
+# R(end) the one-turn matrix at the start). With parameters (or δ of a coasting beam) from the maps
+# around the fixed point without it (no constant part: their linear parts compose exactly), and for
+# δ, m_i6 = η_i - Σ_k m_ik η_k with η the derivative in δ of the fixed point at the row (plus that
+# of the slip per turn in z)
+const _M_SYMS = [Symbol("m", i, k) for i in 1:6, k in 1:6]
+@inline function _mik(j, twi, cache, ::Val{as_tps}, i, k) where {as_tps}
+  isnothing(twi.r_and_tunes) && error("The one-turn matrix (m columns) needs a periodic table: ",
+                                      "without `a_initial`")
+  sym = _M_SYMS[i, k]
+  if haskey(cache.matrix, :mmat)
+    return cache.matrix[:mmat][i, k]
+  elseif haskey(cache.tps, sym)
+    return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
+  end
+  m = twi.transfer[j]
+  if !iscoasting(twi) && ndiffs(twi) == 6
+    R = NNF.jacobian(m, NNF.VARS)
+    M = R*NNF.jacobian(twi.transfer[end], NNF.VARS)*inv(R)
+    cache.matrix[:mmat] = M
+    return M[i, k]
+  end
+  nv = nvars(twi)
+  # (without the constant part: the rows of the variables only, as the δ row of a copy is that of
+  # the map itself)
+  center(t) = (c = copy(t); for p in 1:nv; c.v[p] -= _linear_coefficient(t.v[p], 0, nv); end; c)
+  cj = center(m)
+  mt = cj ∘ center(twi.transfer[end]) ∘ inv(cj)
+  for p in 1:6, q in 1:nv
+    cache.tps[_M_SYMS[p, q]] = _linear_coefficient(mt.v[p], q, nv)
+  end
+  if nv < 6 # (δ of a coasting beam)
+    eta = [TI.deriv(_linear_coefficient(m.v[q], 0, nv), 6) for q in 1:nv]
+    # (z of the fixed point is not periodic: after one turn it has slipped by the same amount at
+    # every row, the change of z from the start to the end)
+    slip = _linear_coefficient(twi.transfer[end].v[nv], 0, nv) -
+           _linear_coefficient(twi.transfer[1].v[nv], 0, nv)
+    for p in 1:nv
+      r = p == nv ? eta[p] + TI.deriv(slip, 6) : eta[p]
+      for q in 1:nv
+        r -= cache.tps[_M_SYMS[p, q]]*eta[q]
+      end
+      cache.tps[_M_SYMS[p, 6]] = r
+    end
+    cache.tps[_M_SYMS[6, 6]] = one(m.v[6])
+  end
+  return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
+end
+
+# The coefficient of the variable k in t, to first order in the variables 1:nv, as a Taylor series
+# in the rest (the parameters, and δ of a coasting beam); for k = 0 the part of t without them
+function _linear_coefficient(t, k, nv)
+  out = zero(t)
+  ords = zeros(UInt8, TI.ndiffs(t))
+  v = Ref{TI.numtype(typeof(t))}()
+  idx = TI.cycle!(t, -1, mono=ords, val=v) # (-1: from the constant term)
+  while idx > -1
+    nvar = sum(Int, view(ords, 1:nv))
+    if k == 0 ? nvar == 0 : (nvar == 1 && ords[k] == 1)
+      k == 0 || (ords[k] = 0)
+      TI.setm!(out, v[], ords)
+    end
+    idx = TI.cycle!(t, idx, mono=ords, val=v)
+  end
+  return out
+end
+
 @inline function _Vi(j, twi, cache, ::Val{as_tps}) where {as_tps}
   if haskey(cache.matrix, :Vi)
     return cache.matrix[:Vi]
@@ -528,7 +635,7 @@ end
     return as_tps ? cache.tps[sym] : scalar(cache.tps[sym])
   end
 
-  o = twi.fac[j].a0.v[k]
+  o = twi.a0[j].v[k]
   if k == 6 && iscoasting(twi) && twi.delta0 != 0 # (δ is a parameter of the maps, without its value)
     o = o + twi.delta0
   end
@@ -665,7 +772,7 @@ end
 # (with parameters, the cached pz column is a Taylor series that also contains δ)
 @inline function _slip_rel_p(j, twi, cache, phi3)
   if iscoasting(twi) && TI.is_tps_type(typeof(phi3)) isa TI.IsTPSType
-    return 1 + twi.delta0 + twi.fac[j].a0.v[6]
+    return 1 + twi.delta0 + twi.a0[j].v[6]
   end
   if !haskey(cache.float, :pz) && !haskey(cache.tps, :pz)
     _pz(j, twi, cache, Val{true}()) # Force (potentially TPSA) calculation of pz
@@ -851,7 +958,7 @@ end
     end
 
     a = twi.fac[j].a
-    a0 = twi.fac[j].a0
+    a0 = twi.a0[j]
     a_isf = inv(a0) ∘ a
     ai_isf = inv(a_isf)
 

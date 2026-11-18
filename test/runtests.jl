@@ -306,6 +306,156 @@ using Test
     end
   end
 
+  @testset "Open-line Twiss from initial Twiss parameters (initial)" begin
+    # Started with the periodic Twiss parameters of row 1 (a coupled ring with dispersion and a
+    # kicked orbit, at δ = 1e-3), the open line reproduces the periodic Twiss (with the coupling
+    # of the opposite sign or transposed, β1 is off by 1.6 and 0.12)
+    @elements begin
+      qf = Quadrupole(Kn1=0.36, L=0.5)
+      qd = Quadrupole(Kn1=-0.36, L=0.5)
+      sq = Quadrupole(Ks1=0.05, L=0.2)
+      d = Drift(L=0.6)
+      b = SBend(L=1.0, g_ref=0.05, angle=0.05)
+      sx = Sextupole(Kn2=2.0, L=0.2)
+      kick = Kicker(Kn0L=2e-4, Ks0L=-1e-4)
+    end
+    ring = Beamline([qf, d, b, sx, d, sq, qd, d, b, kick, d], E_ref=18e9,
+                    species_ref=Species("electron"))
+    cols = ["beta1", "alpha1", "beta2", "alpha2", "c11", "c12", "c21", "c22", "gammac", "dx",
+            "dpx", "dy", "dpy", "x", "px", "y", "py", "pz", "phi1", "phi2"]
+    tp = twiss(ring; cols, delta0=1e-3)
+    r1 = tp.df[1, :]
+    @test abs(r1.c11) > 0.5 && abs(r1.dy) > 0.1 && abs(r1.x) > 1e-3
+    tw = twiss(ring; initial=r1, cols) # (a table row: its other columns are ignored)
+    for c in cols
+      @test tw.df[!, c] ≈ tp.df[!, c] atol=1e-12
+    end
+    ini = (beta1=r1.beta1, alpha1=r1.alpha1, beta2=r1.beta2, alpha2=r1.alpha2, c11=r1.c11,
+           c12=r1.c12, c21=r1.c21, c22=r1.c22, dx=r1.dx, dpx=r1.dpx, dy=r1.dy, dpy=r1.dpy,
+           x=r1.x, px=r1.px, y=r1.y, py=r1.py, pz=r1.pz)
+    @test twiss(ring; initial=ini, cols).df == tw.df
+    # A Dict with String keys (as from a Python dict), δ from delta0
+    dct = Dict{String,Any}(String(k) => v for (k, v) in pairs(ini) if k != :pz)
+    @test twiss(ring; initial=dct, delta0=r1.pz, cols).df == tw.df
+    # A part of the line (start, stop): the rows of the whole open line
+    i4 = findfirst(==(4), tp.df.index)
+    tpart = twiss(ring; initial=tp.df[i4, :], cols, start=4, stop=9)
+    @test tpart.df.index == tp.df.index[i4:i4+5] # (the last row: the beginning of stop)
+    for c in setdiff(cols, ["phi1", "phi2"])
+      @test tpart.df[!, c] ≈ tp.df[i4:i4+5, c] atol=1e-12
+    end
+
+    # Uncoupled thin quadrupoles and drifts: β and α propagate as Courant-Snyder
+    qf = Multipole(Kn1L=0.8); qd = Multipole(Kn1L=-0.7); d = Drift(L=1.0)
+    bl = Beamline([qf, d, qd, d]; species_ref=Species("electron"), pc_ref=1e9)
+    to = twiss(bl; initial=(beta1=3.0, alpha1=-0.4, beta2=5.0, alpha2=1.2))
+    quad = (k -> [1 0; -k 1.0], k -> [1 0; k 1.0]) # Thin quadrupole in x and y
+    for (p, β0, α0, β, α, ϕ) in ((1, 3.0, -0.4, to.df.beta1, to.df.alpha1, to.df.phi1),
+                                  (2, 5.0, 1.2, to.df.beta2, to.df.alpha2, to.df.phi2))
+      γ0 = (1 + α0^2)/β0
+      T = [1 0; 0 1.0]
+      @test β[1] ≈ β0 && α[1] ≈ α0
+      for (i, m) in enumerate([quad[p](0.8), [1 1; 0 1.0], quad[p](-0.7), [1 1; 0 1.0]])
+        T = m*T
+        @test β[i+1] ≈ T[1,1]^2*β0 - 2T[1,1]*T[1,2]*α0 + T[1,2]^2*γ0 atol=1e-13
+        @test α[i+1] ≈ -T[1,1]*T[2,1]*β0 + (T[1,1]*T[2,2] + T[1,2]*T[2,1])*α0 -
+            T[1,2]*T[2,2]*γ0 atol=1e-13
+        @test ϕ[i+1] ≈ atan(T[1,2], T[1,1]*β0 - T[1,2]*α0)/(2pi) atol=1e-14
+      end
+    end
+
+    # chrom=2: δ derivatives against central differences in δ (the start orbit moving with the
+    # dispersion, the start optics fixed)
+    tc = twiss(ring; initial=ini, chrom=2, cols=["beta1", "dbeta1", "dc12", "dx_2"])
+    @test tc.df.beta1 ≈ tw.df.beta1 atol=1e-13
+    h = 1e-6
+    mv(s) = merge(ini, (x=ini.x + s*h*ini.dx, px=ini.px + s*h*ini.dpx, y=ini.y + s*h*ini.dy,
+                        py=ini.py + s*h*ini.dpy, pz=ini.pz + s*h))
+    tpl = twiss(ring; initial=mv(1), cols=["beta1", "c12", "dx"])
+    tmi = twiss(ring; initial=mv(-1), cols=["beta1", "c12", "dx"])
+    for (c, cd) in (("beta1", "dbeta1"), ("c12", "dc12"), ("dx", "dx_2"))
+      @test tc.df[!, cd] ≈ (tpl.df[!, c] .- tmi.df[!, c])/2h atol=1e-7
+    end
+
+    # Values that are Taylor series in GTPSA parameters, against central differences
+    D = Descriptor([1, 1, 1, 1, 1, 1], 2, [1, 1], 1)
+    p = @params(D)
+    inip = merge(ini, (c12=ini.c12 + p[1], x=ini.x + p[2]))
+    tt = twiss(ring; initial=inip, cols=["beta1", "c12", "y"], GTPSA_descriptor=D)
+    @test [t[0] for t in tt.df.beta1] ≈ tw.df.beta1 atol=1e-13
+    fdmax = Dict{Tuple{Symbol,String},Float64}()
+    for (k, name) in enumerate((:c12, :x))
+      tpp = twiss(ring; initial=merge(ini, NamedTuple{(name,)}((ini[name] + h,))),
+                  cols=["beta1", "c12", "y"])
+      tmm = twiss(ring; initial=merge(ini, NamedTuple{(name,)}((ini[name] - h,))),
+                  cols=["beta1", "c12", "y"])
+      for c in ("beta1", "c12", "y")
+        fd = (tpp.df[!, c] .- tmm.df[!, c])/2h
+        @test [GTPSA.deriv(t, 6 + k)[0] for t in tt.df[!, c]] ≈ fd atol=5e-8
+        fdmax[(name, c)] = maximum(abs, fd)
+      end
+    end
+    # (not trivially 0; the orbit does not depend on the coupling)
+    @test fdmax[(:c12, "beta1")] > 0.05 && fdmax[(:x, "beta1")] > 1 && fdmax[(:x, "y")] > 0.005
+    @test fdmax[(:c12, "y")] == 0
+
+    # Errors
+    @test_throws "beta2" twiss(ring; initial=(beta1=1.0,))
+    @test_throws "beta_2" twiss(ring; initial=(beta1=1.0, beta2=1.0, beta_2=3))
+    @test_throws "delta" twiss(ring; initial=(beta1=1.0, beta2=1.0, delta=1e-3))
+    @test_throws "delta0" twiss(ring; initial=(beta1=1.0, beta2=1.0, pz=1e-3), delta0=1e-3)
+    @test_throws "v0" twiss(ring; initial=(beta1=1.0, beta2=1.0), v0=zeros(1, 6))
+    @test_throws "a_initial" twiss(ring; initial=(beta1=1.0, beta2=1.0),
+                                   a_initial=twiss(ring; cols=["a"], as_taylor_series=true).a[1])
+    @test_throws "spin" twiss(ring; initial=(beta1=1.0, beta2=1.0), spin=true)
+    @test_throws "determinant" twiss(ring; initial=(beta1=1.0, beta2=1.0, c11=1.0, c22=1.0))
+    # (a map without synchrotron motion would lose the energy change of a cavity)
+    cav = RFCavity(L=0.5, voltage=5e6, rf_frequency=5e8, zero_phase=PhaseRef.BelowTransition)
+    linac = Beamline([Drift(L=1.0), cav, Drift(L=1.0)]; E_ref=5e9, species_ref=Species("electron"))
+    @test_throws "RF cavities" twiss(linac; initial=(beta1=1.0, beta2=1.0))
+    @test twiss(linac; initial=(beta1=1.0, beta2=1.0), rf_on=false).beta1[end] ≈ 1 + 2.5^2
+    # the same for a coasting a_initial; a cavity without voltage is fine
+    acoast = twiss(Beamline([Quadrupole(Kn1=0.36, L=0.5), Drift(L=1.0), Quadrupole(Kn1=-0.36,
+                   L=0.5), Drift(L=1.0)]; E_ref=5e9, species_ref=Species("electron"));
+                   cols=["a"], as_taylor_series=true, at=[1]).a[1]
+    @test_throws "RF cavities" twiss(linac; a_initial=acoast)
+    cav0 = RFCavity(L=0.5, voltage=0.0, rf_frequency=5e8, zero_phase=PhaseRef.BelowTransition)
+    linac0 = Beamline([Drift(L=1.0), cav0, Drift(L=1.0)]; E_ref=5e9,
+                      species_ref=Species("electron"))
+    @test twiss(linac0; initial=(beta1=1.0, beta2=1.0)).beta1[end] ≈ 1 + 2.5^2
+    @test twiss(linac0; a_initial=acoast).beta1[end] ≈ twiss(linac0; a_initial=acoast,
+                                                            rf_on=false).beta1[end]
+
+    # TwissExpr with a Context as initial: its variables are knobs
+    ctx = Context(beta1=8.0, alpha1=-0.5, beta2=6.0, alpha2=0.3, c12=0.02, dx=0.3, x=1e-3)
+    nt() = (beta1=ctx.beta1, alpha1=ctx.alpha1, beta2=ctx.beta2, alpha2=ctx.alpha2, c12=ctx.c12,
+            dx=ctx.dx, x=ctx.x)
+    q1 = Quadrupole(Kn1=0.3, L=0.4); q2 = Quadrupole(Kn1=-0.35, L=0.4); dl = Drift(L=1.0)
+    line = Beamline([dl, q1, dl, SBend(L=1.0, g_ref=0.04, angle=0.04), Quadrupole(Ks1=0.04, L=0.2),
+                     q2, dl, q1, dl], E_ref=5e9, species_ref=Species("electron"))
+    te = TwissExpr(line; initial=ctx)
+    exprs = [te.beta1[end], te.alpha1[end], te.c12[end], te.y[end]]
+    cs = ["beta1", "alpha1", "c12", "y"]
+    vals(t) = [t.beta1[end], t.alpha1[end], t.c12[end], t.y[end]]
+    @test value(exprs) == vals(twiss(line; initial=nt(), cols=cs))
+    knobs = [@knob(ctx.beta1), @knob(ctx.alpha2), @knob(ctx.c12), @knob(ctx.x), @knob(q2.Kn1)]
+    val, J = value_and_jacobian(exprs, knobs)
+    @test val ≈ vals(twiss(line; initial=nt(), cols=cs)) atol=1e-13
+    @test ctx.beta1 === 8.0 && q2.Kn1 === -0.35 # (numbers again)
+    for (k, kn) in enumerate(knobs)
+      x0 = SciBmad._getknob(kn)
+      SciBmad._setknob!(kn, x0 + h); vp = vals(twiss(line; initial=nt(), cols=cs))
+      SciBmad._setknob!(kn, x0 - h); vm = vals(twiss(line; initial=nt(), cols=cs))
+      SciBmad._setknob!(kn, x0)
+      @test J[:, k] ≈ (vp .- vm)/2h atol=2e-8
+    end
+    res = match!(vary=[@knob(ctx.beta1), @knob(ctx.alpha1)],
+                 targets=[te.beta1[end] == 12.0, te.alpha1[end] == 0.0])
+    t1 = twiss(line; initial=nt(), cols=cs)
+    @test t1.beta1[end] ≈ 12.0 atol=1e-8
+    @test t1.alpha1[end] ≈ 0.0 atol=1e-8
+  end
+
   @testset "Parametric normal form vs finite differences" begin
       # The examples of docs/src/parametric-nf.md: derivatives of the tunes, of beta1, of the 
       # chromaticities and of dh2000 in magnet strengths (GTPSA parameters, changing Descriptors 
@@ -482,6 +632,13 @@ using Test
     v, J = value_and_jacobian(R, [@knob(qf.Kn1), theta])
     @test v ≈ value(R) rtol=1e-11
     @test isapprox(J, fdjac(R, [@knob(qf.Kn1), theta]; h=1e-5); rtol=1e-5)
+      # A matrix of expressions (it was an error): the values in its shape, the Jacobian rows in
+      # the order of vec
+    M = [deriv(tw.x[1], theta) tw.beta1[5]; tw.x[5] deriv(tw.x[5], theta)]
+    vm, Jm = value_and_jacobian(M, [@knob(qf.Kn1), theta])
+    vv, Jv = value_and_jacobian(vec(M), [@knob(qf.Kn1), theta])
+    @test size(value(M)) == (2, 2) && value(M) == reshape(value(vec(M)), 2, 2)
+    @test vm == reshape(vv, 2, 2) && Jm == Jv
 
       # A context variable behind a deferred expression, lazy functions, a knob in an expression
     qf.Kn1 = DefExpr(c -> c.k1)
@@ -641,6 +798,177 @@ using Test
     @test length(tw.dx[[1, 5]] == [1.0, 2.0]) == 2
     @test_throws ErrorException match!(vary=[kf], targets=[[tw.q1, tw.q2] == [0.2, 0.1]])
     @test_throws ErrorException match!(vary=[kf, Knob(qf, :Kn1)], targets=[tw.q1 == 0.2])
+  end
+
+  @testset "Orbit-only twiss" begin
+      # With only orbit columns (and for a coasting beam their δ-derivatives) the rows only need
+      # factorise_a0: the columns and the summary are bitwise those of the full path (a column
+      # more). A wrong a0 at the rows (that of the start) fails 15 of 18 such comparisons
+    flat(x::TPS) = [x[i] for i in 0:GTPSA.numcoefs(x)-1]
+    flat(x::SciBmad.AmplitudeDependentValue) = flat(x.taylor_series)
+    flat(x::AbstractArray) = map(flat, x)
+    flat(x) = x
+    function same(bl; cols, kw...)
+      to = twiss(bl; cols, kw...)
+      tf = twiss(bl; cols=vcat(cols, ["beta1"]), kw...)
+      return all(isequal(flat(collect(to.df[!, c])), flat(collect(tf.df[!, c]))) for c in cols) &&
+             all(isequal(flat(to.summ.sdict[k]), flat(v)) for (k, v) in tf.summ.sdict)
+    end
+    @elements begin
+      qf = Quadrupole(Kn1=0.36, L=0.5, y_offset=2e-5)
+      qd = Quadrupole(Kn1=-0.33, L=0.5, Ks1=1e-3, x_offset=1e-4)
+      sf = Sextupole(Kn2=1.2, L=0.2, x_offset=5e-5)
+      sd = Sextupole(Kn2=-1.1, L=0.2, tilt=0.1)
+      d = Drift(L=0.4)
+      b = SBend(L=1.2, angle=pi/132)
+      rf = RFCavity(L=1e-2, voltage=3e7, rf_frequency=5e8, zero_phase=PhaseRef.AboveTransition)
+    end
+    ring = Beamline([qf, sf, d, b, d, qd, sd, d, b, d]; species_ref=Species("electron"),
+                    pc_ref=3e9)
+    ringrf = Beamline([qf, sf, d, b, d, qd, sd, d, b, d, rf]; species_ref=Species("electron"),
+                      pc_ref=3e9)
+    orb = ["x", "px", "y", "py", "pz"]
+    @test same(ring; cols=vcat(orb, ["dx", "dpy", "dx_2"]), chrom=2)
+    @test same(ring; cols=orb, order=3, at=[3, 7])
+    @test same(ring; cols=vcat(orb, ["dx"]), delta0=1e-4, chrom=2)
+    @test same(ringrf; cols=vcat(orb, ["z", "a0"]), order=2)
+    a = twiss(ring; cols=["a"], as_taylor_series=true, at=[1]).a[1]
+    line = Beamline([qf, d, qd, d, sf, d, qd]; species_ref=Species("electron"), pc_ref=3e9)
+    @test same(line; cols=orb, a_initial=a)
+    D = Descriptor([1, 1, 1, 1, 1, 2], 2, [2, 2], 2)
+    k = params(D)
+    qf.Kn1 = 0.36 + k[1]
+    qd.x_offset = 1e-4 + k[2]
+    @test same(ring; cols=vcat(orb, ["dx"]), GTPSA_descriptor=D)
+    scalarize!(qf)
+    scalarize!(qd)
+    D = Descriptor(fill(1, 6), 1, [1, 1], 1)
+    k = params(D)
+    qf.Kn1 = 0.36 + k[1]
+    qd.x_offset = 1e-4 + k[2]
+    @test same(ringrf; cols=vcat(orb, ["z"]), GTPSA_descriptor=D)
+    scalarize!(qf)
+    scalarize!(qd)
+      # For a coasting beam z and a0 take the full path (the canonisation of factorise changes
+      # their dependence on δ)
+    @test !SciBmad._orbit_col("z", true) && !SciBmad._orbit_col("a0", true)
+    @test SciBmad._orbit_col("z", false) && SciBmad._orbit_col("dx_2", true)
+    @test !SciBmad._orbit_col("dx", false) && !SciBmad._orbit_col("beta1", true)
+  end
+
+  @testset "Transfer matrix r11 ... r66 and one-turn matrix m11 ... m66" begin
+      # r_ik = ∂z_i/∂z_k from the start of the table, against central differences of tracking (to
+      # their error, ~1e-9 in the z row); with parameters and δ around the fixed point for them
+    @elements begin
+      qf = Quadrupole(Kn1=0.36, L=0.5, y_offset=2e-5)
+      qd = Quadrupole(Kn1=-0.33, L=0.5, Ks1=1e-3, x_offset=1e-4)
+      sf = Sextupole(Kn2=1.2, L=0.2, x_offset=5e-5)
+      d = Drift(L=0.4)
+      b = SBend(L=1.2, angle=pi/132)
+      rf = RFCavity(L=1e-2, voltage=3e7, rf_frequency=5e8, zero_phase=PhaseRef.AboveTransition)
+    end
+    ring = Beamline([qf, sf, d, b, d, qd, d, b, d]; species_ref=Species("electron"), pc_ref=3e9)
+    ringrf = Beamline([qf, sf, d, b, d, qd, d, b, d, rf]; species_ref=Species("electron"),
+                      pc_ref=3e9)
+    rc = ["r$i$k" for i in 1:6 for k in 1:6]
+    orb = ["x", "px", "y", "py", "z", "pz"]
+    rmat(tw, p, l) = [getproperty(tw, Symbol("$p$i$k"))[l] for i in 1:6, k in 1:6]
+    rmat(tw, l) = rmat(tw, "r", l)
+    function fdmat(bl, v, l; start=1, h=1e-6, kw...)
+      M = zeros(6, 6)
+      for k in 1:6
+        vp = copy(v); vp[k] += h
+        vm = copy(v); vm[k] -= h
+        rp = track(bl; v0=reshape(vp, 1, 6), n_turns=1, at=[l], start, kw...)
+        rm = track(bl; v0=reshape(vm, 1, 6), n_turns=1, at=[l], start, kw...)
+        M[:, k] = (rp.v[turn=1, particle=1] .- rm.v[turn=1, particle=1]) ./ 2h
+      end
+      return M
+    end
+    near(R, F) = all(abs.(R .- F) .<= 1e-8 .+ 1e-6 .* abs.(F))
+    for (bl, kw) in ((ring, (rf_on=false,)), (ringrf, (;)))
+      tw = twiss(bl; cols=vcat(rc, orb))
+      v = [getproperty(tw, Symbol(c))[1] for c in orb]
+      @test all(near(rmat(tw, l), fdmat(bl, v, l; kw...)) for l in (4, 6, 8))
+    end
+    tw = twiss(ring; chrom=2, cols=vcat(rc, orb)) # (mixed orders)
+    v = [getproperty(tw, Symbol(c))[1] for c in orb]
+    @test near(rmat(tw, 8), fdmat(ring, v, 8; rf_on=false))
+    a = twiss(ring; cols=["a"], as_taylor_series=true, at=[1]).a[1]
+    line = Beamline([qf, d, qd, d, sf, d, b]; species_ref=Species("electron"), pc_ref=3e9)
+    tl = twiss(line; a_initial=a, cols=vcat(rc, orb))
+    v = [getproperty(tl, Symbol(c))[1] for c in orb]
+    @test near(rmat(tl, 7), fdmat(line, v, 7; rf_on=false))
+    J = zeros(6, 6)
+    for i in 1:3
+      J[2i-1, 2i] = 1
+      J[2i, 2i-1] = -1
+    end
+    R = rmat(twiss(ringrf; cols=rc), 10)
+    @test maximum(abs, R'*J*R - J) < 1e-13
+      # The derivative in a strength (the orbit moves with it: qd is offset, sf feeds down)
+    D = Descriptor(fill(1, 6), 2, [1], 2)
+    k = params(D)
+    qf.Kn1 = 0.36 + k[1]
+    dr12 = twiss(ring; GTPSA_descriptor=D, cols=["r12"], at=[6]).r12[6][[0, 0, 0, 0, 0, 0, 1]]
+    scalarize!(qf)
+    h = 1e-6
+    r12(kq) = (qf.Kn1 = kq; twiss(ring; cols=["r12"], at=[6]).r12[6])
+    fd = (r12(0.36 + h) - r12(0.36 - h))/2h
+    qf.Kn1 = 0.36
+    @test dr12 ≈ fd rtol=1e-7
+    te = TwissExpr(ring)
+    @test value_and_jacobian([te.r12[6]], [@knob(qf.Kn1)])[2][1] ≈ fd rtol=1e-7
+      # The dependence on δ of a coasting beam (also with the variables at lower order)
+    for kw in ((chrom=2,), (order=2,)), c in ("r11", "r12", "r16", "r56")
+      s = getproperty(twiss(ring; kw..., cols=[c], at=[6], as_taylor_series=true),
+                      Symbol(c))[6][[0, 0, 0, 0, 0, 1]]
+      rd(d0) = getproperty(twiss(ring; cols=[c], at=[6], delta0=d0), Symbol(c))[6]
+      @test s ≈ (rd(h) - rd(-h))/2h rtol=1e-6 atol=1e-9
+    end
+
+      # m11 ... m66: the one-turn matrix at the row, against one turn of tracking from the row
+      # around to it (turn 2 at the row with `start` at it); a coasting beam's z slips per turn
+    mc = ["m$i$k" for i in 1:6 for k in 1:6]
+    function fdturn(bl, v, l; kw...)
+      M = zeros(6, 6)
+      for k in 1:6
+        vp = copy(v); vp[k] += h
+        vm = copy(v); vm[k] -= h
+        rp = track(bl; v0=reshape(vp, 1, 6), n_turns=2, at=[l], start=l, kw...)
+        rm = track(bl; v0=reshape(vm, 1, 6), n_turns=2, at=[l], start=l, kw...)
+        M[:, k] = (rp.v[turn=2, particle=1] .- rm.v[turn=2, particle=1]) ./ 2h
+      end
+      return M
+    end
+    for (bl, tkw, kw) in ((ring, (;), (rf_on=false,)), (ringrf, (;), (;)),
+                          (ring, (chrom=2,), (rf_on=false,)))
+      tw = twiss(bl; tkw..., cols=vcat(mc, orb))
+      v = [getproperty(tw, Symbol(c))[6] for c in orb]
+      @test near(rmat(tw, "m", 6), fdturn(bl, v, 6; kw...))
+    end
+    rend(tw) = [getproperty(tw, Symbol("r$i$k"))[end] for i in 1:6, k in 1:6]
+    tw = twiss(ring; cols=vcat(mc, rc))
+    @test maximum(abs, rmat(tw, "m", 1) .- rend(tw)) < 1e-13
+    cell = [qf, sf, d, b, d, qd, d, b, d]
+    ring2 = Beamline(vcat(cell, cell); species_ref=Species("electron"), pc_ref=3e9)
+    tp = twiss(ring2; stop=10, cols=vcat(mc, rc)) # (the first cell, periodic by itself)
+    @test maximum(abs, rmat(tp, "m", 1) .- rend(tp)) < 1e-13 && rmat(tp, "m", 1) ≈ rend(tw)
+    qf.Kn1 = 0.36 + k[1]
+    dm12 = twiss(ring; GTPSA_descriptor=D, cols=["m12"], at=[6]).m12[6][[0, 0, 0, 0, 0, 0, 1]]
+    scalarize!(qf)
+    m12(kq) = (qf.Kn1 = kq; twiss(ring; cols=["m12"], at=[6]).m12[6])
+    fd = (m12(0.36 + h) - m12(0.36 - h))/2h
+    qf.Kn1 = 0.36
+    @test dm12 ≈ fd rtol=1e-7
+    @test value_and_jacobian([te.m12[6]], [@knob(qf.Kn1)])[2][1] ≈ fd rtol=1e-7
+    for c in ("m11", "m16", "m52", "m56")
+      s = getproperty(twiss(ring; chrom=2, cols=[c], at=[6], as_taylor_series=true),
+                      Symbol(c))[6][[0, 0, 0, 0, 0, 1]]
+      md(d0) = getproperty(twiss(ring; cols=[c], at=[6], delta0=d0), Symbol(c))[6]
+      @test s ≈ (md(h) - md(-h))/2h rtol=1e-6 atol=1e-9
+    end
+    @test_throws ErrorException twiss(line; a_initial=a, cols=["m11"]) # (needs a periodic table)
   end
 
   @testset "Knobs on vectors, function knobs, display of many knobs" begin
