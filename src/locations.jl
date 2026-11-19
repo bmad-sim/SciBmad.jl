@@ -19,6 +19,34 @@ function _is_or_inherits(ele, sel)
   end
 end
 
+# The beamline indexes of the placements of each of the elements sels (also of copies of them, of
+# any depth), in one pass over the line
+function _placements(line, sels)
+  found = IdDict{LatElement,Vector{Int}}(sel => Int[] for sel in sels)
+  for (i, ele) in enumerate(line)
+    while true
+      idxs = get(found, ele, nothing)
+      isnothing(idxs) || push!(idxs, i)
+      pdict = getfield(ele, :pdict)
+      haskey(pdict, InheritParams) || break
+      ele = pdict[InheritParams].parent
+    end
+  end
+  return found
+end
+
+# The elements in sel, also in vectors in it
+function _elements!(out, sel)
+  if sel isa LatElement
+    push!(out, sel)
+  elseif sel isa AbstractVector
+    for x in sel
+      _elements!(out, x)
+    end
+  end
+  return out
+end
+
 # The UniversalParams of an element, with the length (and n_steps from ds_step) evaluated with
 # the Beamline's context, as in tracking
 function _universal(bl, ele)
@@ -62,15 +90,16 @@ end
 
 _step_s(s, L, n, i, k) = k == 0 ? s[i] : s[i] + k*L[i]/n[i]
 
-# Beamline indexes of the elements selected by sel (n+1: the end of the beamline)
-function _element_indexes(bl::Beamline, sel)
+# Beamline indexes of the elements selected by sel (n+1: the end of the beamline). found: the
+# placements of the elements in sel (_placements), if already known
+function _element_indexes(bl::Beamline, sel, found=nothing)
   line = bl.line
   if sel isa Integer
     1 <= sel <= length(line) + 1 ||
       error("Beamline index $sel is not in 1:$(length(line)+1) ($(length(line)+1): the end)")
     return Int[sel]
   elseif sel isa LatElement
-    idxs = findall(ele -> _is_or_inherits(ele, sel), line)
+    idxs = isnothing(found) ? findall(ele -> _is_or_inherits(ele, sel), line) : copy(found[sel])
     isempty(idxs) && error("Element $(sel.name) is not in the Beamline")
     return idxs
   elseif sel isa Union{AbstractString,Regex}
@@ -78,7 +107,12 @@ function _element_indexes(bl::Beamline, sel)
     isempty(eles) && error("No element of the Beamline matches $(repr(sel))")
     return Int[ele.beamline_index for ele in eles]
   elseif sel isa AbstractVector
-    return reduce(vcat, (_element_indexes(bl, x) for x in sel); init=Int[])
+    # (all elements in one pass over the line)
+    if isnothing(found)
+      eles = _elements!(LatElement[], sel)
+      found = length(eles) > 1 ? _placements(line, eles) : nothing
+    end
+    return reduce(vcat, (_element_indexes(bl, x, found) for x in sel); init=Int[])
   end
   error("Unsupported location $(repr(sel))")
 end
@@ -123,13 +157,13 @@ _location_key((i, k)) = (i == -1 ? typemax(Int) : i, k)
 # s-ranges and `:` give their locations in the part (a vector). With strict=false (for `at`), an
 # index outside the part is left out and an element gives all its placements in the part.
 # (ls: _line_steps(bl) if already computed)
-function _column_locations(bl, part, sel; strict=true, ls=nothing)
+function _column_locations(bl, part, sel; strict=true, ls=nothing, found=nothing)
   sel isa Integer && return _single_location(bl, part, _location(bl, sel, 0), strict), true
   if sel isa Union{Colon,Tuple{Real,Real}}
     range = sel isa Colon ? nothing : sel
     return _range_locations(bl, part, range, isnothing(ls) ? _line_steps(bl) : ls), false
   end
-  idxs = _element_indexes(bl, sel)
+  idxs = _element_indexes(bl, sel, found)
   if sel isa LatElement && strict
     return _one_placement(bl, part, sel, idxs, [[_location(bl, i, 0)] for i in idxs]), true
   end
@@ -204,7 +238,7 @@ end
 
 # The locations of `at` (of twiss and track) in the part of the beamline, ordered along it: each
 # entry is one index of a column (see _column_locations), but beamline indexes outside the part are
-# left out (ls: _line_steps(bl) if already computed)
+# left out (ls: _line_steps(bl) if already computed). The elements are found in one pass
 function _at_locations(bl, part, at, ls=nothing)
   if at isa Colon
     locs = _range_locations(bl, part, nothing, isnothing(ls) ? _line_steps(bl) : ls)
@@ -212,8 +246,10 @@ function _at_locations(bl, part, at, ls=nothing)
     locs = filter(l -> _in_part(bl, l, part), at.v)
   else
     locs = Tuple{Int,Int}[]
+    eles = _elements!(LatElement[], at)
+    found = length(eles) > 1 ? _placements(bl.line, eles) : nothing
     for x in at
-      append!(locs, first(_column_locations(bl, part, x; strict=false, ls)))
+      append!(locs, first(_column_locations(bl, part, x; strict=false, ls, found)))
     end
   end
   return sort!(unique!(locs); by=_location_key)

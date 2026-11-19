@@ -1223,6 +1223,15 @@ using Test
     @test tsub.beta1[qd] == tsub.beta1[5] == tw.beta1[qd] && tsub.beta1[[b]] == tw.beta1[[b]]
     @test twiss(sub; at=[qd]).df.index == [5] &&
           track(sub; v0=zeros(1, 6), start=qd, at=[qd]).index == [5]
+      # The elements of a vector (or of `at`) are found in one pass over the line: the same as one
+      # at a time, also nested, repeated, an element with a copy of it, and copies of copies
+    v = Any[qd, [b, sf], cell.line[6], qd, 2]
+    @test tw.beta1[v] == [tw.beta1[qd]; tw.beta1[[b]]; tw.beta1[sf]; tw.beta1[6]; tw.beta1[qd];
+                          tw.beta1[2]]
+    @test value(te.beta1[v]) == tw.beta1[v]
+    @test twiss(cell; at=v).df.index == [2, 3, 5, 6]
+    @test tsub.beta1[[qd, b]] == [tsub.beta1[qd]; tsub.beta1[[b]]] == tw.beta1[[qd, b]]
+    @test twiss(sub; at=[qd, b]).df.index == [3, 5, 6]
     tc = twiss(cell; chrom=2, at=[])
     @test tc.dq1 == tc.q1[delta=1] && tc.dq2 == tc.q2[delta=1]
     @test tc.dq1 ≈ value(te.dq1) rtol=1e-12
