@@ -721,6 +721,14 @@ Open items:
   with `at=:` 7.4-8.3 vs 8.5; `value` without GC 60.9-61.3 vs 63.9-64.4 (the same call allocates
   87-186 MB from call to call in both versions, so the minimum of 15 samples with GC is noisy;
   the mean of 60 calls with GC: 108-110 vs 111-114 ms); an integer index 0.45 vs 0.36 µs.
+  Finding an element is a scan of the line through the copy chains (`_is_or_inherits`, 0.67 ms
+  per element on ESR's 6,271 elements). The elements of a vector index or of `at` are found in
+  one pass (`_placements`, Nov 19 2026): ESR, 50 elements, `tw.beta1[eles]` 34 -> 1.1 ms,
+  `twiss(at=eles)` 111 -> 82 ms, `track(at=eles)` 42 -> 8.2 ms; results equal, bitwise suite
+  unchanged; test with nested, repeated and copied elements (walking only the element itself
+  fails 7 of 74). `get` instead of `haskey` + `getindex` on the `pdict` was slower for one
+  element (0.88 ms) and equal in the pass. A single element stays one scan: a cache per Beamline
+  would need invalidation when the line changes (not done).
 - After the `track`/`twiss` rework (Nov 2026): notebooks rerun (Nov 17; `track_spin(res.q, …)`
   is (particle, component, location, turn): the spin notebooks index `[1, 2, 1, :]`; the
   Python `nonlinear-twiss` notebook, legacy for SciBmad < 0.5.0, was removed);
