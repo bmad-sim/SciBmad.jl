@@ -12,9 +12,7 @@ kernelspec:
 
 # Quickstart Guide
 
-The following is a tour of SciBmad in one block: build a FODO cell, retune it, compute linear, 
-nonlinear, chromatic and spin Twiss parameters, and track particles with spin. 
-The rest of this page walks through it step by step.
+The following is a tour of SciBmad in one copy-and-pastable block: build a FODO cell, adjust magnet strengths, compute linear, nonlinear, chromatic and spin Twiss parameters, and track particles with spin. The rest of this page walks through it step by step. To easily copy a block of code anywhere in the documentation, move your cursor to the top right of the code block.
 
 ```{code-cell} julia
 :tags: [remove-cell]
@@ -46,6 +44,9 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
 qf.Kn1 = 0.37
 qd.Kn1 = -0.37
 
+# Set number of integration steps in qd to 3
+qd.n_steps = 3
+
 # Find the drifts `d` in `fodo`
 ds = fodo[d];
 
@@ -55,16 +56,30 @@ first_ele = fodo[1];
 # Gets all quadrupoles
 quadrupoles = fodo[x -> x.kind == "Quadrupole"]; # Lambda function
 quadrupoles = fodo["Quadrupole::*"];             # Classic Bmad syntax
+quadrupoles = fodo[r"q.*"];                      # Regex match on name
 
 # Compute the periodic Twiss parameters
 tw = twiss(fodo)
 
-# Read the results: the tunes, and beta1 at the beginning and at the end of qd
-tw.q1, tw.q2
-tw.beta1[qd], tw.beta1[qd, :exit]
+#= 
+  Print the tunes, phase slip factor (etac), momentum compaction (alphac)
+=#
+@show tw.q1
+@show tw.q2
+@show tw.etac
+@show tw.alphac
 
 #=
-  Compute only specific periodic Twiss parameters
+  Print the horizontal-like beta function at various locations
+=#
+@show tw.beta1[qd]        # Beginning of element qd
+@show tw.beta1[qd, :exit] # End of qd
+@show tw.beta1[qd, :]     # Every integration step inside qd
+@show tw.beta1[(0, 1.23)] # Every integration step between s=0, s=1.23
+
+
+#=
+  Compute only specific Twiss parameters
   "beta1" = horizontal-like beta
   "phi2" = vertical-like phase advance,
   "dx" = horizontal dispersion
@@ -78,10 +93,10 @@ tw = twiss(fodo, cols=["beta1", "phi2", "dx"])
   the order of δ (chrom) equal to 2
 =#
 tw = twiss(fodo, cols=["w1", "w2", "dx_2", "dy_2"], chrom=2)
-print(tw.q2)
+@show tw.q2
 #= Prints:
   AmplitudeDependentValue:
-    0.054013300010008765 - 0.008253153240321371 δ
+    0.05401330001000863 - 0.008253153240321323 δ
 =#
 # Get the y-chromaticity
 chromy = tw.dq2         # Prepend "d" to q2
@@ -98,9 +113,9 @@ tw = twiss(fodo, cols=["nx", "ny", "nz"], spin=true,
       as_taylor_series=true, order=2)
 print(tw.qspin)
 #= Prints:
-  AmplitudeDependentValue:
-    -0.3094612779434054 - 0.3094612776236819 δ - 7.680773026144916e-10 J₁ 
-    + 28.127501689589934 J₂ - 4.385285890498197e-10 δ²
+AmplitudeDependentValue:
+ -0.3094612779434053 - 0.3094612776559473 δ - 4.0543183384536337e-10 J₁ 
+ + 28.127501690102246 J₂ - 2.950933476050364e-10 δ²
 =#
 
 #=

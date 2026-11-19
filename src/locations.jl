@@ -171,13 +171,16 @@ function _column_locations(bl, part, sel; strict=true, ls=nothing, found=nothing
   return filter!(l -> _in_part(bl, l, part), locs), false
 end
 function _column_locations(bl, part, sel, pos; strict=true, ls=nothing)
-  idxs = _element_indexes(bl, sel)
   pos isa AbstractString && (pos = Symbol(pos))
+  all_steps = pos isa Colon || pos == :all
+  if sel isa Tuple{Real,Real}
+    error("s-range indexing always returns every integration step in the range, and does not accept a second argument")
+  end
+  idxs = _element_indexes(bl, sel)
   n_ele = length(bl.line)
   # (the end of the beamline is a zero-length element: one step from its beginning to its end,
   # which are the same location)
   nsteps(i) = i == n_ele + 1 ? 1 : _nsteps(bl, i)
-  all_steps = pos isa Colon || pos == :all
   # (the locations of every placement)
   if all_steps
     per = [[_location(bl, i, k) for k in 0:(i == n_ele + 1 ? 0 : nsteps(i))] for i in idxs]

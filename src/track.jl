@@ -108,6 +108,7 @@ res.v[qd, :exit, particle=1]      # all six coordinates at its end: [coordinate,
 struct TrackResult{L,D}
   config::TrackConfig
   elapsed_time::Float64 # in seconds
+  start::Int
   s::L
   index::Vector{Int}
   name::Vector{String}
@@ -129,7 +130,7 @@ function Base.getproperty(res::TrackResult, key::Symbol)
   return getfield(res, key)
 end
 
-Base.propertynames(::TrackResult) = (_TRACK_COLUMNS..., :turns, :s, :index, :name, :kind,
+Base.propertynames(::TrackResult) = (_TRACK_COLUMNS..., :turns, :start, :s, :index, :name, :kind,
                                         :data, :config, :elapsed_time, :bunch)
 
 function Base.show(io::IO, res::TrackResult)
@@ -155,21 +156,21 @@ function Base.show(io::IO, ::MIME"text/plain", res::TrackResult)
   println(io)
   println(io, "elapsed_time = ", getfield(res, :elapsed_time), " seconds")
   println(io)
+  println(io, "start = ", getfield(res, :start))
   dims(x) = "[" * join(("1:$n" for n in size(x)), ", ") * "]"
   rows = Tuple{String,String}[
     ("turns", (length(turns) > 6 ? "$(first(turns)):$(config.save_every_n_turns):$(last(turns))" :
                string(turns)) * ": the saved turns (0: initial coordinates)"),
     ("s, index, name, kind", "the saved locations: " * _track_locations_string(res)),
-    ("state", "particle state codes, read as state[location, turn=n, particle=i]" *
-              (single ? " (one saved location: it can be left out)" : "")),
+    ("state", "particle state codes, e.g. state[" * loc * "turn=n, particle=i]"),
     ("x, px, y, py, z, pz", "the coordinates, e.g. x[" * loc * "turn=n, particle=i]"),
     ("v", "all six coordinates, e.g. v[" * loc * "turn=n, particle=i]")]
   isnothing(data.q) ||
-    push!(rows, ("q", "spin quaternions (track_spin turns them into spin vectors)"))
+    push!(rows, ("q", "spin quaternions (track_spin turns them into spin 3-vectors)"))
   isnothing(data.t_ref) ||
     push!(rows, ("t_ref, beta_gamma_ref", "reference time and energy, e.g. t_ref[" * loc *
                  "turn=n]"))
-  push!(rows, ("data", "the saved arrays (saved turn 1: initial coordinates):"))
+  push!(rows, ("data", "the low-level data arrays (saved turn 1: initial coordinates):"))
   order = (state="[particle, location, saved turn]",
            v="[particle, coordinate, location, saved turn]",
            q="[particle, quaternion, location, saved turn]", t_ref="[location, saved turn]",
@@ -468,7 +469,7 @@ end
 # the beamline). The first turn begins after step_start steps. The locations are saved by a
 # callback during the turns, as in twiss
 function _track(bl, bunch, config, groupsize, step_start, locations, loc_steps, n_steps_turn,
-                ::Val{save_reference}) where {save_reference}
+                ::Val{save_reference}, _start=-1) where {save_reference}
   state = bunch.coords.state
   v     = bunch.coords.v
   q     = bunch.coords.q
@@ -582,7 +583,7 @@ function _track(bl, bunch, config, groupsize, step_start, locations, loc_steps, 
   saved = (; state=state_data, v=v_data, q=q_data,
            t_ref=_reference_result(t_data, bunch.t_ref, batch_start),
            beta_gamma_ref=_reference_result(bg_data, _beta_gamma_ref(bunch), batch_start))
-  return TrackResult(config, t, loc_s, loc_idxs, loc_names, loc_kinds, saved, bunch, bl, rows)
+  return TrackResult(config, t, _start, loc_s, loc_idxs, loc_names, loc_kinds, saved, bunch, bl, rows)
 end
 
 function _track_make_callback(_slot, _location_of_step, _in_body_coordinates, _v_data, _q_data,
