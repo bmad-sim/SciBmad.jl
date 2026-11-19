@@ -12,7 +12,7 @@ kernelspec:
 
 # Quickstart Guide
 
-The following is a tour of SciBmad in one block - build a FODO cell, retune it, compute linear, 
+The following is a tour of SciBmad in one block: build a FODO cell, retune it, compute linear, 
 nonlinear, chromatic and spin Twiss parameters, and track particles with spin. 
 The rest of this page walks through it step by step.
 
@@ -53,7 +53,8 @@ ds = fodo[d];
 first_ele = fodo[1];
 
 # Gets all quadrupoles
-quadrupoles = fodo[x -> x.kind == "Quadrupole"];
+quadrupoles = fodo[x -> x.kind == "Quadrupole"]; # Lambda function
+quadrupoles = fodo["Quadrupole::*"];             # Classic Bmad syntax
 
 # Compute the periodic Twiss parameters
 tw = twiss(fodo)
@@ -83,7 +84,8 @@ print(tw.q2)
     0.054013300010008765 - 0.008253153240321371 δ
 =#
 # Get the y-chromaticity
-chromy = tw.dq2 # the same as getterm(tw.q2, delta=1)
+chromy = tw.dq2         # Prepend "d" to q2
+chromy = tw.q2[delta=1] # Also can give order of delta derivative
 
 # Resonance driving terms h3000, h2100, require order=2
 tw = twiss(fodo, cols=["h3000", "h2100"], order=2)
@@ -173,7 +175,8 @@ ds = fodo[d];
 first_ele = fodo[1];
 
 # Gets all quadrupoles
-quadrupoles = fodo[x -> x.kind == "Quadrupole"];
+quadrupoles = fodo[x -> x.kind == "Quadrupole"]; # Lambda function
+quadrupoles = fodo["Quadrupole::*"];             # Classic Bmad syntax
 ```
 
 Note that `LatElement`s in a beamline simply inherit all properties from the original
@@ -204,15 +207,15 @@ the beta functions, alpha functions, coupling matrix, phase advances/slip, close
 [`DataFrame`](https://dataframes.juliadata.org/stable/) struct.
 
 The values for the whole ring, such as the tunes, are properties of `tw`, and so is every column
-of the table, which is read at locations of the beamline: at the beginning of an element, at its
-end, at every integration step inside it, at the end of the beamline, ...
+of the table, which can be read at any location of the beamline, e.g. the beginning/end of an element, every integration step inside it, at the end of the beamline, etc.
 
 ```{code-cell} julia
 tw.q1               # 0.0549
-tw.beta1[qd]        # 10.13 at the beginning of qd
-tw.beta1[qd, :exit] # 10.13 at the end of qd
+tw.beta1[qd]        # [10.13] at the beginning of qd (one value per placement of qd)
+tw.beta1[qd, :exit] # [10.13] at the end of qd
 tw.beta1[b]         # [12.93, 10.52] b is in the beamline twice
 tw.beta1[end]       # 13.41 at the end of the beamline
+tw.beta1[()]
 ```
 
 A whole column is a column of the table, so it can for example be plotted against `s` with

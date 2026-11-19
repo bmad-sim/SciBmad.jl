@@ -93,9 +93,8 @@ The SciBmad distribution includes the CairoMakie and GLMakie packages from the [
 
 ## Using SciBmad from Python
 
-:::{note}
-The Python interface is still early in development. For now, we encourage using SciBmad from
-Julia.
+:::{warning}
+The SciBmad Python interface is still early in development, and may have poor performance and usability. For now, we encourage using SciBmad from Julia.
 :::
 
 SciBmad can also be used from Python through

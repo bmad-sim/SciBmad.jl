@@ -210,11 +210,12 @@ written after the location (or alone):
   beamline; with several saved locations, one must be given), `[particle, saved turn]`
 - `res.x[turn=n]`: all particles after turn `n`, `res.x[turn=n, particle=i]`: one number.
   `turn` and `particle` can also be `:` (all, as without them), a range or a vector
-- `res.x[qd, turn=n]`, `res.x[5, ...]`, `res.x[qd, :exit, ...]`, `res.x[end, ...]`: at the
-  beginning of `qd` (or of the element with beamline index 5), at its end, at the end of the
-  beamline
-- `res.x[qd, :]`, `res.x["q*"]`, `res.x[(2.0, 6.0)]`: at several locations: their index comes
-  after the particle (`[particle, location, saved turn]`)
+- `res.x[5, turn=n]`, `res.x[5, :exit, ...]`, `res.x[end, ...]`: at the beginning of the element
+  with beamline index 5, at its end, at the end of the beamline (`end` is the beamline index of
+  the end, one more than the number of elements)
+- `res.x[qd, ...]`, `res.x[qd, :]`, `res.x["q*"]`, `res.x[(2.0, 6.0)]`: at several locations
+  (every placement of an element, ...; as for `twiss`): their index comes after the particle
+  (`[particle, location, saved turn]`)
 
 `res.v` and `res.q` have the coordinate or quaternion component as the index after the particle,
 and `t_ref` and `beta_gamma_ref` no particle index (unless they are per particle). The
@@ -225,9 +226,9 @@ struct TrackColumn{R<:TrackResult}
   name::Symbol
 end
 
-# (with more than one index, e.g. x[end, turn=2], `end` is lastindex(c, 1))
+# (with more than one index, e.g. x[end, turn=2], `end` is lastindex(c, 1); n+1: the end)
 Base.firstindex(::TrackColumn, d...) = 1
-Base.lastindex(::TrackColumn, d...) = _End()
+Base.lastindex(c::TrackColumn, d...) = length(getfield(c.res, :bl).line) + 1
 
 function Base.getindex(c::TrackColumn, args...;
                        turn::Union{Nothing,Colon,Integer,AbstractVector{<:Integer}}=nothing,
@@ -240,7 +241,8 @@ function Base.getindex(c::TrackColumn, args...;
                     "give one, e.g. $(c.name)[qd, turn=n] or $(c.name)[end, turn=n]")
     L = 1
   else
-    locs, one = _column_locations(getfield(res, :bl), nothing, args...)
+    bl = getfield(res, :bl)
+    locs, one = _column_locations(bl, (1, length(bl.line) + 1), args...)
     ls = [_track_location(res, l) for l in locs]
     L = one ? only(ls) : ls
   end
@@ -301,10 +303,12 @@ settings specified by the keyword arguments `kwargs`.
 - `start::Union{Integer,LatElement}`: The element (or its beamline index) at whose beginning the
     tracking starts. Default is `1`
 - `at::Union{Nothing,Colon,AbstractVector}`: Where the particles are saved, as in `twiss`: a
-    vector containing `LatElement`s, element beamline indexes, and/or tuples of s-ranges. An
-    element gives its beginning, an s-range the integrator steps inside it (and the end of the
-    beamline if it contains it), and `:` every integrator step. Default is `nothing`, only the
-    end of the beamline. The locations are ordered in s (from the beginning of the beamline).
+    vector of locations, each as one index of a column (see [`TrackColumn`](@ref)): elements
+    (at the beginning of each placement), beamline indexes, names (as for `findelements`), and
+    s-ranges (tuples: the integrator steps inside them, and the end of the beamline if they
+    contain it). `:` is every integrator step and the end of the beamline. An entry that is not
+    in the beamline is an error. Default is `nothing`, only the end of the beamline. The
+    locations are ordered in s (from the beginning of the beamline).
     In the first turn, the locations before `start` are not reached and are `NaN` (`state`
     `STATE_PREBORN`)
 - `n_turns::Int`: Number of turns, each ending at the end of the beamline (the first turn
@@ -434,40 +438,23 @@ function track(
     use_explicit_SIMD,
   )
   n_turns >= 1 || error("n_turns must be at least 1")
-  if start isa LatElement
-    # (as in _twiss_assemble_locations, the element or the element it was copied from)
-    ks = findall(bl.line) do ele
-      ele == start || (haskey(getfield(ele, :pdict), InheritParams) ?
-                       start == getfield(ele, :pdict)[InheritParams].parent : false)
-    end
-    length(ks) == 1 || error("The start element must be in the beamline exactly once")
-    start = only(ks)
-  end
+  # (the element or one made from it, placed once)
+  start = _element_index(bl, start, "start")
   1 <= start <= length(bl.line) || error("start must be a beamline index of an element")
-  # The steps of the turn before the start element (counted as for the locations)
-  if start > 1
-    _, _, _, start_idxs, start_steps = _twiss_assemble_locations(bl, [start])
-    step_start = start_steps[findfirst(==(start), start_idxs)]
-  else
-    step_start = 0
-  end
-  # Locations where the particles are saved, as in twiss (the first entry is the beginning of the
-  # beamline unless steps of the first element are in an s-range, the last the end of the beamline)
-  # (by default only the end of the beamline)
+  # Locations where the particles are saved, as in twiss (by default only the end of the
+  # beamline), and the steps of the turn before the start element
   if at isa AbstractVector && isempty(at) # nothing to save (1.5 ms less on ESR than resolving it)
     loc_s, loc_names, loc_kinds, loc_idxs = Float64[], String[], String[], Int[]
     loc_steps = Int[]
     loc_ele_steps = Int[]
     n_steps_turn = 0
+    step_start = start > 1 ? _line_steps(bl)[4][start] : 0
   else
-    s, names, kinds, idxs, step_save, include_start, include_end, ele_steps =
-      _twiss_assemble_locations(bl, isnothing(at) ? [] : at)
-    include_end |= isnothing(at)
-    sel = (include_start ? 1 : 2):(include_end ? length(s) : length(s)-1)
-    loc_s, loc_names, loc_kinds, loc_idxs = s[sel], names[sel], kinds[sel], idxs[sel]
-    loc_steps = step_save[sel]
-    loc_ele_steps = ele_steps[sel]
-    n_steps_turn = last(step_save)
+    ls = _line_steps(bl)
+    locs = isnothing(at) ? [(-1, 0)] : _at_locations(bl, (1, length(bl.line) + 1), at, ls)
+    loc_s, loc_idxs, loc_names, loc_kinds, loc_steps, loc_ele_steps = _location_info(bl, locs, ls)
+    n_steps_turn = last(ls[4])
+    step_start = ls[4][start]
   end
   # Function barrier for Bunch and groupsize (needs special handling for KA)
   locations = (loc_s, loc_idxs, loc_names, loc_kinds, loc_ele_steps)

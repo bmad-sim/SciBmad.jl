@@ -81,20 +81,20 @@ Therefore, if a particle's state is `0x1`, that means it is alive and well! Once
 is "lost" in tracking, its phase space coordinates are frozen at the point where it is lost.
 
 The particles can also be saved at other locations, given to `track` with `at` as for
-[`twiss`](twiss.md): elements (or their beamline indexes) for their beginnings, s-ranges for
+[`twiss`](twiss.md): elements (or their beamline indexes, or names) for their beginnings, s-ranges for
 every integration step inside them (and the end of the beamline if they contain it), or `:` for
 every integration step. They are then read at these locations exactly as the columns of `twiss`
 (see [Reading the results](twiss.md)):
 
 ```{code-cell} julia
 res = track(fodo, v0=v0, n_turns=10, at=[qf, qd])
-res.x[qd, turn=10]          # x at the beginning of qd after turn 10
+res.x[5, turn=10]           # x at the beginning of qd (beamline index 5) after turn 10
 ```
 
 With several saved locations, a location must be given (`res.x[end, turn=10]` for the end of the
-beamline). A location that is several places (an element placed several times, `[qd, :]`, an
-s-range) gives
-one value per place, in the index after the particle. The s, and the beamline index, name and
+beamline). A location that is several places (an element, which gives one place per placement,
+`[qd, :]`, an s-range) gives
+one value per place, in the index after the particle, e.g. `res.x[qd, turn=10]`. The s, and the beamline index, name and
 kind of the element of every saved location are in `res.s`, `res.index`, `res.name` and
 `res.kind`, so that for example the orbit through the beamline can be plotted:
 
@@ -110,7 +110,7 @@ they are `NaN` there (with `state` `0x0`):
 
 ```{code-cell} julia
 res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], start=qd)
-res.x[qf, particle=1]       # [x at turn 0, NaN (not reached in turn 1), x after turn 2]
+res.x[1, particle=1]        # at qf: [x at turn 0, NaN (not reached in turn 1), x after turn 2]
 ```
 
 The reference time and energy at the locations can be saved too, with `save_reference=true`:
@@ -119,7 +119,7 @@ callbacks below see them). This makes the tracking slower, so it is off by defau
 
 ```{code-cell} julia
 res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], save_reference=true)
-res.t_ref[qd]               # at the beginning of qd, for every saved turn
+res.t_ref[5]                # at the beginning of qd, for every saved turn
 ```
 
 All saved values are also in `res.data`, as arrays indexed by location number (in the order of

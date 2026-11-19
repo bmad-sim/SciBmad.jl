@@ -94,8 +94,12 @@ lattice functions/tune, amplitude-dependent tunes, and parametric quantities, se
 keyword arguments:
 
 ## Keyword arguments
-- `at::Union{Colon, AbstractVector}`: A vector containing `LatElement`s, element beamline 
-    indexes, and/or tuples of s-ranges specifying where to compute the Twiss parameters.
+- `at::Union{Colon, AbstractVector}`: Where to compute the Twiss parameters (the rows of the
+    table): a vector of locations, each as one index of a column (see [`TwissColumn`](@ref)):
+    elements (at the beginning of each placement), beamline indexes, names (as for
+    `findelements`), and s-ranges (tuples). Default `:`, every integration step and the end of
+    the beamline. An entry that is not in the beamline is an error; in a part of the beamline
+    (`start`, `stop`) only the locations in the part are computed.
 - `start`, `stop`: Elements (or their beamline indexes) to compute the Twiss parameters of only
     a part of the beamline: from the beginning of `start` (default: the first element) to the
     beginning of `stop` (default: the end of the beamline). Without `initial` or `a_initial`
@@ -235,7 +239,7 @@ linear dispersion).
 function twiss(
   bl::Beamline; 
 
-  at::Union{Colon, AbstractVector}  = :,
+  at::Union{Colon, AbstractVector, _Locations} = :,
   start::Union{Nothing,Integer,LatElement} = nothing,
   stop::Union{Nothing,Integer,LatElement} = nothing,
   in_body_coordinates::Bool = false, 
@@ -266,13 +270,24 @@ function twiss(
   )
 
   if !isnothing(start) || !isnothing(stop)
-    # A part of the beamline: the twiss of a Beamline of these elements, with the s and the
-    # indexes of the whole one
-    part, at_part, i_start, i_stop, s_start = _twiss_part(bl, start, stop, at)
+    # A part of the beamline: the twiss of a Beamline of these elements (inheriting from those
+    # of bl, with the same reference and context) at the locations of `at` in the part, with the
+    # s and the indexes of the whole one
+    n_ele = length(bl.line)
+    i_start = isnothing(start) ? 1 : _element_index(bl, start, "start")
+    i_stop = isnothing(stop) ? n_ele + 1 : _element_index(bl, stop, "stop")
+    1 <= i_start < i_stop <= n_ele + 1 ||
+      error("`start` must be before `stop` in the beamline (indexes $i_start and $i_stop)")
+    part = Beamline(bl.line[i_start:i_stop-1]; species_ref=bl.species_ref,
+                    p_over_q_ref=bl.p_over_q_ref, context=bl.context)
+    ls = _line_steps(bl)
+    locs = _at_locations(bl, (i_start, i_stop), at, ls)
+    at_part = _Locations([i == -1 || i == i_stop ? (-1, 0) : (i - i_start + 1, k)
+                          for (i, k) in locs])
     tw = twiss(part; at=at_part, in_body_coordinates, rf_on, order, chrom, GTPSA_descriptor,
                initial, a_initial, damping, delta0, v0, spin, base_cols, cols, as_taylor_series,
                coast_tol, symplectic_tol, batch_index)
-    return _twiss_part_table(tw, bl, i_start, i_stop, s_start)
+    return _twiss_part_table(tw, bl, i_start, i_stop, locs, ls)
   end
 
   if !isnothing(initial)
@@ -394,9 +409,15 @@ function twiss(
     end
   end
 
-  # Assemble locations. Note that start and end of the Beamline are ALWAYS included
-  s, names, kinds, idxs, step_save, include_start, include_end, ele_steps =
-    _twiss_assemble_locations(bl, at)
+  # The rows of the table are the locations of `at`. The beginning and the end of the beamline
+  # are always tracked: the first and the last location
+  ls = _line_steps(bl)
+  rows = _at_locations(bl, (1, length(bl.line) + 1), at, ls)
+  include_start = !isempty(rows) && first(rows) == (1, 0)
+  include_end = !isempty(rows) && last(rows) == (-1, 0)
+  locs = [include_start ? Tuple{Int,Int}[] : [(1, 0)]; rows;
+          include_end ? Tuple{Int,Int}[] : [(-1, 0)]]
+  s, idxs, names, kinds, step_save, ele_steps = _location_info(bl, locs, ls)
   beta_gamma_ref = Vector{Float64}(undef, length(s)) # Store the reference energy at each step
   t_ref = Vector{eltype(s)}(undef, length(s)) # Store the reference time at each step (type of the lengths, e.g. TPS for parametric lengths)
 
@@ -522,56 +543,14 @@ function twiss(
   # only thing is with 3d motion, need to compute 
   summ = _twiss_summ(twi, cache)
   # The row of each location (beamline index, step in the element) in the table
-  sel = (include_start ? 1 : 2):(include_end ? length(s) : length(s)-1)
-  rows = Dict{Tuple{Int,Int},Int}((idxs[k], ele_steps[k]) => r for (r, k) in enumerate(sel))
-  return Twiss(summ, df, bl, 1, nothing, rows)
-end
-
-# The index of the single element of bl given as an element (also the one it was made from) or a
-# beamline index
-function _twiss_element_index(bl, ele, what)
-  ele isa Integer && return Int(ele)
-  ks = findall(bl.line) do x
-    x === ele || (haskey(getfield(x, :pdict), InheritParams) &&
-                  getfield(x, :pdict)[InheritParams].parent === ele)
-  end
-  length(ks) == 1 || error("The `$what` element must be in the beamline exactly once")
-  return only(ks)
-end
-
-# The part of bl from the beginning of start to the beginning of stop as a Beamline of its own
-# (its elements inherit from those of bl, with the same reference and context), and `at` for it
-function _twiss_part(bl, start, stop, at)
-  n = length(bl.line)
-  i_start = isnothing(start) ? 1 : _twiss_element_index(bl, start, "start")
-  i_stop = isnothing(stop) ? n + 1 : _twiss_element_index(bl, stop, "stop")
-  1 <= i_start < i_stop <= n + 1 ||
-    error("`start` must be before `stop` in the beamline (indexes $i_start and $i_stop)")
-  part = Beamline(bl.line[i_start:i_stop-1]; species_ref=bl.species_ref,
-                  p_over_q_ref=bl.p_over_q_ref, context=bl.context)
-  s_start = bl.line[i_start].s
-  at isa Colon && return part, at, i_start, i_stop, s_start
-  at_part = Any[]
-  for x in at
-    if x isa Tuple
-      push!(at_part, (x[1] - s_start, x[2] - s_start))
-      continue
-    end
-    for i in (x isa Integer ? (Int(x),) : _element_indexes(bl, x))
-      if i_start <= i < i_stop
-        push!(at_part, i - i_start + 1)
-      elseif i == i_stop # the end of the part
-        s_end = part.line[end].s_downstream
-        push!(at_part, (s_end - 1e-9*max(1.0, abs(scalar(s_end))), Inf))
-      end
-    end
-  end
-  return part, at_part, i_start, i_stop, s_start
+  return Twiss(summ, df, bl, 1, nothing,
+               Dict{Tuple{Int,Int},Int}(l => r for (r, l) in enumerate(rows)))
 end
 
 # The table of the part with the indexes and s of the whole beamline bl (the last row, the end of
-# the part, is the beginning of the element i_stop)
-function _twiss_part_table(tw, bl, i_start, i_stop, s_start)
+# the part, is the beginning of the element i_stop), its rows at the locations locs of bl (ls:
+# _line_steps of bl)
+function _twiss_part_table(tw, bl, i_start, i_stop, locs, ls)
   df = tw.df
   ends = hasproperty(df, :index) ? findall(==(-1), df.index) : Int[]
   if hasproperty(df, :index)
@@ -584,15 +563,15 @@ function _twiss_part_table(tw, bl, i_start, i_stop, s_start)
       hasproperty(df, :name) && (df.name[r] = up.name)
       hasproperty(df, :kind) && (df.kind[r] = up.kind)
     end
-  else
+  elseif hasproperty(df, :index)
     df.index[ends] .= -1
   end
   if hasproperty(df, :s)
-    df.s .+= s_start
+    s = first(_location_info(bl, locs, ls))
+    df.s .= eltype(df.s) <: TPS ? s : scalar.(s)
   end
   stop = i_stop <= length(bl.line) ? i_stop : nothing
-  rows = Dict{Tuple{Int,Int},Int}((i == -1 ? something(stop, -1) : i + i_start - 1, k) => r
-                                  for ((i, k), r) in getfield(tw, :rows))
+  rows = Dict{Tuple{Int,Int},Int}(l => r for (r, l) in enumerate(locs))
   return Twiss(tw.summ, df, bl, i_start, stop, rows)
 end
 
@@ -602,108 +581,6 @@ function co_and_coast(bl, v0, rf_on, coast_tol, batch_index)
     error("Closed orbit finder did not converge.")
   end
   return (co_sol.v0, co_sol.coasting_beam)
-end
-
-_twiss_assemble_locations(bl::Beamline, ::Colon) = _twiss_assemble_locations(bl, [(0., Inf)])
-
-function _twiss_assemble_locations(bl::Beamline, at::AbstractVector)
-  at_idxs = filter(x->x isa Integer, at)
-  at_eles = filter(x->x isa LatElement, at)
-  at_ranges = filter(x->x isa Tuple, at)
-
-  if any(x->x[1] > x[2], at_ranges)
-    t = at_ranges[findfirst(x->x[1] > x[2], at_ranges)]
-    error("Invalid s range ($(t[1]),$(t[2])): start index must be <= end index")
-  end
-  
-  stmp = Vector{Any}(undef, 0)
-  names = Vector{String}(undef, 0)
-  kinds = Vector{String}(undef, 0)
-  idxs = Vector{Int}(undef, 0)
-  step_save = Vector{Int}(undef, 0)
-  ele_steps = Vector{Int}(undef, 0) # the step of each location within its element
-
-  # As a guess assume length equal to number of beamline elements + 1
-  # This makes the typical Twiss case hopefully faster
-  n_ele = length(bl.line)
-  sizehint!(stmp, n_ele+1)
-  sizehint!(names, n_ele+1)
-  sizehint!(kinds, n_ele+1)
-  sizehint!(idxs, n_ele+1)
-  sizehint!(step_save, n_ele)
-  sizehint!(ele_steps, n_ele)
-
-  scur = 0f0
-  step_cur = 0
-  first_found = false # steps of the first element inside an s-range (not only at s = 0)
-  for ele in bl.line
-    idx = ((ele.BeamlineParams)::BeamlineParams).beamline_index
-    up = (ele.UniversalParams)::UniversalParams
-    if up.L isa DefExpr # evaluate it (and n_steps from ds_step) with the Beamline's context, as in tracking
-      up = Beamlines.deval(up, bl.context)
-    end
-    name = up.name
-    kind = up.kind
-    L = up.L
-    # Number of steps with a tracking callback: one per integrator step of each slice (tracking
-    # errors for elements tracked in fewer steps, e.g. a patch with n_steps > 1)
-    n_steps = up.n_slices*up.n_steps
-    ds_step = L/n_steps
-
-    # Check which steps are inside any of the ranges
-    found = false
-    s_ele = scur # element entrance
-    for k in 0:n_steps-1
-      if any(x -> x[1] <= scur < x[2], at_ranges)
-        push!(stmp, scur)
-        push!(names, name)
-        push!(kinds, kind)
-        push!(idxs, idx)
-        push!(step_save, step_cur)
-        push!(ele_steps, k)
-        found = true
-      end
-      step_cur += 1
-      scur += ds_step
-    end
-    if idx == 1
-      first_found = found
-    end
-
-    # If not in an s-range, check if explicitly provided
-    # Always include first element
-    if !found && (idx == 1 || (any(x -> x == idx, at_idxs) || any(at_eles) do x
-          x == ele || (haskey(getfield(ele, :pdict), InheritParams) ? x == (getfield(ele, :pdict)[InheritParams].parent) : false)
-        end
-        ))
-        push!(stmp, s_ele)
-        push!(names, name)
-        push!(kinds, kind)
-        push!(idxs, idx)
-        push!(step_save, step_cur-n_steps)
-        push!(ele_steps, 0)
-    end
-  end
-
-  # Always store the last step
-  push!(stmp, scur)
-  push!(names, "END")
-  push!(kinds, "-"^3)
-  push!(idxs, -1)
-  push!(step_save, step_cur)
-  push!(ele_steps, 0)
-
-  # Now resolve type of s:
-  s = typeof(scur).(stmp)
-
-  include_start = first_found || any(x->x[1]<=0<=x[2], at_ranges) || any(x->x==1, at_idxs) || any(at_eles) do x
-    x == bl.line[1] || (haskey(getfield(bl.line[1], :pdict), InheritParams) ? x == (getfield(bl.line[1], :pdict)[InheritParams].parent) : false)
-  end
-  # The end row is the exit of the last element, so only an s-range containing it includes it 
-  # (a selected element gives the row at its entrance)
-  include_end = any(x->x[1]<=scur<=x[2], at_ranges)
-
-  return s, names, kinds, idxs, step_save, include_start, include_end, ele_steps
 end
 
 # The truncation orders (order, chrom) that the columns need, as TwissExpr chooses them

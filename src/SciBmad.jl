@@ -75,7 +75,8 @@ export  twiss,
         transforms_out!,
         transforms_in!
         
-include("closed_orbit.jl") 
+include("closed_orbit.jl")
+include("locations.jl")
 include("track.jl")
 include("adv.jl")
 include("twiss/twiss_types.jl")

@@ -257,19 +257,14 @@ function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
   bl = getfield(tw, :bl)
   cols = unique!(String[l.col for l in g.leaves if l.index != 0 && l.col != "s"])
   needmaps = any(l -> l.index != 0 && l.col in _MAP_COLS, g.leaves)
-  at = Any[]
-  append!(at, unique!(sort!(Int[l.index for l in g.leaves if l.index > 0 && l.step == 0])))
-  inner = unique!(sort!(Int[l.index for l in g.leaves if l.step > 0]))
-  needend = any(l -> l.index == -1, g.leaves)
-  s, L, n = (isempty(inner) && !needend) ? (Float64[], Float64[], Int[]) : _line_steps(bl)
-  for i in inner # every step of these elements (the ranges end just before their exits)
-    d = 1e-6*L[i]/n[i]
-    push!(at, (s[i] - d, s[i] + L[i] - d))
+  for l in g.leaves
+    if l.step > 0
+      l.step < _nsteps(bl, l.index) || error("$(l): the number of integration steps of the " *
+                                             "element changed since the expression was written")
+    end
   end
-  if needend
-    s_end = s[end] + L[end]
-    push!(at, (s_end - 1e-9*max(1.0, s_end), Inf))
-  end
+  # (the rows: exactly the locations of the expressions)
+  at = _Locations([(l.index, l.step) for l in g.leaves if l.index != 0])
   kw = Dict{Symbol,Any}(k => _kwarg_value(v, st, dzero) for (k, v) in getfield(tw, :kwargs))
   get(kw, :a_initial, nothing) isa DAMap && _check_open_line(bl, kw[:a_initial], kw)
   if !isnothing(get(kw, :initial, nothing)) # (the orbit of initial, its values as numbers)
@@ -284,10 +279,6 @@ function _run_group!(st::_EvalState, g::_Group, D, dzero, pzero)
         "(e.g. `q3` needs RF, `qspin` needs `spin=true`)")
       st.vals[l] = _to_p(t.summ.sdict[Symbol(l.col)], l.mono, pzero)
       continue
-    end
-    if l.step > 0
-      l.step < n[l.index] || error("$(l): the number of integration steps of the element " *
-        "changed since the expression was written")
     end
     x = df[_twiss_row(t, (l.index, l.step)), l.col]
     if l.col in _MAP_COLS

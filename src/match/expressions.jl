@@ -285,17 +285,18 @@ function Base.getindex(l::_TwissLeaf; delta::Integer=0, J1::Integer=0, J2::Integ
   return _TwissLeaf(l.tw, l.col, 0, 0, (delta, J1, J2, J3))
 end
 
-struct _End end
+# The beamline indexes of the beginning and the end of the part of the beamline (`start`, `stop`;
+# n+1: the end of the beamline), `begin` and `end` of the column
 # (with more than one index, e.g. beta1[end, :exit], `end` is lastindex(c, 1))
-Base.lastindex(::_TwissExprColumn, d...) = _End()
-function Base.firstindex(c::_TwissExprColumn, d...) # the beginning of the beamline, or of `start`
+function _part(c::_TwissExprColumn)
+  bl = getfield(c.tw, :bl)
   start = get(getfield(c.tw, :kwargs), :start, nothing)
-  return isnothing(start) ? 1 : _twiss_element_index(getfield(c.tw, :bl), start, "start")
-end
-function _stop_index(c::_TwissExprColumn) # the beamline index of `stop` (nothing: the end)
   stop = get(getfield(c.tw, :kwargs), :stop, nothing)
-  return isnothing(stop) ? nothing : _twiss_element_index(getfield(c.tw, :bl), stop, "stop")
+  return (isnothing(start) ? 1 : _element_index(bl, start, "start"),
+          isnothing(stop) ? length(bl.line) + 1 : _element_index(bl, stop, "stop"))
 end
+Base.firstindex(c::_TwissExprColumn, d...) = _part(c)[1]
+Base.lastindex(c::_TwissExprColumn, d...) = _part(c)[2]
 
 """
     ExprVector
@@ -312,111 +313,11 @@ Base.getindex(a::ExprVector, i::AbstractVector{<:Integer}) = ExprVector(a.v[i])
 Base.getindex(a::ExprVector, ::Colon) = a
 Base.IndexStyle(::Type{ExprVector}) = IndexLinear()
 
-_nsteps(ele) = (up = ele.UniversalParams::UniversalParams; up.n_slices*up.n_steps)
-
-# Beamline indexes of the elements selected by `sel`
-function _element_indexes(bl::Beamline, sel)
-  line = bl.line
-  if sel isa Integer
-    1 <= sel <= length(line) || error("Beamline index $sel is not in 1:$(length(line))")
-    return Int[sel]
-  elseif sel isa LatElement
-    idxs = findall(line) do ele
-      ele === sel || (haskey(getfield(ele, :pdict), InheritParams) &&
-                      getfield(ele, :pdict)[InheritParams].parent === sel)
-    end
-    isempty(idxs) && error("Element $(sel.name) is not in the Beamline")
-    return idxs
-  elseif sel isa Union{AbstractString,Regex}
-    eles = findelements(bl, sel)
-    isempty(eles) && error("No element of the Beamline matches $(repr(sel))")
-    return Int[ele.beamline_index for ele in eles]
-  elseif sel isa AbstractVector
-    return reduce(vcat, (_element_indexes(bl, x) for x in sel); init=Int[])
-  end
-  error("Unsupported location $(repr(sel))")
-end
-
-# The location `step` integration steps after the beginning of element i; its end is the
-# beginning of the next element (index -1: the end of the beamline)
-function _location(bl, i, step)
-  n = _nsteps(bl.line[i])
-  0 <= step <= n || error("Element $i has $n integration steps: step $step does not exist")
-  if step == n
-    return i == length(bl.line) ? (-1, 0) : (i + 1, 0)
-  end
-  return (i, step)
-end
-
-# The locations (beamline index, step) of a column indexed with args, and whether they give one
-# value (else a vector), for TwissExpr and Twiss tables alike. stop is the beamline index of the
-# end of the part of the beamline (nothing: the end of the beamline)
-# `end`: the end of the beamline, or of the part of it given with `stop`
-function _column_locations(bl, stop, ::_End)
-  i = isnothing(stop) ? length(bl.line) + 1 : stop
-  return [i > length(bl.line) ? (-1, 0) : (i, 0)], true
-end
-_column_locations(bl, stop, e::_End, ::Union{Symbol,AbstractString,Integer,Colon}) =
-  _column_locations(bl, stop, e)
-function _column_locations(bl, stop, sel::Union{Integer,LatElement})
-  idxs = _element_indexes(bl, sel)
-  return [(i, 0) for i in idxs], length(idxs) == 1
-end
-_column_locations(bl, stop, sel::Union{AbstractString,Regex,AbstractVector}) =
-  [(i, 0) for i in _element_indexes(bl, sel)], false
-function _column_locations(bl, stop, sel, pos::Union{Symbol,AbstractString,Integer,Colon})
-  idxs = _element_indexes(bl, sel)
-  pos isa AbstractString && (pos = Symbol(pos))
-  if pos isa Colon || pos == :all
-    return [_location(bl, i, k) for i in idxs for k in 0:_nsteps(bl.line[i])], false
-  elseif pos isa Integer
-    locs = [_location(bl, i, pos) for i in idxs]
-  elseif pos == :exit
-    locs = [_location(bl, i, _nsteps(bl.line[i])) for i in idxs]
-  elseif pos == :entrance
-    locs = [(i, 0) for i in idxs]
-  else
-    error("Unknown position $(repr(pos)): use :entrance, :exit, : or a step number")
-  end
-  return locs, sel isa Union{Integer,LatElement} && length(locs) == 1
-end
-_column_locations(bl, stop, ::Colon) = _column_locations(bl, stop, (0.0, Inf))
-function _column_locations(bl, stop, range::Tuple{Real,Real})
-  range[1] <= range[2] || error("Invalid s range $range")
-  s, L, n = _line_steps(bl)
-  locs = Tuple{Int,Int}[]
-  for i in eachindex(s), k in 0:n[i]-1
-    sk = s[i] + k*L[i]/n[i]
-    range[1] <= sk < range[2] && push!(locs, (i, k))
-  end
-  range[1] <= s[end] + L[end] <= range[2] && push!(locs, (-1, 0))
-  return locs, false
-end
-
 function Base.getindex(c::_TwissExprColumn, args...)
-  locs, one = _column_locations(getfield(c.tw, :bl), _stop_index(c), args...)
+  isempty(args) && error("Index the column with a location, e.g. [qd], [5] or [end]")
+  locs, one = _column_locations(getfield(c.tw, :bl), _part(c), args...)
   leaves = LatticeExpr[_TwissLeaf(c.tw, c.col, l[1], l[2], (0, 0, 0, 0)) for l in locs]
   return one ? only(leaves) : ExprVector(leaves)
-end
-
-# s at the beginning, length and number of integration steps of every element
-function _line_steps(bl::Beamline)
-  line = bl.line
-  s = Vector{Float64}(undef, length(line))
-  L = Vector{Float64}(undef, length(line))
-  n = Vector{Int}(undef, length(line))
-  scur = 0.0
-  for (i, ele) in enumerate(line)
-    up = (ele.UniversalParams)::UniversalParams
-    if up.L isa DefExpr
-      up = Beamlines.deval(up, bl.context)
-    end
-    s[i] = scur
-    L[i] = scalar(up.L)
-    n[i] = up.n_slices*up.n_steps
-    scur += L[i]
-  end
-  return s, L, n
 end
 
 """

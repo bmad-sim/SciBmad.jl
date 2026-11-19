@@ -36,7 +36,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
 
 **Optics and nonlinear analysis**
 - Twiss functions, linear and nonlinear (Lie series normal form methods), including spin and radiation
-- Linear transfer matrices and one-turn matrices at every location
+- High order Taylor maps using the Generalised Truncated Power Series Algebra (GTPSA) library
 - Twiss functions anywhere: at every integration step inside elements, for a part of a beamline,
   and for open lattices given the initial optics
 - Resonance driving terms and amplitude-dependent tunes
@@ -47,16 +47,14 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Matching of any Twiss quantity (e.g. tunes, chromaticities, beta functions, Montague functions,
   resonance driving terms, the invariant spin field, amplitude-dependent tunes) at any location, by varying any lattice
   parameter, with exact derivatives computed by automatic differentiation
-- Orbit correction and fitting of measured orbit response matrices (e.g. finding gradient errors)
-  as matches, with any number of correctors
 - Values and exact derivatives of any Twiss quantity, to use with any other optimizer
-  (`value_and_jacobian`)
+  (see `value_and_jacobian`)
 - Everything differentiable (forwards/backwards/Taylor mode) with respect to anything,
   even element lengths
 
 **Lattices**
 - Interdependent parameters through lazily-evaluated deferred expressions, with switchable
-  contexts in which values can be tried and restored (e.g. turn the RF off and back on)
+  contexts in which values can be tried and restored
 - Arbitrary placements and orientations of elements
 - Bmad-style element searches by name, with wild cards, ranges and regular expressions
 
@@ -64,13 +62,11 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Parallel on CPUs and GPUs (NVIDIA, AMD, Intel and Apple): tracking, closed orbits, dynamic
   aperture, IBS, NAFF, and Newton and Levenberg-Marquardt solvers
 - CPU/GPU parallelized over both particles _and lattices_ via `BatchParam`
-- 32-bit precision on CPUs and GPUs (including Apple Metal), also with time-dependent and batch
-  parameters
+- Also support 32-bit precision on CPUs and GPUs (including Apple Metal), also with time-dependent and batch parameters
 
 **Ease of use**
 - One way to read results: Twiss columns, tracking results and matching targets are all read at
-  an element, a name, a position inside an element, or a turn (e.g. `tw.beta1[qd]`,
-  `res.x[qd, turn=10]`)
+  an element, a name, a position inside an element, or a turn
 - Results plot directly with the Makie and Plots packages in Julia (e.g. `lines(tw.s, tw.beta1)`)
 - Usable from Python through [juliacall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/)
 

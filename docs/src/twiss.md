@@ -47,30 +47,33 @@ tw.q1, tw.q2 # (0.14865227408668, 0.1274197024658691)
 Every column of the table is a property too, and is read at locations of the beamline:
 
 ```{code-cell} julia
-tw.beta1[qd]        # 6.695 at the beginning of qd
+tw.beta1[qd]        # [6.695] at the beginning of qd (one value per placement of qd)
 tw.beta1[5]         # 6.695 at the beginning of the element with beamline index 5 (qd)
-tw.beta1[qd, :exit] # 6.695 at its end (the beginning of the next element)
+tw.beta1[qd, :exit] # [6.695] at its end (the beginning of the next element)
 tw.beta1[qd, :]     # [6.695, 6.538, 6.695] at every integration step of qd, both ends included
 tw.beta1[d]         # [14.56, 8.177, 6.695, 12.14] d is in the beamline four times
 tw.beta1["q*"]      # [14.56, 6.695] at the elements whose names start with q
 tw.beta1[end]       # 14.56 at the end of the beamline
+tw.beta1[end-1]     # 12.14 at the beginning of the last element
 ```
 
 All the ways to give a location:
 
 | Location | Meaning |
 |---|---|
-| `tw.beta1[qd]`, `tw.beta1[5]` | At the beginning of an element, or of the element with that beamline index |
+| `tw.beta1[qd]`, `tw.beta1[5]` | At the beginning of every placement of an element, or of the element with that beamline index |
 | `tw.beta1[qd, :exit]` | At the end of the element (the beginning of the next one) |
 | `tw.beta1[qd, :]` | At every integration step of the element, both ends included |
 | `tw.beta1[qd, 1]` | One integration step after the beginning of the element |
-| `tw.beta1[begin]`, `tw.beta1[end]` | At the beginning and the end of the beamline |
+| `tw.beta1[begin]`, `tw.beta1[end]` | At the beginning and the end of the beamline (`end` is the beamline index of the end: `end-1` is the last element) |
 | `tw.beta1["q*"]` | At the elements found by name, see [Searching by Name](beamline.md) |
 | `tw.beta1[[qf, qd]]`, `tw.beta1[2:4]` | At each of these elements |
 | `tw.beta1[(2.0, 6.0)]`, `tw.beta1[:]` | At every integration step in an s-range, or of the whole beamline |
 
-An element that is in the beamline several times gives one value per placement, in beamline
-order, and names, vectors and ranges always give a vector. These locations are the same
+An element gives one value per placement, in beamline order (a vector, also when it is placed
+only once), and names, vectors and ranges always give a vector; a beamline index gives one value.
+The end of the beamline is like a zero-length element: `tw.beta1[end, :exit]` is
+`tw.beta1[end]`. These locations are the same
 everywhere in SciBmad: the expressions used for matching are written in exactly the same way
 (see [](#optimize)).
 
@@ -116,15 +119,15 @@ twiss(fodo, order=3).q1[J1=1] # 0.6817
 
 By default `twiss` computes a standard set of columns at every integration step. `cols` chooses
 the columns (all of them are listed in the reference at the end of this page), and `at` the rows:
-elements (or their beamline indexes) for their beginnings, and s-ranges for every integration step
-in them. Only these locations can then be read, and computing fewer rows is faster. Asking only for
+elements (or their beamline indexes, or names) for their beginnings, and s-ranges for every
+integration step in them. Only these locations can then be read, and computing fewer rows is faster. Asking only for
 the orbit (`x`, `px`, `y`, `py`, `pz`; with RF cavities also `z`, without them the dispersion) is
 faster too, since then none of the optics is computed at the rows. With `at=[]` only the values for
 the whole ring are computed:
 
 ```{code-cell} julia
 twiss(fodo, at=[]).q1                    # 0.14865227408668
-twiss(fodo, at=[qd], cols=["beta1"]).beta1[qd] # 6.695
+twiss(fodo, at=[qd], cols=["beta1"]).beta1[qd] # [6.695]
 ```
 
 The truncation orders are chosen from the columns: `twiss(fodo, cols=["dx_2"])` uses `chrom=2`
@@ -134,7 +137,8 @@ can still be given, for example for the chromaticities alone, which no column as
 
 `start` and `stop` compute only a part of the beamline, from the beginning of `start` to the
 beginning of `stop` (for example one cell of a ring); `tw.beta1[begin]` and `tw.beta1[end]` are
-then those of the part.
+then those of the part, and a location of several values (an element, `:`, ...) gives those in the
+part.
 
 ## Open lattices
 
@@ -236,8 +240,8 @@ d = Drift(L=1.0)
 sx = Multipole(Kn2L=0.01)
 ring = Beamline([qf, d, sx, qd, d], species_ref=Species("electron"), pc_ref=1e9)
 tw = twiss(ring, rf_on=false, order=2, cols=["beta1", "phi1", "h3000"])
-β = tw.beta1[sx]
-φ = 2pi*tw.phi1[sx]
+β = only(tw.beta1[sx]) # (sx is placed once)
+φ = 2pi*only(tw.phi1[sx])
 tw.h3000[1], 0.01*β^1.5/(12*sqrt(2))*cis(-3φ)
 ```
 

@@ -233,18 +233,19 @@ using Test
     @test_throws ErrorException res.x[] # several locations: one must be given
     @test res.pz[end, turn=2] == D.v[:, 6, lend, 2] &&
           res.pz[end, turn=4, particle=2] == D.v[2, 6, lend, 3]
-    @test res.y[qd, turn=4] == res.y[3, turn=4] == D.v[:, 3, lqd, 3]
-    @test res.x[qf, 1, particle=2] == D.v[2, 1, lqf1, :]
+    @test res.y[3, turn=4] == D.v[:, 3, lqd, 3] && res.y[qd, turn=4] == D.v[:, 3, [lqd], 3]
+    @test res.x[qf, 1, particle=2] == D.v[2, 1, [lqf1], :] &&
+          res.x[1, 1, particle=2] == D.v[2, 1, lqf1, :]
     @test res.px[d, :exit, turn=2] == D.v[:, 2, [lqd, lend], 2] # d is placed twice
     @test res.x[qf, :, turn=4, particle=1] == D.v[1, 1, [loc(1, 0.0), lqf1, loc(2, 0.5)], 3]
     @test res.x[(0.0, 0.6), turn=0] == v0[:, 1] .* ones(1, 3)
-    @test res.v[qd, particle=1, turn=2] == D.v[1, :, lqd, 2]
+    @test res.v[qd, particle=1, turn=2] == D.v[1, :, [lqd], 2]
     @test res.q[end, turn=4] == D.q[:, :, lend, 3] && res.state[end, turn=4] == D.state[:, lend, 3]
-    @test res.t_ref[qd, turn=2] == D.t_ref[lqd, 2] &&
+    @test res.t_ref[qd, turn=2] == D.t_ref[[lqd], 2] &&
           res.beta_gamma_ref[end] == D.beta_gamma_ref[lend, :]
     @test res.x[end, turn=:, particle=:] == res.x[end]
     @test res.x[end, turn=[4, 0], particle=2:2] == D.v[2:2, 1, lend, [3, 1]]
-    @test res.y[qd, turn=0:2:4, particle=1] == D.v[1, 3, lqd, :]
+    @test res.y[qd, turn=0:2:4, particle=1] == D.v[1, 3, [lqd], :]
     @test_throws ErrorException res.x[end, turn=3] # not saved
     @test_throws ErrorException res.x[end, turn=0:1:2]
     @test_throws ErrorException res.x[d, turn=2] # the beginning of d is not saved
@@ -253,7 +254,7 @@ using Test
     @test_throws ErrorException plain.q[]
     @test_throws ErrorException plain.t_ref[]
     one = track(bl; v0, n_turns=2, at=[qd]) # the only saved location need not be given
-    @test one.x[turn=1] == one.x[qd, turn=1] == one.data.v[:, 1, 1, 2]
+    @test one.x[turn=1] == one.x[3, turn=1] == one.data.v[:, 1, 1, 2]
     @test_throws ErrorException track(bl; v0, at=[]).x[]
   end
 
@@ -555,8 +556,8 @@ using Test
     knobs = [@knob(qf.Kn1), Knob(qd, :Kn1), Knob(hk => :Kn0L), @knob(d.L)]
     for rf_on in (true, false)
       tw = TwissExpr(ring; rf_on)
-      e = [tw.q1, tw.q2, tw.beta1[qd], tw.beta2[end], tw.x[5], tw.dx[b, :exit]...,
-           mean(tw.beta1[3, :]), maximum(tw.beta2[:]), tw.phi1[7] - tw.phi1[2],
+      e = [tw.q1, tw.q2, tw.beta1[qd]..., tw.beta2[end], tw.x[5],
+           tw.dx[b, :exit]..., mean(tw.beta1[3, :]), maximum(tw.beta2[:]), tw.phi1[7] - tw.phi1[2],
            sqrt(sum(abs2(tw.x["q*"]))), tw.s[end], tw.beta1[1]^2 - 5*mean(tw.alpha1[3, :])]
       push!(e, tw.etac, tw.alphac) # (with RF and parameters they lacked the factor sin(2π q3))
       rf_on && push!(e, tw.q3)
@@ -591,7 +592,7 @@ using Test
 
       # Chromatic and amplitude-dependent terms (the orders are chosen from the quantities)
     tc = TwissExpr(ring; rf_on=false)
-    e = [tc.dq1, tc.dq2, tc.q1[delta=2], tc.dbeta1[qd], tc.dx_2[1], tc.q1[J1=1]]
+    e = [tc.dq1, tc.dq2, tc.q1[delta=2], tc.dbeta1[qd]..., tc.dx_2[1], tc.q1[J1=1]]
     ks = [@knob(sf.Kn2), @knob(sd.Kn2), @knob(qf.Kn1)]
     v, J = value_and_jacobian(e, ks)
     t3 = twiss(ring; rf_on=false, order=3, cols=["dbeta1", "dx_2"], at=[1, 5])
@@ -1130,8 +1131,9 @@ using Test
     @test tw.beta1 == df.beta1 && tw.beta1 ≈ twiss(cell; cols=["beta1"]).beta1
     @test tw.dx ./ tw.beta1 == df.dx ./ df.beta1 && length(tw.beta1) == size(df, 1)
     @test tw.beta1[4] == df.beta1[first_row(4)] != df.beta1[4] # a beamline index, not a row
-    @test tw.beta1[qd] == df.beta1[first_row(5)]
-    @test tw.beta1[qd, :exit] == df.beta1[first_row(6)]
+    @test tw.beta1[qd] == [df.beta1[first_row(5)]] # (an element is a vector, also placed once)
+    @test tw.beta1[qd, :exit] == [df.beta1[first_row(6)]] &&
+          tw.beta1[5, :exit] == df.beta1[first_row(6)]
     @test tw.beta1[b] == df.beta1[[first_row(3), first_row(6)]] # placed twice
     @test tw.beta1[b, :] == df.beta1[[rows_of(3); first_row(4); rows_of(6); first_row(7)]]
     @test tw.beta1[b, 2] == df.beta1[[rows_of(3)[3], rows_of(6)[3]]]
@@ -1139,8 +1141,8 @@ using Test
     @test tw.beta1[(1.0, 1.8)] == df.beta1[findall(x -> 1.0 <= x < 1.8, df.s)]
     @test tw.beta1[:] == df.beta1
     @test tw.beta1[begin] == df.beta1[1] && tw.beta1[end] == df.beta1[end]
-    @test tw.beta1[cell[7], :exit] == tw.beta1[end] == tw.beta1[end, :exit]
-    @test tw.beta1[begin, :exit] == tw.beta1[sf] && value(te.beta1[begin, :exit]) == tw.beta1[sf]
+    @test tw.beta1[cell[7], :exit] == [tw.beta1[end]] && tw.beta1[7, :exit] == tw.beta1[end]
+    @test [tw.beta1[begin, :exit]] == tw.beta1[sf] && value(te.beta1[begin, :exit]) == tw.beta1[2]
     @test tw.name["Sextupole::*"] == ["sf"]
     for loc in Any[(3,), (qd,), (qd, :exit), (b,), (b, :), (b, 2), (2:3,), ([sf, cell[3]],),
                    ((1.0, 1.8),), (:,), ("q*",)]
@@ -1150,6 +1152,64 @@ using Test
     @test_throws ErrorException twiss(cell; at=[1]).beta1[qd] # the row is not in the table
     @test_throws ErrorException twiss(cell; at=[3]).beta1[b, 1]
     @test_throws ErrorException tw.dq1 # needs order 2
+      # As an index, `end` is the beamline index of the end, n+1, which is like a zero-length
+      # element: its entrance and its exit are the same location
+    n = length(cell.line)
+    @test tw.beta1[end-1] == tw.beta1[n] == df.beta1[first_row(n)] &&
+          tw.beta1[n+1] == tw.beta1[end]
+    @test tw.beta1[2:end] == df.beta1[[first_row.(2:n); size(df, 1)]]
+    @test tw.beta1[end, :entrance] == tw.beta1[end, :exit] == tw.beta1[end, 1] == tw.beta1[end] &&
+          tw.beta1[end, :] == [tw.beta1[end]]
+    @test value(te.beta1[end-1]) == tw.beta1[end-1] && value(te.beta1[end, :exit]) == tw.beta1[end]
+    @test_throws ErrorException tw.beta1[end, 2] # (no steps after the end)
+    @test_throws ErrorException tw.beta1[end, :bogus]
+    @test_throws ErrorException tw.beta1[n+2]
+    @test_throws ErrorException tw.beta1[] # (no location)
+    @test_throws ErrorException te.beta1[end, 2]
+      # first and last are the first and the last row
+    ts = twiss(cell; at=[qd])
+    @test first(ts.beta1) == last(ts.beta1) == ts.df.beta1[1] == only(ts.beta1[qd])
+    @test last(tw.beta1) == df.beta1[end] && first(tw.beta1) == df.beta1[1]
+      # `at` takes the same locations (names too); entries not in the beamline are errors. An
+      # element in `at` keeps its row when an s-range has other steps of it (it was lost), and
+      # qd begins at s = 2.0 exactly (the s of the steps were summed; it was 1.9999999999999998)
+    @test twiss(cell; at=["qd"]).df.index == [5] && twiss(cell; at=["q*", 7]).df.index == [1, 5, 7]
+    @test twiss(cell; at=[b, (1.0, 2.0)]).df.index == [3, 3, 3, 4, 6]
+    @test_throws ErrorException twiss(cell; at=["nothing*"])
+    @test_throws ErrorException twiss(cell; at=[n+2])
+    @test_throws ErrorException twiss(cell; at=[Drift(L=1.0)])
+    @test_throws ErrorException track(cell; v0=zeros(1, 6), at=["nothing*"])
+      # The first row inside the first element has its phase from the beginning of the beamline
+      # (it was 0)
+    q4 = Quadrupole(Kn1=0.36, L=0.5, n_steps=4)
+    cell4 = Beamline([q4, sf, b, d, qd, b, d]; species_ref=Species("electron"), pc_ref=18e9)
+    t4, t4r = twiss(cell4), twiss(cell4; at=[(0.2, Inf)])
+    @test t4r.df.s[1] == 0.25 && t4r.df.phi1[1] == t4.df.phi1[3] > 0 &&
+          t4r.df.phi2[1] == t4.df.phi2[3] > 0
+      # s of a location: s at the beginning of its element (Beamlines' ele.s) plus k*L/n, for the
+      # table and for indexing alike, so that an s-range from the s of a row starts at that row
+      # (with steps of L/3 and L/7, which do not add up exactly: the table summed the steps)
+    @elements begin
+      q1 = Quadrupole(Kn1=0.3, L=0.1, n_steps=3)
+      d1 = Drift(L=0.7, n_steps=7)
+      q2 = Quadrupole(Kn1=-0.3, L=0.1, n_steps=3)
+      d2 = Drift(L=0.3)
+    end
+    fodo = Beamline(repeat([q1, d1, q2, d2], 20); species_ref=Species("electron"), pc_ref=18e9)
+    tf = twiss(fodo; cols=String[], base_cols=["index", "s"])
+    sr = tf.df.s
+    @test all(r -> tf.s[(sr[r], Inf)] == sr[sr .>= sr[r]], eachindex(sr))
+    @test [tf.s[i] for i in eachindex(fodo.line)] == [ele.s for ele in fodo.line] &&
+          tf.s[end] == fodo.line[end].s_downstream
+    @test all(r -> twiss(fodo; at=[(0.0, sr[r])], cols=String[]).s[(0.0, sr[r])] == sr[1:r-1],
+              (7, 50, 151))
+      # Elements made from elements made from qd (copies of copies) are qd too
+    sub = Beamline(Beamline(repeat([qf, sf, b, d, qd, b, d], 2); species_ref=Species("electron"),
+                            pc_ref=18e9).line[8:14]; species_ref=Species("electron"), pc_ref=18e9)
+    tsub = twiss(sub)
+    @test tsub.beta1[qd] == [tsub.beta1[5]] == tw.beta1[qd] && tsub.beta1[b] == tw.beta1[b]
+    @test twiss(sub; at=[qd]).df.index == [5] && twiss(sub; start=qd).df.index[1] == 5 &&
+          track(sub; v0=zeros(1, 6), start=qd, at=[qd]).index == [5]
     tc = twiss(cell; chrom=2, at=[])
     @test tc.dq1 == tc.q1[delta=1] && tc.dq2 == tc.q2[delta=1]
     @test tc.dq1 ≈ value(te.dq1) rtol=1e-12
@@ -1292,7 +1352,21 @@ using Test
     @test tp.df.phi2 ≈ tc.df.phi2 rtol=1e-12 atol=1e-13
     @test tp.df.index[1] == n+1 && tp.df.index[end] == 2n+1 && tp.df.name[end] == "qf"
     @test tp.df.s ≈ tc.df.s .+ ring.line[n+1].s
-    @test tp.beta1[ring.line[n+5]] == tp.beta1[n+5] == tp.df.beta1[findfirst(==(n+5), tp.df.index)]
+    @test tp.beta1[ring.line[n+5]] == [tp.beta1[n+5]] &&
+          tp.beta1[n+5] == tp.df.beta1[findfirst(==(n+5), tp.df.index)]
+      # Locations of several values give those in the part (qd and qf are placed three times in
+      # the ring), a beamline index outside the part is an error, and s is that of the whole ring
+    tr = twiss(ring)
+    @test tp.beta1[:] == tp.beta1[(0.0, Inf)] == tp.df.beta1
+    @test tp.beta1[qd] == tp.beta1["qd"] == [tp.beta1[n+5]] &&
+          tp.beta1[qf] == [tp.beta1[begin], tp.beta1[end]]
+    @test tp.df.s == tr.df.s[findfirst(==(n+1), tr.df.index):findfirst(==(2n+1), tr.df.index)]
+    @test_throws ErrorException tp.beta1[1]
+    @test_throws ErrorException tp.beta1[end, :exit] # (the exit of `stop`, outside the part)
+    @test twiss(ring; start=n+1, stop=2n+1, at=[qd, 1, "sf", (0.0, 0.6)]).df.index == [n+2, n+5]
+    tep = TwissExpr(ring; start=n+1, stop=2n+1)
+    @test value(tep.beta1[:]) ≈ tp.df.beta1 rtol=1e-13
+    @test value(tep.beta1[qd]) ≈ tp.beta1[qd] rtol=1e-13
     @test tp.beta1[begin] == tp.df.beta1[1] && tp.beta1[end] == tp.df.beta1[end]
     ts = twiss(ring; start=n+2, stop=2n+2) # the cell started one element later: the same tunes
     @test ts.q1 ≈ tc.q1 rtol=1e-12
@@ -1311,7 +1385,7 @@ using Test
     @test to.df.alpha2 ≈ scalar.(fu.alpha2[j1:j2]) rtol=1e-10
     @test to.df.dx ≈ scalar.(fu.dx[j1:j2]) rtol=1e-10
     @test to.df.phi1 ≈ scalar.(fu.phi1[j1:j2]) .- scalar(fu.phi1[j1]) rtol=1e-10 atol=1e-12
-    @test to.beta1[ring.line[i2]] == to.beta1[end]
+    @test to.beta1[ring.line[i2]] == [to.beta1[end]]
     @test twiss(ring; a_initial=full.a[i1], start=i1, stop=i2, at=[i1+1, i2, q4]).df.index ==
           [i1+1, i2-1, i2]
     te = twiss(ring; a_initial=full.a[i1], start=i1) # to the end of the beamline
@@ -1321,7 +1395,7 @@ using Test
     @test_throws ErrorException twiss(ring; start=qf) # placed several times
       # As expressions: [end] and [begin] are those of the part
     tw = TwissExpr(ring; a_initial=full.a[i1], start=i1, stop=i2)
-    e = [tw.beta1[end], tw.alpha1[end], tw.beta2[q4], tw.phi1[end] - tw.phi1[begin]]
+    e = [tw.beta1[end], tw.alpha1[end], tw.beta2[q4]..., tw.phi1[end] - tw.phi1[begin]]
     v, J = value_and_jacobian(e, [@knob(q3.Kn1), @knob(q4.Kn1)])
     @test v[1:2] ≈ [to.beta1[end], to.alpha1[end]] rtol=1e-12
     fd_part = zeros(4, 2)

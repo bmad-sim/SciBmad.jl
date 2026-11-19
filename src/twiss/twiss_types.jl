@@ -69,22 +69,29 @@ Base.propertynames(tw::Twiss) = vcat(propertynames(tw.summ), propertynames(tw.df
 A column of a `Twiss` table (e.g. `tw.beta1`), indexed with locations of the beamline exactly as
 the columns of a [`TwissExpr`](@ref):
 
-- `tw.beta1[qd]`, `tw.beta1[5]`: at the beginning of the element `qd`, or of the element with
-  beamline index 5. An element that is in the beamline several times gives a vector with one
-  entry per placement, in beamline order
+- `tw.beta1[5]`: at the beginning of the element with beamline index 5 (one value)
+- `tw.beta1[qd]`: at the beginning of the element `qd`, a vector with one entry per placement of
+  `qd` in the beamline (also of elements made from `qd`), in beamline order
 - `tw.beta1[begin]`, `tw.beta1[end]`: at the beginning and the end of the beamline (or of the part
-  of it given with `start` and `stop`)
-- `tw.beta1[qd, :exit]`: at the end of the element (the beginning of the next one)
-- `tw.beta1[qd, :]`: at every integration step of the element, both ends included
-- `tw.beta1[qd, 2]`: two integration steps after the beginning of the element
+  of it given with `start` and `stop`). As an index, `end` is the beamline index of the end (one
+  more than the number of elements, or the index of `stop`), so `tw.beta1[end-1]` is at the
+  beginning of the last element
+- `tw.beta1[5, :exit]`, `tw.beta1[qd, :exit]`: at the end of the element (the beginning of the
+  next one). The end of the beamline is like a zero-length element: `[end]`, `[end, :entrance]`
+  and `[end, :exit]` are the same location
+- `tw.beta1[5, :]`, `tw.beta1[qd, :]`: at every integration step of the element, both ends
+  included (a vector)
+- `tw.beta1[5, 2]`, `tw.beta1[qd, 2]`: two integration steps after the beginning of the element
 - `tw.beta1["q*"]`, `tw.beta1[r"..."]`, `tw.beta1[[qf, qd]]`, `tw.beta1[2:5]`: at the beginning
   of the elements found by name (as for `findelements`), or of each element given (a vector)
 - `tw.beta1[(2.0, 10.0)]`, `tw.beta1[:]`: at every integration step in an s-range (and the end
-  of the beamline if the range contains it), or of the whole beamline
+  of the beamline if the range contains it), or of the whole beamline (a vector)
 
-The table must have rows at these locations (it has with the default `at`). The column also
-iterates over all rows of the table, in order, and broadcasts (`tw.dbeta1 ./ tw.beta1`) as a
-vector of them; `collect(tw.beta1)` (or `tw.df.beta1`) is that vector.
+In the table of a part of the beamline (`start`, `stop`), a vector has the locations in the part
+only, and a beamline index outside it is an error. The table must have rows at these locations
+(it has with the default `at`). The column also iterates over all rows of the table, in order, and
+broadcasts (`tw.dbeta1 ./ tw.beta1`) as a vector of them; `collect(tw.beta1)` (or `tw.df.beta1`)
+is that vector, and `first` and `last` are its first and last rows.
 """
 struct TwissColumn{T,V<:AbstractVector{T}}
   v::V
@@ -103,15 +110,23 @@ Base.:(==)(a::AbstractVector, b::TwissColumn) = a == b.v
 Base.isapprox(a::TwissColumn, b::TwissColumn; kw...) = isapprox(a.v, b.v; kw...)
 Base.isapprox(a::TwissColumn, b::AbstractVector; kw...) = isapprox(a.v, b; kw...)
 Base.isapprox(a::AbstractVector, b::TwissColumn; kw...) = isapprox(a, b.v; kw...)
+Base.last(c::TwissColumn) = last(c.v) # (the last row, as first is the first row)
+# The beamline indexes of the beginning and the end of the part of the beamline (`start`, `stop`;
+# n+1: the end of the beamline), `begin` and `end` of the column
 # (with more than one index, e.g. beta1[end, :exit], `end` is lastindex(c, 1))
-Base.firstindex(c::TwissColumn, d...) = getfield(c.tw, :start)
-Base.lastindex(::TwissColumn, d...) = _End()
+function _part(tw::Twiss)
+  bl = getfield(tw, :bl)
+  isnothing(bl) && error("This Twiss table does not know its Beamline")
+  return (getfield(tw, :start), something(getfield(tw, :stop), length(bl.line) + 1))
+end
+Base.firstindex(c::TwissColumn, d...) = _part(c.tw)[1]
+Base.lastindex(c::TwissColumn, d...) = _part(c.tw)[2]
 
 function Base.getindex(c::TwissColumn, args...)
   tw = c.tw
-  bl = getfield(tw, :bl)
-  isnothing(bl) && error("This Twiss table does not know its Beamline")
-  locs, one = _column_locations(bl, getfield(tw, :stop), args...)
+  isempty(args) && error("Index the column with a location, e.g. [qd], [5] or [end] " *
+                         "(collect(column) is the vector of all rows)")
+  locs, one = _column_locations(getfield(tw, :bl), _part(tw), args...)
   vals = [c.v[_twiss_row(tw, l)] for l in locs]
   return one ? only(vals) : vals
 end
