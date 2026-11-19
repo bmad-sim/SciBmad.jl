@@ -100,7 +100,9 @@ Every summary value and every scalar column of [`twiss`](twiss.md) is available 
 at the same locations and written in the same way as for the result of `twiss` (see
 [Reading the results](twiss.md)): `tw.q1`, `tw.dq1`, `tw.q1[J1=1]`, `tw.beta1[qd]`,
 `tw.beta1[6]`, `tw.beta1[qd, :exit]`, `tw.beta1[b, :]`, `tw.beta1[end]`, `tw.beta1["q*"]`,
-`tw.beta1[(2.0, 10.0)]`, and so on. Chromatic derivatives (`tw.dbeta1[qd]`, `tw.dx_2[1]`) and the
+`tw.beta1[(2.0, 10.0)]`, and so on. As there, an element gives a vector (one expression per
+placement); `only(tw.beta1[qd])` is the single expression of an element placed once, as is its
+beamline index (`tw.beta1[6]`). Chromatic derivatives (`tw.dbeta1[qd]`, `tw.dx_2[1]`) and the
 `h` terms (`tw.h3000[1]`) too. The `h` terms are complex numbers: `value` gives them as such, but a
 target or `minimize` needs `abs`, `real` or `imag` of them. Unlike for `twiss`, you do not need to choose truncation orders or rows: each quantity
 knows what it needs.
@@ -109,7 +111,7 @@ These expressions can be combined with ordinary arithmetic and functions. For ex
 of the beta function at `qd` minus five times the average of the alpha function through the bends:
 
 ```{code-cell} julia
-e = tw.beta1[qd]^2 - 5*mean(tw.alpha1[b, :])
+e = only(tw.beta1[qd])^2 - 5*mean(tw.alpha1[b, :])
 ```
 
 `value` computes an expression. Only the rows and columns of `twiss` that it uses are computed:
@@ -132,7 +134,7 @@ value(maximum(tw.beta1[:]))
 A phase advance between two points is simply a difference:
 
 ```{code-cell} julia
-value(tw.phi1[qd] - tw.phi1[qf]) # in units of 2π
+value(only(tw.phi1[qd]) - only(tw.phi1[qf])) # in units of 2π
 ```
 
 Anything else can be included with `lazy`: `lazy(f)` is the result of the function `f()`, computed
@@ -148,7 +150,7 @@ value(lazy(() -> fodo[1].Bn1))
 Besides `==`, a target can be an inequality:
 
 ```julia
-tw.beta1[qd] <= 30
+tw.beta1[6] <= 30
 tw.beta1["q*"] <= 30            # at each of these elements
 maximum(tw.beta1[:]) <= 100     # everywhere
 ```
@@ -159,7 +161,7 @@ or less than the others while they cannot all be met:
 
 ```julia
 Target(tw.q1, 0.25; tol=1e-6)
-Target(tw.beta1[qd]; lower=5, upper=30, weight=0.1)
+Target(tw.beta1[6]; lower=5, upper=30, weight=0.1)
 ```
 
 There may be fewer, as many, or more targets than knobs. With more knobs than needed, the knobs
@@ -246,7 +248,7 @@ ring.context.kicks = zeros(ncell);
 ring.context.dk = zeros(ncell);
 
 twr = TwissExpr(ring)
-orbit = [twr.x[bpm] for bpm in bpms]
+orbit = twr.x[bpms]
 maximum(abs, value(orbit)) # 5.8e-4 m at the BPMs
 ```
 
@@ -267,7 +269,7 @@ matrix of derivatives (`deriv`, see "Values and Derivatives" below), here with r
 entries of `kicks`:
 
 ```{code-cell} julia
-R = [deriv(twr.x[bpm], Knob(ring.context, :kicks, j)) for bpm in bpms, j in 1:ncell]
+R = [deriv(x, Knob(ring.context, :kicks, j)) for x in twr.x[bpms], j in 1:ncell]
 ```
 
 A measured response matrix can then be fitted, as in LOCO. It depends on the focusing of the ring,
@@ -339,7 +341,7 @@ res = match!(vary    = [@knob(ini.beta1), @knob(ini.alpha1), @knob(ini.beta2), @
 knobs, for your own purposes:
 
 ```{code-cell} julia
-v, J = value_and_jacobian([tw.beta1[qd], tw.q1], [@knob(qf.Kn1), @knob(qd.Kn1)])
+v, J = value_and_jacobian([only(tw.beta1[qd]), tw.q1], [@knob(qf.Kn1), @knob(qd.Kn1)])
 J # [dbeta1/dqf dbeta1/dqd; dq1/dqf dq1/dqd]
 ```
 
@@ -354,7 +356,7 @@ ring = Beamline([qf, sf, d, b, d, qd, sd, d, b, d, kicker],
 twr = TwissExpr(ring)
 kick = Knob(kicker, :Kn0L)
 
-R = [deriv(twr.x[qf], kick), deriv(twr.x[qd], kick)]
+R = deriv(twr.x[[qf, qd]], kick)
 value(R)
 ```
 

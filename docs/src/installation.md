@@ -116,9 +116,10 @@ jl.seval("using SciBmad")
 The first time, juliacall installs Julia and SciBmad, which takes a while. Julia functions are
 then called through `jl`, e.g. `tw = jl.twiss(ring)`, and Julia code without a Python equivalent,
 such as `@elements`, is run with `jl.seval("...")`. Results are Julia objects:
-`np.asarray(tw.beta1)` gives a column as a NumPy array, and `tw.beta1[jl.qd]` its value at the
-beginning of the element `qd`. Python has no keywords in indexing, so tracking results are read
-from their arrays instead: `np.asarray(res.data.v)[particle, coordinate, location, saved turn]`
+`np.asarray(tw.beta1)` gives a column as a NumPy array, and `tw.beta1[jl.qd]` its values at the
+beginning of the element `qd` (one per placement). Python has no keywords in indexing, so
+tracking results are read from their arrays instead:
+`np.asarray(res.data.v)[particle, coordinate, location, saved turn]`
 (counting from 0). Pass NumPy arrays to SciBmad as Julia arrays, e.g. `jl.Array(v0)`, for
 performance. The [examples](examples-index.md) include Python notebooks.
 

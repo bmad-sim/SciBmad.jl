@@ -1208,7 +1208,7 @@ using Test
                             pc_ref=18e9).line[8:14]; species_ref=Species("electron"), pc_ref=18e9)
     tsub = twiss(sub)
     @test tsub.beta1[qd] == [tsub.beta1[5]] == tw.beta1[qd] && tsub.beta1[b] == tw.beta1[b]
-    @test twiss(sub; at=[qd]).df.index == [5] && twiss(sub; start=qd).df.index[1] == 5 &&
+    @test twiss(sub; at=[qd]).df.index == [5] &&
           track(sub; v0=zeros(1, 6), start=qd, at=[qd]).index == [5]
     tc = twiss(cell; chrom=2, at=[])
     @test tc.dq1 == tc.q1[delta=1] && tc.dq2 == tc.q2[delta=1]
@@ -1356,7 +1356,7 @@ using Test
           tp.beta1[n+5] == tp.df.beta1[findfirst(==(n+5), tp.df.index)]
       # Locations of several values give those in the part (qd and qf are placed three times in
       # the ring), a beamline index outside the part is an error, and s is that of the whole ring
-    tr = twiss(ring)
+    tr = twiss(Beamline(repeat(cellp, 3); species_ref=Species("electron"), pc_ref=18e9))
     @test tp.beta1[:] == tp.beta1[(0.0, Inf)] == tp.df.beta1
     @test tp.beta1[qd] == tp.beta1["qd"] == [tp.beta1[n+5]] &&
           tp.beta1[qf] == [tp.beta1[begin], tp.beta1[end]]

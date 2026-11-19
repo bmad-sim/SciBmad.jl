@@ -203,6 +203,8 @@ plainly what was not verified and what could be wrong. Never present unverified 
   `dynamic_aperture` build the kernel chains once per call (`BTBL.prepare`) and run them every 
   turn with `track!(bunch, chains; <launch keywords>)` (bitwise equal to `track!` per turn); 
   `track`'s `elapsed_time` excludes building them (about one turn of one particle).
+- `src/locations.jl`: the locations of a Beamline for `twiss`, `track`, their results and
+  `TwissExpr` (see "Locations" under "Matching" below).
 - `src/twiss/`: `twiss.jl` (`twiss` and its phases), `twiss_operators.jl` (one function per 
   column, `_beta1(j, twi, cache, Val{as_tps})` etc.), `twiss_map.jl` (column name → function, units), 
   `twiss_df.jl` (`_twiss_df`, the row/column loop), `twiss_types.jl` (`Twiss`, `TwissSummary`, 
@@ -220,11 +222,14 @@ plainly what was not verified and what could be wrong. Never present unverified 
 ### `twiss`
 
 1. `co_and_coast`: closed orbit and coasting check (`find_closed_orbit`).
-2. `_twiss_assemble_locations`: the `s` of every tracking callback and which ones are saved 
-   (`step_save`). **The callback count per element must match BeamTracking exactly:** it is 
-   `n_slices*n_steps` (`UniversalParams`, `n_steps` per slice) for every element. BeamTracking 
-   guarantees it: elements tracked in one step (patches, maps, SaganCavity) error for 
-   `n_steps > 1` or `n_slices > 1`, and Beamlines forces `n_steps = n_slices = 1` for zero length. 
+2. Locations (`src/locations.jl`): `_at_locations` gives the rows (the locations of `at`), and
+   `_location_info` the `s`, name, kind and tracking step (`step_save`) of each, plus the
+   beginning and the end of the beamline, which are always tracked (`include_start`/`include_end`
+   say whether they are rows). **The callback count per element must match BeamTracking
+   exactly:** it is `n_slices*n_steps` (`UniversalParams`, `n_steps` per slice) for every
+   element. BeamTracking guarantees it: elements tracked in one step (patches, maps,
+   SaganCavity) error for `n_steps > 1` or `n_slices > 1`, and Beamlines forces
+   `n_steps = n_slices = 1` for zero length.
    Verified per element with a counting callback on mixed lines and ESR.
 3. Tracking with `track` (`_twiss_track`: `_track` at the rows, `save_reference=true` so that all
    of `twiss`'s tracking compiles the same kernels; the Bunch `t_ref = zero(s[1])` holds parametric
@@ -365,11 +370,11 @@ Reading a `TrackResult` (Nov 2026, maintainer's choices): `res.x` … `res.pz`, 
 `res.q`, `res.state`, `res.t_ref`, `res.beta_gamma_ref` are `TrackColumn`s read at the
 locations of `twiss` (same `_column_locations`; no location = the only saved location, an error
 if several were saved) with the
-keywords `turn` (the turn number, 0 = initial) and `particle`: `res.x[qd, turn=2, particle=1]`.
+keywords `turn` (the turn number, 0 = initial) and `particle`: `res.x[5, turn=2, particle=1]`
+(an element gives a location index: `res.x[qd, turn=2]` is [particle, location]).
 Julia indexing takes keywords after a comma (`a[i, k=1]`), not a semicolon, and lowers `end`
 with several indexes or keywords to `lastindex(a, 1)` (all column types define it). `TrackResult.rows`
-maps (beamline index, step in the element) to the location number (from
-`_twiss_assemble_locations`, whose last output is the step within the element); `res.turns` lists
+maps (beamline index, step in the element) to the location number; `res.turns` lists
 the saved turns. The saved arrays moved to `res.data` (`res.data.v[particle, coordinate,
 location, saved turn]`, …; breaking) and are what internal code uses (`twiss` reads `tr.data`).
 `track_spin(res.q, s0)` accepts the column. Tested against `res.data` ("Tracking results read at
@@ -400,16 +405,32 @@ values kept alive for the save). With it off the kernels' native code is identic
   (`_to_p`: the part without phase space dependence, in a parameter-only Descriptor), and the
   trees are evaluated with these (`_peval`); `deriv` is `GTPSA.deriv` there.
 - Rows: a location is (beamline index, step); the end of an element is the beginning of the next
-  (-1: the end of the beamline). Beginnings are requested by index, interior steps by an s-range
-  over the element, the end by `(s_end - δ, Inf)`; the rows of the result are found with
-  `Twiss.rows` (below).
+  (-1: the end of the beamline). The engine passes exactly the locations of its expressions to
+  `twiss` (`at=_Locations(...)`, internal); the rows of the result are found with `Twiss.rows`.
+  (Before Nov 18 2026 it asked for every step of an element for one step, and for everything
+  within 1e-9 m of the end, e.g. zero-length end markers: 2 extra rows on ESR.)
 - Locations are the same for `TwissExpr` and `twiss` tables (maintainer, Nov 2026: "everything in
-  TwissExpr accessible identically in regular twiss"): `_column_locations(bl, stop, args...)` in
-  `expressions.jl` turns any index (integer = beamline index, element, name, vector, range,
+  TwissExpr accessible identically in regular twiss"): `_column_locations(bl, part, args...)` in
+  `locations.jl` turns any index (integer = beamline index, element, name, vector, range,
   `[ele, :exit]`, `[ele, :]`, `[ele, k]`, s-range, `:`, `begin`/`end` of the beamline or of
   `start`/`stop`) into locations (beamline index, step in the element) and says whether it is one
-  value. `twiss` stores the row of every location of its table (`Twiss.rows`, from the step of
-  each row within its element, which `_twiss_assemble_locations` returns last), with `start` and
+  value. `at` of `twiss` and `track` is resolved by the same code (`_at_locations`: each entry as
+  one index; integers outside a part are left out). Rules (maintainer, Nov 18 2026): only an
+  integer (also `begin`, `end`, `[5, :exit]`, `[5, 2]`) gives one value; an element always gives a
+  vector, one entry per placement (also of copies of copies, `_is_or_inherits`), as Beamlines'
+  `bl[qf]` does; `end` is the beamline index n+1 (or the index of `stop`), so `end-1` is the last
+  element, and the end is like a zero-length element (`[end]`, `[end, :entrance]`,
+  `[end, :exit]`, `[end, 1]` are the same location; `[end, :]` is a 1-vector; other positions
+  error; in a part table `[end, :exit]` is the exit of `stop`, outside the part: an error); `[]`
+  is an error (for `TrackColumn` it is the only saved location); in a part table (`start`,
+  `stop`) vectors keep only the locations in the part and an integer outside it is an error; `at`
+  entries not in the beamline (unknown names, indexes, elements) are errors. The s of every
+  location is s at the beginning of its element as Beamlines sums it (`ele.s`) plus k*L/n, for
+  the table and for indexing alike (`_line_steps`; the table used to sum the steps, which differs
+  in the last bits where L/n is not exact: 257 of 281 rows on a FODO with L/3 and L/7 steps, and
+  an s-range starting at a row's own `s` did not start at that row for 95 of them; `s` of a part
+  table was `ele.s` of `start` plus the part's own sums). `twiss` stores the row of every location
+  of its table (`Twiss.rows`), with `start` and
   `stop`; `_twiss_row(tw, loc)` finds a row (also for the engine, replacing its search by s;
   `value`/`value_and_jacobian` bitwise unchanged). A table column (`TwissColumn`) is
   therefore not an `AbstractVector` (an integer is not a row): it iterates, broadcasts, compares
@@ -675,9 +696,25 @@ Open items:
   parameter group that held a TPS keeps the TPS type: `scalarize!(ele)` (20 µs) is needed.
 - The first design draft of the matching interface (before the implementation, with the
   evidence for the two items above): https://claude.ai/artifact/FDK4ajRV3EWLhVaf4j5PLW.
-- `twiss` should not assemble its rows itself (`_twiss_assemble_locations`): `track` resolves `at`
-  already (it calls the same function), so `twiss` can take the locations from `track`. Remove
-  it from `twiss` (not done yet).
+- Locations (Nov 18 2026): `_twiss_assemble_locations` is gone; `twiss`, `track`, the column
+  types and the engine all use `src/locations.jl`. Old bugs fixed with it (tests, negative
+  controls on the old code: 19 failures and 6 errors of 56 checks in "Twiss table indexed with
+  locations", 9 of 33 in "Twiss of a part of the beamline"): an element in `at` lost its entrance
+  row when an s-range had other steps of it; a table whose first row was inside the first
+  element gave that row phase 0 (now the full table's phases, bitwise); part tables failed for
+  `:`, s-ranges, names and elements placed outside the part; `[end, k]` ignored `k`; names in
+  `at` were ignored silently without `start`/`stop`; only one level of copies was followed.
+  Bitwise against the previous state on 31 cases (ESR default, `chrom=2`, sparse; FODOs with all
+  default columns, Taylor series, order 2, `chrom=3`, spin, RF, `r`/`m` columns, parts, open
+  lines, `track` with `at`, `value`/`value_and_jacobian` incl. a part): equal except `s` in the
+  last bits (≤ 4.4e-16 on the FODO, 2.3e-13 on an ESR part; ESR itself bitwise) and the
+  explained row changes above; `alphac` divides by `s[end]` (1.7e-23 -> 1.4e-23 on a ring
+  without bends). Performance (ESR, Julia 1.10, alternating fresh processes): `_line_steps` 0.88
+  ms against 1.5-1.8 ms of `_twiss_assemble_locations`; `twiss` 241.6-244.0 ms vs 240.2-246.8,
+  `chrom=2` 696-701 vs 711-712, part 111-114 vs 113-114, sparse 79.6-81.2 vs 82.6-84.5, `track`
+  with `at=:` 7.4-8.3 vs 8.5; `value` without GC 60.9-61.3 vs 63.9-64.4 (the same call allocates
+  87-186 MB from call to call in both versions, so the minimum of 15 samples with GC is noisy;
+  the mean of 60 calls with GC: 108-110 vs 111-114 ms); an integer index 0.45 vs 0.36 µs.
 - After the `track`/`twiss` rework (Nov 2026): notebooks rerun (Nov 17; `track_spin(res.q, …)`
   is (particle, component, location, turn): the spin notebooks index `[1, 2, 1, :]`; the
   Python `nonlinear-twiss` notebook, legacy for SciBmad < 0.5.0, was removed);
@@ -791,7 +828,7 @@ Open items:
   kernel takes √K): a knob on a quadrupole with `Kn1 == 0` aborts Julia in GTPSA
   (`sqrt(+0.0000E+00)`, no exception), e.g. `value_and_jacobian([tw.q1], [@knob(q0.Kn1)])`. The
   map is analytic in K; GTPSA's `sincu`-type functions would avoid the square root.
-- Unknown entries of `at` are ignored silently; `_dampdec` returns an `Int` 0 without radiation; 
+- `_dampdec` returns an `Int` 0 without radiation; 
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.
 - Docs (`docs/`) were updated page by page in TOC order (`docs/toctree.md`, see "Writing docs"); 
@@ -812,7 +849,8 @@ Open items:
 - Python (juliacall) cannot index with keywords: `res.x[turn=3]` has no Python syntax, so
   Python users read `np.asarray(res.data.v)[particle, coordinate, location, saved turn]`
   (documented in `installation.md`, "Using SciBmad from Python"). Twiss columns work
-  (`tw.beta1[jl.qd]`). Idea (maintainer, Nov 2026: in the Python wrapper, no Julia changes; not
+  (`tw.beta1[jl.qd]` is a vector, one entry per placement; checked Nov 18 2026). Idea
+  (maintainer, Nov 2026: in the Python wrapper, no Julia changes; not
   done, untested): `res.x[qd, turn=3]` is `getindex(res.x, qd; turn=3)`, and juliacall passes
   Python keywords as Julia keywords, so `jl.getindex(res.x, jl.qd, turn=3, particle=1)` should
   work as is. The wrapper would wrap result objects so that `res.x(qd, turn=3)` and

@@ -164,12 +164,15 @@ can then be knobs, e.g. to match the Twiss parameters at the start of a line:
 
 ## Locations
 The same as for the columns of the result of `twiss` (see [`TwissColumn`](@ref)):
-- `tw.beta1[ele]`, `tw.beta1[7]`: the beginning of the element (or of the element with that
-  beamline index). An element placed several times gives a vector.
+- `tw.beta1[7]`, `tw.beta1[ele]`: the beginning of the element with that beamline index (one
+  expression), or of every placement of the element (a vector, also if it is placed once:
+  `only(tw.beta1[ele])` is then the expression itself).
 - `tw.beta1[ele, :exit]`: the end of the element.
 - `tw.beta1[ele, :]`: every integration step of the element, both ends included (a vector).
   `tw.beta1[ele, k]`: after `k` integration steps.
-- `tw.beta1[end]`, `tw.beta1[begin]`: the end and the beginning of the beamline.
+- `tw.beta1[end]`, `tw.beta1[begin]`: the end and the beginning of the beamline (or of the part
+  given with `start` and `stop`, which vectors are restricted to). `end` is a beamline index:
+  `tw.beta1[end-1]` is the beginning of the last element.
 - `tw.beta1["q*"]`, `tw.beta1[r"..."]`: elements by name, as for `findelements` (a vector).
 - `tw.beta1[(s1, s2)]`, `tw.beta1[:]`: every integration step in an s-range, or of the whole
   beamline (a vector).
