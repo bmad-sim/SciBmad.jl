@@ -372,8 +372,8 @@ Reading a `TrackResult` (Nov 2026, maintainer's choices): `res.x` … `res.pz`, 
 `res.q`, `res.state`, `res.t_ref`, `res.beta_gamma_ref` are `TrackColumn`s read at the
 locations of `twiss` (same `_column_locations`; no location = the only saved location, an error
 if several were saved) with the
-keywords `turn` (the turn number, 0 = initial) and `particle`: `res.x[5, turn=2, particle=1]`
-(an element gives a location index: `res.x[qd, turn=2]` is [particle, location]).
+keywords `turn` (the turn number, 0 = initial) and `particle`: `res.x[qd, turn=2, particle=1]`
+(`res.x[[d], turn=2]`, every placement of `d`, is [particle, location]).
 Julia indexing takes keywords after a comma (`a[i, k=1]`), not a semicolon, and lowers `end`
 with several indexes or keywords to `lastindex(a, 1)` (all column types define it). `TrackResult.rows`
 maps (beamline index, step in the element) to the location number; `res.turns` lists
@@ -417,10 +417,16 @@ values kept alive for the save). With it off the kernels' native code is identic
   `[ele, :exit]`, `[ele, :]`, `[ele, k]`, s-range, `:`, `begin`/`end` of the beamline or of
   `start`/`stop`) into locations (beamline index, step in the element) and says whether it is one
   value. `at` of `twiss` and `track` is resolved by the same code (`_at_locations`: each entry as
-  one index; integers outside a part are left out). Rules (maintainer, Nov 18 2026): only an
-  integer (also `begin`, `end`, `[5, :exit]`, `[5, 2]`) gives one value; an element always gives a
-  vector, one entry per placement (also of copies of copies, `_is_or_inherits`), as Beamlines'
-  `bl[qf]` does; `end` is the beamline index n+1 (or the index of `stop`), so `end-1` is the last
+  one index, but an element is every placement; integers outside a part are left out). Rules
+  (maintainer, Nov 19 2026; the shape depends only on the type of the index, as for Julia arrays):
+  an integer (also `begin`, `end`, `[5, :exit]`, `[5, 2]`) and an element (`[qd]`, `[qd, :exit]`,
+  `[qd, 2]`) give one value; an element must have exactly one placement in the table (or the part;
+  copies, also of copies, count as placements: `_is_or_inherits`), else an error naming the
+  beamline indexes (`_one_placement`), also with a position (`[b, :]` too); in a vector,
+  `[[qd]]`, `[[qd], :exit]`, `[[qd], :]`, it gives every placement. (Nov 18 an element always
+  gave a vector: the docs needed `only(...)` in ten places, and an outside reviewer objected to
+  dereferencing the common single value.) Names, s-ranges and `:` give vectors; `end` is the
+  beamline index n+1 (or the index of `stop`), so `end-1` is the last
   element, and the end is like a zero-length element (`[end]`, `[end, :entrance]`,
   `[end, :exit]`, `[end, 1]` are the same location; `[end, :]` is a 1-vector; other positions
   error; in a part table `[end, :exit]` is the exit of `stop`, outside the part: an error); `[]`
@@ -849,7 +855,7 @@ Open items:
 - Python (juliacall) cannot index with keywords: `res.x[turn=3]` has no Python syntax, so
   Python users read `np.asarray(res.data.v)[particle, coordinate, location, saved turn]`
   (documented in `installation.md`, "Using SciBmad from Python"). Twiss columns work
-  (`tw.beta1[jl.qd]` is a vector, one entry per placement; checked Nov 18 2026). Idea
+  (`tw.beta1[jl.qd]` is one value; checked Nov 19 2026). Idea
   (maintainer, Nov 2026: in the Python wrapper, no Julia changes; not
   done, untested): `res.x[qd, turn=3]` is `getindex(res.x, qd; turn=3)`, and juliacall passes
   Python keywords as Julia keywords, so `jl.getindex(res.x, jl.qd, turn=3, particle=1)` should
