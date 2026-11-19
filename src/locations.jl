@@ -117,9 +117,11 @@ _location_key((i, k)) = (i == -1 ? typemax(Int) : i, k)
 
 # The locations of a column indexed with args in the part of the beamline from the beginning of
 # element part[1] to the beginning of part[2], and whether they give one value (else a vector),
-# for Twiss tables, TwissExpr and TrackResult alike. A beamline index (with a position other than
-# `:`) gives one value and must be in the part (with strict=false, as for `at`, it is left out if
-# not); elements, names, vectors, s-ranges and `:` give their locations in the part (a vector).
+# for Twiss tables, TwissExpr and TrackResult alike. A beamline index or an element (with a
+# position other than `:`) gives one value: the index must be in the part, and the element must
+# have exactly one placement there (else an error: `[[ele]]` is every placement). Names, vectors,
+# s-ranges and `:` give their locations in the part (a vector). With strict=false (for `at`), an
+# index outside the part is left out and an element gives all its placements in the part.
 # (ls: _line_steps(bl) if already computed)
 function _column_locations(bl, part, sel; strict=true, ls=nothing)
   sel isa Integer && return _single_location(bl, part, _location(bl, sel, 0), strict), true
@@ -127,7 +129,11 @@ function _column_locations(bl, part, sel; strict=true, ls=nothing)
     range = sel isa Colon ? nothing : sel
     return _range_locations(bl, part, range, isnothing(ls) ? _line_steps(bl) : ls), false
   end
-  locs = [_location(bl, i, 0) for i in _element_indexes(bl, sel)]
+  idxs = _element_indexes(bl, sel)
+  if sel isa LatElement && strict
+    return _one_placement(bl, part, sel, idxs, [[_location(bl, i, 0)] for i in idxs]), true
+  end
+  locs = [_location(bl, i, 0) for i in idxs]
   return filter!(l -> _in_part(bl, l, part), locs), false
 end
 function _column_locations(bl, part, sel, pos; strict=true, ls=nothing)
@@ -137,21 +143,41 @@ function _column_locations(bl, part, sel, pos; strict=true, ls=nothing)
   # (the end of the beamline is a zero-length element: one step from its beginning to its end,
   # which are the same location)
   nsteps(i) = i == n_ele + 1 ? 1 : _nsteps(bl, i)
-  if pos isa Colon || pos == :all
-    locs = [_location(bl, i, k) for i in idxs for k in 0:(i == n_ele + 1 ? 0 : nsteps(i))]
+  all_steps = pos isa Colon || pos == :all
+  # (the locations of every placement)
+  if all_steps
+    per = [[_location(bl, i, k) for k in 0:(i == n_ele + 1 ? 0 : nsteps(i))] for i in idxs]
   elseif pos isa Integer
-    locs = [_location(bl, i, pos) for i in idxs]
+    per = [[_location(bl, i, pos)] for i in idxs]
   elseif pos == :exit
-    locs = [_location(bl, i, nsteps(i)) for i in idxs]
+    per = [[_location(bl, i, nsteps(i))] for i in idxs]
   elseif pos == :entrance
-    locs = [_location(bl, i, 0) for i in idxs]
+    per = [[_location(bl, i, 0)] for i in idxs]
   else
     error("Unknown position $(repr(pos)): use :entrance, :exit, : or a step number")
   end
-  if sel isa Integer && !(pos isa Colon || pos == :all)
-    return _single_location(bl, part, only(locs), strict), true
+  if sel isa Integer && !all_steps
+    return _single_location(bl, part, only(only(per)), strict), true
+  elseif sel isa LatElement && strict
+    return _one_placement(bl, part, sel, idxs, per), !all_steps
   end
-  return filter!(l -> _in_part(bl, l, part), locs), false
+  return filter!(l -> _in_part(bl, l, part), reduce(vcat, per; init=Tuple{Int,Int}[])), false
+end
+
+# The locations in the part of the only placement of the element sel that has locations there
+# (idxs: the beamline indexes of its placements, per: their locations), else an error
+function _one_placement(bl, part, sel, idxs, per)
+  inpart = [filter(l -> _in_part(bl, l, part), p) for p in per]
+  k = findall(!isempty, inpart)
+  length(k) == 1 && return inpart[only(k)]
+  n_ele = length(bl.line)
+  where = part == (1, n_ele + 1) ? "the beamline" :
+          "the part of the beamline from element $(part[1]) to element $(part[2]) (`start`, `stop`)"
+  isempty(k) && error("Element $(repr(sel.name)) has no placement in ", where)
+  is = idxs[k]
+  error("Element $(repr(sel.name)) is placed $(length(k)) times in ", where, " (beamline indexes ",
+        join(first(is, 10), ", "), length(is) > 10 ? ", ..." : "", "): index with `[[ele]]` for ",
+        "all of them, or with one beamline index")
 end
 
 function _single_location(bl, part, l, strict)

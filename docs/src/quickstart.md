@@ -211,9 +211,9 @@ of the table, which can be read at any location of the beamline, e.g. the beginn
 
 ```{code-cell} julia
 tw.q1               # 0.0549
-tw.beta1[qd]        # [10.13] at the beginning of qd (one value per placement of qd)
-tw.beta1[qd, :exit] # [10.13] at the end of qd
-tw.beta1[b]         # [12.93, 10.52] b is in the beamline twice
+tw.beta1[qd]        # 10.13 at the beginning of qd
+tw.beta1[qd, :exit] # 10.13 at the end of qd
+tw.beta1[[b]]       # [12.93, 10.52] at both placements of b
 tw.beta1[end]       # 13.41 at the end of the beamline
 tw.beta1[()]
 ```

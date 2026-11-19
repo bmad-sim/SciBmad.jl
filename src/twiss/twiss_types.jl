@@ -69,9 +69,10 @@ Base.propertynames(tw::Twiss) = vcat(propertynames(tw.summ), propertynames(tw.df
 A column of a `Twiss` table (e.g. `tw.beta1`), indexed with locations of the beamline exactly as
 the columns of a [`TwissExpr`](@ref):
 
-- `tw.beta1[5]`: at the beginning of the element with beamline index 5 (one value)
-- `tw.beta1[qd]`: at the beginning of the element `qd`, a vector with one entry per placement of
-  `qd` in the beamline (also of elements made from `qd`), in beamline order
+- `tw.beta1[qd]`, `tw.beta1[5]`: at the beginning of the element `qd` (one value; `qd` must be
+  placed once in the beamline, else it is an error), or of the element with beamline index 5.
+  Elements made from `qd` (copies, also of copies) are placements of `qd`
+- `tw.beta1[[qd]]`: at the beginning of every placement of `qd`, in beamline order (a vector)
 - `tw.beta1[begin]`, `tw.beta1[end]`: at the beginning and the end of the beamline (or of the part
   of it given with `start` and `stop`). As an index, `end` is the beamline index of the end (one
   more than the number of elements, or the index of `stop`), so `tw.beta1[end-1]` is at the
@@ -83,15 +84,17 @@ the columns of a [`TwissExpr`](@ref):
   included (a vector)
 - `tw.beta1[5, 2]`, `tw.beta1[qd, 2]`: two integration steps after the beginning of the element
 - `tw.beta1["q*"]`, `tw.beta1[r"..."]`, `tw.beta1[[qf, qd]]`, `tw.beta1[2:5]`: at the beginning
-  of the elements found by name (as for `findelements`), or of each element given (a vector)
+  of the elements found by name (as for `findelements`), or of each element given (a vector).
+  With a position, e.g. `tw.beta1[[qd], :exit]`, at that position of each
 - `tw.beta1[(2.0, 10.0)]`, `tw.beta1[:]`: at every integration step in an s-range (and the end
   of the beamline if the range contains it), or of the whole beamline (a vector)
 
 In the table of a part of the beamline (`start`, `stop`), a vector has the locations in the part
-only, and a beamline index outside it is an error. The table must have rows at these locations
-(it has with the default `at`). The column also iterates over all rows of the table, in order, and
-broadcasts (`tw.dbeta1 ./ tw.beta1`) as a vector of them; `collect(tw.beta1)` (or `tw.df.beta1`)
-is that vector, and `first` and `last` are its first and last rows.
+only, an element must be placed once in the part, and a beamline index outside it is an error.
+The table must have rows at these locations (it has with the default `at`). The column also
+iterates over all rows of the table, in order, and broadcasts (`tw.dbeta1 ./ tw.beta1`) as a vector
+of them; `collect(tw.beta1)` (or `tw.df.beta1`) is that vector, and `first` and `last` are its
+first and last rows.
 """
 struct TwissColumn{T,V<:AbstractVector{T}}
   v::V

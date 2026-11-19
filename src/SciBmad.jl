@@ -219,7 +219,7 @@ if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE",
            targets=[tw.q1 == t0.q1 + 0.01, tw.q2 == t0.q2 - 0.01, tw.beta1[qd] <= 100])
     match!(vary=[@knob(fodo.context.ksf), @knob(fodo.context.ksd)],
            targets=[tw.dq1 == 1, tw.dq2 == 1])
-    value(tw.beta1[qd]^2 - 5*mean(tw.alpha1[b, :]))
+    value(tw.beta1[qd]^2 - 5*mean(tw.alpha1[[b], :]))
   end
 end
 end # if Base.JLOptions().code_coverage == 0

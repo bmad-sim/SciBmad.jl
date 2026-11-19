@@ -210,12 +210,12 @@ written after the location (or alone):
   beamline; with several saved locations, one must be given), `[particle, saved turn]`
 - `res.x[turn=n]`: all particles after turn `n`, `res.x[turn=n, particle=i]`: one number.
   `turn` and `particle` can also be `:` (all, as without them), a range or a vector
-- `res.x[5, turn=n]`, `res.x[5, :exit, ...]`, `res.x[end, ...]`: at the beginning of the element
-  with beamline index 5, at its end, at the end of the beamline (`end` is the beamline index of
-  the end, one more than the number of elements)
-- `res.x[qd, ...]`, `res.x[qd, :]`, `res.x["q*"]`, `res.x[(2.0, 6.0)]`: at several locations
-  (every placement of an element, ...; as for `twiss`): their index comes after the particle
-  (`[particle, location, saved turn]`)
+- `res.x[qd, turn=n]`, `res.x[5, ...]`, `res.x[qd, :exit, ...]`, `res.x[end, ...]`: at the
+  beginning of `qd` (placed once) or of the element with beamline index 5, at its end, at the end
+  of the beamline (`end` is the beamline index of the end, one more than the number of elements)
+- `res.x[qd, :]`, `res.x[[qd]]`, `res.x["q*"]`, `res.x[(2.0, 6.0)]`: at several locations (every
+  step of `qd`, every placement of `qd`, ...; as for `twiss`): their index comes after the
+  particle (`[particle, location, saved turn]`)
 
 `res.v` and `res.q` have the coordinate or quaternion component as the index after the particle,
 and `t_ref` and `beta_gamma_ref` no particle index (unless they are per particle). The

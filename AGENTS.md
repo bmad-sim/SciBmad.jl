@@ -243,8 +243,10 @@ plainly what was not verified and what could be wrong. Never present unverified 
    `beta_gamma_ref` and `t_ref` of the rows come from the result.
 4. `factorise` (NNF) of `a`, then `_twiss_push_a`: per row `a = map ∘ a` (or the tracked `a`) and
    `factorise` (canonise level from `canonise_phase_damp`; 0 at order 1) with fresh phases: the
-   phases from the start mod 1, unwrapped against the previous row (so rows must be less than half
-   a turn of phase apart, as before: with sparse `at` the integer tunes are lost, a known issue).
+   phases from the start mod 1, unwrapped against the previous row; when the rows are not all
+   integration steps, their whole turns come from the order-1 maps at every step (`_twiss_turns`,
+   commit 182d287), so phases and tunes have their integer parts with any `at` (ESR `at=[]`:
+   q1 48.08, as the full table).
    The slip of a coasting beam and the damping are totals. Old and new agree to round-off (23
    cases), except the self-detuning with variable orders below the total order (an artifact of the
    truncation either way; with complete orders they agree to all digits).
@@ -440,14 +442,11 @@ values kept alive for the save). With it off the kernels' native code is identic
   CairoMakie 0.24 and Plots. Tests compare expressions with raw rows (`t.df.beta1[r]`) to stay
   independent of the shared code. The docs present this once, in `twiss.md` ("Reading the
   results"); the Quickstart introduces it and `optimize.md` refers to it.
-- Tunes and phases: `twiss` unwraps the phases row by row, so with few rows they are only known
-  modulo 1 (`twiss(ring; at=[])` gives the tunes in (-0.5, 0.5]). When `q1`, `q2`, `phi1` or
-  `phi2` are used, the engine adds rows (`phase_rows` of the `TwissExpr`: elements at most 0.2
-  turns apart, chosen from one full `twiss`, chosen again when two rows are more than ~0.35
-  apart, `_StalePhaseRows`). With derivatives the rows would each cost a parametric normal form
-  (ESR, 40 knobs: 1.8 s instead of 0.48 s), so the integer parts are taken from an evaluation
-  without derivatives instead. An unwrapping inside `twiss` from the linear maps at every step
-  would make this unnecessary (not done).
+- Tunes and phases: `twiss` gives their whole turns itself with any rows (`_twiss_turns`, see
+  `twiss` 4.), so the engine adds no rows for `q1`, `q2`, `phi1`, `phi2` (the earlier
+  `phase_rows`/`_StalePhaseRows` of the `TwissExpr` are gone). ESR, 5 rows, 10 quadrupole knobs
+  (Nov 19 2026, without GC): `value` 62.3 ms, with the tunes 61.2 ms; `value_and_jacobian`
+  260.9 ms, with the tunes 262.4 ms.
 - Open lines are checked with numbers first (`_check_open_line`: the initial orbit and the
   transfer matrix by differences, 13 particles): with wild knob values the tracked map overflows
   and GTPSA ends the process in the normal form (`invsqrt(NaN)`), which a solver step can cause
@@ -470,8 +469,9 @@ values kept alive for the save). With it off the kernels' native code is identic
   everywhere. A weight of 1e-5 for `minimize` (to hold the targets exactly) made LM stall: the
   default is 1, and targets that must hold get a larger weight (constrained minimization would
   need a null-space step: not done).
-- ESR (5 rows, quadrupole strengths as knobs, Julia 1.10, Apple M4): `value` 60 ms (85 ms with
-  tunes); `value_and_jacobian` with 2/10/40 knobs 127/197/478 ms (231/315/587 ms with tunes);
+- ESR (5 rows, quadrupole strengths as knobs, Julia 1.10, Apple M4): `value` 60 ms;
+  `value_and_jacobian` with 2/10/40 knobs 127/197/478 ms (the tunes, then 85 ms and
+  231/315/587 ms, now cost nothing extra: see "Tunes and phases");
   the same Jacobian by forward differences would take 3/11/41 × 60 ms. A tune match with 4
   quadrupoles: 4 iterations, 1.6 s.
 - `_check_cachable` (twiss): the single-tracking path (track the identity once, compose the maps

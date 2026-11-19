@@ -70,7 +70,7 @@ The same goes for any column of `twiss`, at any location. For example, how the b
 the dispersion at `qd` depend on the quadrupole strengths:
 
 ```{code-cell} julia
-v, J = value_and_jacobian([only(tw.beta1[qd]), only(tw.dx[qd])], [kf, kd])
+v, J = value_and_jacobian([tw.beta1[qd], tw.dx[qd]], [kf, kd])
 J # [dbeta1/dkf dbeta1/dkd; ddx/dkf ddx/dkd]
 ```
 
@@ -145,7 +145,7 @@ grad(twp.q1) # [dq1/dkf, dq1/dkd], as above
 ```
 
 ```{code-cell} julia
-grad(only(twp.beta1[qd])) # [dbeta1/dkf, dbeta1/dkd]
+grad(twp.beta1[qd]) # [dbeta1/dkf, dbeta1/dkd]
 ```
 
 Before setting any parameters to be `TPS`'s from a different `Descriptor`, use `scalarize!` on
