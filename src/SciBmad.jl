@@ -11,6 +11,7 @@ using Reexport
   using NonlinearNormalForm: NonlinearNormalForm as NNF
   using TPSAInterface: TPSAInterface as TI
   using DifferentiationInterface: DifferentiationInterface as DI
+  using Statistics: Statistics, mean
   using LinearAlgebra,
         DataFrames,
         OrderedCollections,
@@ -36,24 +37,46 @@ export  twiss,
         track,
         track_spin,
         track_spin!,
-        TrackingResult,
-        TrackingConfig,
+        TrackResult,
+        TrackConfig,
+        TrackColumn,
         Twiss,
         TwissSummary,
+        TwissColumn,
         getterm,
         AmplitudeDependentValue,
         grad,
         val,
         jac,
         phase_trombone!,
+        TwissExpr,
+        LatticeExpr,
+        ExprVector,
+        Knob,
+        @knob,
+        Target,
+        MatchProblem,
+        MatchResult,
+        match!,
+        undo!,
+        value,
+        value_and_jacobian,
+        penalty,
+        setknobs!,
+        lazy,
+        mean,
         BeamTracking,
         Bunch,
         ParticleView, 
         Time, 
         TimeDependentParam, 
-        BatchParam
+        BatchParam,
+        TrackPoint,
+        transforms_out!,
+        transforms_in!
         
-include("closed_orbit.jl") 
+include("closed_orbit.jl")
+include("locations.jl")
 include("track.jl")
 include("adv.jl")
 include("twiss/twiss_types.jl")
@@ -65,6 +88,9 @@ include("dynamic_aperture.jl")
 include("experimental/Experimental.jl")
 include("utils.jl")
 include("trombone.jl")
+include("match/expressions.jl")
+include("match/engine.jl")
+include("match/match.jl")
 
 # Only precompile when not processing code coverage, and not during General registry
 # AutoMerge checks (the workload exceeds the memory of the AutoMerge CI runners).
@@ -98,11 +124,14 @@ if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE",
     # track
     res = track(fodo, v0=rand(4, 6) .* 1e-5)
     res = track(fodo, v0=rand(4, 6) .* 1e-5, spin=true)
-    # track! of a Bunch (BeamTracking) compiles other keyword argument methods than track
+    # track of a given Bunch (as in twiss and dynamic_aperture), locations and a start element
     b = Bunch(rand(4, 6) .* 1e-5; species=fodo.species_ref, p_over_q_ref=fodo.p_over_q_ref)
-    track!(b, fodo)
+    res = track(fodo, bunch=b, at=[])
+    res = track(fodo, v0=rand(4, 6) .* 1e-5, at=[qf, (1.0, 2.0)], start=qd, n_turns=2)
     redirect_stdout(devnull) do # dynamic_aperture prints its progress
       dynamic_aperture(fodo; n_r=3, n_theta=3, deltas=[0.0], max_sig_x=1, max_sig_y=1, emit_1=1e-9, emit_2=1e-9, n_turns=1)
+      # with delta-dependent orbits (coasting rings): the closed orbits track with track! of a Bunch
+      dynamic_aperture(fodo; n_r=3, n_theta=3, deltas=[0.0, 1e-3], max_sig_x=1, max_sig_y=1, emit_1=1e-9, emit_2=1e-9, n_turns=1, delta_dependent_orbits=true)
     end
     # Elements with apertures (e.g. most elements of the RCS)
     fodo_ap = Beamline([deepcopy_no_beamline(ele) for ele in fodo_line]; species_ref=Species("electron"), E_ref=18e9)
@@ -181,6 +210,16 @@ if Base.JLOptions().code_coverage == 0 && get(ENV, "JULIA_REGISTRYCI_AUTOMERGE",
 
     tw = twiss(fodo, GTPSA_descriptor=dnf3, cols=["dh2000"])
     grad(tw.dh2000[1])
+
+    # Matching: tunes and a beta function with the quadrupoles, chromaticities with the sextupoles
+    scalarize!(fodo)
+    t0 = twiss(fodo, at=[])
+    tw = TwissExpr(fodo)
+    match!(vary=[@knob(fodo.context.kqf), @knob(fodo.context.kqd)],
+           targets=[tw.q1 == t0.q1 + 0.01, tw.q2 == t0.q2 - 0.01, tw.beta1[qd] <= 100])
+    match!(vary=[@knob(fodo.context.ksf), @knob(fodo.context.ksd)],
+           targets=[tw.dq1 == 1, tw.dq2 == 1])
+    value(tw.beta1[qd]^2 - 5*mean(tw.alpha1[[b], :]))
   end
 end
 end # if Base.JLOptions().code_coverage == 0

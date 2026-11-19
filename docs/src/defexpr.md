@@ -112,36 +112,6 @@ c1.a = 3; # Can mutate the state of the variables
 println(d(c1))
 ```
 
-Contexts can be pushed on/popped from a global stack of contexts `GLOBAL_CONTEXTS`. In this
-case, when referencing a variable from a context, if it does not exist in that given
-context, then the first instance of that variable from the top (last in) of the `GLOBAL_CONTEXTS`
-stack will be used:
-
-```{code-cell} julia
-c1 = Context(a = 1);
-push!(GLOBAL_CONTEXTS, c1);
-c2 = Context(b = 2);
-println(c2.a) # `a` does not exist in `c2`, get from `GLOBAL_CONTEXTS`
-push!(GLOBAL_CONTEXTS, c2);
-c3 = Context();
-println(c3.a)
-println(c3.b)
-```
-
-If no context is provided, the first instance of the variable in the `GLOBAL_CONTEXTS` stack
-will be used:
-
-```{code-cell} julia
-d = DefExpr(c -> c.a); # one-argument lambda function
-println(d()) # Finds `a` from the `GLOBAL_CONTEXTS` stack
-```
-
-```{code-cell} julia
-:tags: [remove-cell]
-# Leave the global stack as we found it, so later cells/pages are unaffected.
-empty!(GLOBAL_CONTEXTS)
-```
-
 All `Beamline`s have a `context` property to store a context, which all containing
 `LatElement` parameters defined use when getting properties at the element-level:
 
@@ -152,7 +122,42 @@ bl = Beamline([qf], context=c1);
 bl[qf][1].Kn1 # Index the beamline with the `qf` to get all child `qf`s
 ```
 
+To try a value for a while, `push!` it onto the context and `pop!` it off again: the previous
+value is used again (and a variable that `push!` added is removed). For example, to turn the RF
+voltage off and back on:
+
+```{code-cell} julia
+cav = RFCavity(L=0.1, voltage=DefExpr(c -> c.vrf), rf_frequency=5e8);
+ring = Beamline([Drift(L=1.0), cav], context=Context(vrf=1e6));
+push!(ring.context; vrf=0.0);
+println(ring.line[2].voltage) # 0.0
+pop!(ring.context);
+println(ring.line[2].voltage) # 1.0e6
+```
+
+`withvalues` does the same around a block of code, and restores the values even if the code
+throws an error:
+
+```{code-cell} julia
+withvalues(ring.context; vrf=0.0) do
+  println(ring.line[2].voltage) # 0.0
+end
+println(ring.line[2].voltage)   # 1.0e6
+```
+
+Elements that are not in a `Beamline` use the context `DEFAULT_CONTEXT` (as does a `DefExpr`
+called without a context), which works in the same way:
+
+```{code-cell} julia
+qd = Quadrupole(Kn1=DefExpr(c -> c.kd), L=0.5);
+DEFAULT_CONTEXT.kd = -0.36;
+println(qd.Kn1) # -0.36
+```
+
 ```{docstring} Context
+```
+
+```{docstring} withvalues
 ```
 
 ## Getting the Deferred Expression Itself

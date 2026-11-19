@@ -24,7 +24,7 @@ Usage (either form, and they can be combined)::
 
     ```{docstring}
     track
-    TrackingResult
+    TrackResult
     ```
 
 which is the MyST counterpart of Documenter's ```` ```@docs ```` blocks.

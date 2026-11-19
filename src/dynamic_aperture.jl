@@ -36,7 +36,7 @@ second index corresponds to that in `deltas`.
 - `output_file`: If provided, then a file containing the initial particle coordinates (w.r.t. 
     the closed orbit(s)) as rows, with the last column specifying the particle state at the 
     end of tracking, will be written to the file. Default is `nothing`.
-- `track_kwargs...`: Any of the settings in `TrackingConfig` except for `n_turns` and 
+- `track_kwargs...`: Any of the settings in `TrackConfig` except for `n_turns` and 
     `save_every_n_turns` may be provided to configure the tracking.
 """
 function dynamic_aperture(
@@ -60,7 +60,7 @@ function dynamic_aperture(
     delta_dependent_orbits::Bool=coast_check(bl),
     output_file=nothing,
     theta_lims=(0, pi),
-    track_kwargs... # Get passed to track!
+    track_kwargs... # Get passed to track
   )
   Base.require_one_based_indexing(deltas)
   if delta_dependent_orbits && emit_3 != 0
@@ -154,18 +154,9 @@ function dynamic_aperture(
   end
 
   b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
-  # The kernel chains of the elements are built once for all turns; the other settings are passed
-  # to each launch
-  prep_keys = (:rf_on, :ramp_particle_energy_without_rf, :ramp_update_each_particle, :batch_start)
-  prep_kwargs = NamedTuple(k => v for (k, v) in pairs(track_kwargs) if k in prep_keys)
-  launch_kwargs = NamedTuple(k => v for (k, v) in pairs(track_kwargs) if !(k in prep_keys))
-  chains = BTBL.prepare(b0, bl; scalar_params=true, prep_kwargs...)
-  for i in 1:n_turns
-    track!(b0, chains; launch_kwargs...)
-    print("\rFinished turn $i out of $n_turns")
-    flush(stdout) 
-  end
-  println("\nTracking complete")
+  # Only the particles at the end are needed (no locations saved)
+  track(bl; bunch=b0, n_turns, at=[], merge((; scalar_params=true, verbose=true), track_kwargs)...)
+  println("Tracking complete")
 
   if !(backend isa KA.CPU)
     copy!(v, vt)

@@ -23,11 +23,13 @@ Spin tracking is NOT currently compatible with phase trombones.
 """
 function phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0)
   bl = ele.beamline
-  tw = twiss(bl, base_cols=["index"], cols=["a", "x", "px", "y", "py", "z", "pz"], at=[ele])
-  a = SMatrix{6,6}(tw.a[1])
+  i = ele.beamline_index
+  tw = twiss(bl, base_cols=["index"], cols=["a", "x", "px", "y", "py", "z", "pz"], at=[i])
+  a = SMatrix{6,6}(tw.a[i])
   ai = inv(a)
   ele.transport_map = _make_trombone_map()
-  ele.transport_map_params = (phi1, phi2, phi3, a, ai, tw.x[1], tw.px[1], tw.y[1], tw.py[1], tw.z[1], tw.pz[1])
+  ele.transport_map_params = (phi1, phi2, phi3, a, ai, tw.x[i], tw.px[i], tw.y[i],
+                              tw.py[i], tw.z[i], tw.pz[i])
   return ele
 end
 

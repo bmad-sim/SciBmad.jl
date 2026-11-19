@@ -20,6 +20,5 @@ AGS spin ramp <examples/julia/ags-spin-ramp.ipynb>
 :maxdepth: 1
 :caption: Python examples
 
-Nonlinear Twiss <examples/python/nonlinear-twiss.ipynb>
 AGS spin ramp <examples/python/ags-spin-ramp.ipynb>
 ```

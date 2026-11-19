@@ -45,16 +45,24 @@ v0 = [1e-3 0 0 0 0 1e-3]
 res = track(fodo, v0=v0, n_turns=10)
 ```
 
-The outputted structure is a `TrackingResult`, which contains quite a lot of information
-about the tracking. First, `config` is a `TrackingConfig` structure that contains all the
-configuration settings we may have provided to `track`, for example `n_turns`. For a
-description of all settings, see the [`TrackingConfig`](#configuration-settings) docstring.
+The outputted structure is a `TrackResult`. The particles are read from it for a turn and a
+particle, given by their numbers (turn 0 holds the initial coordinates). By default the particles
+are saved at the end of the beamline after every turn, and when only one location is saved, as
+here, it does not have to be given:
 
-Next, we have a matrix `state`, which corresponds to each particle's state at each saved
-turn. For example, particle 1's state at turn 3 is indexed with `res.state[1,4]`
-(**note:** 1 must be added to the turn number, because `res` also stores the initial
-particle states/coordinates). The values of `state` are 8-bit integers that correspond to
-the following constants defined in `BeamTracking`:
+```{code-cell} julia
+res.x[turn=3]               # x of all particles after turn 3
+res.x[turn=3, particle=1]   # x of particle 1
+res.v[turn=3, particle=1]   # all six coordinates x, px, y, py, z, pz
+res.x[]                     # [particle, saved turn]
+```
+
+The same goes for `px`, `y`, `py`, `z` and `pz`. `turn` and `particle` can also be `:` (all of
+them, as when they are not given), a range or a vector, e.g. `res.x[turn=0:5, particle=1]`. With
+`save_every_n_turns`, only every n-th turn is saved; `res.turns` lists the saved turns.
+
+The state of each particle is `res.state`, for example `res.state[turn=3]`. The values of `state`
+are 8-bit integers that correspond to the following constants defined in `BeamTracking`:
 
 ```julia
 const STATE_PREBORN                 = 0x0
@@ -72,11 +80,53 @@ const STATE_IMPLICIT_NONCONVERGENCE = 0x9
 Therefore, if a particle's state is `0x1`, that means it is alive and well! Once a particle
 is "lost" in tracking, its phase space coordinates are frozen at the point where it is lost.
 
-Then we have a tensor `v` which contains each particle's phase space coordinates at each
-saved turn. The indexing of this tensor is described in the output. For example, particle
-1's phase space coordinates at turn 5 are indexed with `res.v[1,:,6]` (**again note:** 1
-must be added to the turn number, because `res` also stores the initial particle
-states/coordinates).
+The particles can also be saved at other locations, given to `track` with `at` as for
+[`twiss`](twiss.md): elements (or their beamline indexes, or names) for their beginnings,
+s-ranges for every integration step inside them (and the end of the beamline if they contain
+it), or `:` for every integration step. They are then read at these locations exactly as the
+columns of `twiss` (see [Reading the results](twiss.md)):
+
+```{code-cell} julia
+res = track(fodo, v0=v0, n_turns=10, at=[qf, qd])
+res.x[qd, turn=10]          # x at the beginning of qd after turn 10
+```
+
+With several saved locations, a location must be given (`res.x[end, turn=10]` for the end of the
+beamline). A location that is several places (`[[d]]` for every placement of an element,
+`[qd, :]`, an s-range) gives
+one value per place, in the index after the particle. The s, and the beamline index, name and
+kind of the element of every saved location are in `res.s`, `res.index`, `res.name` and
+`res.kind`, so that for example the orbit through the beamline can be plotted:
+
+```julia
+res = track(fodo, v0=v0, n_turns=1, at=:)
+lines(res.s, res.x[:, turn=1, particle=1]) # x at every integration step (using CairoMakie)
+```
+
+The tracking can also start at the beginning of another element, given with `start`. The first
+turn then goes from there to the end of the beamline (for example, `n_turns=1` tracks through
+the rest of a linac), and the locations before the start are not reached in the first turn, so
+they are `NaN` there (with `state` `0x0`):
+
+```{code-cell} julia
+res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], start=qd)
+res.x[qf, particle=1]       # [x at turn 0, NaN (not reached in turn 1), x after turn 2]
+```
+
+The reference time and energy at the locations can be saved too, with `save_reference=true`:
+they are then `res.t_ref` and `res.beta_gamma_ref` (one value per location and turn, as the
+callbacks below see them). This makes the tracking slower, so it is off by default:
+
+```{code-cell} julia
+res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], save_reference=true)
+res.t_ref[qd]               # at the beginning of qd, for every saved turn
+```
+
+All saved values are also in `res.data`, as arrays indexed by location number (in the order of
+`res.s`) and saved turn number (1 holds the initial coordinates), e.g.
+`res.data.v[particle, coordinate, location, saved turn]`. These are useful for processing many
+particles at once, and are on the GPU when the particles are. The settings of the tracking are
+`res.config` (see the [`TrackConfig`](#configuration-settings) docstring).
 
 Finally we have `bunch`, which contains the full `Bunch` structure at the end of tracking.
 If we'd like to continue tracking more turns with this bunch, we can simply provide this
@@ -103,11 +153,8 @@ v0 = [1e-3 0 0 0 0 1e-3]
 res = track(fodo, v0=v0, n_turns=10, spin=true)
 ```
 
-Our `TrackingResult` now has an extra tensor `q`, which contains each particle's spin
-quaternion from the beginning up to each saved turn. Similar to the phase space coordinates
-indexing, particle 1's spin quaternion from the beginning up through turn 5 can be indexed
-as `res.q[1,:,6]` (**again note:** 1 must be added to the turn number, because `res` also
-stores the initial particle quaternion).
+The spin quaternions are then `res.q`, for example `res.q[turn=5, particle=1]` (its four
+components) from the beginning up through turn 5.
 
 To compute a particle's spin 3-vector at each turn given some initial spin direction, we can
 use the post-processing function `track_spin`:
@@ -117,24 +164,27 @@ s0 = [0, 1, 0] # initial vertical spin vector
 s = track_spin(res.q, s0)
 ```
 
-`s` is now a tensor that can be indexed in the same way as `v` and `q`, but now the second
-dimension is the spin 3-vector index (between 1 and 3). If you'd like to initialize
-different initial spin directions for each particle (perhaps along the invariant spin
-field), give the initial spins as a matrix of size `n_particles x 3`.
+`s` is now a tensor indexed as `res.data.v`, but with the spin 3-vector index (between 1 and 3)
+as the second dimension: `s[1, :, 1, end]` is the spin of particle 1 at the end of the last
+turn. If you'd like to initialize different initial spin directions for each particle (perhaps
+along the invariant spin field), give the initial spins as a matrix of size `n_particles x 3`.
 
 ```{docstring} track
 ```
 
-```{docstring} TrackingResult
+```{docstring} TrackResult
+```
+
+```{docstring} TrackColumn
 ```
 
 ## Configuration Settings
 
 While configuration settings can be set as keyword arguments at the level of `track`, a
-`TrackingConfig` structure may be provided instead, to the keyword argument `config`. All of
-these settings are described below in the docstring for `TrackingConfig`.
+`TrackConfig` structure may be provided instead, to the keyword argument `config`. All of
+these settings are described below in the docstring for `TrackConfig`.
 
-```{docstring} TrackingConfig
+```{docstring} TrackConfig
 ```
 
 ## The Bunch Struct
@@ -161,7 +211,7 @@ follow the same orbit, but they are slower, so they fall behind (their `z` chang
 ```{code-cell} julia
 b = Bunch(v=copy(v0), species=Species("muon"))
 res = track(fodo, bunch=b, n_turns=10)
-res.v[1,:,end]
+res.v[turn=10, particle=1]
 ```
 
 A particle with the opposite charge, such as a positron in an electron ring, is bent the other
@@ -181,7 +231,7 @@ every integration step, inside of elements.
 Callbacks are required to have the function signature defined below
 
 ```julia
-function mycallback(i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!)
+function mycallback(i, coords, p)
   # Do stuff...
   return
 end
@@ -196,19 +246,21 @@ callback signature. These are:
   - `coords.v`: particle phase space matrix of size `n_particle x 6`
   - `coords.q`: `nothing` if no spin tracking, else, particle spin quaternion matrix of size `n_particle x 4`
   - `coords.weight`: `nothing` if uniform macroparticle weights, else weights vector of length `n_particles`
-- `cur_s`: Current s-position from the element start
-- `cur_t_ref`: Current reference time of the bunch **from the beginning of tracking**
-- `cur_beta_gamma_ref`: Current reference Lorentz $\beta\gamma$ of the bunch
-- `last_ds_step`: Last integration step length before executing this callback
-- `last_g`: Last integration coordinate system curvature as a tuple `(gx, gy)` in lab coordinates before executing this callback
+- `p`: A `TrackPoint`, the point of the tracking, with the properties:
+  - `p.s`: Current s-position from the beginning of the beamline
+  - `p.t_ref`: Current reference time of the bunch **from the beginning of tracking**
+  - `p.step`: Current integration step from the beginning of the beamline (the steps of the
+    elements counted as above, the last one of an element at its exit). This is how `track` finds
+    the locations of `at`
+  - `p.beta_gamma_ref`: Current reference Lorentz $\beta\gamma$ of the bunch
+  - `p.last_ds_step`: Last integration step length before executing this callback
+  - `p.last_g`: Last integration coordinate system curvature as a tuple `(gx, gy)` in lab coordinates before executing this callback
 
-The last two arguments, `transforms_out!` and `transforms_in!`, are special, in that they
-are functions that can be applied to `coords` in order to transform the particle coordinates
-out of the element integration body frame and back into the laboratory frame. This can be
-useful if, for example, an element is misaligned, but you want to see the phase space
-coordinates in the laboratory frame. The transformations may be called by simply executing
-`transforms_out!(i, coords, cur_s, cur_t_ref)` or
-`transforms_in!(i, coords, cur_s, cur_t_ref)`
+The functions `transforms_out!` and `transforms_in!` can be applied to `coords` in order to
+transform the particle coordinates out of the element integration body frame and back into the
+laboratory frame. This can be useful if, for example, an element is misaligned, but you want to
+see the phase space coordinates in the laboratory frame. The transformations may be called by
+simply executing `transforms_out!(i, coords, p)` or `transforms_in!(i, coords, p)`
 
 Any of these quantities may be used in the callback. Also, as long as callbacks are written
 to be GPU compatible, they will work on the GPU. For example, this callback prints the $x$
@@ -217,10 +269,10 @@ coordinate of each particle on the GPU in laboratory coordinates, each integrati
 ```julia
 using CUDA
 
-function mycallback(i, coords, cur_s, cur_t_ref, cur_beta_gamma_ref, last_ds_step, last_g, transforms_out!, transforms_in!)
-  transforms_out!(i, coords, cur_s, cur_t_ref) # Transform out of body integration coordinates
-  CUDA.@cuprintln("Hi! I'm particle $i at $cur_t_ref and my x-coordinate is $(coords.v[i,1])")
-  transforms_in!(i, coords, cur_s, cur_t_ref) # Transform back into body integration coordinates
+function mycallback(i, coords, p)
+  transforms_out!(i, coords, p) # Transform out of body integration coordinates
+  CUDA.@cuprintln("Hi! I'm particle $i at $(p.t_ref) and my x-coordinate is $(coords.v[i,1])")
+  transforms_in!(i, coords, p) # Transform back into body integration coordinates
   return
 end
 ```

@@ -265,7 +265,7 @@ Sphinx cannot read Julia docstrings on its own, so ```` ```@docs ```` becomes th
 
 ```{docstring}
 track
-TrackingResult
+TrackResult
 ```
 ````
 
