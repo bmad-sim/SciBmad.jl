@@ -28,27 +28,41 @@ the beamline to track through and a matrix of size `n_particles x 6` of the init
 canonical phase space coordinates. Note that SciBmad uses the same six canonical coordinates
 as in Bmad.
 
+The parameters of the beamline, including [deferred expressions](defexpr.md), are evaluated
+once when `track` is called, and kept for all turns of that call. Changes to them take effect
+at the next call of `track`. To have parameters change during tracking (for example a ramp),
+use [time-dependent parameters](timedependent.md).
+
 ```{code-cell} julia
 @elements begin
   qf = Quadrupole(Kn1=0.36, L=0.5)
+  bpm1 = BPM()
   sf = Sextupole(Kn2=1.2, L=0.2)
   d = Drift(L=0.1)
   b = SBend(L=1.2, angle=pi/132)
   qd = Quadrupole(Kn1=-0.36, L=0.5)
+  bpm2 = BPM()
   sd = Sextupole(Kn2=-1.2, L=0.2)
 end
 
-fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
+fodo = Beamline([qf, bpm1, sf, b, d, qd, bpm2, sd, b, d],
         species_ref=Species("electron"), pc_ref=18e9)
 
-v0 = [1e-3 0 0 0 0 1e-3]
+v0 = [1e-3 0 0 0 0 0;
+      1e-3 0 0 0 0 1e-3]
 res = track(fodo, v0=v0, n_turns=10)
 ```
 
-The outputted structure is a `TrackResult`. The particles are read from it for a turn and a
-particle, given by their numbers (turn 0 holds the initial coordinates). By default the particles
-are saved at the end of the beamline after every turn, and when only one location is saved, as
-here, it does not have to be given:
+The outputted structure is a `TrackingResult`, which contains quite a lot of information
+about the tracking. First, `config` is a `TrackingConfig` structure that contains all the
+configuration settings we may have provided to `track`, for example `n_turns`. For a
+description of all settings, see the [`TrackingConfig`](#configuration-settings) docstring.
+
+The integer value `start` specifies the beamline index of the element where tracking was commenced (at the entrance end). This can be changed by specifying the `start` keyword argument to `track`. The turns that the particle coordinates were saved at are also included, with 0 being the initial coordinates.
+
+The four vectors `s`, `index`, `name`, and `kind` specify each of the locations in the beamline where phase space coordinates were saved (the s-positions, and the containing elements' beamline indexes, names, and kinds). By default, the phase space coordinates are only saved at the end of the beamline, as in the above example. Further down on this page we discuss saving coordinates at different locations in the beamline.
+
+Next, we have the `TrackColumn`s: `state`, `x`, `px`, `y`, `py`, `z`, `pz`, and `v`. All `TrackColumn`s store the particle data at every selected location and turn. If only one location is saved, then all `TrackColumn`s can be indexed using the syntax `x[turn=n, particle=i]` where `turn` and `particle` can be integers, ranges/vectors of indexes, or colons `:` which specifies all. Both `turn` and `particle` default to a colon `:`.
 
 ```{code-cell} julia
 res.x[turn=3]               # x of all particles after turn 3
@@ -57,12 +71,7 @@ res.v[turn=3, particle=1]   # all six coordinates x, px, y, py, z, pz
 res.x[]                     # [particle, saved turn]
 ```
 
-The same goes for `px`, `y`, `py`, `z` and `pz`. `turn` and `particle` can also be `:` (all of
-them, as when they are not given), a range or a vector, e.g. `res.x[turn=0:5, particle=1]`. With
-`save_every_n_turns`, only every n-th turn is saved; `res.turns` lists the saved turns.
-
-The state of each particle is `res.state`, for example `res.state[turn=3]`. The values of `state`
-are 8-bit integers that correspond to the following constants defined in `BeamTracking`:
+The values of `state` are 8-bit integers that correspond to the following constants defined in `BeamTracking`:
 
 ```julia
 const STATE_PREBORN                 = 0x0
@@ -80,67 +89,74 @@ const STATE_IMPLICIT_NONCONVERGENCE = 0x9
 Therefore, if a particle's state is `0x1`, that means it is alive and well! Once a particle
 is "lost" in tracking, its phase space coordinates are frozen at the point where it is lost.
 
-The particles can also be saved at other locations, given to `track` with `at` as for
-[`twiss`](twiss.md): elements (or their beamline indexes, or names) for their beginnings,
-s-ranges for every integration step inside them (and the end of the beamline if they contain
-it), or `:` for every integration step. They are then read at these locations exactly as the
-columns of `twiss` (see [Reading the results](twiss.md)):
+```{docstring} track
+```
+
+```{docstring} TrackResult
+```
+
+```{docstring} TrackColumn
+```
+
+## Saving Particle Data at Certain Locations
+
+The particle data can also be saved at other locations given to `track` through the `at` keyword argument, which accepts a vector containing any combination of: 
+
+- s-ranges as a tuple from start to stop, e.g. `(0., 1.23)` saves the coordinates for all integration steps between `s=0` and `s=1.23`
+- Beamline element indexes as integers or index ranges (only at the beginning of the element)
+- `LatElement`s themselves (only at the beginning of the element)
+- A colon `:` for every integration step
+
+For example, to save the phase space coordinates at the entrance of the BPMs in the above line, use:
 
 ```{code-cell} julia
-res = track(fodo, v0=v0, n_turns=10, at=[qf, qd])
-res.x[qd, turn=10]          # x at the beginning of qd after turn 10
+res = track(fodo, v0=v0, n_turns=10, at=[bpm1, bpm2])
 ```
 
-With several saved locations, a location must be given (`res.x[end, turn=10]` for the end of the
-beamline). A location that is several places (`[[d]]` for every placement of an element,
-`[qd, :]`, an s-range) gives
-one value per place, in the index after the particle. The s, and the beamline index, name and
-kind of the element of every saved location are in `res.s`, `res.index`, `res.name` and
-`res.kind`, so that for example the orbit through the beamline can be plotted:
+When there is more than one location saved, indexing for all `TrackColumn`s require specifying which location(s) the data should be indexed at as the first indexing argument, using any of the location indexing formats passable to `at` (element, element index, array of elements/indexes, s-ranges, colon).
+
+```{code-cell} julia
+res.x[bpm2, turn=10]          # x at the beginning of qd after turn 10
+```
+
+If the end of a beamline is saved, then `end` can be specified as the location for that point. A location that is several places (e.g. `[[d]]` for every placement of element `d`, `[qd, :]` for all integration steps through `qd`, an s-range) gives one value per place, in the index after the particle. All of this is the exact same indexing scheme as for the columns of `twiss` (see [Twiss](twiss.md)).
+
+The s, and the beamline index, name and kind of the element of every saved location are in `res.s`, `res.index`, `res.name` and `res.kind`, so that for example the orbit through the beamline can be plotted:
 
 ```julia
-res = track(fodo, v0=v0, n_turns=1, at=:)
-lines(res.s, res.x[:, turn=1, particle=1]) # x at every integration step (using CairoMakie)
+res = track(fodo, v0=v0, n_turns=1, at=:) # : = Every integration step
+
+using CairoMakie
+lines(res.s, res.x[:, turn=1, particle=1]) # x vs. s for every integration step 
 ```
 
+## Starting at a Different Location
 The tracking can also start at the beginning of another element, given with `start`. The first
 turn then goes from there to the end of the beamline (for example, `n_turns=1` tracks through
 the rest of a linac), and the locations before the start are not reached in the first turn, so
-they are `NaN` there (with `state` `0x0`):
+they are `NaN` there (with `state` equal to `BeamTracking.STATE_PREBORN = 0x0`):
+
+(THIS NEEDS FIXING BEFORE NEW SCIBMAD RELEASE!!)
 
 ```{code-cell} julia
 res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], start=qd)
 res.x[qf, particle=1]       # [x at turn 0, NaN (not reached in turn 1), x after turn 2]
 ```
+(END FIX)
 
-The reference time and energy at the locations can be saved too, with `save_reference=true`:
-they are then `res.t_ref` and `res.beta_gamma_ref` (one value per location and turn, as the
-callbacks below see them). This makes the tracking slower, so it is off by default:
+Eventually when backwards tracking is supported by SciBmad, there will be an option to track backwards to the beginning of the beamline from any given `start`.
+
+## Saving the Reference Time/Energy
+
+The reference time and energy at the chosen locations can be saved too, with `save_reference=true`:
+they are then `res.t_ref` and `res.beta_gamma_ref` (one value per location and turn). This extra save makes the tracking slightly slower, so it is off by default:
 
 ```{code-cell} julia
 res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], save_reference=true)
 res.t_ref[qd]               # at the beginning of qd, for every saved turn
 ```
 
-All saved values are also in `res.data`, as arrays indexed by location number (in the order of
-`res.s`) and saved turn number (1 holds the initial coordinates), e.g.
-`res.data.v[particle, coordinate, location, saved turn]`. These are useful for processing many
-particles at once, and are on the GPU when the particles are. The settings of the tracking are
-`res.config` (see the [`TrackConfig`](#configuration-settings) docstring).
-
-Finally we have `bunch`, which contains the full `Bunch` structure at the end of tracking.
-If we'd like to continue tracking more turns with this bunch, we can simply provide this
-bunch to `track`:
-
-```{code-cell} julia
-# track 5 more turns:
-res2 = track(fodo, bunch=res.bunch, n_turns=5)
-```
-
-The parameters of the beamline, including [deferred expressions](defexpr.md), are evaluated
-once when `track` is called, and kept for all turns of that call. Changes to them take effect
-at the next call of `track`. To have parameters change during tracking (for example a ramp),
-use [time-dependent parameters](timedependent.md).
+## Spin Tracking
 
 To do spin tracking, simply set `spin=true`. This will initialize all particles with their
 own spin [quaternion](https://en.wikipedia.org/wiki/Quaternion), each of which will be
@@ -164,19 +180,13 @@ s0 = [0, 1, 0] # initial vertical spin vector
 s = track_spin(res.q, s0)
 ```
 
+( THIS ALSO NEEDS TO BE FIXED)
+
 `s` is now a tensor indexed as `res.data.v`, but with the spin 3-vector index (between 1 and 3)
 as the second dimension: `s[1, :, 1, end]` is the spin of particle 1 at the end of the last
 turn. If you'd like to initialize different initial spin directions for each particle (perhaps
 along the invariant spin field), give the initial spins as a matrix of size `n_particles x 3`.
-
-```{docstring} track
-```
-
-```{docstring} TrackResult
-```
-
-```{docstring} TrackColumn
-```
+(END FIX)
 
 ## Configuration Settings
 
@@ -197,10 +207,21 @@ time `t_ref` (used to evaluate [time-dependent parameters](timedependent.md)), a
 reference energy `p_over_q_ref`. All `Bunch` properties are described in the below
 docstring.
 
+If we'd like to continue tracking more turns with a bunch used in previous tracking, we can simply provide this bunch to `track`:
+
+```{code-cell} julia
+res = track(fodo, v0=v0, n_turns=5)
+
+# track 5 more turns:
+res2 = track(fodo, bunch=res.bunch, n_turns=5)
+```
+
 ```{docstring} Bunch
 ```
 
 ## Tracking a Different Species
+
+(THIS ALSO NEEDS FIXING - TRACK SHOULD ACCEPT A DIFFERENT SPECIES AT THE LEVEL OF TRACK (EASY FIX))
 
 By default, the particles tracked are of the reference species of the beamline. To track a
 different species, give `track` a `Bunch` of that species. Just like in a real accelerator,
@@ -213,6 +234,7 @@ b = Bunch(v=copy(v0), species=Species("muon"))
 res = track(fodo, bunch=b, n_turns=10)
 res.v[turn=10, particle=1]
 ```
+(END fix)
 
 A particle with the opposite charge, such as a positron in an electron ring, is bent the other
 way by the dipoles and is quickly lost, just as it would be in the real ring.
@@ -225,13 +247,12 @@ The `Bunch` struct may also contain a tuple of functions `callbacks`. These func
 executed **every integration step**, and allow users to inject their own code into the
 tracking if desired. An element with `n_slices` slices of `n_steps` steps each (see
 [Integration Steps and Slices](#track.steps)) executes them `n_slices*n_steps` times, and
-elements without integration steps (patches, maps, and `SaganCavity`) once. For example, `twiss` uses callbacks to compute the Twiss parameters at
-every integration step, inside of elements.
+elements without integration steps (patches, maps, and `SaganCavity`) once. For example, `twiss` uses callbacks to compute the Twiss parameters at every integration step, inside of elements.
 
 Callbacks are required to have the function signature defined below
 
 ```julia
-function mycallback(i, coords, p)
+function mycallback(i, coords::BeamTracking.Coords, p::TrackPoint)
   # Do stuff...
   return
 end
@@ -256,10 +277,7 @@ callback signature. These are:
   - `p.last_ds_step`: Last integration step length before executing this callback
   - `p.last_g`: Last integration coordinate system curvature as a tuple `(gx, gy)` in lab coordinates before executing this callback
 
-The functions `transforms_out!` and `transforms_in!` can be applied to `coords` in order to
-transform the particle coordinates out of the element integration body frame and back into the
-laboratory frame. This can be useful if, for example, an element is misaligned, but you want to
-see the phase space coordinates in the laboratory frame. The transformations may be called by
+The functions `transforms_out!` and `transforms_in!` can be applied inside the callback to `coords` in order to transform the particle coordinates out of the element integration body frame and back into the laboratory frame. This can be useful if, for example, an element is misaligned, but you want to see the phase space coordinates in the laboratory frame. The transformations may be called by
 simply executing `transforms_out!(i, coords, p)` or `transforms_in!(i, coords, p)`
 
 Any of these quantities may be used in the callback. Also, as long as callbacks are written
@@ -277,6 +295,9 @@ function mycallback(i, coords, p)
 end
 ```
 
+```{docstring} TrackPoint
+```
+
 ## Coordinates Number Type
 By default, particle phase space (and quaternion) coordinates are 64-bit floats. However, there may be cases where the often-significant performance gains of using 32-bit floats outweigh the cost of lower precision. For example, almost every neural network implementation in major machine learning libraries defaults to 32-bit precision, because it is "good enough". Furthermore, some GPUs (such as Apple Metal) _only_ support 32-bit floats. 
 
@@ -290,7 +311,6 @@ res = track(fodo, v0=v0)
 :::{note}
 When 32-bit floats are used for the particle coordinates, _all_ numbers in the tracking (e.g. magnet strengths, lengths, and time-dependent parameters) are 32-bit floats too.
 :::
-
 
 (cpuparallel)=
 ## CPU Parallelization

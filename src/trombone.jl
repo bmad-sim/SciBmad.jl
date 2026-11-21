@@ -6,7 +6,7 @@ Makes `ele` into a phase trombone - a matrix expanded around the _current_ close
 (at the time of calling this function) which applies a linear rotation in normal form 
 coordinates (which are also computed at the time of calling this function). Useful for 
 creating zero-length elements where the phase advance can be tuned without impacting the 
-Twiss parameters/linear optics. The `LatElement` must be in a `Beamline` in order to 
+linear optics. The `LatElement` must be in a `Beamline` in order to 
 use this function.
 
 `phi1`, `phi2`, and `phi3` are the changes of the phase advances of the three normal modes, in 
@@ -18,7 +18,7 @@ changed later to change the phase advances.
 Spin tracking is NOT currently compatible with phase trombones.
   
 !!! warn
-    If the closed orbit and/or Twiss parameters at `ele` are changed *after* calling 
+    If the closed orbit and/or linear optics at `ele` are changed *after* calling 
     this function, then the phase trombone map is no longer valid.
 """
 function phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0)

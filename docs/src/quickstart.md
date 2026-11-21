@@ -12,7 +12,7 @@ kernelspec:
 
 # Quickstart Guide
 
-The following is a tour of SciBmad in one copy-and-pastable block: build a FODO cell, adjust magnet strengths, compute linear, nonlinear, chromatic and spin Twiss parameters, and track particles with spin. The rest of this page walks through it step by step. To easily copy a block of code anywhere in the documentation, move your cursor to the top right of the code block.
+The following is an introduction to SciBmad in one copy-and-pastable block: build a FODO cell, compute linear, nonlinear, chromatic and spin Twiss parameters, adjust the sextupoles to set the chromaticities, and track particles with spin. The rest of this page walks through it step by step. To easily copy a block of code anywhere in the documentation, move your cursor to the top right of the code block and select to copy.
 
 ```{code-cell} julia
 :tags: [remove-cell]
@@ -47,16 +47,19 @@ qd.Kn1 = -0.37
 # Set number of integration steps in qd to 3
 qd.n_steps = 3
 
+# Find the single instance of `qf` in fodo:
+qf_in_fodo = fodo[qf];
+
 # Find the drifts `d` in `fodo`
-ds = fodo[d];
+ds = fodo[[d]];
 
 # Get the first element of `fodo`
 first_ele = fodo[1];
 
 # Gets all quadrupoles
-quadrupoles = fodo[x -> x.kind == "Quadrupole"]; # Lambda function
-quadrupoles = fodo["Quadrupole::*"];             # Classic Bmad syntax
-quadrupoles = fodo[r"q.*"];                      # Regex match on name
+quads = fodo[x -> x.kind == "Quadrupole"]; # Lambda function
+quads = fodo["Quadrupole::*"];             # Classic Bmad syntax
+quads = fodo[r"q.*"];                      # Regex match on name
 
 # Compute the periodic Twiss parameters
 tw = twiss(fodo)
@@ -64,19 +67,21 @@ tw = twiss(fodo)
 #= 
   Print the tunes, phase slip factor (etac), momentum compaction (alphac)
 =#
-@show tw.q1
-@show tw.q2
-@show tw.etac
-@show tw.alphac
+@show tw.q1     # Horizontal-like tune
+@show tw.q2     # Vertical-like tune
+@show tw.etac   # Phase slip factor
+@show tw.alphac # Momentum compaction
 
 #=
   Print the horizontal-like beta function at various locations
+  including inside elements
 =#
 @show tw.beta1[qd]        # Beginning of element qd
 @show tw.beta1[qd, :exit] # End of qd
 @show tw.beta1[qd, :]     # Every integration step inside qd
+@show tw.beta1[qd, 2]     # 2nd integration step inside qd
+@show tw.beta1[4, :]      # Every integration step of element 4
 @show tw.beta1[(0, 1.23)] # Every integration step between s=0, s=1.23
-
 
 #=
   Compute only specific Twiss parameters
@@ -95,15 +100,15 @@ tw = twiss(fodo, cols=["beta1", "phi2", "dx"])
 tw = twiss(fodo, cols=["w1", "w2", "dx_2", "dy_2"], chrom=2)
 @show tw.q2
 #= Prints:
-  AmplitudeDependentValue:
+  tw.q2 = AmplitudeDependentValue:
     0.05401330001000863 - 0.008253153240321323 δ
 =#
 # Get the y-chromaticity
-chromy = tw.dq2         # Prepend "d" to q2
-chromy = tw.q2[delta=1] # Also can give order of delta derivative
+chromy = tw.q2[delta=1]
+chromy = tw.dq2 # or equivalently tw.dq2_1 
 
-# Resonance driving terms h3000, h2100, require order=2
-tw = twiss(fodo, cols=["h3000", "h2100"], order=2)
+# Resonance driving terms h3000, h2100
+tw = twiss(fodo, cols=["h3000", "h2100"])
 
 #=
   Spin analysis (invariant spin field as Taylor series,
@@ -111,12 +116,20 @@ tw = twiss(fodo, cols=["h3000", "h2100"], order=2)
 =#
 tw = twiss(fodo, cols=["nx", "ny", "nz"], spin=true,
       as_taylor_series=true, order=2)
-print(tw.qspin)
+@show tw.qspin
 #= Prints:
-AmplitudeDependentValue:
- -0.3094612779434053 - 0.3094612776559473 δ - 4.0543183384536337e-10 J₁ 
- + 28.127501690102246 J₂ - 2.950933476050364e-10 δ²
+  tw.qspin = AmplitudeDependentValue:
+    -0.3094612779434053 - 0.3094612776559473 δ - 4.0543183384536337e-10 J₁ 
+    + 28.127501690102246 J₂ - 2.950933476050364e-10 δ²
 =#
+
+#= 
+  Adjust the sextupoles to make chromaticities to be +1 
+  using SciBmad's autodiff + parametric normal form
+=#
+te = TwissExpr(fodo)
+sol = match!(vary = [@knob(sf.Kn2), @knob(sd.Kn2)],
+             targets = [te.dq1 == 1, te.dq2 == 1])
 
 #=
   Track a particle with [x, px, y, py, z, pz]
@@ -167,12 +180,29 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
         species_ref=Species("electron"), pc_ref=18e9)
 ```
 
-Note that, under the hood, all element "kinds" (`Sextupole`, `Quadrupole`, etc.) are one
-single type `LatElement`. Therefore, there is nothing preventing you from writing e.g.
+All element "kinds" (`Sextupole`, `Quadrupole`, etc.) are one single type `LatElement` 
+under the hood. Therefore, there is nothing preventing you from writing e.g.
 `Drift(L=1.2, Ks8=123)`. This structure provides maximal flexibility for defining and
 modifying elements (see [Defining a LatElement](element.md) for more). A default tracking 
 method is chosen given an element kind, e.g. `MatrixKick` for a finite-length `Quadrupole`, 
 which you can change at any time (see [Tracking Methods](tracking-methods.md)).
+
+`LatElement`s in a beamline simply inherit all properties from the original
+element definition. For example, retuning the quadrupole strengths or number of integration 
+steps
+
+```{code-cell} julia
+# Change the quadrupole strengths
+qf.Kn1 = 0.37
+qd.Kn1 = -0.37
+
+# Set number of integration steps in qd to 3
+qd.n_steps = 3
+```
+
+is reflected everywhere that element has been placed in a `Beamline`, without needing to
+rebuild `fodo` or search-and-replace through its element list (see
+[Defining a Beamline](beamline.md) for more). 
 
 The [`AtomicAndPhysicalConstants`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl)
 package is used for specifying particle species, and so any species defined by that package
@@ -180,32 +210,25 @@ may be provided. Also, instead of specifying the reference momentum `pc_ref`, we
 alternatively could have specified the total reference energy `E_ref`, or the _signed_
 magnetic rigidity `p_over_q_ref`.
 
-We can find instances of elements in a `Beamline`, by "indexing" it in the following manner:
+We can find instances of elements in a `Beamline`, by searching in the following manners:
 
 ```{code-cell} julia
-# Find the drifts `d` in `fodo`
-ds = fodo[d];
+# Find the *single* instance of `qf` in fodo:
+qf_in_fodo = fodo[qf];
+
+# Find *all* the drifts `d` in `fodo` (note the extra [])
+ds = fodo[[d]];
 
 # Get the first element of `fodo`
 first_ele = fodo[1];
 
 # Gets all quadrupoles
-quadrupoles = fodo[x -> x.kind == "Quadrupole"]; # Lambda function
-quadrupoles = fodo["Quadrupole::*"];             # Classic Bmad syntax
+quads = fodo[x -> x.kind == "Quadrupole"]; # Lambda function
+quads = fodo["Quadrupole::*"];             # Classic Bmad syntax
+quads = fodo[r"q.*"];                      # Regex match on name
 ```
 
-Note that `LatElement`s in a beamline simply inherit all properties from the original
-element definition. For example, retuning the quadrupole strengths
-
-```{code-cell} julia
-# Change the quadrupole strengths
-qf.Kn1 = 0.37
-qd.Kn1 = -0.37
-```
-
-is reflected everywhere that element has been placed in a `Beamline`, without needing to
-rebuild `fodo` or search-and-replace through its element list (see
-[Defining a Beamline](beamline.md) for more).
+To see all the ways you can search for elements, see [Defining a Beamline](beamline.md).
 
 ### Twiss
 
@@ -214,30 +237,35 @@ Once a `Beamline` is defined, we can compute the Twiss parameters with `twiss`:
 ```{code-cell} julia
 # Compute the periodic Twiss parameters
 tw = twiss(fodo)
+
+# Compute the open Twiss parameters given initial
+two = twiss(fodo, initial=(beta1=13, alpha1=-1, beta2=10, alpha2=1))
 ```
 
-By default this computes the tunes and, in the Sagan-Rubin/Edwards-Teng coupling formalism,
-the beta functions, alpha functions, coupling matrix, phase advances/slip, closed orbit and
-(crab) dispersions at _all integration steps_ in a
-[`DataFrame`](https://dataframes.juliadata.org/stable/) struct.
+By default this computes the closed orbit, tunes/phase advances and, in the Sagan-Rubin/Edwards-Teng coupling formalism, the beta functions, alpha functions, coupling matrix, phase advances/slip, and (crab) dispersions at _all integration steps_ in a [`DataFrame`](https://dataframes.juliadata.org/stable/) struct.
 
-The values for the whole ring, such as the tunes, are properties of `tw`, and so is every column
-of the table, which can be read at any location of the beamline, e.g. the beginning/end of an element, every integration step inside it, at the end of the beamline, etc.
+The values for the whole ring, such as the tunes, are properties of `tw`:
+```{code-cell} julia
+@show tw.q1     # Horizontal-like tune
+@show tw.q2     # Vertical-like tune
+@show tw.etac   # Phase slip factor
+@show tw.alphac; # Momentum compaction
+```
+
+In Julia, the `@` sign specifies a macro, which modifies the code it acts on. In this case, `@show tw.q1` is syntactic sugar that replaces the line of code with `println("tw.q1 = ", tw.q1)`.
+
+The columns of the Twiss table contain the s-dependent values, and can be read at any location, for example the beginning/ends of elements, or every integration step over an s-range.
 
 ```{code-cell} julia
-tw.q1               # 0.0549
-tw.beta1[qd]        # 10.13 at the beginning of qd
-tw.beta1[qd, :exit] # 10.13 at the end of qd
-tw.beta1[[b]]       # [12.93, 10.52] at both placements of b
-tw.beta1[end]       # 13.41 at the end of the beamline
-tw.beta1[()]
+# Betas at various locations:
+@show tw.beta1[qd]        # Beginning of element qd
+@show tw.beta1[qd, :exit] # End of qd
+@show tw.beta1[qd, :]     # Every integration step inside qd
+@show tw.beta1[qd, 2]     # 2nd integration step inside qd
+@show tw.beta1[4, :]      # Every integration step of element 4
+@show tw.beta1[(0, 1.23)]; # Every integration step between s=0, s=1.23
 ```
-
-A whole column is a column of the table, so it can for example be plotted against `s` with
-`lines(tw.s, tw.beta1)` (using [CairoMakie](https://docs.makie.org/stable/)). All the ways to
-give a location are listed in [Reading the results](twiss.md). They are the same everywhere in
-SciBmad: later, when matching, the same expressions are used as targets (see
-[Matching and Optimization](optimize.md)).
+All of the ways to specify a location are described in [Twiss](twiss.md).
 
 If only a subset of quantities is needed, the `cols` keyword restricts the computation (and
 the columns returned) to exactly what you ask for, which can save computation time:
@@ -257,11 +285,9 @@ docstring.
 
 ### Nonlinear Twiss
 
-Beyond the purely linear optics, `twiss` can also compute higher-order and nonlinear
-quantities by increasing the order of the underlying truncated power series (DA) map used
-internally. All quantities are computed using SciBmad's Lie algebraic normal form analysis
-package [`NonlinearNormalForm`](https://github.com/bmad-sim/NonlinearNormalForm.jl). `twiss`
-exposes two independent "orders" that can be set:
+Beyond the purely linear optics, `twiss` can also compute higher order quantities, simply by requesting the associated column and/or increasing the order of the underlying truncated power series (DA) map used internally. All quantities are computed using SciBmad's Lie series normal form analysis package [`NonlinearNormalForm`](https://github.com/bmad-sim/NonlinearNormalForm.jl). 
+
+`twiss`exposes two independent "orders" that can be set:
 
 - `chrom`, the order to which the energy deviation `δ` is truncated, for computing higher
   order chromatic quantities
@@ -291,54 +317,39 @@ plain numbers but as `AmplitudeDependentValue`s - Taylor series in the action-an
 variables `J₁`, `J₂` and the energy deviation `δ`:
 
 ```{code-cell} julia
-print(tw.q2)
+@show tw.q2
 ```
 
-Individual terms of an `AmplitudeDependentValue` can be extracted with `getterm`, by
-specifying the power of each variable you want. For example, the linear chromaticity in `y`
-is the coefficient of `δ¹`:
+Individual terms of an `AmplitudeDependentValue` can be extracted by indexing the quantity and providing the power of each variable you want. For example, the linear chromaticity in `y` is the coefficient of `δ¹`:
 
 ```{code-cell} julia
 # Get the y-chromaticity
-chromy = getterm(tw.q2, delta=1)
+chromy = tw.q2[delta=1]
 ```
 
-The chromaticities also have the short names `tw.dq1` and `tw.dq2`. Indexing gives derivatives:
-`tw.q2[delta=1]` is the chromaticity too, and `tw.q2[delta=2]` (or `tw.dq2_2`) is
-$\partial^2 q_2/\partial\delta^2$, which is 2! times the coefficient that `getterm` gives (see
-[Reading the results](twiss.md)).
-
-The same mechanism extends naturally to purely amplitude-dependent tune shifts (once `order`
-is raised high enough to resolve them), using the `J1` and `J2` keyword arguments to extract
-coefficients of `J₁`/`J₂`.
-
-Using the operator notation, the "nonlinear effective Hamiltonian" in linear action-angle variables is defined as the polynomial $h$ in
-
-$$
-\mathcal{M} = \mathcal{A}_{cs}^{-1}\exp{(: h : )} \mathcal{R} \mathcal{A}_{cs}
-$$
-
-where $\mathcal{M}$ is the compositional operator representing the one turn map and
-$\mathcal{A}_{cs}$ is the compositional operator representing only a linear (Courant Snyder)
-normalizing transformation. Monomials of $h$ are sometimes referred to as **resonance
-driving terms** or **detune coefficients** depending on if they drive resonances or tune
-shifts with amplitude.
-
-We can extract any monomial of the nonlinear effective Hamiltonian by simply setting the `order` of `twiss` appropriately
-(must be at least one less than the total order of the monomial). And, if the beam is
-coasting, we can take chromatic derivatives as described before. The variables and factors of
-$h$ are given in [Resonance driving terms and detuning](twiss.md).
+For chromatic derivatives only, you can also use the shorthand `d<quantity>_<order>` notation:
 
 ```{code-cell} julia
-# Resonance driving terms h3000, h2100, require order=2
-tw = twiss(fodo, cols=["h3000", "h2100"], order=2)
+chromy = tw.dq2 # or equivalently tw.dq2_1 
 ```
 
-### Spin
+Likewise, `tw.q2[delta=2]` (or `tw.dq2_2`) is $\partial^2 q_2/\partial\delta^2$. The same mechanism extends naturally to purely amplitude-dependent tune shifts (once `order`
+is raised high enough to resolve them), using the `J1` and `J2` keyword arguments to extract tune derivatives w.r.t. the action variables.
+
+We can also extract any so-called resonance driving term/detune coefficient - monomials of the nonlinear effective Hamiltonian in linear action-angle variables. And, if the beam is
+coasting, we can even take chromatic derivatives of these quantities as described before. These quantities are defined in [Resonance driving terms and detuning](twiss.md).
+
+```{code-cell} julia
+# Resonance driving terms h3000, h2100
+tw = twiss(fodo, cols=["h3000", "h2100"])
+```
+
+To compute these quantities, technically `order=2` is required. However, `twiss` will automatically resolve the internal orders given the requested columns if not explicitly provided.
+
+### Spin Analysis
 
 `twiss` can additionally analyze the spin dynamics by setting `spin=true`. This enables
-computation of the invariant spin field (as a Taylor series in the phase space coordinates)
-and the amplitude-dependent spin tune:
+computation of the invariant spin field (as a Taylor series in the phase space coordinates if requested) and the amplitude-dependent spin tune:
 
 ```{code-cell} julia
 #=
@@ -351,15 +362,60 @@ n = [tw.nx[1], tw.ny[1], tw.nz[1]] # ISF at first element
 ```
 
 With `as_taylor_series=true`, the components of the ISF are returned as full Taylor series in
-the phase space variables $(x,p_x,y,p_y,z,p_z)$, rather than just returning $\hat{n}_0$. The
-spin tune, accessible as `tw.qspin`, is likewise an `AmplitudeDependentValue`:
+the phase space variables $(x,p_x,y,p_y,z,\delta)$, rather than just returning $\hat{n}_0$. The spin tune, accessible as `tw.qspin`, is likewise an `AmplitudeDependentValue`:
 
 ```{code-cell} julia
-print(tw.qspin)
+@show tw.qspin
 ```
 
-As with the orbital tunes, individual terms, such as the spin tune's linear dependence on
-energy, or on its amplitude `J₂`, can be pulled out with `getterm`.
+As with the orbital tunes, individual derivatives, such as the spin tune's linear dependence on energy, or on its amplitude `J₂`, can be indexed.
+
+### Optimization using Autodiff
+Let's check the chromaticities of our FODO cell:
+
+```{code-cell} julia
+tw = twiss(fodo, chrom=2)
+@show tw.dq1
+@show tw.dq2
+```
+
+We want to adjust the sextupoles `sf` and `sd` so that these values are both `+1`. To do this, we first form a `TrissExpr` of our Beamline - this allows us to form mathematical expressions for _any_ output of regular `twiss`, which we can then use in optimizations.
+
+```{code-cell} julia
+te = TwissExpr(fodo)
+```
+
+Because `TwissExpr` allows expressions for any output from `twiss`, the `cols` keyword argument does not need to, and cannot, be provided.
+
+We can now form the two target expressions using our `TwissExpr`, specifying that we want the chromaticities `dq1` and `dq2` to be `+1`.
+
+```{code-cell} julia
+[te.dq1 == 1, te.dq2 == 1]
+```
+
+Lastly, we need to specify our "knobs" - the things we want to change to achieve our targets. This is done using `@knob` with the normal sextupole strengths `Kn2` of `sf` and `sd`:
+
+```{code-cell} julia
+[@knob(sf.Kn2), @knob(sd.Kn2)]
+```
+
+Putting this all together into SciBmad's `match!` function, we can now run the optimization:
+
+```{code-cell} julia
+te = TwissExpr(fodo)
+sol = match!(vary = [@knob(sf.Kn2), @knob(sd.Kn2)],
+             targets = [te.dq1 == 1, te.dq2 == 1])
+```
+
+We see that the match has been achieved, and can verify it with a regular `twiss` call:
+
+```{code-cell} julia
+twiss(fodo, chrom=2)
+```
+
+Under the hood, `match!` uses SciBmad's automatic differentiation and parametric normal form to achieve an exact, and fast, match.
+
+`TwissExpr` enables powerful accelerator lattice design and optimization workflows. Outputs of `TwissExpr` (such as the optics functions) can be passed into other `TwissExpr`s as initial conditions. For example, after matching arc FODO cells, one can pass the output values easily into another `TwissExpr` that is then used to match the arc FODO cells to a straight section. Derivatives of various quantities including w.r.t. knobs can also be matched through the same interface, for example as done in the Linear Optics from Closed Orbits (LOCO) algorithm. For all details, see the [Matching and Optimization](optimize.md) section of the documentation.
 
 ### Track
 
@@ -383,17 +439,14 @@ n_particles = 10
 res = track(fodo, v0=rand(n_particles, 6).*1e-5, n_turns=10, spin=true)
 ```
 
-The particles are saved at the end of the beamline after every turn (turn 0 holds the initial
-coordinates), and are read by turn and particle:
+The particles are saved at the end of the beamline after every turn by default (turn 0 holds the initial coordinates), and are read by turn and particle:
 
 ```{code-cell} julia
 res.x[turn=10]               # x of all particles after turn 10
 res.x[turn=:, particle=1]    # x of particle 1 at turns 0 to 10
 ```
 
-To save them at other places, give the elements (or positions inside elements) with `at`, and
-read them with the element first, as for the Twiss results, e.g. `res.x[qd, turn=10]`. See the
-[Track](track.md) page.
+To save them at other places, give the elements (or positions inside elements) with `at`, and read them with the element first, as for the `twiss` results, e.g. `res.x[qd, turn=10]`. See the [Track](track.md) page for more details.
 
 On the CPU, all tracking will automatically be parallelized using single instruction,
 multiple data (SIMD) if your hardware supports it. CPU multithreading can also be enabled by
@@ -425,21 +478,21 @@ For more details, see the [GPU Parallelization](#gpuparallel) section of the man
 
 This guide only scratched the surface. The rest of the documentation covers:
 
-- [Matching and Optimization](optimize.md): match tunes, beta functions, chromaticities,
+- [Matching and Optimization](optimize.md): optimize tunes, beta functions, chromaticities,
   resonance driving terms and more, at any location, by varying any element parameter, with
   exact derivatives; or get the values and derivatives of any Twiss quantity for your own
   optimizer
 - [Twiss](twiss.md): all the Twiss columns, reading them at elements and inside elements, Twiss
-  of a part of a beamline and of open lines, resonance driving terms and detuning
+  of a part of a beamline and of open lines, resonance driving terms and detuning coefficients
 - [Parametric Normal Form](parametric-nf.md): Twiss quantities and tunes as Taylor series in
   magnet strengths, lengths or any other parameter
 - [Track](track.md): saving particles anywhere, other species, 32-bit coordinates, CPU and GPU
   parallelization; with [Tracking Methods](tracking-methods.md) per element,
-  [Collective Effects](collective.md) (intrabeam scattering), [time-dependent
-  parameters](timedependent.md) and [batches](batch.md) of lattice parameters
+  [Collective Effects](collective.md), [time-dependent parameters](timedependent.md) and [batches](batch.md) of lattice parameters
 - The [closed orbit](co.md), [dynamic aperture](dynamic-aperture.md) and
   [frequency map analysis](fma.md), all of which run on GPUs
 - Lattices: [elements](element.md), [beamlines](beamline.md), [deferred
   expressions](defexpr.md) for interdependent parameters, and [definition tools](def-tools.md)
   such as phase trombones
-- [Examples](examples-index.md): complete Jupyter notebooks in Julia and Python
+
+To get the most use out of SciBmad, we recommend going through the documentation sequentially, starting with the next page [Defining a LatElement](element.md).

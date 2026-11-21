@@ -20,8 +20,6 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
-## Deferred Expressions
-
 Consider the simple FODO cell:
 
 ```{code-cell} julia
@@ -38,126 +36,99 @@ fodo = Beamline([qf, d, qd, d], E_ref=18e9,
 We set `qf.Kn1 = 0.36`, and `qd.Kn1 = -0.36`. But what if we want to ensure that
 `qd.Kn1 == -qf.Kn1` always? We can bake-in such an interdependence, common in accelerator
 parameters, using a "deferred expression" - an expression where evaluation is postponed
-until its result is actually needed, rather than immediately when it is defined.
-
-To do this, let's first define a function that returns the current value of `-qf.Kn1`. We
-can do this without giving the function any explicit name using
-[lambda/anonymous functions](https://docs.julialang.org/en/v1/manual/functions/#man-anonymous-functions):
+until its result is actually needed, rather than immediately when it is defined. To do this, let's first define a variable `kq = 0.36` in an object called a `Context`. For interactive use, there is a global context `DEFAULT_CONTEXT` available:
 
 ```{code-cell} julia
-lambdafun = () -> -qf.Kn1
-println("Before: ", lambdafun())
-qf.Kn1 = 0.1
-println("After: ", lambdafun())
+println("BEFORE:")
+println(DEFAULT_CONTEXT)
+
+DEFAULT_CONTEXT.kq = 0.36 # Set variable kq
+
+println("AFTER:")
+println(DEFAULT_CONTEXT)
 ```
 
-Here `lambdafun` takes no arguments (specified by the empty tuple `()`) and returns
-`-qf.Kn1`. In the context of programming, `lambdafun` is specifically called a
-[**closure**](https://en.wikipedia.org/wiki/Closure_(computer_programming)), because it
-"encloses" `qf`, and at the time of evaluation gets the `Kn1` of that enclosed `qf` and
-negates its sign.
+Then, let's write a [lambda/anonymous function](https://docs.julialang.org/en/v1/manual/functions/#man-anonymous-functions) that receives the context as an argument (below, `c`) and returns either `+kq` or `-kq`:
 
-Now we just wrap this function in SciBmad's `DefExpr` type, and we can set any `LatElement`
-parameter to be such a deferred expression:
 
 ```{code-cell} julia
-qd.Kn1 = DefExpr(lambdafun)
-qd.Kn1
+# Define lambda functions
+kqf = c -> c.kq
+kqd = c -> -c.kq
+
+# Call with the context:
+@show kqf(DEFAULT_CONTEXT)
+@show kqd(DEFAULT_CONTEXT);
 ```
 
-Now if we change `qf.Kn1`, evaluation of `qd.Kn1` will always be `-qf.Kn1`:
+Now, if we can just set the quadrupole strengths `Kn1` of `qf` and `qd` to always be the outputs of these functions, then we have achieved our goal! SciBmad's `DefExpr` type allows you to do this, by wrapping such lambda functions:
 
 ```{code-cell} julia
-qf.Kn1 = 0.7
-qd.Kn1
+qf.Kn1 = DefExpr(kqf);
+qd.Kn1 = DefExpr(kqd);
+
+@show qf.Kn1;
+@show qd.Kn1;
 ```
 
-Deferred expressions can also be manipulated like any other number:
+When we change the value of `kq`, it is reflected now in the quadrupoles
 
 ```{code-cell} julia
-a = 1
-da = DefExpr(()->a)
-b = 2
-db = DefExpr(()->b)
-dc = da + db
-println(dc())
-a = 4
-println(dc())
-dd = sin(dc)
-println(dd())
-```
-
-One can really "go crazy" with deferred expressions if they want to. They can be infinitely
-nested, and you can write any function that the programming language allows, for example
-file I/O, or even control system gets/puts with a real accelerator for a digital twin.
-
-```{docstring} DefExpr
-```
-
-## Contexts
-
-While `DefExpr`s can wrap variables in the given scope as shown in the previous section, it
-can be useful and convenient to have a contained place where all control variables exist;
-this is the purpose of the `Context`. `Context`s contain variables that can be optionally
-used when evaluating `DefExpr`s that are defined with a single input argument of type
-`Context`. This is best shown with an example:
-
-```{code-cell} julia
-c1 = Context(a = 1);
-c2 = Context(a = 2);
-d = DefExpr(c -> c.a); # one-argument lambda function
-println(d(c1))
-println(d(c2))
-c1.a = 3; # Can mutate the state of the variables
-println(d(c1))
-```
-
-All `Beamline`s have a `context` property to store a context, which all containing
-`LatElement` parameters defined use when getting properties at the element-level:
-
-```{code-cell} julia
-c1 = Context(Kn1=0.36);
-qf = Quadrupole(Kn1=DefExpr(c -> c.Kn1), L=0.5);
-bl = Beamline([qf], context=c1);
-bl[qf][1].Kn1 # Index the beamline with the `qf` to get all child `qf`s
+DEFAULT_CONTEXT.kq = 0.37
+@show qf.Kn1;
+@show qd.Kn1;
 ```
 
 To try a value for a while, `push!` it onto the context and `pop!` it off again: the previous
-value is used again (and a variable that `push!` added is removed). For example, to turn the RF
-voltage off and back on:
+value is used again (and a variable that `push!` added is removed). For example:
 
 ```{code-cell} julia
-cav = RFCavity(L=0.1, voltage=DefExpr(c -> c.vrf), rf_frequency=5e8);
-ring = Beamline([Drift(L=1.0), cav], context=Context(vrf=1e6));
-push!(ring.context; vrf=0.0);
-println(ring.line[2].voltage) # 0.0
-pop!(ring.context);
-println(ring.line[2].voltage) # 1.0e6
+DEFAULT_CONTEXT.vrf = 1e6
+cav = RFCavity(L=0.1, voltage=DefExpr(c -> c.vrf), rf_frequency=5e8)
+println("Before push! : ", cav.voltage)
+push!(DEFAULT_CONTEXT; vrf=2e6)
+println("After push!  : ", cav.voltage)
+pop!(DEFAULT_CONTEXT)
+println("After pop!   : ", cav.voltage);
 ```
 
-`withvalues` does the same around a block of code, and restores the values even if the code
-throws an error:
+Alternatively, `withvalues` does the same around a block of code, and restores the values even if the code throws an error:
 
 ```{code-cell} julia
-withvalues(ring.context; vrf=0.0) do
-  println(ring.line[2].voltage) # 0.0
+withvalues(DEFAULT_CONTEXT; vrf=2.0e6) do
+  println("In withvalues block     : ", cav.voltage)
 end
-println(ring.line[2].voltage)   # 1.0e6
+println("Out of withvalues block : ", cav.voltage); 
 ```
 
-Elements that are not in a `Beamline` use the context `DEFAULT_CONTEXT` (as does a `DefExpr`
-called without a context), which works in the same way:
+Thus far, we have only been using the global `DEFAULT_CONTEXT`. However, all `Beamline`s have their own `context` property to store beamline-specific parameters, which all containing `LatElement` parameters use when getting properties at the element-level. If a property in the beamline context is not found, it will fallback to `DEFAULT_CONTEXT` if the value is defined there. All of the above machinery (`push!`, `pop!`, `withvalues`) also works with individual beamline contexts.
 
 ```{code-cell} julia
-qd = Quadrupole(Kn1=DefExpr(c -> c.kd), L=0.5);
-DEFAULT_CONTEXT.kd = -0.36;
-println(qd.Kn1) # -0.36
+DEFAULT_CONTEXT.kq = 0.1
+
+qf = Quadrupole(Kn1=DefExpr(c -> c.kq), L=0.5);
+bl = Beamline([qf]);
+
+child_qf = bl[qf]
+println("Before setting Beamline context ---------------")
+println("Parent `qf` (not in a beamline): ", qf.Kn1)
+println("Child `qf` in the beamline:      ", child_qf.Kn1) 
+
+# Set kq in the beamline context
+push!(bl.context, kq = 0.2)
+
+println("After setting Beamline context ----------------")
+println("Parent `qf` (not in a beamline): ", qf.Kn1)
+println("Child `qf` in the beamline:      ", child_qf.Kn1) 
 ```
 
 ```{docstring} Context
 ```
 
 ```{docstring} withvalues
+```
+
+```{docstring} DefExpr
 ```
 
 ## Getting the Deferred Expression Itself
@@ -170,22 +141,19 @@ example to build a new one from it. `rawget` gets a parameter exactly as it was 
 ```{code-cell} julia
 d = rawget(qf, :Kn1);
 println(d isa DefExpr)
-println(deval(d, bl.context)) # The same as bl[qf][1].Kn1
+println(deval(d, bl.context)) # The same as bl[qf].Kn1
 ```
 
 For example, to make `qf` 10% stronger while it keeps following `Kn1` in the context:
 
 ```{code-cell} julia
 qf.Kn1 = 1.1*rawget(qf, :Kn1)
-println(bl[qf][1].Kn1)
-c1.Kn1 = 0.4
-println(bl[qf][1].Kn1)
+println(bl[qf].Kn1)
+bl.context.kq = 0.4
+println(bl[qf].Kn1)
 ```
 
-Only the parameters that were actually set can be gotten this way. Others are computed from
-them: here `Kn1` was set, so e.g. the integrated strength `Kn1L` and the field gradient `Bn1`
-are computed from `Kn1` (and the length or the reference energy). `rawget` gives an error for
-these, saying which parameter to use instead:
+Only the parameters stored as independent variables (set explicitly by the user) can be gotten this way. Others are computed from them: here `Kn1` was set, so e.g. the integrated strength `Kn1L` and the field gradient `Bn1` are computed from `Kn1` (and the length or the reference energy). `rawget` gives an error for these, saying which parameter to use instead:
 
 ```{code-cell} julia
 :tags: [raises-exception]

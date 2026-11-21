@@ -136,7 +136,7 @@ Base.propertynames(::TrackResult) = (_TRACK_COLUMNS..., :turns, :start, :s, :ind
 function Base.show(io::IO, res::TrackResult)
   n_particles, n_locations, n_slots = size(getfield(res, :data).state)
   print(io, "TrackResult(", n_particles, n_particles == 1 ? " particle, " : " particles, ",
-        n_locations, n_locations == 1 ? " location, " : " locations, ", n_slots, " saved turns)")
+        n_locations, n_locations == 1 ? " location, " : " locations, ", n_slots, " saved turns, start = ", res.start)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", res::TrackResult)
@@ -157,10 +157,10 @@ function Base.show(io::IO, ::MIME"text/plain", res::TrackResult)
   println(io, "elapsed_time = ", getfield(res, :elapsed_time), " seconds")
   println(io)
   println(io, "start = ", getfield(res, :start))
+  println(io, "turns = ", (length(turns) > 6 ? "$(first(turns)):$(config.save_every_n_turns):$(last(turns))" : string(turns)))
+  println(io)
   dims(x) = "[" * join(("1:$n" for n in size(x)), ", ") * "]"
   rows = Tuple{String,String}[
-    ("turns", (length(turns) > 6 ? "$(first(turns)):$(config.save_every_n_turns):$(last(turns))" :
-               string(turns)) * ": the saved turns (0: initial coordinates)"),
     ("s, index, name, kind", "the saved locations: " * _track_locations_string(res)),
     ("state", "particle state codes, e.g. state[" * loc * "turn=n, particle=i]"),
     ("x, px, y, py, z, pz", "the coordinates, e.g. x[" * loc * "turn=n, particle=i]"),
@@ -170,7 +170,7 @@ function Base.show(io::IO, ::MIME"text/plain", res::TrackResult)
   isnothing(data.t_ref) ||
     push!(rows, ("t_ref, beta_gamma_ref", "reference time and energy, e.g. t_ref[" * loc *
                  "turn=n]"))
-  push!(rows, ("data", "the low-level data arrays (saved turn 1: initial coordinates):"))
+  push!(rows, ("data", "the internal, low-level data arrays:"))
   order = (state="[particle, location, saved turn]",
            v="[particle, coordinate, location, saved turn]",
            q="[particle, quaternion, location, saved turn]", t_ref="[location, saved turn]",
@@ -257,7 +257,9 @@ function Base.getindex(c::TrackColumn, args...;
 end
 
 function Base.show(io::IO, c::TrackColumn)
-  print(io, "TrackColumn `", c.name, "` (read it with locations, `turn` and `particle`)")
+  single = length(getfield(c.res, :index)) == 1
+  loc = single ? "" : "location, "
+  print(io, "TrackColumn `", c.name, "` (read it with `$(c.name)["* loc * "turn=n, particle=i]`)")
 end
 
 # The saved array of the quantity name, and the coordinate (for x, ..., pz)
@@ -460,7 +462,7 @@ function track(
   # Function barrier for Bunch and groupsize (needs special handling for KA)
   locations = (loc_s, loc_idxs, loc_names, loc_kinds, loc_ele_steps)
   return @noinline _track(bl, bunch, newconfig, groupsize == 0 ? nothing : groupsize, step_start,
-                          locations, loc_steps, n_steps_turn, Val(save_reference))
+                          locations, loc_steps, n_steps_turn, Val(save_reference), start)
 end
 
 # locations are the s, beamline index, name, kind and step within the element of each location.

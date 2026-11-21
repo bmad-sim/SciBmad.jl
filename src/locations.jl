@@ -100,7 +100,7 @@ function _element_indexes(bl::Beamline, sel, found=nothing)
     return Int[sel]
   elseif sel isa LatElement
     idxs = isnothing(found) ? findall(ele -> _is_or_inherits(ele, sel), line) : copy(found[sel])
-    isempty(idxs) && error("Element $(sel.name) is not in the Beamline")
+    isempty(idxs) && error("LatElement $(sel.name) is not in the Beamline")
     return idxs
   elseif sel isa Union{AbstractString,Regex}
     eles = findelements(bl, sel)
@@ -136,7 +136,7 @@ function _location(bl, i, k)
     return (-1, 0)
   end
   n = _nsteps(bl, i)
-  0 <= k <= n || error("Element $i has $n integration steps: step $k does not exist")
+  0 <= k <= n || error("LatElement $i has $n integration steps: step $k does not exist")
   return k < n ? (i, k) : i == n_ele ? (-1, 0) : (i + 1, 0)
 end
 
@@ -210,9 +210,9 @@ function _one_placement(bl, part, sel, idxs, per)
   n_ele = length(bl.line)
   where = part == (1, n_ele + 1) ? "the beamline" :
           "the part of the beamline from element $(part[1]) to element $(part[2]) (`start`, `stop`)"
-  isempty(k) && error("Element $(repr(sel.name)) has no placement in ", where)
+  isempty(k) && error("LatElement $(repr(sel.name)) has no placement in ", where)
   is = idxs[k]
-  error("Element $(repr(sel.name)) is placed $(length(k)) times in ", where, " (beamline indexes ",
+  error("LatElement $(repr(sel.name)) is placed $(length(k)) times in ", where, " (beamline indexes ",
         join(first(is, 10), ", "), length(is) > 10 ? ", ..." : "", "): index with `[[ele]]` for ",
         "all of them, or with one beamline index")
 end
