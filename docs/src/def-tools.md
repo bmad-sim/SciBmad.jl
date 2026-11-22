@@ -22,9 +22,7 @@ ENV["LINES"] = 30
 
 ## Phase Trombone
 
-A phase trombone is an element that changes the phase advances, and so the tunes, of a ring
-without changing the other Twiss parameters (e.g. the beta functions and the dispersion)
-anywhere. This can be useful for dynamic aperture optimizations where the phase advance between arcs can have a significant impact on the nonlinear correction scheme. `phase_trombone!` turns any element in a `Beamline` into a phase trombone. For example, using a `Marker` at the end of a FODO cell:
+A phase trombone is an element that changes the phase advances without changing the Twiss parameters anywhere. This can be useful for dynamic aperture optimizations where the phase advance between arcs can have a significant impact on the nonlinear correction scheme. `phase_trombone!` turns any element in a `Beamline` into a phase trombone. For example, using a `Marker` at the end of a FODO cell:
 
 ```{code-cell} julia
 @elements begin
