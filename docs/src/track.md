@@ -26,7 +26,14 @@ The `track` function can be used for all particle tracking, including spin track
 radiation, intra-beam scattering, etc. At the highest level, all one needs to do is provide
 the beamline to track through and a matrix of size `n_particles x 6` of the initial particle
 canonical phase space coordinates. Note that SciBmad uses the same six canonical coordinates
-as in Bmad.
+as in Bmad, in the order `x, px, y, py, z, pz`:
+
+- `x`, `y`: the horizontal and vertical positions relative to the reference trajectory [m]
+- `px`, `py`: the horizontal and vertical momenta divided by the reference momentum $P_0$
+- `z` $= -\beta c (t - t_\mathrm{ref})$: the longitudinal position relative to the reference
+  particle [m], positive when the particle is ahead of it ($\beta c$ is the particle's velocity,
+  $t$ its arrival time and $t_\mathrm{ref}$ that of the reference particle)
+- `pz` $= (P - P_0)/P_0$: the relative momentum deviation, also called $\delta$
 
 The parameters of the beamline, including [deferred expressions](defexpr.md), are evaluated
 once when `track` is called, and kept for all turns of that call. Changes to them take effect
@@ -53,12 +60,12 @@ v0 = [1e-3 0 0 0 0 0;
 res = track(fodo, v0=v0, n_turns=10)
 ```
 
-The outputted structure is a `TrackingResult`, which contains quite a lot of information
-about the tracking. First, `config` is a `TrackingConfig` structure that contains all the
+The outputted structure is a `TrackResult`, which contains quite a lot of information
+about the tracking. First, `config` is a `TrackConfig` structure that contains all the
 configuration settings we may have provided to `track`, for example `n_turns`. For a
-description of all settings, see the [`TrackingConfig`](#configuration-settings) docstring.
+description of all settings, see the [`TrackConfig`](#track.config) docstring.
 
-The integer value `start` specifies the beamline index of the element where tracking was commenced (at the entrance end). This can be changed by specifying the `start` keyword argument to `track`. The turns that the particle coordinates were saved at are also included, with 0 being the initial coordinates.
+The integer value `start` specifies the beamline index of the element where tracking was commenced (at the entrance end). This can be changed by specifying the `start` keyword argument to `track`. The turns that the particle coordinates were saved at are also included (`res.turns`), with 0 being the initial coordinates.
 
 The four vectors `s`, `index`, `name`, and `kind` specify each of the locations in the beamline where phase space coordinates were saved (the s-positions, and the containing elements' beamline indexes, names, and kinds). By default, the phase space coordinates are only saved at the end of the beamline, as in the above example. Further down on this page we discuss saving coordinates at different locations in the beamline.
 
@@ -70,6 +77,9 @@ res.x[turn=3, particle=1]   # x of particle 1
 res.v[turn=3, particle=1]   # all six coordinates x, px, y, py, z, pz
 res.x[]                     # [particle, saved turn]
 ```
+
+The saved turn `k` in `res.x[]` is the turn `res.turns[k]`: here the saved turns 1 to 11 are
+the turns 0 to 10.
 
 The values of `state` are 8-bit integers that correspond to the following constants defined in `BeamTracking`:
 
@@ -88,6 +98,8 @@ const STATE_IMPLICIT_NONCONVERGENCE = 0x9
 
 Therefore, if a particle's state is `0x1`, that means it is alive and well! Once a particle
 is "lost" in tracking, its phase space coordinates are frozen at the point where it is lost.
+`STATE_PREBORN` marks a location the particle has not reached yet (see
+[Starting at a Different Location](#track.start)).
 
 ```{docstring} track
 ```
@@ -103,8 +115,10 @@ is "lost" in tracking, its phase space coordinates are frozen at the point where
 The particle data can also be saved at other locations given to `track` through the `at` keyword argument, which accepts a vector containing any combination of: 
 
 - s-ranges as a tuple from start to stop, e.g. `(0., 1.23)` saves the coordinates for all integration steps between `s=0` and `s=1.23`
-- Beamline element indexes as integers or index ranges (only at the beginning of the element)
-- `LatElement`s themselves (only at the beginning of the element)
+- Beamline element indexes as integers or index ranges (only at the beginning of the element).
+  The end of the beamline is the index `length(fodo) + 1`, one more than the number of elements
+- `LatElement`s themselves (only at the beginning of each placement of the element)
+- Element names, as in [Searching by Name](#search:name), e.g. `"bpm*"`
 - A colon `:` for every integration step
 
 For example, to save the phase space coordinates at the entrance of the BPMs in the above line, use:
@@ -113,10 +127,10 @@ For example, to save the phase space coordinates at the entrance of the BPMs in 
 res = track(fodo, v0=v0, n_turns=10, at=[bpm1, bpm2])
 ```
 
-When there is more than one location saved, indexing for all `TrackColumn`s require specifying which location(s) the data should be indexed at as the first indexing argument, using any of the location indexing formats passable to `at` (element, element index, array of elements/indexes, s-ranges, colon).
+When there is more than one location saved, indexing for all `TrackColumn`s requires specifying which location(s) the data should be indexed at as the first indexing argument, using any of the location indexing formats passable to `at` (element, element index, array of elements/indexes, s-ranges, colon).
 
 ```{code-cell} julia
-res.x[bpm2, turn=10]          # x at the beginning of qd after turn 10
+res.x[bpm2, turn=10]          # x at bpm2 (the exit of qd) after turn 10
 ```
 
 If the end of a beamline is saved, then `end` can be specified as the location for that point. A location that is several places (e.g. `[[d]]` for every placement of element `d`, `[qd, :]` for all integration steps through `qd`, an s-range) gives one value per place, in the index after the particle. All of this is the exact same indexing scheme as for the columns of `twiss` (see [Twiss](twiss.md)).
@@ -130,19 +144,18 @@ using CairoMakie
 lines(res.s, res.x[:, turn=1, particle=1]) # x vs. s for every integration step 
 ```
 
+(track.start)=
 ## Starting at a Different Location
 The tracking can also start at the beginning of another element, given with `start`. The first
 turn then goes from there to the end of the beamline (for example, `n_turns=1` tracks through
-the rest of a linac), and the locations before the start are not reached in the first turn, so
-they are `NaN` there (with `state` equal to `BeamTracking.STATE_PREBORN = 0x0`):
-
-(THIS NEEDS FIXING BEFORE NEW SCIBMAD RELEASE!!)
+the rest of a linac), and the locations before the start are first reached in the second turn,
+so they are `NaN` until then, also in turn 0 (with `state` equal to
+`BeamTracking.STATE_PREBORN = 0x0`):
 
 ```{code-cell} julia
 res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], start=qd)
-res.x[qf, particle=1]       # [x at turn 0, NaN (not reached in turn 1), x after turn 2]
+res.x[qf, particle=1]       # [NaN, NaN (not reached in turns 0 and 1), x in turn 2]
 ```
-(END FIX)
 
 Eventually when backwards tracking is supported by SciBmad, there will be an option to track backwards to the beginning of the beamline from any given `start`.
 
@@ -170,7 +183,7 @@ res = track(fodo, v0=v0, n_turns=10, spin=true)
 ```
 
 The spin quaternions are then `res.q`, for example `res.q[turn=5, particle=1]` (its four
-components) from the beginning up through turn 5.
+components): the rotation of the spin from the start of the tracking through turn 5.
 
 To compute a particle's spin 3-vector at each turn given some initial spin direction, we can
 use the post-processing function `track_spin`:
@@ -180,14 +193,16 @@ s0 = [0, 1, 0] # initial vertical spin vector
 s = track_spin(res.q, s0)
 ```
 
-( THIS ALSO NEEDS TO BE FIXED)
+`s` is read just like `res.q`, but with the three components of the spin vector:
 
-`s` is now a tensor indexed as `res.data.v`, but with the spin 3-vector index (between 1 and 3)
-as the second dimension: `s[1, :, 1, end]` is the spin of particle 1 at the end of the last
-turn. If you'd like to initialize different initial spin directions for each particle (perhaps
+```{code-cell} julia
+s[turn=10, particle=1]      # the spin of particle 1 after turn 10
+```
+
+If you'd like to initialize different initial spin directions for each particle (perhaps
 along the invariant spin field), give the initial spins as a matrix of size `n_particles x 3`.
-(END FIX)
 
+(track.config)=
 ## Configuration Settings
 
 While configuration settings can be set as keyword arguments at the level of `track`, a
@@ -216,25 +231,25 @@ res = track(fodo, v0=v0, n_turns=5)
 res2 = track(fodo, bunch=res.bunch, n_turns=5)
 ```
 
+The `Bunch` is tracked in place, so afterwards `res.bunch` and `res2.bunch` are the same
+`Bunch`, after all 10 turns. The saved coordinates in `res` and `res2` are not changed.
+
 ```{docstring} Bunch
 ```
 
 ## Tracking a Different Species
 
-(THIS ALSO NEEDS FIXING - TRACK SHOULD ACCEPT A DIFFERENT SPECIES AT THE LEVEL OF TRACK (EASY FIX))
-
 By default, the particles tracked are of the reference species of the beamline. To track a
-different species, give `track` a `Bunch` of that species. Just like in a real accelerator,
+different species, give it to `track` with `species` (or give `track` a `Bunch` of that
+species). Just like in a real accelerator,
 the magnets keep the same fields, and each particle responds to them according to its own
 charge, mass, and energy. For example, muons with the same momentum as the design electrons
 follow the same orbit, but they are slower, so they fall behind (their `z` changes more):
 
 ```{code-cell} julia
-b = Bunch(v=copy(v0), species=Species("muon"))
-res = track(fodo, bunch=b, n_turns=10)
+res = track(fodo, v0=v0, species=Species("muon"), n_turns=10)
 res.v[turn=10, particle=1]
 ```
-(END fix)
 
 A particle with the opposite charge, such as a positron in an electron ring, is bent the other
 way by the dipoles and is quickly lost, just as it would be in the real ring.

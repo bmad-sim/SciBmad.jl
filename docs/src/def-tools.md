@@ -23,7 +23,8 @@ ENV["LINES"] = 30
 ## Phase Trombone
 
 A phase trombone is an element that changes the phase advances, and so the tunes, of a ring
-without changing the Twiss parameters anywhere else. This can be useful for dynamic aperture optimizations where the phase advance between arcs can have a significant impact on the nonlinear correction scheme. `phase_trombone!` turns any element in a `Beamline` into a phase trombone. For example, using a `Marker` at the end of a FODO cell:
+without changing the other Twiss parameters (e.g. the beta functions and the dispersion)
+anywhere. This can be useful for dynamic aperture optimizations where the phase advance between arcs can have a significant impact on the nonlinear correction scheme. `phase_trombone!` turns any element in a `Beamline` into a phase trombone. For example, using a `Marker` at the end of a FODO cell:
 
 ```{code-cell} julia
 @elements begin
@@ -51,7 +52,7 @@ println("After:  q1 = ", tw.q1, ", q2 = ", tw.q2)
 
 `phi1`, `phi2`, and `phi3` are stored as the first three entries of the element's
 `transport_map_params`, so they can be changed at any time without calling
-`phase_trombone!` again. `transport_map_params` is a tuple, which should not be changed in place, so its best to let them be deferred expressions stored in the beamline context:
+`phase_trombone!` again. `transport_map_params` is a tuple, which cannot be changed in place, so it's best to let them be deferred expressions stored in the beamline context:
 
 ```{code-cell} julia
 # Remove the current phase trombone map by setting MapParams = nothing:
@@ -76,7 +77,7 @@ tw = twiss(fodo)
 println("After again: q1 = ", tw.q1, ", q2 = ", tw.q2)
 ```
 
-The phase trombone is built from the closed orbit and the linear optics at the element at the time `phase_trombone!` is called. As such, if you plan to change the closed orbit and/or linear optics afterwards, first remove the phase trombone before doing anything, and then recall `phase_trombone!` when the orbit and linear optics are not changing anymore.
+The phase trombone is built from the closed orbit and the linear optics at the element at the time `phase_trombone!` is called. As such, if you plan to change the closed orbit and/or linear optics afterwards, first remove the phase trombone before doing anything, and then call `phase_trombone!` again when the orbit and linear optics are not changing anymore.
 
 ```{docstring} phase_trombone!
 ```

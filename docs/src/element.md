@@ -60,7 +60,8 @@ println(ele2.name)
 
 In SciBmad, every element kind (`Quadrupole`, `Sextupole`, `Multipole`, etc.) is the same
 type, `LatElement`. The kind only does two things: it sets the `kind` string, and it chooses
-a suitable tracking method for the element (see [Element Kinds](#element.kinds) below):
+a suitable tracking method for the element (see [Element Kinds](#element.kinds) below; a
+`CrabCavity` also sets `is_crabcavity = true`):
 
 ```{code-cell} julia
 @elements begin

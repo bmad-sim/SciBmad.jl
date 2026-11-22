@@ -367,7 +367,12 @@ one callback (`_track_make_callback`): `location_of_step[p.step]` is the locatio
 the column of the turn (0 if not saved, set before each turn); the location where a turn begins is 
 copied before the turn (no callback runs at step 0). It always tracks with this callback (also 
 with `at=[]`), so `track`, `twiss` and `dynamic_aperture` compile the same kernels. Saved: the 
-initial particles (column 1, at every location), then every `save_every_n_turns`-th turn.
+initial particles (column 1, at every location the first turn reaches), then every
+`save_every_n_turns`-th turn. With `start`, the locations before it are first reached in turn 2:
+they are NaN/`STATE_PREBORN` in turns 0 and 1 (maintainer, Nov 22 2026; before, turn 0 held the
+initial particles there, giving alive, NaN, alive). `res.start` is the start's beamline index
+(1 for `twiss`'s internal tracking). `track(…; species)` sets the species of the default Bunch
+(bitwise equal to `bunch=Bunch(…; species)`).
 Reading a `TrackResult` (Nov 2026, maintainer's choices): `res.x` … `res.pz`, `res.v`,
 `res.q`, `res.state`, `res.t_ref`, `res.beta_gamma_ref` are `TrackColumn`s read at the
 locations of `twiss` (same `_column_locations`; no location = the only saved location, an error
@@ -379,8 +384,10 @@ with several indexes or keywords to `lastindex(a, 1)` (all column types define i
 maps (beamline index, step in the element) to the location number; `res.turns` lists
 the saved turns. The saved arrays moved to `res.data` (`res.data.v[particle, coordinate,
 location, saved turn]`, …; breaking) and are what internal code uses (`twiss` reads `tr.data`).
-`track_spin(res.q, s0)` accepts the column. Tested against `res.data` ("Tracking results read at
-locations"; shifting the turn mapping fails 5 of 16).
+`track_spin(res.q, s0)` returns a `TrackColumn` named `:spin` (its array in the field `data`,
+which is `nothing` for the columns read from `res.data`), read like `res.q`; `track_spin` of an
+array (`res.data.q`, also what Python uses) returns the array. Tested against `res.data`
+("Tracking results read at locations"; shifting the turn mapping fails 5 of 16).
 `save_reference=true` also saves `p.t_ref` and `p.beta_gamma_ref` at the locations (one value per
 location and turn, written by particle 1; per particle with `BatchParam`s, returned as
 `BatchParam`s). It is off by default: the reference time is then computed at every integration
@@ -425,7 +432,10 @@ values kept alive for the save). With it off the kernels' native code is identic
   beamline indexes (`_one_placement`), also with a position (`[b, :]` too); in a vector,
   `[[qd]]`, `[[qd], :exit]`, `[[qd], :]`, it gives every placement. (Nov 18 an element always
   gave a vector: the docs needed `only(...)` in ten places, and an outside reviewer objected to
-  dereferencing the common single value.) Names, s-ranges and `:` give vectors; `end` is the
+  dereferencing the common single value.) Beamlines (0.14) indexes a `Beamline` the same way:
+  `bl[ele]` is one element (an error if placed several times or not at all), `bl[[ele, 3]]` every
+  placement in order (an element of `bl.line` is its own placement; not placed: an error).
+  Names, s-ranges and `:` give vectors; `end` is the
   beamline index n+1 (or the index of `stop`), so `end-1` is the last
   element, and the end is like a zero-length element (`[end]`, `[end, :entrance]`,
   `[end, :exit]`, `[end, 1]` are the same location; `[end, :]` is a 1-vector; other positions
@@ -545,7 +555,8 @@ values kept alive for the save). With it off the kernels' native code is identic
   remembers the old ones (or that a variable was new), `pop!(c)` restores, `withvalues(f, c; ...)`
   restores in `finally`, also what `f` pushed and did not pop. A typed context coerces all values
   before setting any. `merge`/`copy` start with nothing saved.
-- Lookup is the context's own variables only. Elements not in a Beamline (and a `DefExpr` called
+- Lookup is the context's own variables, then `DEFAULT_CONTEXT`'s (converted to the context's
+  type; Beamlines 0.14, maintainer). Elements not in a Beamline (and a `DefExpr` called
   without a context, `deval` without one) use `DEFAULT_CONTEXT` (maintainer's choice, instead of
   an error); BeamTracking's `track!` of a single element too. `NULL_CONTEXT` stays as the empty
   context the members of a Branch/Lattice store.
@@ -729,8 +740,9 @@ Open items:
   fails 7 of 74). `get` instead of `haskey` + `getindex` on the `pdict` was slower for one
   element (0.88 ms) and equal in the pass. A single element stays one scan: a cache per Beamline
   would need invalidation when the line changes (not done).
-- After the `track`/`twiss` rework (Nov 2026): notebooks rerun (Nov 17; `track_spin(res.q, …)`
-  is (particle, component, location, turn): the spin notebooks index `[1, 2, 1, :]`; the
+- After the `track`/`twiss` rework (Nov 2026): notebooks rerun (Nov 17; the spin
+  notebooks read `track_spin(res.q, …)[particle=1][2, :]` (Julia; changed Nov 22 without a
+  rerun, the expressions checked equal) and `track_spin(res.data.q, …)` (Python); the
   Python `nonlinear-twiss` notebook, legacy for SciBmad < 0.5.0, was removed);
   Julia 1.13 suite as 1.10 (725 passed, 4 broken). BeamTracking's `test/performance_test.jl`
   still allows 2 allocations per prepared chain, now 5 per ESR turn in total: a bound independent

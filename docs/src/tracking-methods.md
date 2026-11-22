@@ -21,12 +21,11 @@ ENV["LINES"] = 30
 ```
 
 Every element has a `tracking_method`, which sets how particles are pushed through it. When
-you construct an element with one of the element kinds, a suitable tracking method is chosen
+you construct an element with one of the element kinds, a default tracking method is chosen
 for you (see the table of [Element Kinds](#element.kinds)), for example `MatrixKick()` for a
 `Quadrupole` and `BendKick()` for an `SBend`. Any element with `L = 0` uses `Exact()`.
 
-A bare `LatElement()` has no tracking method, so you must set one yourself before tracking
-through it. The default can always be overridden, either during construction or afterwards:
+A bare `LatElement()` has no tracking method, so you must set one yourself before tracking. The default can always be overridden, either during construction or afterwards:
 
 ```{code-cell} julia
 qf = Quadrupole(L=0.5, Kn1=0.36, tracking_method=DriftKick(order=6))
@@ -55,43 +54,41 @@ track(bl, v0=[1e-3 0 0 0 0 0]).v[turn=1, particle=1]
 The tracking method decides *how* each integration step is taken. How many steps are taken,
 and a few other settings, are set in the element's `UniversalParams`:
 
-- `n_steps` or `ds_step`: the number of integration steps, or the length of each step.
-  Setting one of these sets the other (`n_steps = ceil(L / n_slices / ds_step)`).
+- `n_steps` or `ds_step`: the number of integration steps, or the largest length of each step.
+  Setting one of these sets the other (`n_steps = ceil(L / n_slices / ds_step)`, and the
+  steps all have the length `L / n_slices / n_steps`).
 - `n_slices`: the number of slices to split the element into, each with `n_steps`
   integration steps. Collective effects (see [Collective Effects](collective.md)) and a
   ramping reference energy are recomputed and applied once per slice. If you only need more
   accuracy, increase `n_steps` instead, which is faster.
 - `fringe_at`: which ends of the element include fringe fields. Fringe fields are only
   included at the ends of the whole element, not between its slices.
-- `rad_damping` and `rad_fluctuations`: whether the element includes the damping and the
-  stochastic fluctuations of synchrotron radiation.
+- `rad_damping`: `true` if tracking should include the deterministic damping effect of radiation
+- `rad_fluctuations`: `true` if tracking should include the stochastic kicks of radiation
 
 ```{code-cell} julia
 sf = Sextupole(L=0.2, Kn2=1.2, n_steps=4, rad_damping=true)
 ```
 
 Patches, maps, and `SaganCavity` (whose kicks are set by `n_cells`) are always tracked in one
-step, so `n_steps` must be 1 for them. Elements with a patch or a map, and `SaganCavity`,
+step, so `n_steps` must be 1 for them. Elements with a patch or a map, and presently `SaganCavity`,
 also cannot be sliced.
 
 ## Symplectic Integrators
 
-`DriftKick`, `MatrixKick`, `BendKick`, `SolenoidKick`, and `Implicit` are symplectic
-integrators. The first four split the motion through the element into a simple part that can
-be solved directly, and "kicks" with the rest in between. They differ in how the motion is
-split:
+`DriftKick`, `MatrixKick`, `BendKick`, `SolenoidKick`, and `Implicit` are the various symplectic
+integrators provided in SciBmad. The first four split the motion through the element into a simple part that can be solved directly, and "kicks" with the rest in between. They differ in how the motion is split:
 
 - `DriftKick`: drifts exactly, and kicks with all of the multipoles. This works for any
   straight element without a solenoid field, including RF cavities.
 - `MatrixKick`: tracks an approximate energy-dependent quadrupole, and kicks with its
-  corrections and other multipoles. This is usually the best choice for straight elements
+  corrections and other multipoles. This is usually the best choice for straight, aligned elements
   with a strong quadrupole field.
 - `SolenoidKick`: tracks through the solenoid field exactly, and kicks with the rest of the
   multipoles. This works for any straight element, with or without a solenoid field,
   including RF cavities.
-- `BendKick`: tracks through the bend exactly, and kicks with the rest of the multipoles.
-  This is the usual choice for elements that bend the reference trajectory (see
-  [BendParams](#bend.params)).
+- `BendKick`: tracks through a bending coordinate system and dipole strength exactly, and kicks with 
+  the rest of the multipoles. This is the usual choice for elements that bend the reference trajectory (see [BendParams](#bend.params)).
 - `Implicit`: an implicit integrator for arbitrary electromagnetic fields defined by a
   four-potential (see `FourPotentialParams`). All fields in the element must be included in
   the four-potential.
@@ -101,7 +98,7 @@ All of these take the same two settings:
 ```{docstring} DriftKick
 ```
 
-`Implicit` also has `use_newton`:
+`Implicit` also has `use_newton` specifying if a Newton iteration should be used for implicit solve (default is `false`, to use fixed point iteration):
 
 ```{docstring} Implicit
 ```
@@ -137,7 +134,7 @@ switches its tracking method to `Exact` automatically.
 `RK4` integrates the equations of motion through an arbitrary electromagnetic field, defined
 as a function of the particle position and time in [EMFieldParams](#emfield.params),
 together with any multipoles and bend in the element. It is not symplectic, and does not
-support spin tracking.
+support spin tracking at the moment.
 
 ## Sagan Cavity
 

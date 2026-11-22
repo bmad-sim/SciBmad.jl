@@ -101,7 +101,7 @@ end
 println("Out of withvalues block : ", cav.voltage); 
 ```
 
-Thus far, we have only been using the global `DEFAULT_CONTEXT`. However, all `Beamline`s have their own `context` property to store beamline-specific parameters, which all containing `LatElement` parameters use when getting properties at the element-level. If a property in the beamline context is not found, it will fallback to `DEFAULT_CONTEXT` if the value is defined there. All of the above machinery (`push!`, `pop!`, `withvalues`) also works with individual beamline contexts.
+Thus far, we have only been using the global `DEFAULT_CONTEXT`. However, all `Beamline`s have their own `context` property to store beamline-specific parameters, which the deferred expressions of the elements in the beamline are evaluated with. If a variable is not found in the beamline context, it will fall back to `DEFAULT_CONTEXT` if the variable is defined there. All of the above machinery (`push!`, `pop!`, `withvalues`) also works with individual beamline contexts.
 
 ```{code-cell} julia
 DEFAULT_CONTEXT.kq = 0.1
@@ -144,7 +144,7 @@ println(d isa DefExpr)
 println(deval(d, bl.context)) # The same as bl[qf].Kn1
 ```
 
-For example, to make `qf` 10% stronger while it keeps following `Kn1` in the context:
+For example, to make `qf` 10% stronger while it keeps following `kq` in the context:
 
 ```{code-cell} julia
 qf.Kn1 = 1.1*rawget(qf, :Kn1)

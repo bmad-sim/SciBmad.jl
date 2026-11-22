@@ -64,17 +64,17 @@ Then when Jupyter is opened, the SciBmad Distribution kernel will appear as an o
 
 ## Adding Other Packages
 
-Initially you will not need this, but at some point you may want to use a package that is not included in the SciBmad distribution. This can be done by adding packages within Julia. For example, to add the `Cxx.jl` package,
+Initially you will not need this, but at some point you may want to use a package that is not included in the SciBmad distribution. This can be done by adding packages within Julia. For example, to add the `Unitful.jl` package,
 
 ```julia
-import Pkg; Pkg.add("Cxx")
+import Pkg; Pkg.add("Unitful")
 ```
 
 You can suggest packages to be included in the SciBmad distribution by submitting an issue on Github [here](https://github.com/bmad-sim/SciBmad-Distribution/issues).
 
 ## Adding GPU Support
 
-SciBmad supports GPU parallelization on the following hardwares:
+SciBmad supports GPU parallelization on the following hardware:
 
 - [NVIDIA CUDA](https://github.com/JuliaGPU/CUDA.jl)
 - [AMD ROCm](https://github.com/JuliaGPU/AMDGPU.jl)

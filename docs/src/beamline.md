@@ -38,7 +38,7 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
         species_ref=Species("electron"), pc_ref=18e9)
 ```
 
-Alternatively, the reference species and energy may be provided in the beginning
+Alternatively, the reference species and energy may be provided in the first
 `LatElement`. So, we could have equivalently written this as:
 
 ```{code-cell} julia
@@ -80,6 +80,11 @@ fodo[4];
 quads = fodo[x -> x.kind == "Quadrupole"];
 focusing_sextupoles = fodo[x -> x.Kn2 > 0];
 ```
+
+`fodo[d]` would be an error, because `d` is placed twice: index with `[[d]]` for all of its
+placements, or with a beamline index for one of them. A vector can also mix elements and
+beamline indexes, e.g. `fodo[[qf, 4]]`. These are the same rules as for reading `twiss` and
+`track` results at elements.
 
 The anonymous function is applied to all elements in the beamline, and if `true` is
 returned, then that element is included in the search output.
@@ -132,7 +137,7 @@ with several branches, where `branch>>name` matches only in the branches named `
 ## Multiple LatElements in (multiple) Beamlines
 
 Again continuing with the FODO cell example above, note that `fodo` contains two instances
-of the line element `d` and two instances of `b`. If the length of `d` is changed, then both
+of the element `d` and two instances of `b`. If the length of `d` is changed, then both
 instances of `d` will see this new, changed length:
 
 ```{code-cell} julia

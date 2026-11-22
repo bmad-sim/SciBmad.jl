@@ -94,7 +94,10 @@ res.v[qd, :exit, particle=1]      # all six coordinates at its end: [coordinate,
   index), `q`: the spin quaternions if spin was tracked, `state`: the state of the particles
   (`STATE_ALIVE`, ...), `t_ref`, `beta_gamma_ref`: the reference time and energy (one value per
   location and turn) if `save_reference=true`. See [`TrackColumn`](@ref) for how they are read
-- `turns`: the saved turns (turn 0: the initial coordinates)
+- `turns`: the saved turns (turn 0: the initial coordinates; `NaN` at the locations before
+  `start`)
+- `start`: the beamline index of the element where the tracking started (see `start` in
+  [`track`](@ref))
 - `s`, `index`, `name`, `kind`: the s, the beamline index (`-1` for the end of the beamline), the
   name and the kind of the element of each saved location
 - `data`: the saved arrays, indexed by location number (in the order of `s`) and saved turn (1:
@@ -136,7 +139,8 @@ Base.propertynames(::TrackResult) = (_TRACK_COLUMNS..., :turns, :start, :s, :ind
 function Base.show(io::IO, res::TrackResult)
   n_particles, n_locations, n_slots = size(getfield(res, :data).state)
   print(io, "TrackResult(", n_particles, n_particles == 1 ? " particle, " : " particles, ",
-        n_locations, n_locations == 1 ? " location, " : " locations, ", n_slots, " saved turns, start = ", res.start)
+        n_locations, n_locations == 1 ? " location, " : " locations, ", n_slots,
+        " saved turns, start = ", res.start, ")")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", res::TrackResult)
@@ -157,7 +161,8 @@ function Base.show(io::IO, ::MIME"text/plain", res::TrackResult)
   println(io, "elapsed_time = ", getfield(res, :elapsed_time), " seconds")
   println(io)
   println(io, "start = ", getfield(res, :start))
-  println(io, "turns = ", (length(turns) > 6 ? "$(first(turns)):$(config.save_every_n_turns):$(last(turns))" : string(turns)))
+  println(io, "turns = ", length(turns) > 6 ?
+              "$(first(turns)):$(config.save_every_n_turns):$(last(turns))" : string(turns))
   println(io)
   dims(x) = "[" * join(("1:$n" for n in size(x)), ", ") * "]"
   rows = Tuple{String,String}[
@@ -218,14 +223,17 @@ written after the location (or alone):
   step of `qd`, every placement of `qd`, ...; as for `twiss`): their index comes after the
   particle (`[particle, location, saved turn]`)
 
-`res.v` and `res.q` have the coordinate or quaternion component as the index after the particle,
-and `t_ref` and `beta_gamma_ref` no particle index (unless they are per particle). The
-locations must have been saved (see `at` in [`track`](@ref)).
+`res.v`, `res.q` and the spins from [`track_spin`](@ref) have the coordinate, quaternion or spin
+component as the index after the particle, and `t_ref` and `beta_gamma_ref` no particle index
+(unless they are per particle). The locations must have been saved (see `at` in [`track`](@ref)).
 """
-struct TrackColumn{R<:TrackResult}
+struct TrackColumn{R<:TrackResult,A}
   res::R
   name::Symbol
+  data::A # the array of a quantity computed from the result (the spins), else nothing
 end
+
+TrackColumn(res::TrackResult, name::Symbol) = TrackColumn(res, name, nothing)
 
 # (with more than one index, e.g. x[end, turn=2], `end` is lastindex(c, 1); n+1: the end)
 Base.firstindex(::TrackColumn, d...) = 1
@@ -235,7 +243,7 @@ function Base.getindex(c::TrackColumn, args...;
                        turn::Union{Nothing,Colon,Integer,AbstractVector{<:Integer}}=nothing,
                        particle=nothing)
   res = c.res
-  raw, k = _track_raw(getfield(res, :data), c.name)
+  raw, k = isnothing(c.data) ? _track_raw(getfield(res, :data), c.name) : (c.data, nothing)
   if isempty(args) # the only saved location
     n = length(getfield(res, :index))
     n == 1 || error(n == 0 ? "No locations were saved (`at=[]`)" : "$n locations were saved: " *
@@ -302,7 +310,10 @@ settings specified by the keyword arguments `kwargs`.
 - `q0`: A matrix of size `(n_particles, 4)` storing the initial particle spin quaternions if spin tracking
 - `weight`: Optional vector of length `(n_particles)` specifying macroparticle weights per particle, default 
     is `nothing` corresponding to uniform weights for all particles
-- `bunch`: Instead of specifying `v0`, `spin`, `q0`, and `weight`, an initial `Bunch` may be explicitly provided
+- `species`: The species of the particles, default the reference species of the beamline
+    (`bl.species_ref`)
+- `bunch`: Instead of specifying `v0`, `spin`, `q0`, `weight`, and `species`, an initial `Bunch`
+    may be explicitly provided
 - `start::Union{Integer,LatElement}`: The element (or its beamline index) at whose beginning the
     tracking starts. Default is `1`
 - `at::Union{Nothing,Colon,AbstractVector}`: Where the particles are saved, as in `twiss`: a
@@ -312,8 +323,8 @@ settings specified by the keyword arguments `kwargs`.
     contain it). `:` is every integrator step and the end of the beamline. An entry that is not
     in the beamline is an error. Default is `nothing`, only the end of the beamline. The
     locations are ordered in s (from the beginning of the beamline).
-    In the first turn, the locations before `start` are not reached and are `NaN` (`state`
-    `STATE_PREBORN`)
+    The locations before `start` are first reached in the second turn: before (turns 0 and 1)
+    they are `NaN` (`state` `STATE_PREBORN`)
 - `n_turns::Int`: Number of turns, each ending at the end of the beamline (the first turn
     begins at `start`), defaults to `1`
 - `save_every_n_turns::Int`: Multiple of turn number which specifies the turns tracking 
@@ -373,13 +384,14 @@ function track(
     q0::Union{AbstractMatrix,Nothing}=spin ? (q = similar(v0, (size(v0, 1), 4)); q .= 0; q[:,1] .= 1; q) : nothing,
     weight::Union{AbstractArray,Number,Nothing}=nothing,
     callbacks::Tuple=(),
+    species=bl.species_ref,
 
     # Or explicitly provide a Bunch:
     bunch::Bunch=Bunch(; 
       v=(v = similar(v0); v .= copy.(v0); v), spin=spin,
       q=(!isnothing(q0) ? copy.(q0) : nothing), 
       weight=(!isnothing(weight) ? copy.(weight) : nothing), 
-      species=bl.species_ref, 
+      species=species,
       p_over_q_ref=(_p_over_q_ref = bl.p_over_q_ref; _p_over_q_ref isa TimeDependentParam ? _p_over_q_ref(0) : _p_over_q_ref),
       t_ref=begin
         s_end = bl.line[end].s_downstream # (sums the lengths of all elements, 0.8 ms on ESR)
@@ -471,7 +483,7 @@ end
 # the beamline). The first turn begins after step_start steps. The locations are saved by a
 # callback during the turns, as in twiss
 function _track(bl, bunch, config, groupsize, step_start, locations, loc_steps, n_steps_turn,
-                ::Val{save_reference}, _start=-1) where {save_reference}
+                ::Val{save_reference}, _start=1) where {save_reference}
   state = bunch.coords.state
   v     = bunch.coords.v
   q     = bunch.coords.q
@@ -517,10 +529,11 @@ function _track(bl, bunch, config, groupsize, step_start, locations, loc_steps, 
     error("The steps of the chains differ from those of the locations")
   if step_start > 0
     # The first turn begins with the first chain of the start element: the first that ends after
-    # step_start steps of the turn. The locations before are not reached in the first turn
+    # step_start steps of the turn. The locations before are not reached in the first turn, so
+    # they hold no particles before the second (also not the initial ones)
     first_chain = findfirst(pc -> pc.step_exit > step_start, chains)
-    j = slot_of_turn(1)
-    if j != 0
+    for j in (1, slot_of_turn(1))
+      j == 0 && continue
       ls = 1:count(<(step_start), loc_steps) # (the locations are ordered in s)
       state_data[:,ls,j] .= BeamTracking.STATE_PREBORN
       v_data[:,:,ls,j] .= convert(eltype(v_data), NaN)
@@ -767,12 +780,17 @@ _slot(::Nothing, l, j) = nothing
 @inline _saved(x) = isbits(x) ? x : copy(x)
 
 """
+    track_spin(q::TrackColumn, s0::AbstractVecOrMat)
     track_spin(q::AbstractArray, s0::AbstractVecOrMat)
 
-Given initial spin(s) `s0` and the quaternion output tensor `q` from `track`, 
-returns a tensor `s` of size `(n_particles, 3, n_locations, n_saved_turns)` of the particles' 
-spins at each location and stored turn (any further dimensions of `q` after the second are 
-kept as they are).
+Given initial spin(s) `s0` and the quaternions `res.q` of a [`TrackResult`](@ref) `res`,
+returns a [`TrackColumn`](@ref) `s` of the particles' spin 3-vectors, read like `res.q`: e.g.
+`s[turn=n, particle=i]` is the spin of particle `i` after turn `n` (at the only saved location),
+`s[qd, turn=n, particle=i]` at the beginning of `qd`.
+
+Given the quaternion array `res.data.q` instead, returns an array `s` of size
+`(n_particles, 3, n_locations, n_saved_turns)` of the spins at each location and saved turn
+(any further dimensions of `q` after the second are kept as they are).
 
 If `s0` is a vector (of length 3), then all particles are assumed to have initial spin 
 `s0`. If `s0` is a matrix (of size `(n_particles, 3)`), then the i-th particle will have
@@ -788,8 +806,8 @@ end
 
 # (the q of a TrackResult)
 function track_spin(q::TrackColumn, s0::AbstractVecOrMat)
-  q.name === :q || error("track_spin needs the quaternions `res.q`")
-  return track_spin(_track_raw(getfield(q.res, :data), :q)[1], s0)
+  q.name === :q && isnothing(q.data) || error("track_spin needs the quaternions `res.q`")
+  return TrackColumn(q.res, :spin, track_spin(_track_raw(getfield(q.res, :data), :q)[1], s0))
 end
 
 """

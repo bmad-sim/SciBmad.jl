@@ -160,11 +160,17 @@ using Test
       return ref, step0
     end
     # steps of the rows: step of the location, the end of the beamline n_steps. The first slot
-    # holds the initial particles at every location, then every m-th turn
+    # holds the initial particles at every location the first turn reaches (the others are not
+    # reached before the second turn), then every m-th turn
     function matches(r, ref, step0, steps; m=1)
       for p in 1:size(v0, 1), (l, step) in enumerate(steps)
-        isequal((r.data.v[p,:,l,1], r.data.q[p,:,l,1], r.data.state[p,l,1]),
-                (v0[p,:], [1.0, 0, 0, 0], BeamTracking.STATE_ALIVE)) || return false
+        if step < step0
+          all(isnan, r.data.v[p,:,l,1]) && r.data.state[p,l,1] == BeamTracking.STATE_PREBORN ||
+            return false
+        else
+          isequal((r.data.v[p,:,l,1], r.data.q[p,:,l,1], r.data.state[p,l,1]),
+                  (v0[p,:], [1.0, 0, 0, 0], BeamTracking.STATE_ALIVE)) || return false
+        end
       end
       for p in 1:size(v0, 1), (l, step) in enumerate(steps), t in m:m:n_turns
         j = div(t, m) + 1
@@ -215,6 +221,103 @@ using Test
     @test tw.df.beta1 ≈ tall.df.beta1[3:4] rtol=1e-14
   end
 
+  @testset "track from every start element" begin
+    # Every start on a line with markers, a patch, thin and zero-length elements, fringes,
+    # slices, an aperture and RF, compared at every location and saved turn with each particle
+    # tracked element by element. Locations before the start are first reached in turn 2
+    # (NaN/STATE_PREBORN in turns 0 and 1); the others hold the initial particles in turn 0.
+    # (Starting the first turn one chain early fails 154 of 267 checks, the initial particles
+    # in turn 0 at every location 167.)
+    m1, m2, m3 = Marker(), Marker(), Marker()
+    qf = Quadrupole(L=0.5, Kn1=0.36, n_steps=4, x_offset=2e-5, fringe_at=Fringe.BothEnds)
+    b = SBend(L=1.0, angle=0.1, n_slices=2, n_steps=2, x_rot=1e-4, y_offset=2e-4)
+    qd = Quadrupole(L=0.5, Kn1=-0.36, x_offset=1e-4, y_rot=1e-4, tilt=0.1, n_steps=3,
+        x1_limit=-1.5e-3, x2_limit=1.5e-3, y1_limit=-1.5e-3, y2_limit=1.5e-3)
+    rf = RFCavity(L=0.1, voltage=1e5, rf_frequency=4e8, zero_phase=PhaseRef.BelowTransition)
+    bl = Beamline([m1, qf, Multipole(Kn2L=10.0), Patch(dx=1e-5, dy_rot=1e-6), m2, b,
+        Drift(L=0.0), qd, Drift(L=1.0), rf, m3]; species_ref=Species("electron"), E_ref=1e9)
+    n_turns = 4
+    v0 = [2e-4*sin(7.0*i + k) for i in 1:11, k in 1:6] # some particles are lost
+    n_steps = sum(e -> e.n_slices*e.n_steps, bl.line)
+    function reference(start) # (particle, turn, step) => (v, q, state)
+      ref = Dict{Tuple{Int,Int,Int},Any}()
+      step0 = sum(e -> e.n_slices*e.n_steps, bl.line[1:start-1]; init=0)
+      for p in 1:size(v0, 1)
+        cnt = Ref(0); turn = Ref(1)
+        cb = (i, coords, pt) -> begin
+          cnt[] += 1
+          vs = coords.v[i,:]; qs = coords.q[i,:]
+          transforms_out!(i, coords, pt)
+          ref[(p, turn[], cnt[])] = (coords.v[i,:], coords.q[i,:], coords.state[i])
+          coords.v[i,:] .= vs; coords.q[i,:] .= qs
+        end
+        bun = Bunch(v=v0[p:p,:], q=[1.0 0 0 0], callbacks=(cb,), species=bl.species_ref,
+            p_over_q_ref=bl.p_over_q_ref)
+        ref[(p, 1, step0)] = (bun.v[1,:], bun.q[1,:], bun.state[1])
+        cnt[] = step0
+        for ele in bl.line[start:end]
+          BeamTracking.track!(bun, ele; notify=false)
+        end
+        for t in 2:n_turns
+          ref[(p, t, 0)] = (bun.v[1,:], bun.q[1,:], bun.state[1])
+          cnt[] = 0; turn[] = t
+          BeamTracking.track!(bun, bl; notify=false)
+        end
+      end
+      return ref, step0
+    end
+    preborn(r, p, l, j) = all(isnan, r.data.v[p,:,l,j]) && all(isnan, r.data.q[p,:,l,j]) &&
+                          r.data.state[p,l,j] == BeamTracking.STATE_PREBORN
+    function matches(r, ref, step0, steps; m=1)
+      for p in 1:size(v0, 1), (l, step) in enumerate(steps)
+        ok = step < step0 ? preborn(r, p, l, 1) :
+             isequal((r.data.v[p,:,l,1], r.data.q[p,:,l,1], r.data.state[p,l,1]),
+                     (v0[p,:], [1.0, 0, 0, 0], BeamTracking.STATE_ALIVE))
+        ok || return false
+      end
+      for p in 1:size(v0, 1), (l, step) in enumerate(steps), t in m:m:n_turns
+        j = div(t, m) + 1
+        ok = t == 1 && step < step0 ? preborn(r, p, l, j) :
+             isequal((r.data.v[p,:,l,j], r.data.q[p,:,l,j], r.data.state[p,l,j]),
+                     ref[(p, t, step)])
+        ok || return false
+      end
+      return true
+    end
+    all_steps = [0:n_steps-1; n_steps]
+    key(res, k) = (res.index[k], res.s[k])
+    for start in eachindex(bl.line)
+      ref, step0 = reference(start)
+      r = track(bl; v0, n_turns, spin=true, at=:, start)
+      @test size(r.data.v, 3) == n_steps + 1 && r.start == start
+      @test matches(r, ref, step0, all_steps)
+      # a location never returns to STATE_PREBORN
+      @test all(Iterators.product(axes(v0, 1), axes(r.data.state, 2))) do (p, l)
+        st = r.data.state[p, l, :]
+        k = findlast(==(BeamTracking.STATE_PREBORN), st)
+        isnothing(k) || all(==(BeamTracking.STATE_PREBORN), st[1:k])
+      end
+      s0 = bl.line[start].s
+      for at in ([bl.line[start]], [m1, m2, m3], [bl.line[max(start - 1, 1)]],
+                 [(s0 - 1e-12, s0 + 1e-12)], [(0.0, s0)], [bl.line[start], (s0, Inf)],
+                 [1, start, length(bl.line)]), m in (1, 2, 3)
+        rs = track(bl; v0, n_turns, spin=true, at, start, save_every_n_turns=m)
+        rows = [findfirst(k -> key(r, k) == key(rs, l), eachindex(r.s)) for l in eachindex(rs.s)]
+        @test !any(isnothing, rows) && matches(rs, ref, step0, all_steps[rows]; m)
+      end
+    end
+    # A tracked Bunch continues from start as a new Bunch with its coordinates and states
+    for start in (1, 5, 8)
+      r1 = track(bl; v0, n_turns=2, rf_on=false)
+      v1, st1 = copy(r1.bunch.v), copy(r1.bunch.state)
+      ra = track(bl; bunch=r1.bunch, n_turns=2, at=:, start, rf_on=false)
+      b2 = Bunch(v=v1, species=bl.species_ref, p_over_q_ref=bl.p_over_q_ref)
+      b2.state .= st1
+      rb = track(bl; bunch=b2, n_turns=2, at=:, start, rf_on=false)
+      @test isequal(ra.data.v, rb.data.v) && isequal(ra.data.state, rb.data.state)
+    end
+  end
+
   @testset "Tracking results read at locations" begin
       # res.x etc. are read at the locations of twiss (by default the end of the beamline), for a
       # turn (its number) and a particle, from the saved arrays res.data
@@ -257,6 +360,22 @@ using Test
     one = track(bl; v0, n_turns=2, at=[qd]) # the only saved location need not be given
     @test one.x[turn=1] == one.x[qd, turn=1] == one.data.v[:, 1, 1, 2]
     @test_throws ErrorException track(bl; v0, at=[]).x[]
+    # Spins: a column read as res.q, from the array of track_spin of the saved quaternions
+    s0 = [0.0, 1.0, 0.2] ./ hypot(1, 0.2)
+    s, raw = track_spin(res.q, s0), track_spin(D.q, s0)
+    @test s[qd, turn=2, particle=2] == raw[2, :, lqd, 2] && s[end, turn=4] == raw[:, :, lend, 3]
+    @test s[[qd], turn=0:2:4, particle=1] == raw[1, :, [lqd], :] && s[end, turn=0, particle=1] == s0
+    @test track_spin(res.q, [0 1.0 0; 1.0 0 0])[qd, turn=4] ==
+          track_spin(D.q, [0 1.0 0; 1.0 0 0])[:, :, lqd, 3]
+    @test_throws ErrorException track_spin(s, s0)
+    @test_throws ErrorException track_spin(res.x, s0)
+    # Another species: the same as a Bunch of it
+    mu = Species("muon")
+    rmu = track(bl; v0, n_turns=2, species=mu, spin=true, at=[qd])
+    bmu = track(bl; bunch=Bunch(v=copy(v0), q=[1.0 0 0 0; 1 0 0 0], species=mu), n_turns=2, at=[qd])
+    @test rmu.bunch.species == mu && isequal(rmu.data.v, bmu.data.v) &&
+          isequal(rmu.data.q, bmu.data.q) &&
+          !isequal(rmu.data.v, track(bl; v0, n_turns=2, at=[qd]).data.v)
   end
 
   @testset "Open-lattice Twiss (a_initial)" begin
@@ -1443,7 +1562,7 @@ using Test
     fodo = Beamline([Quadrupole(Kn1=0.36, L=0.5), Drift(L=1.2), Quadrupole(Kn1=-0.36, L=0.5), Drift(L=1.2), tr];
         species_ref=Species("electron"), pc_ref=18e9)
     t0 = twiss(fodo)
-    t = fodo[tr][1]
+    t = fodo[tr]
     phase_trombone!(t; phi1=0.1, phi2=-0.05)
     @test t.transport_map_params[1:3] == (0.1, -0.05, 0)
     t1 = twiss(fodo)
