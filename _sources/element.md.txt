@@ -28,24 +28,21 @@ ele = LatElement()
 
 As you can see, the `LatElement` by default comes with a "parameter group" structure
 called `UniversalParams`. This contains a `kind` as a string, a `name` as a string, a
-length `L`, the `tracking_method`, and a few settings for how the element is tracked
-through (the number of integration steps and slices, fringe fields, and radiation). A bare
-`LatElement` has no tracking method set. For more details on the tracking methods
-available, see the [Tracking Methods](tracking-methods.md) section of the documentation.
+length `L`, and various settings specifying how the element should be tracked through, including the `tracking_method`. A bare `LatElement` has no tracking method set. For more details on the tracking methods available, see the [Tracking Methods](tracking-methods.md) section of the documentation. All properties of `UniversalParams` and every other parameter group are defined in the last section of this page.
 
 To set one of these parameters, use the natural syntax
 
 ```{code-cell} julia
 ele.name = "ele"
-ele.kind = "Quadrupole"
+ele.kind = "MyElementKind"
 ele.L = 123
 ```
 
-Alternatively, we could have set these parameters as keyword arguments ("`kwargs`") during
+Alternatively, we could have set these parameters as keyword arguments during
 `LatElement` construction:
 
 ```{code-cell} julia
-ele = LatElement(name="ele", kind="Quadrupole", L=123)
+ele = LatElement(name="ele", kind="MyElementKind", L=123)
 ```
 
 It would often be convenient if we can make the variable symbol (`ele` in this case)
@@ -63,7 +60,8 @@ println(ele2.name)
 
 In SciBmad, every element kind (`Quadrupole`, `Sextupole`, `Multipole`, etc.) is the same
 type, `LatElement`. The kind only does two things: it sets the `kind` string, and it chooses
-a suitable tracking method for the element (see [Element Kinds](#element.kinds) below):
+a suitable tracking method for the element (see [Element Kinds](#element.kinds) below; a
+`CrabCavity` also sets `is_crabcavity = true`):
 
 ```{code-cell} julia
 @elements begin
@@ -97,7 +95,7 @@ For details, see the [Tracking Methods](tracking-methods.md) section of the docu
 (element.kinds)=
 ## Element Kinds
 
-These are all of the element kinds, and the tracking method each one uses by default. Any
+Below are all of the element kinds and their default tracking methods. Any
 element with `L = 0` uses `Exact()`, and you can always set a different tracking method,
 either as a keyword argument or afterwards.
 
@@ -107,7 +105,7 @@ either as a keyword argument or afterwards.
 | `Quadrupole` | `MatrixKick()`          |                                          |
 | `Sextupole`  | `DriftKick()`           |                                          |
 | `Octupole`   | `DriftKick()`           |                                          |
-| `Multipole`  | `DriftKick()`           | Usually zero length, i.e. `Exact()`      |
+| `Multipole`  | `DriftKick()`           |                                          |
 | `SBend`      | `BendKick()`            |                                          |
 | `Solenoid`   | `SolenoidKick()`        |                                          |
 | `Kicker`     | `DriftKick()`           |                                          |
@@ -134,10 +132,12 @@ To see a full list of the parameters you can set, look at the docstring for the
 ```
 
 Note that parameters are split into "parameter groups", for organization and convenience.
-They are all documented below.
+They are all documented below. 
 
 (pgs)=
 ## Parameter Groups
+
+Parameter groups are automatically added to an element when a corresponding property is set. Parameter groups can be removed from an element as a whole by setting that parameter group to `nothing`; for example, to remove `MapParams` from an element named `ele`, do `ele.MapParams = nothing`.
 
 (alignment.params)=
 (alignment:params)=

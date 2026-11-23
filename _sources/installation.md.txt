@@ -74,7 +74,7 @@ You can suggest packages to be included in the SciBmad distribution by submittin
 
 ## Adding GPU Support
 
-SciBmad supports GPU parallelization on the following hardwares:
+SciBmad supports GPU parallelization on the following hardware:
 
 - [NVIDIA CUDA](https://github.com/JuliaGPU/CUDA.jl)
 - [AMD ROCm](https://github.com/JuliaGPU/AMDGPU.jl)
@@ -90,6 +90,44 @@ import Pkg; Pkg.add("CUDA")
 ## Plotting
 
 The SciBmad distribution includes the CairoMakie and GLMakie packages from the [Makie](https://docs.makie.org/stable/) ecosystem, and [Plots](https://docs.juliaplots.org/stable/). Our personal preference is Makie.
+
+## Using SciBmad from Python
+
+:::{warning}
+The SciBmad Python interface is still early in development, and may have poor performance and usability. For now, we encourage using SciBmad from Julia.
+:::
+
+SciBmad can also be used from Python through
+[juliacall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/), which runs Julia inside
+Python. Install it with `pip install juliacall`, add SciBmad once with
+
+```python
+import juliapkg
+juliapkg.add("SciBmad", "7bf6e793-a2ec-421f-8700-d1465381ee80")
+```
+
+and load it in your scripts or notebooks:
+
+```python
+from juliacall import Main as jl
+jl.seval("using SciBmad")
+```
+
+The first time, juliacall installs Julia and SciBmad, which takes a while. The Julia code in this
+documentation then translates to Python as follows:
+
+```python
+import numpy as np
+
+q = jl.Quadrupole(L=0.5, Kn1=0.36)  # Julia functions through jl, with the same keyword arguments
+jl.seval("x = [1.0 2.0; 3.0 4.0]")  # Julia code without a Python equivalent, as a string
+a = np.asarray(jl.x)                # Julia arrays as NumPy arrays (indices count from 0)
+b = jl.Array(a)                     # NumPy arrays as Julia arrays, for performance
+```
+
+Some results in Julia are read with keywords inside the square brackets, such as `x[turn=3]`.
+Python has no such syntax: write `jl.getindex(x, turn=3)` instead (in general, `x[i, k=1]` is
+`jl.getindex(x, i, k=1)`). The [examples](examples-index.md) include Python notebooks.
 
 ## Next Steps
 

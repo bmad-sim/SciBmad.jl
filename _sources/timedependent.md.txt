@@ -23,8 +23,9 @@ ENV["LINES"] = 30
 ## Time-Dependent Parameters
 
 In SciBmad, almost any `LatElement` parameter may be set to have an arbitrary time-dependence
-using `Time()`. For example to construct an AC-kicker with amplitude `1e-4` T and angular
-frequency `1e6`, we can simply write
+using `Time()`, the time in seconds. For example to construct an AC-kicker with a normalized
+strength `Ks0` of amplitude `1e-4` 1/m (a kick of up to `Ks0*L` = 5e-5 rad) and angular
+frequency `1e6` rad/s, we can simply write
 
 ```{code-cell} julia
 t = Time()
@@ -64,7 +65,7 @@ earthquake = Quadrupole(Kn1=0.36, L=0.5, x_offset=0.1*sin(120*t), y_offset=0.1*s
 ```
 
 A time-dependent parameter can also differ from particle to particle, by using a
-[`BatchParam`](batch.md) in its expression. Each particle sees its element of the batch, as for
+[`BatchParam`](batch.md) in its expression. Each particle sees its own entry of the batch, as for
 any other `BatchParam`. For example, an AC kicker with a different frequency for each of three
 particles:
 
@@ -73,7 +74,7 @@ particles:
 ac_kicker2 = VKicker(L=0.5, Ks0=1e-4*sin(ω*t))
 bl = Beamline([Drift(L=1.0), ac_kicker2], species_ref=Species("electron"), E_ref=18e9)
 res = track(bl, v0=zeros(3, 6))
-res.v[:, 4, end] # vertical kicks of the three particles
+res.py[turn=1] # vertical kicks of the three particles
 ```
 
 ## Energy Ramping
@@ -107,20 +108,23 @@ println(fodo[1].Bn1(1e-3))
 
 The reference energy is evaluated at the reference time at the entrance of each element slice.
 
-When ramping, two [configuration settings](track.md) that we can pass
+When ramping, two [configuration settings](#track.config) that we can pass
 to `track` become relevant:
 
 - `ramp_particle_energy_without_rf`: If `true` when ramping (`Beamline`'s reference energy is
   a `TimeFunction`), then particle energies will be artificially ramped with the reference
   energy. Default is `false`.
-- `ramp_update_each_particle`: If `true` when ramping, then the z-offset/time-offset of each
-  individual particle at the element entrances is taken into account when tracking particles
-  through the time-dependent element parameters. Usually only needed if ramping is fast
-  compared to the time scale of bunch passage through elements. Default is `false`.
+- `ramp_update_each_particle`: If `true` when ramping, then each particle sees the reference
+  energy at its own time (from its z-offset) at the element entrances, and the reference energy
+  also changes through each element. If `false`, all particles see the reference energy at the
+  reference time at each element entrance. Usually only needed if ramping is fast compared to the
+  time scale of bunch passage through elements. Default is `false`. (Time-dependent element
+  parameters are always evaluated at each particle's own time, see above.)
 
 In this FODO cell example above, we would need to use `ramp_particle_energy_without_rf=true`,
-because there is no RF to increase the particle's energy as the fields are ramped. Both flags
-are GPU compatible.
+because there is no RF to increase the particle's energy as the fields are ramped. Without it,
+the particles keep their energy while the reference energy rises, so their relative momentum
+deviation `pz` falls. Both flags are GPU compatible.
 
 Once again, we can now track using the same (GPU-compatible) tracking function described in
 [Track](track.md).
@@ -129,4 +133,4 @@ Once again, we can now track using the same (GPU-compatible) tracking function d
 
 - The element length `L` and the bend curvature `g_ref` (and so the bend `angle`) cannot be
   time-dependent: they set the reference coordinate system, which is fixed.
-- `SaganCavity` does not support a ramping reference energy.
+- Elements tracked with `SaganCavity` do not support a ramping reference energy.

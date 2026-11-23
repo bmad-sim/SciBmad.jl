@@ -41,7 +41,7 @@ fodo = Beamline([qf, d, qd, d], E_ref=18e9,
         species_ref=Species("electron"))
 ```
 
-We can then set the `K1` property of `fodo.context` to be a `BatchParam` with 10 different
+We can then set the variable `K1` of `fodo.context` to be a `BatchParam` with 10 different
 quadrupole strengths
 
 ```{code-cell} julia
@@ -55,7 +55,7 @@ particle coordinates be the same, and observe the difference in the output $x$-c
 ```{code-cell} julia
 v0 = repeat([1e-3 0 0 0 0 1e-3], 10, 1)
 res = track(fodo, v0=v0)
-res.v[:,1,end] # output x-coordinates
+res.x[turn=1] # output x-coordinates
 ```
 
 In one parallelized tracking run, we have effectively simulated 10 different beamlines. This
@@ -75,19 +75,31 @@ fodo.context.K1 = BatchParam(repeat(collect(0.1:0.05:0.55), inner=n_particles))
 ```
 
 If there are more particles than values in a `BatchParam`, the values start over: with the
-10 values above, particle 21 would see `K1=0.1` again.
+20 values above, particle 21 would see `K1=0.1` again. Each `BatchParam` starts over on its
+own, so `BatchParam`s of different lengths can be used together. With the setting
+`batch_start` of `track` (see [Configuration Settings](#track.config)), the first particle sees
+another value than the first.
 
 And `track` again:
 
 ```{code-cell} julia
 v0 = repeat([1e-3 0 0 0 0 1e-3], n_particles*10, 1)
 res = track(fodo, v0=v0)
-res.v[:,1,end] # output x-coordinates
+res.x[turn=1] # output x-coordinates
 ```
+
+`twiss` computes the optics of one value of the batch at a time, chosen with its keyword
+`batch_index` (by default the first).
 
 ## Limitations
 
-Any parameter of a `LatElement` or `Beamline` may be a `BatchParam`, with a few limitations:
+Any numerical parameter of a `LatElement` or `Beamline` may be a `BatchParam`, with a few
+limitations:
+
+- The settings of the integration steps and slices (`n_steps`, `ds_step` and `n_slices`) cannot
+  be `BatchParam`s.
+- `twiss` does not support batched element lengths or a batched reference energy yet (`track` and
+  `find_closed_orbit` do).
 
 - All particles go through an element with the same tracking method (see
   [Tracking Methods](tracking-methods.md)), whatever their parameter values are.
