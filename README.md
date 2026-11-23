@@ -60,7 +60,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
 
 **Performance**
 - Parallel on CPUs and GPUs (NVIDIA, AMD, Intel and Apple): tracking, closed orbits, dynamic
-  aperture, IBS, NAFF, and Newton and Levenberg-Marquardt solvers
+  aperture, IBS, NAFF (not yet on Apple GPUs), and Newton and Levenberg-Marquardt solvers
 - CPU/GPU parallelized over both particles _and lattices_ via `BatchParam`
 - Also supports 32-bit precision on CPUs and GPUs (including Apple Metal), also with time-dependent and batch parameters
 

@@ -965,8 +965,13 @@ Open items:
   without it `Base.have_color` is `nothing`, IJulia passes that as `:color` of its stderr, and
   GPUCompiler's `__init__` fails ("Cannot convert Nothing to Bool") on `using SciBmad`. Execute into
   the scratch directory first (`--output-dir`), compare the outputs with the committed notebook,
-  then copy it back. Last run: `ags-spin-ramp` (Julia), Nov 22 2026: only the `TrackResult`
-  display and the elapsed time changed.
+  then copy it back. nbconvert stores every `\r` progress update (`dynamic_aperture`'s "Finished
+  turn ...") as its own output; merge consecutive stream outputs and keep the text after the last
+  `\r` per line, as the committed notebooks have it. The login shell sets
+  `PYTHON_JULIACALL_PROJECT` and `PYTHON_JULIACALL_EXE` to empty strings, which juliacall rejects:
+  set them (to the scratch environment and its Julia) along with the `PYTHON_JULIAPKG_*` ones.
+  Last run Nov 22 2026, all six notebooks: outputs identical to the committed ones except
+  `ags-spin-ramp` (Julia: the `TrackResult` display and the elapsed time; committed).
   IJulia ≥ 1.34 has no `src/kernel.jl`: the kernelspec runs `-e "import IJulia;
   IJulia.run_kernel()" {connection_file}`. The Python notebooks run through juliacall with
   `PYTHON_JULIAPKG_PROJECT=<env>`, `PYTHON_JULIAPKG_OFFLINE=yes`, `PYTHON_JULIAPKG_EXE=<julia>`;
@@ -1121,7 +1126,16 @@ of the above to the whole page, not only to the paragraph mentioned.
   touching `docs/Project.toml` or `~/Library/Jupyter` (which `docs/build.py` changes): a venv in
   the scratch directory with `docs/requirements.txt`, an `rsync` copy of the repository, and
   `sphinx-build -b html -D nb_execution_mode=off -q . <out>` in its `docs/src`. Only the
-  `{docstring}` lookups warn then (they need the docs' Julia environment). The `{docstring}`
+  `{docstring}` lookups warn then (they need the docs' Julia environment). For the full build
+  as CI runs it (every page executed, docstrings, Documenter), run `docs/build.py` on an `rsync`
+  copy that is made a throwaway Git repository (`git init`, `remote add origin` the GitHub URL, one
+  commit: Documenter needs it), with `PATH` starting with a directory holding `pip` and
+  `sphinx-build` of the venv and a `julia` script that execs the Julia 1.13 binary by its full
+  path (CI uses Julia `1`; a script calling `julia +release` finds itself and loops), with
+  `JUPYTER_DATA_DIR`/`JUPYTER_PATH` in the scratch directory (the IJulia kernel goes there), and
+  with the local clones developed into the copy's `docs` environment first (unregistered
+  versions). Nov 22 2026: builds; the only warning is the highlighting of the intended error's
+  traceback on `tracking-methods.md` (relaxed mode, cosmetic). The `{docstring}`
   directive evaluates the name in `Main` after `using SciBmad`: unexported names need the module
   (`{docstring} SciBmad.value_and_jacobian`).
 - Every name used in examples must work as written after `using SciBmad` (unexported functions
