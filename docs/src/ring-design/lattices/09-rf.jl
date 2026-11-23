@@ -24,4 +24,4 @@ ring = Beamline([sextant1; sextant3; sextant5; sextant7; sextant9; sextant11],
 tw_ring = TwissExpr(ring)
 
 # Above transition, the synchrotron tune q3 is negative
-match!(vary=[@knob(rf0.voltage)], targets=[tw_ring.q3 == -0.05], solver=:gauss_newton)
+match!(vary=[@knob(rf0.voltage)], targets=[tw_ring.q3 == -0.05])

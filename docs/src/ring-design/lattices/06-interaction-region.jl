@@ -37,14 +37,12 @@ tw_ipr = TwissExpr(ir_r, a_initial=tw_ipf.a[end])
 # β ranges from 0.06 m to 700 m here: matching log(β) weighs relative errors equally
 match!(vary=[@knob(qef1.Kn1), @knob(qef2.Kn1), @knob(qef3.Kn1), @knob(qef4.Kn1)],
        targets=[log(tw_ipf.beta1[end]) == log(0.6), log(tw_ipf.beta2[end]) == log(0.06),
-                tw_ipf.alpha1[end] == 0, tw_ipf.alpha2[end] == 0],
-       solver=:gauss_newton)
+                tw_ipf.alpha1[end] == 0, tw_ipf.alpha2[end] == 0])
 match!(vary=[@knob(qer1.Kn1), @knob(qer2.Kn1), @knob(qer3.Kn1), @knob(qer4.Kn1)],
        targets=[log(tw_ipr.beta1[end]) == log(tw_ssr.beta1[begin]),
                 log(tw_ipr.beta2[end]) == log(tw_ssr.beta2[begin]),
                 tw_ipr.alpha1[end] == tw_ssr.alpha1[begin],
-                tw_ipr.alpha2[end] == tw_ssr.alpha2[begin]],
-       solver=:gauss_newton)
+                tw_ipr.alpha2[end] == tw_ssr.alpha2[begin]])
 
 # The interaction region replaces the last three straight section cells of sextant 5 and the
 # first three of sextant 7

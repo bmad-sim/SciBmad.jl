@@ -157,11 +157,10 @@ Target(tw.q1, 0.25; tol=1e-6)
 Target(tw.beta1[qd]; lower=5, upper=30, weight=0.1)
 ```
 
-There may be fewer, as many, or more targets than knobs. With more knobs than needed, many
-solutions exist, and `match!` returns one near the starting point. With
-`match!(...; solver=:gauss_newton)`, each step is the smallest change of the knobs that meets the
-targets to first order. With more targets than can be met, `match!` returns the closest it can
-get (in the least-squares sense) and reports the match as not converged.
+There may be fewer, as many, or more targets than knobs. With more knobs than needed, many solutions
+exist, and `match!` returns one near the starting point: each step is the smallest change of the
+knobs that meets the targets to first order. With more targets than can be met, `match!` returns the
+closest it can get (in the least-squares sense) and reports the match as not converged.
 
 `minimize` is for quantities that should just be as small as possible. For example, we can minimize the driving terms of a ring with four sextupoles while also requiring that the chromaticities are +1 with (using `reim` which returns a tuple of the real and imaginary parts, and then splatting those values with `...` into the vector):
 
@@ -355,11 +354,11 @@ expression, also in targets. For more, see [Parametric Normal Form](#pnf).
 
 ## Using Other Optimizers
 
-`match!` uses the Levenberg-Marquardt method of
-[BatchSolve](https://mattsignorelli.github.io/BatchSolve.jl/dev/guide/), which finds a nearby
-solution. Like every such method, it can stop at a point that small changes cannot improve, even
-though a solution exists elsewhere. A better starting point, bounds on the knobs, or a global
-optimizer then help.
+`match!` takes Gauss-Newton steps, which find a nearby solution. With `solver=:levenberg_marquardt`
+it uses the Levenberg-Marquardt method of
+[BatchSolve](https://mattsignorelli.github.io/BatchSolve.jl/dev/guide/) instead. Like every such
+method, it can stop at a point that small changes cannot improve, even though a solution exists
+elsewhere. A better starting point, bounds on the knobs, or a global optimizer then help.
 
 For other optimizers, `MatchProblem` provides what the optimization packages of Julia ask for:
 

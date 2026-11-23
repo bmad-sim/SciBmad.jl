@@ -4,7 +4,8 @@
 # focusing and vertical next to defocusing quadrupoles. Each corrector is an element of its own,
 # so that its kick can be set by itself. A BPM after every bend b, bh and straight section
 # drift db. The orbit with radiation damping (the sawtooth) is corrected with the horizontal
-# correctors.
+# correctors. The phase trombones are maps around the closed orbit at the time they are built, so
+# they are taken out for the orbit correction and put back afterwards.
 
 include("12-sextupoles.jl")
 
@@ -47,12 +48,18 @@ end
 
 ring = Beamline(elements, species_ref=electron, pc_ref=pc_ref, context=ring.context)
 
+for tr in (tr_f, tr_r, tr_m)
+  ring[tr].MapParams = nothing
+end
+
 # Radiation damping in every element
 for ele in ring.line
   ele.rad_damping = true
 end
 
-# The orbit does not depend on the normal form, which SciBmad does not compute to second order
-# with radiation damping yet: damping=false computes it as without damping.
-tw_orbit = TwissExpr(ring, damping=false)
+tw_orbit = TwissExpr(ring)
 match!(vary=[Knob(kicker, :Kn0L) for kicker in hkickers], minimize=tw_orbit.x[[bpm]])
+
+phase_trombone!(ring[tr_f]; phi1=DefExpr(c -> c.x1), phi2=DefExpr(c -> c.y1))
+phase_trombone!(ring[tr_r]; phi1=DefExpr(c -> c.x2), phi2=DefExpr(c -> c.y2))
+phase_trombone!(ring[tr_m]; phi1=DefExpr(c -> -c.x1 - c.x2), phi2=DefExpr(c -> -c.y1 - c.y2))

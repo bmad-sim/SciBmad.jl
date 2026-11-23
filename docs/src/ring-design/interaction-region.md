@@ -123,8 +123,7 @@ value([tw_ipf.beta1[end], tw_ipf.beta2[end]])
 ```{code-cell} julia
 match!(vary=[@knob(qef1.Kn1), @knob(qef2.Kn1), @knob(qef3.Kn1), @knob(qef4.Kn1)],
        targets=[log(tw_ipf.beta1[end]) == log(0.6), log(tw_ipf.beta2[end]) == log(0.06),
-                tw_ipf.alpha1[end] == 0, tw_ipf.alpha2[end] == 0],
-       solver=:gauss_newton)
+                tw_ipf.alpha1[end] == 0, tw_ipf.alpha2[end] == 0])
 ```
 
 6. Match IPR to the periodic lattice functions of the reverse straight section cell, which
@@ -135,8 +134,7 @@ match!(vary=[@knob(qer1.Kn1), @knob(qer2.Kn1), @knob(qer3.Kn1), @knob(qer4.Kn1)]
        targets=[log(tw_ipr.beta1[end]) == log(tw_ssr.beta1[begin]),
                 log(tw_ipr.beta2[end]) == log(tw_ssr.beta2[begin]),
                 tw_ipr.alpha1[end] == tw_ssr.alpha1[begin],
-                tw_ipr.alpha2[end] == tw_ssr.alpha2[begin]],
-       solver=:gauss_newton)
+                tw_ipr.alpha2[end] == tw_ssr.alpha2[begin]])
 ```
 
 7. Add the IR into the ring. It replaces the last three straight section cells of sextant 5 and

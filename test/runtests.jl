@@ -898,8 +898,8 @@ using Test
       @test res.converged && length(res.history) < res.evaluations
       undo!(res)
     end
-      # The previous solver (Gauss-Newton steps from the SVD) gives the same tunes
-    res = match!(vary=[kf, kd], targets=[tw.q1 == 0.2, tw.q2 == 0.15], solver=:gauss_newton)
+      # The Levenberg-Marquardt method of BatchSolve gives the same tunes
+    res = match!(vary=[kf, kd], targets=[tw.q1 == 0.2, tw.q2 == 0.15], solver=:levenberg_marquardt)
     @test res.converged
     @test res.x ≈ x_tunes rtol=1e-7
     undo!(res)
@@ -980,6 +980,49 @@ using Test
     @test !SciBmad._orbit_col("z", true) && !SciBmad._orbit_col("a0", true)
     @test SciBmad._orbit_col("z", false) && SciBmad._orbit_col("dx_2", true)
     @test !SciBmad._orbit_col("dx", false) && !SciBmad._orbit_col("beta1", true)
+  end
+
+  @testset "Orbit-only twiss with radiation damping and parameters" begin
+      # The orbit only needs a0, which the canonization does not change: with radiation damping
+      # and parameters (nonlinear canonization with damping is not in NNF) twiss computes it
+      # without the summary values. Against the closed orbit with radiation (order 1) and the
+      # central differences of it in the strength of a corrector; also through TwissExpr. Before,
+      # both stopped with "Nonlinear canonization including damping not implemented yet"
+    @elements begin
+      qf = Quadrupole(Kn1=0.36, L=0.5)
+      qd = Quadrupole(Kn1=-0.33, L=0.5)
+      kick = Multipole(Kn0L=1e-5)
+      d = Drift(L=0.4)
+      b = SBend(L=1.2, angle=pi/132)
+      rf = RFCavity(L=1e-2, voltage=3e7, rf_frequency=5e8, zero_phase=PhaseRef.AboveTransition)
+    end
+    ring = Beamline([qf, kick, d, b, d, qd, d, b, d, rf]; species_ref=Species("electron"),
+                    pc_ref=3e9)
+    for ele in ring.line
+      ele.rad_damping = true
+    end
+    tw0 = twiss(ring; cols=["x", "pz"])
+    @test maximum(abs, tw0.pz) > 1e-5 # (the energy changes along the ring)
+    D = Descriptor(fill(2, 6), 2, [1], 2) # (as TwissExpr: one knob)
+    k = params(D)
+    kick.Kn0L = 1e-5 + k[1]
+    tw = twiss(ring; cols=["x", "pz"], GTPSA_descriptor=D)
+    scalarize!(kick)
+    @test isempty(tw.summ.sdict)
+    @test scalar.(tw.x) ≈ tw0.x atol=1e-15
+    @test scalar.(tw.pz) ≈ tw0.pz atol=1e-15
+    h = 1e-7
+    kick.Kn0L = 1e-5 + h
+    xp = twiss(ring; cols=["x"]).x
+    kick.Kn0L = 1e-5 - h
+    xm = twiss(ring; cols=["x"]).x
+    kick.Kn0L = 1e-5
+    dx = [t[[0, 0, 0, 0, 0, 0, 1]] for t in tw.x]
+    @test dx ≈ (xp .- xm) ./ (2h) rtol=1e-6
+    te = TwissExpr(ring)
+    v, J = SciBmad.value_and_jacobian([te.x[qd]], [@knob(kick.Kn0L)])
+    @test v[1] ≈ tw0.x[qd] atol=1e-15
+    @test J[1, 1] ≈ dx[ring[qd].beamline_index] rtol=1e-10
   end
 
   @testset "Transfer matrix r11 ... r66 and one-turn matrix m11 ... m66" begin

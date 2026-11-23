@@ -265,10 +265,11 @@ Given a `Beamline`, `targets` (and `minimize`) may be functions of its `TwissExp
 match!(cell; vary=[@knob(qf.Kn1), @knob(qd.Kn1)], targets = tw -> [tw.q1 == 0.25, tw.q2 == 0.25])
 ```
 
-The derivatives are exact (see [`SciBmad.value_and_jacobian`](@ref)). The solver is the
-Levenberg-Marquardt method of `BatchSolve` (`BatchSolve.levenberg_marquardt!`): steps that do
-not reduce the residuals, or where the lattice has no solution (e.g. it is unstable), are
-rejected and shorter ones taken, so there may be fewer, as many, or more targets than knobs.
+The derivatives are exact (see [`SciBmad.value_and_jacobian`](@ref)). Each step is a
+Gauss-Newton step from the singular value decomposition of the Jacobian: the smallest change of
+the knobs that meets the targets to first order. Steps that do not reduce the residuals, or where
+the lattice has no solution (e.g. it is unstable), are rejected and shorter or damped ones taken,
+so there may be fewer, as many, or more targets than knobs.
 Knobs stay within their bounds and step limits, and `<=` and `>=` targets only count while they
 are violated. Like every such method it finds a nearby solution: targets of very different size
 (a tune and a beta function) should get `weight`s that make their residuals comparable. To use
@@ -277,16 +278,17 @@ another optimizer, see [`MatchProblem`](@ref).
 ## Keyword arguments
 - `maxiter`: Maximum number of iterations, default is `50`
 - `verbose`: If `true`, prints the progress of the solver at each iteration. Default is `false`
-- `solver`: `:levenberg_marquardt` (default), or `:gauss_newton`: Gauss-Newton steps from the
-    singular value decomposition of the Jacobian (their halves, quarters and eighths, then
-    damped steps, where a step does not reduce the residuals)
+- `solver`: `:gauss_newton` (default): Gauss-Newton steps from the singular value
+    decomposition of the Jacobian (their halves, quarters and eighths, then damped steps, where a
+    step does not reduce the residuals), or `:levenberg_marquardt`: the Levenberg-Marquardt
+    method of `BatchSolve` (`BatchSolve.levenberg_marquardt!`)
 - `rcond`: For `solver=:gauss_newton`, singular values of the Jacobian below `rcond` times the
     largest are ignored (knob combinations the targets do not respond to). Default is `1e-10`
 
 Returns a [`MatchResult`](@ref). `match!(res)` continues the match from the current lattice.
 """
 function match!(prob::MatchProblem; maxiter::Integer=50, verbose::Bool=false,
-                solver::Symbol=:levenberg_marquardt, rcond::Real=1e-10)
+                solver::Symbol=:gauss_newton, rcond::Real=1e-10)
   if solver == :levenberg_marquardt
     return _match_levenberg_marquardt!(prob, maxiter, verbose)
   elseif solver != :gauss_newton

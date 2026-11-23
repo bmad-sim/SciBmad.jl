@@ -100,6 +100,17 @@ length(hkickers), length(vkickers), length(ring[[bpm]])
    The new ring keeps the context of the previous one, which holds the variables of the sextupoles
    and the phase trombones.
 
+3. A phase trombone is a matrix applied around the closed orbit at its place, built from the
+   closed orbit and the lattice functions at the time `phase_trombone!` is called. The radiation
+   and the correctors change the closed orbit, so the phase trombones are taken out now, and put
+   back at the very end, after the orbit correction:
+
+```{code-cell} julia
+for tr in (tr_f, tr_r, tr_m)
+  ring[tr].MapParams = nothing
+end
+```
+
 ## Example: Radiation-Induced Sawtooth Orbit Correction
 
 ```{figure} figures/sawtooth.svg
@@ -133,14 +144,8 @@ fig
    are more BPM readings than correctors, so the orbit cannot be zero at all of them. Each corrector
    is a knob, and its strength is its normal dipole field `Kn0L` (a kick of `-Kn0L`).
 
-   With radiation damping, `twiss` computes the normal form of a damped map. To compute the
-   derivatives with respect to the knobs, it would need its nonlinear normal form, which SciBmad does
-   not compute with damping yet. The orbit does not depend on it, so the `TwissExpr` is made with
-   `damping=false`: the orbit is still the closed orbit with the radiation energy loss, but the normal
-   form is computed as without damping.
-
 ```{code-cell} julia
-tw_orbit = TwissExpr(ring, damping=false)
+tw_orbit = TwissExpr(ring)
 res = match!(vary=[Knob(kicker, :Kn0L) for kicker in hkickers], minimize=tw_orbit.x[[bpm]])
 res.converged, res.iterations
 ```
@@ -181,7 +186,7 @@ for q in ring_err["Quadrupole::*"]
   end
   q.x_offset = dx
 end
-tw_err = TwissExpr(ring_err, damping=false)
+tw_err = TwissExpr(ring_err)
 maximum(abs, value(tw_err.x["bpm"])) # The largest BPM reading [m]
 ```
 
@@ -200,6 +205,22 @@ maximum(abs, value(tw_err.x["bpm"]))
    the start, e.g. a row of the periodic `twiss` table of the design) treats the ring as an open
    line. After the trajectory is corrected, the orbit excursions are much smaller, the periodic orbit
    is far away from the unstable region, and the closed orbit can be corrected.
+
+## Example: Putting the Phase Trombones Back
+
+The orbit of `ring` is corrected, so its phase trombones can be put back, with the phase advances
+of [chapter 12](dynamic-aperture.md). They are now built around the closed orbit with the radiation
+and the correctors, so they do not change it:
+
+```{code-cell} julia
+reading = value(tw_orbit.x[[bpm]]) # The BPM readings without the phase trombones
+phase_trombone!(ring[tr_f]; phi1=DefExpr(c -> c.x1), phi2=DefExpr(c -> c.y1))
+phase_trombone!(ring[tr_r]; phi1=DefExpr(c -> c.x2), phi2=DefExpr(c -> c.y2))
+phase_trombone!(ring[tr_m]; phi1=DefExpr(c -> -c.x1 - c.x2), phi2=DefExpr(c -> -c.y1 - c.y2))
+maximum(abs, value(tw_orbit.x[[bpm]]) .- reading) # The change of the BPM readings [m]
+```
+
+If the orbit is corrected again later, the phase trombones are taken out first, in the same way.
 
 ## Exercises
 

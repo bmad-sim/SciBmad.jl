@@ -43,5 +43,4 @@ match!(vary=[@knob(qfss_2.Kn1), @knob(qdss_2.Kn1), @knob(qff2_2.Kn1), @knob(qdf2
              @knob(qff3_2.Kn1), @knob(qdf3_2.Kn1)],
        targets=[tw_2.beta1[end] == tw_ss2.beta1[begin], tw_2.alpha1[end] == tw_ss2.alpha1[begin],
                 tw_2.beta2[end] == tw_ss2.beta2[begin], tw_2.alpha2[end] == tw_ss2.alpha2[begin],
-                tw_ring.q1 == 54.08, tw_ring.q2 == 54.14],
-       solver=:gauss_newton)
+                tw_ring.q1 == 54.08, tw_ring.q2 == 54.14])

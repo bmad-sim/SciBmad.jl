@@ -499,11 +499,18 @@ function twiss(
   # Determine canonization level
   canonise, phase, damp = canonise_phase_damp(GTPSA_descriptor, coast, damping)
 
-  a_initial = factorise(a_initial; canonise=canonise, damping=isnothing(damp) ? false : true,
-                        compute_r=Val{false}()).a
+  # The orbit is the translation a0 of the normalizing map, which the canonization does not change
+  # (the canonizing map has no constant part). Only the summary values (tunes, damping) need it, so
+  # with only the orbit asked for and no nonlinear canonization with damping (not in NNF yet), they
+  # are left out
+  no_summary = orbit_only && !isnothing(damp) && canonise == 2
+  if !no_summary
+    a_initial = factorise(a_initial; canonise=canonise, damping=isnothing(damp) ? false : true,
+                          compute_r=Val{false}()).a
+  end
 
   turns = nothing
-  if sparse || orbit_only
+  if (sparse || orbit_only) && !no_summary
     if isnothing(tr_steps) && !sparse && !isnothing(maps) && isnothing(a0_rows)
       tr_steps = tr # (the identity, tracked to every step)
     elseif isnothing(tr_steps)
@@ -525,11 +532,13 @@ function twiss(
     tr = _twiss_track(a_initial, bl, rf_on, batch_index, zero(s[1]), locations, step_save,
                       in_body_coordinates, delta_orbit)
     fac, a0s, transfers, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 =
-      _twiss_push_a(tr, a_initial, canonise, phase, damp, coast, turns, orbit_only, transfer)
+      _twiss_push_a(tr, a_initial, canonise, phase, damp, coast, turns, orbit_only, transfer,
+                    no_summary)
   else
     a_right = isnothing(a0_rows) ? a_initial : inv(a0_rows) ∘ a_initial
     fac, a0s, transfers, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 =
-      _twiss_push_a(maps, a_right, canonise, phase, damp, coast, turns, orbit_only, transfer)
+      _twiss_push_a(maps, a_right, canonise, phase, damp, coast, turns, orbit_only, transfer,
+                    no_summary)
   end
   _twiss_reference!(beta_gamma_ref, t_ref, tr,
                     tr === tr_steps ? step_save .+ 1 : axes(tr.data.v, 3))
@@ -544,7 +553,9 @@ function twiss(
 
   # q1, q2, slip factor eta_c, momentum compaction alpha_c, [q3, qspin]
   # only thing is with 3d motion, need to compute 
-  summ = _twiss_summ(twi, cache)
+  summ = no_summary ?
+         TwissSummary(LittleDict{Symbol,Union{Float64,AmplitudeDependentValue}}()) :
+         _twiss_summ(twi, cache)
   # The row of each location (beamline index, step in the element) in the table
   return Twiss(summ, df, bl, 1, nothing,
                Dict{Tuple{Int,Int},Int}(l => r for (r, l) in enumerate(rows)))
@@ -790,12 +801,13 @@ end
 # tracked (saved at the rows by track). With only the orbit asked for (orbit_only), the rows only
 # need a0 (the translation to the fixed point, as factorise gives it), and only the first and the
 # last are factorised (for the summary; the last one's phases are unwrapped with turns, and the
-# longitudinal one against the first row). With transfer, also the map from the start to every
-# row around the fixed point at the start (for the r columns): a (before factorise canonises it)
-# composed with the inverse of a at the first row without its translation (which has no constant
-# part, so that nothing is lost when the variables have lower orders than the parameters)
+# longitudinal one against the first row; with no_summary, none are). With transfer, also the map
+# from the start to every row around the fixed point at the start (for the r columns): a (before
+# factorise canonises it) composed with the inverse of a at the first row without its translation
+# (which has no constant part, so that nothing is lost when the variables have lower orders than
+# the parameters)
 function _twiss_push_a(maps_or_tr, a_initial, canonise, phase, damp, coast, turns, orbit_only,
-                       transfer)
+                       transfer, no_summary=false)
   tracked = maps_or_tr isa TrackResult
   n = tracked ? size(maps_or_tr.data.v, 3) : length(maps_or_tr)
   fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3 = _twiss_make_base_columns(n, a_initial,
@@ -818,7 +830,7 @@ function _twiss_push_a(maps_or_tr, a_initial, canonise, phase, damp, coast, turn
       end
       transfers[j] = a ∘ a_start_inv
     end
-    if orbit_only && 1 < j < n
+    if orbit_only && (1 < j < n || no_summary)
       a0s[j] = factorise_a0(a)
     else
       _store_twiss!(fac, phi1, phi2, phi3_or_slip, damp1, damp2, damp3, a, canonise, phase, damp,

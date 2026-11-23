@@ -294,8 +294,7 @@ match!(vary=[@knob(ring.context.xf[3]), @knob(ring.context.xd[3]),
        targets=[tw_chrom.w1a[ip6] == 0, tw_chrom.w1b[ip6] == 0,
                 tw_chrom.w2a[ip6] == 0, tw_chrom.w2b[ip6] == 0,
                 tw_chrom.w1a[end_7] == 0, tw_chrom.w1b[end_7] == 0,
-                tw_chrom.w2a[end_7] == 0, tw_chrom.w2b[end_7] == 0],
-       solver=:gauss_newton)
+                tw_chrom.w2a[end_7] == 0, tw_chrom.w2b[end_7] == 0])
 ```
 
 The W function is now corrected in the IR and over one arc:

@@ -87,15 +87,15 @@ targets = [tw_f.beta1[end] == tw_ssf.beta1[begin], tw_f.alpha1[end] == tw_ssf.al
 
 5. Run the match. A matching problem like this one can have several solutions: the knobs that make
    the targets hold are not unique. Which solution is found depends on the starting point and on
-   the method of the optimizer. Here we use the Gauss-Newton method of `match!` (`solver=:gauss_newton`),
-   which finds the solution of the Bmad version of this tutorial:
+   the method of the optimizer. From the strengths of the straight section, `match!` finds the
+   solution of the Bmad version of this tutorial:
 
 ```{code-cell} julia
 match!(vary=[@knob(qff2.Kn1), @knob(qdf2.Kn1), @knob(qff3.Kn1), @knob(qdf3.Kn1)],
-       targets=targets, solver=:gauss_newton)
+       targets=targets)
 ```
 
-   The default method, Levenberg-Marquardt, finds another solution (exercise 3).
+   The Levenberg-Marquardt method finds another solution (exercise 3).
 
 6. The betas through the line, from the arc into the straight section:
 
@@ -133,9 +133,10 @@ value([tw_f.beta1[end], tw_ssf.beta1[begin], tw_f.alpha2[end], tw_ssf.alpha2[beg
    optimization do?
 
 3. **Several solutions:** Start again with the unoptimized quadrupoles, and run the match with
-   the default method (without `solver`). Check that the solution is different, and that it meets
-   the targets. Compare the maximum beta functions in the matching section for both solutions, for
-   example with `value(maximum(tw_f.beta1["qff2:qdf3"]))`. Which would you choose?
+   the Levenberg-Marquardt method (`solver=:levenberg_marquardt`). Check that the solution is
+   different, and that it meets the targets. Compare the maximum beta functions in the matching
+   section for both solutions, for example with `value(maximum(tw_f.beta1["qff2:qdf3"]))`. Which
+   would you choose?
 
 The solution of exercise 1 is in the lattice file of this chapter,
 [`lattices/03-match-to-straight.jl`](https://github.com/bmad-sim/SciBmad.jl/tree/main/docs/src/ring-design/lattices/03-match-to-straight.jl).

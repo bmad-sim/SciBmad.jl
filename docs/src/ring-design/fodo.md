@@ -234,8 +234,9 @@ Most optimizers need the derivatives of the targets with respect to the knobs. O
 as Tao, compute them with finite differences, which are approximate, need a step size, and need
 one more calculation for each knob. SciBmad computes the exact derivatives with respect to all
 knobs at once, with automatic differentiation (see
-[Matching and Optimization](../optimize.md)). `match!` uses the Levenberg-Marquardt method by
-default. It finds a nearby solution, and converges to a local optimum. For a global search, see
+[Matching and Optimization](../optimize.md)). `match!` takes Gauss-Newton steps (the smallest
+change of the knobs that meets the targets to first order), and shorter or damped steps where those
+do not improve the match. It finds a nearby solution, and converges to a local optimum. For a global search, see
 [Using Other Optimizers](../optimize.md).
 
 There is no need to save the optimized lattice to a file: the strengths of `qf` and `qd` have

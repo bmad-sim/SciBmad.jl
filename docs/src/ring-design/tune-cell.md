@@ -113,8 +113,7 @@ match!(vary=[@knob(qfss_2.Kn1), @knob(qdss_2.Kn1), @knob(qff2_2.Kn1), @knob(qdf2
                 tw_2.alpha1[end] == tw_ss2.alpha1[begin],
                 tw_2.beta2[end] == tw_ss2.beta2[begin],
                 tw_2.alpha2[end] == tw_ss2.alpha2[begin],
-                tw_ring.q1 == 54.08, tw_ring.q2 == 54.14],
-       solver=:gauss_newton)
+                tw_ring.q1 == 54.08, tw_ring.q2 == 54.14])
 ```
 
    The tunes of the ring are now 54.08 and 54.14, and the beta functions are only changed in the

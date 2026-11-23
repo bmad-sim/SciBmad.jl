@@ -32,9 +32,7 @@ tw_r = TwissExpr(line_r, a_initial=tw_ar.a[end])
 
 match!(vary=[@knob(qff2.Kn1), @knob(qdf2.Kn1), @knob(qff3.Kn1), @knob(qdf3.Kn1)],
        targets=[tw_f.beta1[end] == tw_ssf.beta1[begin], tw_f.alpha1[end] == tw_ssf.alpha1[begin],
-                tw_f.beta2[end] == tw_ssf.beta2[begin], tw_f.alpha2[end] == tw_ssf.alpha2[begin]],
-       solver=:gauss_newton)
+                tw_f.beta2[end] == tw_ssf.beta2[begin], tw_f.alpha2[end] == tw_ssf.alpha2[begin]])
 match!(vary=[@knob(qfr2.Kn1), @knob(qdr2.Kn1), @knob(qfr3.Kn1), @knob(qdr3.Kn1)],
        targets=[tw_r.beta1[end] == tw_ssr.beta1[begin], tw_r.alpha1[end] == tw_ssr.alpha1[begin],
-                tw_r.beta2[end] == tw_ssr.beta2[begin], tw_r.alpha2[end] == tw_ssr.alpha2[begin]],
-       solver=:gauss_newton)
+                tw_r.beta2[end] == tw_ssr.beta2[begin], tw_r.alpha2[end] == tw_ssr.alpha2[begin]])

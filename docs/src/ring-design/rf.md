@@ -146,7 +146,7 @@ way in the $z$-$p_z$ plane than below transition (see [Twiss](#twiss.rf)).
 
 ```{code-cell} julia
 tw_ring = TwissExpr(ring)
-match!(vary=[@knob(rf0.voltage)], targets=[tw_ring.q3 == -0.05], solver=:gauss_newton)
+match!(vary=[@knob(rf0.voltage)], targets=[tw_ring.q3 == -0.05])
 ```
 
 The momentum compaction $\alpha_c$, the relative change of the length of the closed orbit with

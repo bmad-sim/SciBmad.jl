@@ -219,6 +219,16 @@ plainly what was not verified and what could be wrong. Never present unverified 
 - `src/dynamic_aperture.jl`, `src/trombone.jl` (`phase_trombone!`: a `MapParams` map from the 
   linear normal form), `src/adv.jl` (`AmplitudeDependentValue`), `src/utils.jl` (`grad`, `jac`, `val`), 
   `src/experimental/` (submodule `Experimental`).
+- Phase trombones (maintainer, Nov 23 2026): the map is a matrix A R A⁻¹ applied around the
+  closed orbit, both computed once by `phase_trombone!` (with its `rf_on`), so it is invisible to
+  the closed orbit and keeps the lattice functions only while the orbit and the optics stay as
+  they were. They are applied at the very end, after orbit correction (ring design chapter 14
+  takes them out and puts them back). No trombone-specific code in `twiss`/`track`/etc.: a
+  rebuild per call was implemented and reverted (hooks in `twiss`, `track`, `find_closed_orbit`;
+  `twiss` 117 -> 177 ms on the tutorial ring); building the map lazily in a `DefExpr` of
+  `MapParams` needs no hooks but runs at every preparation (3 per `twiss`, 4 per `chrom=2` or
+  `value_and_jacobian`, 2 per `find_closed_orbit`), one `twiss` per trombone each, and cannot see
+  the call's `rf_on`, `start`/`stop`, `initial`.
 - `const BTBL = Base.get_extension(BeamTracking, :BeamTrackingBeamlinesExt)`: SciBmad uses 
   `BTBL.resolve_reference!` to get the reference of a Beamline without tracking.
 
@@ -483,10 +493,19 @@ values kept alive for the save). With it off the kernels' native code is identic
   ESR tunes 5 vs 4+5; a tune with max β <= 6: met vs not met; three problems neither solves. It
   evaluates the residual at the trial point and then residual and Jacobian again at the same
   point; it has no bounds and no step limits.
-- `match!` defaults to BatchSolve's `levenberg_marquardt!` (`solver=:levenberg_marquardt`); the
-  own method below is `solver=:gauss_newton`. With more knobs than targets, only Gauss-Newton
-  takes minimum-norm steps (Nov 22 2026, one tune with two quadrupoles: the change is along the
-  gradient, cos 1.0000; Levenberg-Marquardt: cos 0.39). `value(prob, x)`, `value_and_jacobian` and
+- `match!` defaults to the own method below (`solver=:gauss_newton`, maintainer's decision Nov
+  23 2026); BatchSolve's `levenberg_marquardt!` is `solver=:levenberg_marquardt`. Evidence: on the
+  11 problems of the "match!" test set plus ESR tunes and the four-quadrupole waist, Gauss-Newton
+  met every target that can be met with as many or fewer evaluations, except the inconsistent
+  least-squares problem (1 knob, 2 targets: 108 vs 34); LM failed "q1 + max β ≤ 6" without a
+  weight. On the 9 matches of the ring design tutorial GN met 9, LM 7 (it crawls along a curved
+  valley in the IR matches, λ 40-450, until maxiter: not a bug); GN found Bmad's root of the
+  matching section, LM another. With more knobs than targets, only Gauss-Newton takes minimum-norm
+  steps (Nov 22 2026, one tune with two quadrupoles: the change is along the gradient, cos 1.0000;
+  Levenberg-Marquardt: cos 0.39). BatchSolve's LM clamped diag(JᵀJ) to an absolute [1e-6, 1e16]
+  for its damping scale, so a knob in volts (dq3/dV ~ 1e-8) took 45 evaluations instead of 4;
+  the bounds are now relative to the largest entry (Nov 23 2026, test "the units of the unknowns
+  do not change the iteration"). `value(prob, x)`, `value_and_jacobian` and
   `penalty` leave the knobs at `x` (documented in `optimize.md`).
 - A knob on a parameter set to a deferred expression replaces the expression by a constant, also
   in `value`/`value_and_jacobian` (maintainer, Nov 22 2026: making it a knob sets it, as
