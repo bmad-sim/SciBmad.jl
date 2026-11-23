@@ -1,0 +1,1310 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Frequency Map Analysis" href="fma.html"><link rel="prev" title="Parametric Normal Form" href="parametric-nf.html">
+        <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
+        <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Matching and Optimization - SciBmad Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0d90b94b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">SciBmad Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="_static/SciBmad-Logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="_static/SciBmad-Logo-dark.png" alt="Dark Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">Table of Contents</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="installation.html">Installation</a><input aria-label="Toggle navigation of Installation" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#updating-scibmad">Updating SciBmad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#jupyter-kernel-installation">Jupyter Kernel Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#adding-other-packages">Adding Other Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#adding-gpu-support">Adding GPU Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-scibmad-from-python">Using SciBmad from Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#a-simple-copy-paste-example">A Simple Copy-Paste Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-by-step-description">Step-By-Step Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#where-to-go-next">Where to Go Next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#pgs">Parameter Groups</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-latelements-in-multiple-beamlines">Multiple LatElements in (multiple) Beamlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="def-tools.html#phase-trombone">Phase Trombone</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#saving-particle-data-at-certain-locations">Saving Particle Data at Certain Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-start">Starting at a Different Location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#saving-the-reference-time-energy">Saving the Reference Time/Energy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#spin-tracking">Spin Tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-config">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpuparallel">GPU Parallelization</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-sagan">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#twiss-rows">Choosing rows and columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#twiss-orders">Chromatic and amplitude-dependent quantities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#twiss-rf">Synchrotron motion and radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#twiss-spin">Spin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#twiss-open">Open lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#twiss-part">A part of a beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#twiss-h">Resonance driving terms and detuning (<code class="docutils literal notranslate"><span class="pre">h</span></code> columns)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="twiss.html#reference">Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a><input aria-label="Toggle navigation of Parametric Normal Form" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="parametric-nf.html#derivatives-with-respect-to-lattice-parameters">Derivatives with respect to lattice parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametric-nf.html#taylor-series-in-the-parameters-with-gtpsa">Taylor series in the parameters with GTPSA</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Matching and Optimization</a><input aria-label="Toggle navigation of Matching and Optimization" checked="" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="#a-first-match">A First Match</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quantities-and-locations">Quantities and Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#targets">Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optimize-knobs">Knobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#orbit-correction">Orbit Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lines-that-are-not-periodic">Lines That Are Not Periodic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#values-and-derivatives">Values and Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-other-optimizers">Using Other Optimizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-it-works">How It Works</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ags-spin-ramp.html">AGS spin ramp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/python/ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-ponder">Standing-Wave Ponderomotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-in-misaligned-elements">Reference Time in Misaligned Elements</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#ai-contribution-guidelines">AI Contribution Guidelines</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/optimize.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/optimize.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="optimize">
+<span id="matching-and-optimization"></span><h1>Matching and Optimization<a class="headerlink" href="#optimize" title="Link to this heading">¶</a></h1>
+<p>Matching means varying parameters of a lattice (the “knobs”) until quantities such as the tunes,
+the beta functions at some point, chromaticities, etc have the values you want. In SciBmad all you
+need to do is write down the quantities and their goals, say what knobs should be varied to achieve that goal, and call <code class="docutils literal notranslate"><span class="pre">match!</span></code>.</p>
+<p>Most optimizers need the derivatives of the quantities with respect to the knobs. In
+non-differentiable codes, these are computed with finite differences, which are approximate and
+need one more calculation per knob. Because SciBmad is fully differentiable, <code class="docutils literal notranslate"><span class="pre">match!</span></code> gets the
+<em>exact</em> derivatives with respect to all knobs from a single calculation.</p>
+<section id="a-first-match">
+<h2>A First Match<a class="headerlink" href="#a-first-match" title="Link to this heading">¶</a></h2>
+<p>Let’s make the phase advance of a FODO cell <span class="math notranslate nohighlight">\(90^\circ\)</span> in both planes by varying its two
+quadrupoles.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">SciBmad</span>
+
+<span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">  </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">sf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Sextupole</span><span class="p">(</span><span class="n">Kn2</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="w">  </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="w">  </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SBend</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span><span class="w"> </span><span class="n">angle</span><span class="o">=</span><span class="nb">pi</span><span class="o">/</span><span class="mi">132</span><span class="p">)</span>
+<span class="w">  </span><span class="n">qd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">sd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Sextupole</span><span class="p">(</span><span class="n">Kn2</span><span class="o">=-</span><span class="mf">1.2</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="n">fodo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">sf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">sd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">],</span>
+<span class="w">        </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Beamline:
+ species_ref = electron
+ pc_ref = 1.8e10
+
+ <span class=" -Color -Color-Bold"> Index </span> <span class=" -Color -Color-Bold"> Name </span> <span class=" -Color -Color-Bold"> Kind       </span> <span class=" -Color -Color-Bold"> L [m] </span> <span class=" -Color -Color-Bold"> s [m]              </span> <span class=" -Color -Color-Bold"> s_downstream [m]   </span>
+  1       qf     Quadrupole   0.5     0.0f0                0.5
+  2       sf     Sextupole    0.2     0.5                  0.7
+  3       d      Drift        0.2     0.7                  0.8999999999999999
+  4       b      SBend        6.5     0.8999999999999999   7.4
+  5       d      Drift        0.2     7.4                  7.6000000000000005
+  6       qd     Quadrupole   0.5     7.6000000000000005   8.100000000000001
+  7       sd     Sextupole    0.2     8.100000000000001    8.3
+  8       d      Drift        0.2     8.3                  8.5
+  9       b      SBend        6.5     8.5                  15.0
+  10      d      Drift        0.2     15.0                 15.2
+</pre></div>
+</div>
+</div>
+</div>
+<p>First we need a way to refer to what <code class="docutils literal notranslate"><span class="pre">twiss</span></code> computes for <code class="docutils literal notranslate"><span class="pre">fodo</span></code>: <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code> gives exactly that. It is a lazily-evaluated <code class="docutils literal notranslate"><span class="pre">twiss</span></code> call that can be read in the same way that <code class="docutils literal notranslate"><span class="pre">twiss</span></code> can, however nothing is actually computed until it is requested. Furthermore, it will automatically infer the  <code class="docutils literal notranslate"><span class="pre">at</span></code>, <code class="docutils literal notranslate"><span class="pre">cols</span></code>, <code class="docutils literal notranslate"><span class="pre">base_cols</span></code>, <code class="docutils literal notranslate"><span class="pre">as_taylor_series</span></code> and <code class="docutils literal notranslate"><span class="pre">GTPSA_descriptor</span></code> keyword arguments to <code class="docutils literal notranslate"><span class="pre">twiss</span></code> based on what you request. Other than those inputs, <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code> accepts all the same arguments as <a class="reference internal" href="twiss.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">twiss</span></code></span></a>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TwissExpr</span><span class="p">(</span><span class="n">fodo</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TwissExpr of a Beamline with 10 elements
+</pre></div>
+</div>
+</div>
+</div>
+<p>The tunes of the cell are then <code class="docutils literal notranslate"><span class="pre">tw.q1</span></code> and <code class="docutils literal notranslate"><span class="pre">tw.q2</span></code>. A target is written with <code class="docutils literal notranslate"><span class="pre">==</span></code>, and a knob with
+<code class="docutils literal notranslate"><span class="pre">&#64;knob</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span><span class="p">)],</span>
+<span class="w">             </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Match converged (all targets met): 3 iterations, 4 evaluations, 0.789 s
+ Target  value         goal     met
+ q1      0.2500000001  == 0.25  yes
+ q2      0.2500000001  == 0.25  yes
+ Knob    before  after          lower  upper
+ qf.Kn1  0.36    0.3804445783   -Inf   Inf
+ qd.Kn1  -0.36   -0.3805887077  -Inf   Inf
+</pre></div>
+</div>
+</div>
+</div>
+<p>The quadrupole strengths have been changed, and <code class="docutils literal notranslate"><span class="pre">twiss</span></code> confirms the tunes:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="o">=</span><span class="p">[])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 0.2500000000757015
+ q2     = 0.2500000000756642
+ etac   = 0.0010780794259915062
+ alphac = 0.001078080231917208
+
+df:
+<span class=" -Color -Color-Bold">0×26 DataFrame</span>
+<span class=" -Color -Color-Bold"> Row </span>│<span class=" -Color -Color-Bold"> index  name  kind  s    beta1  phi1  dx   x    beta2  phi2  dy   y    slip  alpha1  alpha2 </span> ⋯
+<span class=" -Color -Color-Bold">     </span>│                    [m]  [m]    [2π]  [m]  [m]  [m]    [2π]  [m]  [m]  [m]   [1]     [1]     ⋯
+─────┴──────────────────────────────────────────────────────────────────────────────────────────────
+<span class=" -Color -Color-Cyan">                                                                                  11 columns omitted</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">undo!(res)</span></code> would set the knobs back to where they were, and <code class="docutils literal notranslate"><span class="pre">match!(res)</span></code> continues a match
+that stopped early.</p>
+<p>If only one beamline is involved, it can also be given to <code class="docutils literal notranslate"><span class="pre">match!</span></code> directly. The targets are then
+written as a function of its <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code>. Keyword arguments for <code class="docutils literal notranslate"><span class="pre">twiss</span></code>, if any, are given with
+<code class="docutils literal notranslate"><span class="pre">twiss=(rf_on=false,)</span></code>:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">match!</span><span class="p">(</span><span class="n">fodo</span><span class="p">;</span><span class="w"> </span><span class="n">vary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span><span class="p">)],</span>
+<span class="w">             </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Now let’s make the chromaticities <span class="math notranslate nohighlight">\(+1\)</span> in both planes with the sextupoles. The chromaticities are
+<code class="docutils literal notranslate"><span class="pre">tw.dq1</span></code> and <code class="docutils literal notranslate"><span class="pre">tw.dq2</span></code>. They are only defined without synchrotron motion, so for a beamline with RF
+cavities use <code class="docutils literal notranslate"><span class="pre">TwissExpr(ring;</span> <span class="pre">rf_on=false)</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">Kn2</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">sd</span><span class="o">.</span><span class="n">Kn2</span><span class="p">)],</span>
+<span class="w">             </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">tw</span><span class="o">.</span><span class="n">dq1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">dq2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Match converged (all targets met): 3 iterations, 4 evaluations, 0.0776 s
+ Target       value         goal    met
+ q1[delta=1]  0.9999999998  == 1.0  yes
+ q2[delta=1]  0.9999999998  == 1.0  yes
+ Knob    before  after         lower  upper
+ sf.Kn2  1.2     8.676933574   -Inf   Inf
+ sd.Kn2  -1.2    -17.22903271  -Inf   Inf
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="quantities-and-locations">
+<h2>Quantities and Locations<a class="headerlink" href="#quantities-and-locations" title="Link to this heading">¶</a></h2>
+<p>Every summary value and every numeric column of <a class="reference internal" href="twiss.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">twiss</span></code></span></a> is available from a
+<code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code>, written in the same way as for the result of <code class="docutils literal notranslate"><span class="pre">twiss</span></code>: <code class="docutils literal notranslate"><span class="pre">tw.q1</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.dq1</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tw.q1[J1=1]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[qd]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[qd,</span> <span class="pre">:exit]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[[b],</span> <span class="pre">:]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[&quot;q*&quot;]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tw.dbeta1[qd]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.h3000[1]</span></code>, and so on. Unlike for <code class="docutils literal notranslate"><span class="pre">twiss</span></code>, you do not choose truncation
+orders or rows: <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code> will knows what you need based on what you ask for.</p>
+<p>You can form arbitrary expressions with the Twiss output to serve as targets/minimization goals using ordinary arithmetic and functions. For example, the square of the beta function at <code class="docutils literal notranslate"><span class="pre">qd</span></code> minus five times the average of the alpha function through the bends:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">e</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="n">qd</span><span class="p">]</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">5</span><span class="o">*</span><span class="n">mean</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">alpha1</span><span class="p">[[</span><span class="n">b</span><span class="p">],</span><span class="w"> </span><span class="o">:</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>beta1[qd#6]^2 - (5 * (sum(alpha1[b#4], alpha1[d#5], alpha1[b#9], alpha1[d#10]) / 4))
+</pre></div>
+</div>
+</div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">h</span></code> terms are complex numbers. <code class="docutils literal notranslate"><span class="pre">value</span></code> gives them as such, but a target or <code class="docutils literal notranslate"><span class="pre">minimize</span></code> needs
+their <code class="docutils literal notranslate"><span class="pre">real</span></code> and <code class="docutils literal notranslate"><span class="pre">imag</span></code> parts separately.</p>
+<p><code class="docutils literal notranslate"><span class="pre">value</span></code> computes an expression. Only the rows and columns of <code class="docutils literal notranslate"><span class="pre">twiss</span></code> that it needs are computed:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">value</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>21.37293536381279
+</pre></div>
+</div>
+</div>
+</div>
+<p>A location with several places gives a vector, and arithmetic and comparisons apply to each of
+its entries. <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">maximum</span></code>, and <code class="docutils literal notranslate"><span class="pre">minimum</span></code> reduce it to one expression:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">value</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="s">"q*"</span><span class="p">])</span><span class="w"> </span><span class="c"># beta1 at qf and at qd</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2-element Vector{Float64}:
+ 25.130558798663905
+  4.608524847606288
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">value</span><span class="p">(</span><span class="n">maximum</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="o">:</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>25.13055879866396
+</pre></div>
+</div>
+</div>
+</div>
+<p>A phase advance between two points is simply a difference:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">value</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">phi1</span><span class="p">[</span><span class="n">qd</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">phi1</span><span class="p">[</span><span class="n">qf</span><span class="p">])</span><span class="w"> </span><span class="c"># in units of 2π</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.1177692518903041
+</pre></div>
+</div>
+</div>
+</div>
+<p>Anything else can be included with <code class="docutils literal notranslate"><span class="pre">lazy</span></code>: <code class="docutils literal notranslate"><span class="pre">lazy(f)</span></code> is the result of the function <code class="docutils literal notranslate"><span class="pre">f()</span></code>, computed
+from the lattice itself when it is needed. For example, the field gradient of <code class="docutils literal notranslate"><span class="pre">qf</span></code> in this
+beamline:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">value</span><span class="p">(</span><span class="n">lazy</span><span class="p">(()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">fodo</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">Bn1</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-22.842477277953655
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="targets">
+<h2>Targets<a class="headerlink" href="#targets" title="Link to this heading">¶</a></h2>
+<p>Besides <code class="docutils literal notranslate"><span class="pre">==</span></code>, a target can be an inequality:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="n">qd</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">30</span>
+<span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="s">"q*"</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">30</span><span class="w">            </span><span class="c"># at each of these elements</span>
+<span class="n">maximum</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="o">:</span><span class="p">])</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">100</span><span class="w">     </span><span class="c"># everywhere</span>
+</pre></div>
+</div>
+<p>An inequality only acts while it is violated. A target counts as met when it is within its
+tolerance, which is <code class="docutils literal notranslate"><span class="pre">1e-8</span></code> unless you set it with <code class="docutils literal notranslate"><span class="pre">Target</span></code>. A <code class="docutils literal notranslate"><span class="pre">weight</span></code> makes a target count more
+or less than the others while they cannot all be met:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Target</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.25</span><span class="p">;</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+<span class="n">Target</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="n">qd</span><span class="p">];</span><span class="w"> </span><span class="n">lower</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="n">weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>There may be fewer, as many, or more targets than knobs. With more knobs than needed, many
+solutions exist, and <code class="docutils literal notranslate"><span class="pre">match!</span></code> returns one near the starting point. With
+<code class="docutils literal notranslate"><span class="pre">match!(...;</span> <span class="pre">solver=:gauss_newton)</span></code>, each step is the smallest change of the knobs that meets the
+targets to first order. With more targets than can be met, <code class="docutils literal notranslate"><span class="pre">match!</span></code> returns the closest it can
+get (in the least-squares sense) and reports the match as not converged.</p>
+<p><code class="docutils literal notranslate"><span class="pre">minimize</span></code> is for quantities that should just be as small as possible. For example, we can minimize the driving terms of a ring with four sextupoles while also requiring that the chromaticities are +1 with (using <code class="docutils literal notranslate"><span class="pre">reim</span></code> which returns a tuple of the real and imaginary parts, and then splatting those values with <code class="docutils literal notranslate"><span class="pre">...</span></code> into the vector):</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">twc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TwissExpr</span><span class="p">(</span><span class="n">ring</span><span class="p">;</span><span class="w"> </span><span class="n">rf_on</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span>
+<span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">Kn2</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">s2</span><span class="o">.</span><span class="n">Kn2</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">s3</span><span class="o">.</span><span class="n">Kn2</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">s4</span><span class="o">.</span><span class="n">Kn2</span><span class="p">)],</span>
+<span class="w">       </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">Target</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">dq1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">weight</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
+<span class="w">                  </span><span class="n">Target</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">dq2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">weight</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)],</span>
+<span class="w">       </span><span class="n">minimize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">reim</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">h3000</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">...</span><span class="p">,</span><span class="w"> </span><span class="n">reim</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">h2100</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">...</span><span class="p">,</span><span class="w"> </span><span class="n">reim</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">h1020</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">...</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The sum of the squares of the expressions in <code class="docutils literal notranslate"><span class="pre">minimize</span></code> and of the distances from the targets
+(each times its weight) is made as small as possible. If they cannot all vanish, the result
+balances them, so give targets that must hold a larger weight, as here.</p>
+</section>
+<section id="optimize-knobs">
+<span id="knobs"></span><h2>Knobs<a class="headerlink" href="#optimize-knobs" title="Link to this heading">¶</a></h2>
+<p>A knob is any parameter that can be set with <code class="docutils literal notranslate"><span class="pre">object.parameter</span> <span class="pre">=</span> <span class="pre">value</span></code>:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@knob</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="w">                           </span><span class="c"># an element parameter</span>
+<span class="nd">@knob</span><span class="w"> </span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="w"> </span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="mf">0.6</span><span class="w">         </span><span class="c"># with bounds</span>
+<span class="nd">@knob</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">L</span><span class="w">                              </span><span class="c"># also lengths</span>
+<span class="nd">@knob</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">kqf</span><span class="w">                 </span><span class="c"># a variable used by deferred expressions</span>
+<span class="nd">@knob</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">coilstrengths</span><span class="w">       </span><span class="c"># a vector variable: one knob per entry</span>
+<span class="nd">@knob</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">coilstrengths</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w">    </span><span class="c"># one entry of it</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&#64;knob</span> <span class="pre">qf.Kn1</span></code> is the same as <code class="docutils literal notranslate"><span class="pre">Knob(qf,</span> <span class="pre">:Kn1)</span></code>. Setting a parameter of an element changes it
+everywhere the element is placed (see <a class="reference internal" href="beamline.html"><span class="std std-doc">Defining a Beamline</span></a>), so <code class="docutils literal notranslate"><span class="pre">&#64;knob(qf.Kn1)</span></code>
+varies all <code class="docutils literal notranslate"><span class="pre">qf</span></code>s together. To vary several different elements together, or to build any other
+knob, use a <a class="reference internal" href="defexpr.html"><span class="std std-doc">deferred expression</span></a> and vary the variable it depends on:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">kq</span><span class="p">)</span>
+<span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="o">-</span><span class="n">c</span><span class="o">.</span><span class="n">kq</span><span class="p">)</span>
+<span class="n">fodo</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">kq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.38</span>
+
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">fodo</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">kq</span><span class="p">)],</span><span class="w"> </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Match converged (all targets met): 2 iterations, 3 evaluations, 0.0979 s
+ Target  value         goal     met
+ q1      0.2499999999  == 0.25  yes
+ Knob  before  after         lower  upper
+ kq    0.38    0.3804135071  -Inf   Inf
+</pre></div>
+</div>
+</div>
+</div>
+<p>A variable can also be a vector, e.g. the strengths of many correctors, each set by a deferred
+expression such as <code class="docutils literal notranslate"><span class="pre">DefExpr(c</span> <span class="pre">-&gt;</span> <span class="pre">c.coilstrengths[3])</span></code>. <code class="docutils literal notranslate"><span class="pre">&#64;knob(ring.context.coilstrengths)</span></code> then
+varies every entry. The result lists them as <code class="docutils literal notranslate"><span class="pre">coilstrengths[1]</span></code>, <code class="docutils literal notranslate"><span class="pre">coilstrengths[2]</span></code>, and so on,
+as many as fit in the terminal. <code class="docutils literal notranslate"><span class="pre">print(res)</span></code> shows all of them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">step</span></code> limits how much a knob may change in one iteration (<code class="docutils literal notranslate"><span class="pre">&#64;knob</span> <span class="pre">qf.Kn1</span> <span class="pre">step=0.01</span></code>). A knob is
+also an expression, so it can appear in targets: <code class="docutils literal notranslate"><span class="pre">&#64;knob(qf.Kn1)</span> <span class="pre">+</span> <span class="pre">&#64;knob(qd.Kn1)</span> <span class="pre">&lt;=</span> <span class="pre">0.05</span></code>.</p>
+</section>
+<section id="orbit-correction">
+<h2>Orbit Correction<a class="headerlink" href="#orbit-correction" title="Link to this heading">¶</a></h2>
+<p>The closed orbit is a column of <code class="docutils literal notranslate"><span class="pre">twiss</span></code> like any other (<code class="docutils literal notranslate"><span class="pre">tw.x[bpm]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.y[bpm]</span></code>, …), so <code class="docutils literal notranslate"><span class="pre">match!</span></code> can do orbit correction too. Here is a ring of ten cells, each with a misaligned quadrupole, a
+horizontal corrector and a BPM. The strengths of all correctors come from one vector variable of
+the context, <code class="docutils literal notranslate"><span class="pre">kicks</span></code> (and gradient errors of the quadrupoles from another, <code class="docutils literal notranslate"><span class="pre">dk</span></code>, used below):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ncell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
+<span class="n">offsets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-4</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="p">[</span><span class="mf">0.8</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">1.3</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">0.4</span><span class="p">]</span><span class="w"> </span><span class="c"># in m</span>
+<span class="n">elements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">[]</span>
+<span class="n">bpms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LatElement</span><span class="p">[]</span>
+<span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="mi">1</span><span class="o">:</span><span class="n">ncell</span>
+<span class="w">  </span><span class="n">bpm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Marker</span><span class="p">()</span>
+<span class="w">  </span><span class="n">push!</span><span class="p">(</span><span class="n">bpms</span><span class="p">,</span><span class="w"> </span><span class="n">bpm</span><span class="p">)</span>
+<span class="w">  </span><span class="n">append!</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mf">0.36</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">dk</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">x_offset</span><span class="o">=</span><span class="n">offsets</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+<span class="w">                     </span><span class="n">Multipole</span><span class="p">(</span><span class="n">Kn0L</span><span class="o">=</span><span class="n">DefExpr</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">kicks</span><span class="p">[</span><span class="n">i</span><span class="p">])),</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span><span class="w"> </span><span class="n">bpm</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">SBend</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span><span class="w"> </span><span class="n">angle</span><span class="o">=</span><span class="nb">pi</span><span class="o">/</span><span class="n">ncell</span><span class="p">),</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span>
+<span class="w">                     </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span>
+<span class="w">                     </span><span class="n">SBend</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span><span class="w"> </span><span class="n">angle</span><span class="o">=</span><span class="nb">pi</span><span class="o">/</span><span class="n">ncell</span><span class="p">),</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)])</span>
+<span class="k">end</span>
+<span class="n">ring</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">(</span><span class="n">elements</span><span class="p">;</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">);</span>
+<span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">kicks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zeros</span><span class="p">(</span><span class="n">ncell</span><span class="p">);</span>
+<span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">dk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zeros</span><span class="p">(</span><span class="n">ncell</span><span class="p">);</span>
+
+<span class="n">twr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TwissExpr</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
+<span class="n">orbit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">twr</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">bpm</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">bpm</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">bpms</span><span class="p">]</span>
+<span class="n">maximum</span><span class="p">(</span><span class="n">abs</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">(</span><span class="n">orbit</span><span class="p">))</span><span class="w"> </span><span class="c"># 5.8e-4 m at the BPMs</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.0005790402437629866
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">minimize</span></code> makes the orbit at the BPMs as small as possible (in the least-squares sense), varying
+every corrector:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">kicks</span><span class="p">)],</span><span class="w"> </span><span class="n">minimize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orbit</span><span class="p">)</span>
+<span class="n">maximum</span><span class="p">(</span><span class="n">abs</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">(</span><span class="n">orbit</span><span class="p">))</span><span class="w"> </span><span class="c"># 3e-15 m</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2.558716160918835e-15
+</pre></div>
+</div>
+</div>
+</div>
+<p>Only the orbit is computed for this (none of the optics at the BPMs), which is faster. The closed
+orbit needs stable linear optics: if the errors make the ring unstable, correct the orbit first
+with the sextupoles turned off, then turn them on in steps.</p>
+<p>The orbit response matrix, the change of the orbit at each BPM per kick of each corrector, is a
+matrix of derivatives (<code class="docutils literal notranslate"><span class="pre">deriv</span></code>, see “Values and Derivatives” below), here with respect to the
+entries of <code class="docutils literal notranslate"><span class="pre">kicks</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">R</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">deriv</span><span class="p">(</span><span class="n">twr</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">bpm</span><span class="p">],</span><span class="w"> </span><span class="n">Knob</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="ss">:kicks</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">))</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">bpm</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">bpms</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="mi">1</span><span class="o">:</span><span class="n">ncell</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>10×10 Matrix{SciBmad._Deriv}:
+ deriv(x[4], kicks[1])   deriv(x[4], kicks[2])   …  deriv(x[4], kicks[10])
+ deriv(x[14], kicks[1])  deriv(x[14], kicks[2])     deriv(x[14], kicks[10])
+ deriv(x[24], kicks[1])  deriv(x[24], kicks[2])     deriv(x[24], kicks[10])
+ deriv(x[34], kicks[1])  deriv(x[34], kicks[2])     deriv(x[34], kicks[10])
+ deriv(x[44], kicks[1])  deriv(x[44], kicks[2])     deriv(x[44], kicks[10])
+ deriv(x[54], kicks[1])  deriv(x[54], kicks[2])  …  deriv(x[54], kicks[10])
+ deriv(x[64], kicks[1])  deriv(x[64], kicks[2])     deriv(x[64], kicks[10])
+ deriv(x[74], kicks[1])  deriv(x[74], kicks[2])     deriv(x[74], kicks[10])
+ deriv(x[84], kicks[1])  deriv(x[84], kicks[2])     deriv(x[84], kicks[10])
+ deriv(x[94], kicks[1])  deriv(x[94], kicks[2])     deriv(x[94], kicks[10])
+</pre></div>
+</div>
+</div>
+</div>
+<p>A measured response matrix can then be fitted, as in LOCO. It depends on the focusing of the
+ring, and hardly on the misalignments: they shift the orbit, but without sextupoles they barely
+change its response to a kick (here by 2e-4 of its size). So it is fitted with gradient errors.</p>
+<p>Here the “measurement” is the response matrix of the ring with the gradient errors <code class="docutils literal notranslate"><span class="pre">dk_true</span></code>. The
+model starts without them, and finds them again:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">dk_true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-3</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.4</span><span class="p">]</span>
+<span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">dk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">copy</span><span class="p">(</span><span class="n">dk_true</span><span class="p">)</span>
+<span class="n">R_measured</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+<span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">dk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zeros</span><span class="p">(</span><span class="n">ncell</span><span class="p">)</span>
+
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">dk</span><span class="p">)],</span><span class="w"> </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">(</span><span class="n">R</span><span class="w"> </span><span class="o">.==</span><span class="w"> </span><span class="n">R_measured</span><span class="p">))</span>
+<span class="n">maximum</span><span class="p">(</span><span class="n">abs</span><span class="p">,</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">dk</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">dk_true</span><span class="p">)</span><span class="w"> </span><span class="c"># 8e-13: the errors are found again</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>8.320661867844414e-13
+</pre></div>
+</div>
+</div>
+</div>
+<p>Further knobs fit the same way, for example quadrupole tilts for the coupling (with the vertical
+orbit in the matrix) and the calibrations of the BPMs and correctors.</p>
+</section>
+<section id="lines-that-are-not-periodic">
+<h2>Lines That Are Not Periodic<a class="headerlink" href="#lines-that-are-not-periodic" title="Link to this heading">¶</a></h2>
+<p>For a transfer line, a linac, or a section of a ring by itself, give the lattice functions at its
+start with <code class="docutils literal notranslate"><span class="pre">initial</span></code> or <code class="docutils literal notranslate"><span class="pre">a_initial</span></code> (see <a class="reference internal" href="twiss.html#twiss-open"><span class="std std-ref">Open lines</span></a>). <code class="docutils literal notranslate"><span class="pre">a_initial</span></code> can be the <code class="docutils literal notranslate"><span class="pre">a</span></code> of
+another <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code>, so that the line continues from another beamline. Here a line of four
+quadrupoles follows the FODO cell, and is matched to a waist with beta functions of 10 m at its
+end:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">  </span><span class="n">m1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">m2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">m3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">m4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">dm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">m1</span><span class="p">,</span><span class="w"> </span><span class="n">dm</span><span class="p">,</span><span class="w"> </span><span class="n">m2</span><span class="p">,</span><span class="w"> </span><span class="n">dm</span><span class="p">,</span><span class="w"> </span><span class="n">m3</span><span class="p">,</span><span class="w"> </span><span class="n">dm</span><span class="p">,</span><span class="w"> </span><span class="n">m4</span><span class="p">,</span><span class="w"> </span><span class="n">dm</span><span class="p">],</span>
+<span class="w">        </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+
+<span class="n">tl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TwissExpr</span><span class="p">(</span><span class="n">line</span><span class="p">;</span><span class="w"> </span><span class="n">a_initial</span><span class="o">=</span><span class="n">tw</span><span class="o">.</span><span class="n">a</span><span class="p">[</span><span class="k">end</span><span class="p">])</span><span class="w"> </span><span class="c"># starts with the periodic lattice functions of the cell</span>
+
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">m1</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">m2</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">m3</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">m4</span><span class="o">.</span><span class="n">Kn1</span><span class="p">)],</span>
+<span class="w">             </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">tl</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">tl</span><span class="o">.</span><span class="n">beta2</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">tl</span><span class="o">.</span><span class="n">alpha1</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">tl</span><span class="o">.</span><span class="n">alpha2</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Match converged (all targets met): 7 iterations, 8 evaluations, 5.04 s
+ Target       value            goal     met
+ beta1[end]   10.0             == 10.0  yes
+ beta2[end]   10.0             == 10.0  yes
+ alpha1[end]  -4.928282715e-9  == 0.0   yes
+ alpha2[end]  6.807639508e-10  == 0.0   yes
+ Knob    before  after          lower  upper
+ m1.Kn1  0.3     0.3696315653   -Inf   Inf
+ m2.Kn1  -0.3    -0.5741988083  -Inf   Inf
+ m3.Kn1  0.3     0.4994244669   -Inf   Inf
+ m4.Kn1  -0.3    -0.3747810368  -Inf   Inf
+</pre></div>
+</div>
+</div>
+</div>
+<p>Because the start of the line is taken from the cell each time, quadrupoles of the cell could be
+varied in the same match. A whole ring can be built this way piece by piece: match the arc cell,
+then a dispersion suppressor that follows it (<code class="docutils literal notranslate"><span class="pre">tl.dx[end]</span> <span class="pre">==</span> <span class="pre">0,</span> <span class="pre">tl.dpx[end]</span> <span class="pre">==</span> <span class="pre">0</span></code>), then the
+straight section that follows the suppressor, and finally the tunes and chromaticities of the
+complete ring.</p>
+<p>The Twiss parameters at the start can be knobs too: give <code class="docutils literal notranslate"><span class="pre">initial</span></code> as a <code class="docutils literal notranslate"><span class="pre">Context</span></code>, and vary its
+variables. Here, with the quadrupoles as matched above, they are matched so that the line ends in
+a waist with beta functions of 5 m:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">ini</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Context</span><span class="p">(</span><span class="n">beta1</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="n">alpha1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">beta2</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="n">alpha2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">ti</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TwissExpr</span><span class="p">(</span><span class="n">line</span><span class="p">;</span><span class="w"> </span><span class="n">initial</span><span class="o">=</span><span class="n">ini</span><span class="p">)</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">ini</span><span class="o">.</span><span class="n">beta1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">ini</span><span class="o">.</span><span class="n">alpha1</span><span class="p">),</span>
+<span class="w">                          </span><span class="nd">@knob</span><span class="p">(</span><span class="n">ini</span><span class="o">.</span><span class="n">beta2</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">ini</span><span class="o">.</span><span class="n">alpha2</span><span class="p">)],</span>
+<span class="w">             </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">ti</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="n">ti</span><span class="o">.</span><span class="n">beta2</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">ti</span><span class="o">.</span><span class="n">alpha1</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">ti</span><span class="o">.</span><span class="n">alpha2</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Match converged (all targets met): 8 iterations, 9 evaluations, 0.868 s
+ Target       value                   goal    met
+ beta1[end]   5.0                     == 5.0  yes
+ beta2[end]   5.0                     == 5.0  yes
+ alpha1[end]  -6.038910797e-10        == 0.0  yes
+ alpha2[end]  -6.206335382999999e-17  == 0.0  yes
+ Knob    before  after         lower  upper
+ beta1   10.0    33.98062465   -Inf   Inf
+ alpha1  0.0     -2.501507737  -Inf   Inf
+ beta2   10.0    7.16981123    -Inf   Inf
+ alpha2  0.0     0.077716894   -Inf   Inf
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="values-and-derivatives">
+<h2>Values and Derivatives<a class="headerlink" href="#values-and-derivatives" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SciBmad.value_and_jacobian</span></code> gives the values of expressions and their exact derivatives with
+respect to knobs, for your own purposes. It is not exported, because DifferentiationInterface
+exports a function of the same name:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">J</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SciBmad</span><span class="o">.</span><span class="n">value_and_jacobian</span><span class="p">([</span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="n">qd</span><span class="p">],</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span><span class="p">)])</span>
+<span class="n">J</span><span class="w"> </span><span class="c"># [dbeta1/dqf dbeta1/dqd; dq1/dqf dq1/dqd]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2×2 Matrix{Float64}:
+ -29.2363   -0.573747
+   1.01593   0.180136
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">deriv(expr,</span> <span class="pre">knob)</span></code> is the derivative of an expression with respect to a knob as a new
+expression, as for the orbit response matrix above. Such derivatives can be used like any other
+expression, also in targets. For more, see <a class="reference internal" href="parametric-nf.html#pnf"><span class="std std-ref">Parametric Normal Form</span></a>.</p>
+</section>
+<section id="using-other-optimizers">
+<h2>Using Other Optimizers<a class="headerlink" href="#using-other-optimizers" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">match!</span></code> uses the Levenberg-Marquardt method of
+<a class="reference external" href="https://mattsignorelli.github.io/BatchSolve.jl/dev/guide/">BatchSolve</a>, which finds a nearby
+solution. Like every such method, it can stop at a point that small changes cannot improve, even
+though a solution exists elsewhere. A better starting point, bounds on the knobs, or a global
+optimizer then help.</p>
+<p>For other optimizers, <code class="docutils literal notranslate"><span class="pre">MatchProblem</span></code> provides what the optimization packages of Julia ask for:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.36</span>
+<span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">0.36</span>
+<span class="n">prob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatchProblem</span><span class="p">(</span><span class="n">vary</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="p">,</span><span class="w"> </span><span class="n">lower</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="mf">0.6</span><span class="p">),</span>
+<span class="w">                               </span><span class="nd">@knob</span><span class="p">(</span><span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span><span class="p">,</span><span class="w"> </span><span class="n">lower</span><span class="o">=-</span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">)],</span>
+<span class="w">                    </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MatchProblem with 2 knobs, 2 targets
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prob.x</span></code>, <code class="docutils literal notranslate"><span class="pre">prob.lower</span></code>, <code class="docutils literal notranslate"><span class="pre">prob.upper</span></code>: the current values and the bounds of the knobs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value(prob,</span> <span class="pre">x)</span></code>: the vector of the distances from the targets, at the knob values <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SciBmad.value_and_jacobian(prob,</span> <span class="pre">x)</span></code>: these and their exact derivatives with respect to the knobs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">penalty(prob,</span> <span class="pre">x)</span></code>: one number, the sum of the squared distances. It is <code class="docutils literal notranslate"><span class="pre">Inf</span></code> where the lattice
+has no solution, for example where it is unstable</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">setknobs!(prob,</span> <span class="pre">x)</span></code>: sets the knobs</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">value_and_jacobian</span></code> and <code class="docutils literal notranslate"><span class="pre">penalty</span></code> set the knobs to <code class="docutils literal notranslate"><span class="pre">x</span></code>, so the lattice is left at the
+last <code class="docutils literal notranslate"><span class="pre">x</span></code> an optimizer tried. Finish with <code class="docutils literal notranslate"><span class="pre">setknobs!</span></code> at the solution, as below.</p>
+<p>For example, with <code class="docutils literal notranslate"><span class="pre">NewtonRaphson</span></code> of
+<a class="reference external" href="https://docs.sciml.ai/NonlinearSolve/stable/"><code class="docutils literal notranslate"><span class="pre">NonlinearSolve</span></code></a>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">NonlinearSolve</span>
+
+<span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">NonlinearFunction</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">value</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="w">                      </span><span class="n">jac</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SciBmad</span><span class="o">.</span><span class="n">value_and_jacobian</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">sol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solve</span><span class="p">(</span><span class="n">NonlinearProblem</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">prob</span><span class="o">.</span><span class="n">x</span><span class="p">),</span><span class="w"> </span><span class="n">NewtonRaphson</span><span class="p">())</span>
+<span class="n">setknobs!</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">sol</span><span class="o">.</span><span class="n">u</span><span class="p">)</span>
+<span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="o">=</span><span class="p">[])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 0.2500000000001255
+ q2     = 0.2500000000001256
+ etac   = 0.0010780794265294214
+ alphac = 0.0010780802324551232
+
+df:
+<span class=" -Color -Color-Bold">0×26 DataFrame</span>
+<span class=" -Color -Color-Bold"> Row </span>│<span class=" -Color -Color-Bold"> index  name  kind  s    beta1  phi1  dx   x    beta2  phi2  dy   y    slip  alpha1  alpha2 </span> ⋯
+<span class=" -Color -Color-Bold">     </span>│                    [m]  [m]    [2π]  [m]  [m]  [m]    [2π]  [m]  [m]  [m]   [1]     [1]     ⋯
+─────┴──────────────────────────────────────────────────────────────────────────────────────────────
+<span class=" -Color -Color-Cyan">                                                                                  11 columns omitted</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>With the gradient-based <code class="docutils literal notranslate"><span class="pre">LBFGS</span></code> of <a class="reference external" href="https://github.com/JuliaNLSolvers/Optim.jl"><code class="docutils literal notranslate"><span class="pre">Optim</span></code></a>:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Optim</span>
+
+<span class="k">function</span><span class="w"> </span><span class="n">g!</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="c"># gradient of the penalty</span>
+<span class="w">  </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">J</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SciBmad</span><span class="o">.</span><span class="n">value_and_jacobian</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+<span class="w">  </span><span class="n">G</span><span class="w"> </span><span class="o">.=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="p">(</span><span class="n">J</span><span class="o">'*</span><span class="n">r</span><span class="p">)</span>
+<span class="k">end</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Optim</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">penalty</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">),</span><span class="w"> </span><span class="n">g!</span><span class="p">,</span><span class="w"> </span><span class="n">prob</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">Optim</span><span class="o">.</span><span class="n">LBFGS</span><span class="p">())</span>
+<span class="n">setknobs!</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">Optim</span><span class="o">.</span><span class="n">minimizer</span><span class="p">(</span><span class="n">res</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>And with a genetic algorithm that needs no derivatives, here differential evolution of
+<a class="reference external" href="https://github.com/jmejia8/Metaheuristics.jl"><code class="docutils literal notranslate"><span class="pre">Metaheuristics</span></code></a>, within the bounds of the knobs:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">Metaheuristics</span>
+
+<span class="n">bounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">prob</span><span class="o">.</span><span class="n">lower</span><span class="w"> </span><span class="n">prob</span><span class="o">.</span><span class="n">upper</span><span class="p">]</span><span class="o">'</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Metaheuristics</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">penalty</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">),</span><span class="w"> </span><span class="n">bounds</span><span class="p">,</span><span class="w"> </span><span class="n">Metaheuristics</span><span class="o">.</span><span class="n">DE</span><span class="p">())</span>
+<span class="n">setknobs!</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span><span class="w"> </span><span class="n">Metaheuristics</span><span class="o">.</span><span class="n">minimizer</span><span class="p">(</span><span class="n">res</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Such a global search can be finished with <code class="docutils literal notranslate"><span class="pre">match!(prob)</span></code>, which then starts from its result.</p>
+</section>
+<section id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">¶</a></h2>
+<p>The knobs are made parameters of the truncated power series that <code class="docutils literal notranslate"><span class="pre">twiss</span></code> computes with (see
+<a class="reference internal" href="parametric-nf.html"><span class="std std-doc">Parametric Normal Form</span></a>), with the truncation orders that the quantities and
+their derivatives need. One <code class="docutils literal notranslate"><span class="pre">twiss</span></code> calculation per <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code> then gives the values and all
+derivatives, and the lattice is restored afterwards. While this runs, the lattice holds these
+parameters, so <code class="docutils literal notranslate"><span class="pre">match!</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code> and <code class="docutils literal notranslate"><span class="pre">value_and_jacobian</span></code> must not be used from several threads
+at once on the same lattice.</p>
+<p>Making a parameter a knob sets it, as <code class="docutils literal notranslate"><span class="pre">qf.Kn1</span> <span class="pre">=</span> <span class="pre">0.38</span></code> does. If the parameter was set to a deferred
+expression, that dependence is then broken, also by <code class="docutils literal notranslate"><span class="pre">value</span></code> and <code class="docutils literal notranslate"><span class="pre">value_and_jacobian</span></code>. To keep it,
+vary the variable the expression depends on. Deferred expressions and contexts that knobs act
+through must not be restricted to a number type such as <code class="docutils literal notranslate"><span class="pre">DefExpr{Float64}</span></code> or
+<code class="docutils literal notranslate"><span class="pre">Context{Float64}</span></code>.</p>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">match!</span></code> — <em>Function</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">match!</span><span class="p">(;</span><span class="w"> </span><span class="n">vary</span><span class="p">,</span><span class="w"> </span><span class="n">targets</span><span class="o">=</span><span class="p">[],</span><span class="w"> </span><span class="n">minimize</span><span class="o">=</span><span class="p">[],</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">MatchResult</span>
+<span class="n">match!</span><span class="p">(</span><span class="n">bl</span><span class="o">::</span><span class="kt">Beamline</span><span class="p">;</span><span class="w"> </span><span class="n">vary</span><span class="p">,</span><span class="w"> </span><span class="n">targets</span><span class="p">,</span><span class="w"> </span><span class="n">twiss</span><span class="o">=</span><span class="p">(;),</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
+<span class="n">match!</span><span class="p">(</span><span class="n">prob</span><span class="o">::</span><span class="kt">MatchProblem</span><span class="p">;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
+<span class="n">match!</span><span class="p">(</span><span class="n">res</span><span class="o">::</span><span class="kt">MatchResult</span><span class="p">;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Varies the <code class="docutils literal notranslate"><span class="pre">Knob</span></code>s <code class="docutils literal notranslate"><span class="pre">vary</span></code> (also <code class="docutils literal notranslate"><span class="pre">obj</span> <span class="pre">=&gt;</span> <span class="pre">:property</span></code> pairs) until the <code class="docutils literal notranslate"><span class="pre">Target</span></code>s
+<code class="docutils literal notranslate"><span class="pre">targets</span></code> are met, and leaves the lattice there. <code class="docutils literal notranslate"><span class="pre">minimize</span></code> are expressions whose sum of squares is
+made as small as possible together with the distances from the targets (each times its <code class="docutils literal notranslate"><span class="pre">weight</span></code>;
+the expressions times <code class="docutils literal notranslate"><span class="pre">minimize_weight</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>). Targets are written with expressions
+(<code class="docutils literal notranslate"><span class="pre">LatticeExpr</span></code>) of the quantities of a <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code>:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TwissExpr</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">match!</span><span class="p">(</span><span class="n">vary</span><span class="o">=</span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span><span class="p">)],</span><span class="w"> </span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Given a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>, <code class="docutils literal notranslate"><span class="pre">targets</span></code> (and <code class="docutils literal notranslate"><span class="pre">minimize</span></code>) may be functions of its <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code> (made with the
+<code class="docutils literal notranslate"><span class="pre">twiss</span></code> keyword arguments in <code class="docutils literal notranslate"><span class="pre">twiss</span></code>), which can also be written as a <code class="docutils literal notranslate"><span class="pre">do</span></code> block:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">match!</span><span class="p">(</span><span class="n">cell</span><span class="p">;</span><span class="w"> </span><span class="n">vary</span><span class="o">=</span><span class="p">[</span><span class="nd">@knob</span><span class="p">(</span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="p">),</span><span class="w"> </span><span class="nd">@knob</span><span class="p">(</span><span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span><span class="p">)],</span><span class="w"> </span><span class="n">targets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.25</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The derivatives are exact (see <code class="docutils literal notranslate"><span class="pre">SciBmad.value_and_jacobian</span></code>). The solver is the
+Levenberg-Marquardt method of <code class="docutils literal notranslate"><span class="pre">BatchSolve</span></code> (<code class="docutils literal notranslate"><span class="pre">BatchSolve.levenberg_marquardt!</span></code>): steps that do
+not reduce the residuals, or where the lattice has no solution (e.g. it is unstable), are
+rejected and shorter ones taken, so there may be fewer, as many, or more targets than knobs.
+Knobs stay within their bounds and step limits, and <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code> and <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> targets only count while they
+are violated. Like every such method it finds a nearby solution: targets of very different size
+(a tune and a beta function) should get <code class="docutils literal notranslate"><span class="pre">weight</span></code>s that make their residuals comparable. To use
+another optimizer, see <code class="docutils literal notranslate"><span class="pre">MatchProblem</span></code>.</p>
+<p class="rubric">Keyword arguments</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">maxiter</span></code>: Maximum number of iterations, default is <code class="docutils literal notranslate"><span class="pre">50</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, prints the progress of the solver at each iteration. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">solver</span></code>: <code class="docutils literal notranslate"><span class="pre">:levenberg_marquardt</span></code> (default), or <code class="docutils literal notranslate"><span class="pre">:gauss_newton</span></code>: Gauss-Newton steps from the
+singular value decomposition of the Jacobian (their halves, quarters and eighths, then
+damped steps, where a step does not reduce the residuals)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rcond</span></code>: For <code class="docutils literal notranslate"><span class="pre">solver=:gauss_newton</span></code>, singular values of the Jacobian below <code class="docutils literal notranslate"><span class="pre">rcond</span></code> times the
+largest are ignored (knob combinations the targets do not respond to). Default is <code class="docutils literal notranslate"><span class="pre">1e-10</span></code></p></li>
+</ul>
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">MatchResult</span></code>. <code class="docutils literal notranslate"><span class="pre">match!(res)</span></code> continues the match from the current lattice.</p>
+</div>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">TwissExpr</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">TwissExpr</span><span class="p">(</span><span class="n">bl</span><span class="o">::</span><span class="kt">Beamline</span><span class="p">;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The quantities of <code class="docutils literal notranslate"><span class="pre">twiss(bl;</span> <span class="pre">kwargs...)</span></code> as expressions (<code class="docutils literal notranslate"><span class="pre">LatticeExpr</span></code>), computed only
+when they are needed (by <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">SciBmad.value_and_jacobian</span></code> or <code class="docutils literal notranslate"><span class="pre">match!</span></code>), and
+then only at the locations used. <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> are those of <code class="docutils literal notranslate"><span class="pre">twiss</span></code> (<code class="docutils literal notranslate"><span class="pre">rf_on</span></code>, <code class="docutils literal notranslate"><span class="pre">a_initial</span></code>, <code class="docutils literal notranslate"><span class="pre">spin</span></code>,
+<code class="docutils literal notranslate"><span class="pre">delta0</span></code>, …) except <code class="docutils literal notranslate"><span class="pre">at</span></code>, <code class="docutils literal notranslate"><span class="pre">cols</span></code>, <code class="docutils literal notranslate"><span class="pre">base_cols</span></code>, <code class="docutils literal notranslate"><span class="pre">as_taylor_series</span></code> and <code class="docutils literal notranslate"><span class="pre">GTPSA_descriptor</span></code>, which
+are set from the expressions. The truncation orders are chosen from the quantities used; <code class="docutils literal notranslate"><span class="pre">order</span></code>
+can be given to use a higher one.</p>
+<p><code class="docutils literal notranslate"><span class="pre">a_initial</span></code> may be the <code class="docutils literal notranslate"><span class="pre">a</span></code> of another <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">TwissExpr(line;</span> <span class="pre">a_initial=tw.a[end])</span></code>,
+to continue the lattice functions of another beamline. <code class="docutils literal notranslate"><span class="pre">initial</span></code> may be a <code class="docutils literal notranslate"><span class="pre">Context</span></code>, whose variables
+can then be knobs, e.g. to match the Twiss parameters at the start of a line:
+<code class="docutils literal notranslate"><span class="pre">ini</span> <span class="pre">=</span> <span class="pre">Context(beta1=10.0,</span> <span class="pre">beta2=10.0)</span></code>, <code class="docutils literal notranslate"><span class="pre">TwissExpr(line;</span> <span class="pre">initial=ini)</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;knob(ini.beta1)</span></code>.</p>
+<p class="rubric">Quantities</p>
+<ul class="simple">
+<li><p>Summary values: <code class="docutils literal notranslate"><span class="pre">tw.q1</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.q2</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.q3</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.etac</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.alphac</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.qspin</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.damp1</span></code>, …
+A derivative of an amplitude-dependent value is selected as for the result of <code class="docutils literal notranslate"><span class="pre">twiss</span></code>, e.g.
+<code class="docutils literal notranslate"><span class="pre">tw.q1[delta=2]</span></code> (∂²q1/∂δ²) or <code class="docutils literal notranslate"><span class="pre">tw.q1[J1=1]</span></code>; <code class="docutils literal notranslate"><span class="pre">tw.dq1</span></code> and <code class="docutils literal notranslate"><span class="pre">tw.dq2</span></code> are short for the
+chromaticities <code class="docutils literal notranslate"><span class="pre">tw.q1[delta=1]</span></code> and <code class="docutils literal notranslate"><span class="pre">tw.q2[delta=1]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.dq1_n</span></code> for <code class="docutils literal notranslate"><span class="pre">tw.q1[delta=n]</span></code>.</p></li>
+<li><p>Columns: <code class="docutils literal notranslate"><span class="pre">tw.&lt;column&gt;[location]</span></code> for every scalar column of <code class="docutils literal notranslate"><span class="pre">twiss</span></code>, including chromatic
+derivatives (<code class="docutils literal notranslate"><span class="pre">tw.dbeta1</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.dx_2</span></code>) and <code class="docutils literal notranslate"><span class="pre">tw.h&lt;ijkl&gt;</span></code>.</p></li>
+</ul>
+<p class="rubric">Locations</p>
+<p>The same as for the columns of the result of <code class="docutils literal notranslate"><span class="pre">twiss</span></code> (see <code class="docutils literal notranslate"><span class="pre">TwissColumn</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[ele]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[7]</span></code>: the beginning of the element (placed once, else an error), or
+of the element with that beamline index. <code class="docutils literal notranslate"><span class="pre">tw.beta1[[ele]]</span></code>: every placement (a vector).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[ele,</span> <span class="pre">:exit]</span></code>: the end of the element.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[ele,</span> <span class="pre">:]</span></code>: every integration step of the element, both ends included (a vector;
+<code class="docutils literal notranslate"><span class="pre">tw.beta1[[ele],</span> <span class="pre">:]</span></code> of every placement).
+<code class="docutils literal notranslate"><span class="pre">tw.beta1[ele,</span> <span class="pre">k]</span></code>: after <code class="docutils literal notranslate"><span class="pre">k</span></code> integration steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[end]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[begin]</span></code>: the end and the beginning of the beamline (or of the part
+given with <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span></code>, which vectors are restricted to). <code class="docutils literal notranslate"><span class="pre">end</span></code> is a beamline index:
+<code class="docutils literal notranslate"><span class="pre">tw.beta1[end-1]</span></code> is the beginning of the last element.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[&quot;q*&quot;]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[r&quot;...&quot;]</span></code>: elements by name, as for <code class="docutils literal notranslate"><span class="pre">findelements</span></code> (a vector).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[(s1,</span> <span class="pre">s2)]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[:]</span></code>: every integration step in an s-range, or of the whole
+beamline (a vector).</p></li>
+</ul>
+<p>Vectors are elementwise: <code class="docutils literal notranslate"><span class="pre">tw.beta1[&quot;q*&quot;]^2</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[&quot;q*&quot;]</span> <span class="pre">&lt;=</span> <span class="pre">30</span></code> (one target per element),
+with <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">maximum</span></code>, <code class="docutils literal notranslate"><span class="pre">minimum</span></code> and <code class="docutils literal notranslate"><span class="pre">norm</span></code>.</p>
+</div>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">Knob</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Knob</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span><span class="w"> </span><span class="n">property</span><span class="p">;</span><span class="w"> </span><span class="n">lower</span><span class="o">=-</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">step</span><span class="o">=</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
+<span class="n">Knob</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span><span class="w"> </span><span class="n">property</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="p">;</span><span class="w"> </span><span class="n">lower</span><span class="o">=-</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">step</span><span class="o">=</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
+<span class="n">Knob</span><span class="p">(</span><span class="n">get</span><span class="p">,</span><span class="w"> </span><span class="n">set</span><span class="p">;</span><span class="w"> </span><span class="n">lower</span><span class="o">=-</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">step</span><span class="o">=</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">"knob"</span><span class="p">)</span>
+<span class="nd">@knob</span><span class="w"> </span><span class="n">obj</span><span class="o">.</span><span class="n">property</span><span class="w"> </span><span class="n">lower</span><span class="o">=...</span><span class="w"> </span><span class="n">upper</span><span class="o">=...</span>
+<span class="nd">@knob</span><span class="w"> </span><span class="n">obj</span><span class="o">.</span><span class="n">property</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="w"> </span><span class="n">lower</span><span class="o">=...</span><span class="w"> </span><span class="n">upper</span><span class="o">=...</span>
+</pre></div>
+</div>
+<p>Something that can be varied: the <code class="docutils literal notranslate"><span class="pre">property</span></code> of <code class="docutils literal notranslate"><span class="pre">obj</span></code> (a <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>, a <code class="docutils literal notranslate"><span class="pre">Context</span></code>, a
+<code class="docutils literal notranslate"><span class="pre">Controller</span></code>, or anything else with <code class="docutils literal notranslate"><span class="pre">obj.property</span></code> to get and set a number), or a pair of
+functions <code class="docutils literal notranslate"><span class="pre">get()</span></code> and <code class="docutils literal notranslate"><span class="pre">set(value)</span></code>. <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code> are the bounds used by <code class="docutils literal notranslate"><span class="pre">match!</span></code> and
+<code class="docutils literal notranslate"><span class="pre">step</span></code> the largest change per iteration.</p>
+<p>If the property is a vector of numbers (e.g. a variable of a <code class="docutils literal notranslate"><span class="pre">Context</span></code> holding the strengths of
+several correctors), the knob stands for one knob per entry, named <code class="docutils literal notranslate"><span class="pre">property[1]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">property[2]</span></code>, …, with the same bounds: <code class="docutils literal notranslate"><span class="pre">match!</span></code>, <code class="docutils literal notranslate"><span class="pre">value_and_jacobian</span></code> and <code class="docutils literal notranslate"><span class="pre">setknobs!</span></code> vary
+each entry. <code class="docutils literal notranslate"><span class="pre">index</span></code> (or <code class="docutils literal notranslate"><span class="pre">&#64;knob</span> <span class="pre">obj.property[index]</span></code>) is one entry alone.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">Knob</span></code> is also a <code class="docutils literal notranslate"><span class="pre">LatticeExpr</span></code>, so it can be used in expressions and targets.</p>
+<p>Making a property a knob sets it, as <code class="docutils literal notranslate"><span class="pre">obj.property</span> <span class="pre">=</span> <span class="pre">value</span></code> does: if it was set to a deferred
+expression, that dependence is replaced by the value.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">k1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Knob</span><span class="p">(</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="ss">:Kn1</span><span class="p">;</span><span class="w"> </span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">k2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nd">@knob</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">kqd</span>
+<span class="n">k3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nd">@knob</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">coilstrengths</span><span class="w"> </span><span class="c"># one knob per entry of the vector</span>
+<span class="n">k4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nd">@knob</span><span class="w"> </span><span class="n">ring</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">coilstrengths</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">Target</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">Target</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span><span class="w"> </span><span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
+<span class="n">Target</span><span class="p">(</span><span class="n">expr</span><span class="p">;</span><span class="w"> </span><span class="n">lower</span><span class="o">=-</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">upper</span><span class="o">=</span><span class="nb">Inf</span><span class="p">,</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span><span class="w"> </span><span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
+<span class="n">expr</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w">  </span><span class="n">expr</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w">  </span><span class="n">expr</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">value</span>
+</pre></div>
+</div>
+<p>A goal for <code class="docutils literal notranslate"><span class="pre">match!</span></code>: the expression (<code class="docutils literal notranslate"><span class="pre">LatticeExpr</span></code>) <code class="docutils literal notranslate"><span class="pre">expr</span></code> should equal <code class="docutils literal notranslate"><span class="pre">value</span></code>,
+or lie between <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>. The target is met when it is within <code class="docutils literal notranslate"><span class="pre">tol</span></code>. <code class="docutils literal notranslate"><span class="pre">weight</span></code> multiplies
+its residual, to make it count more or less than the other targets while they are not all met.</p>
+</div>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">value</span></code> — <em>Function</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">value</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="n">value</span><span class="p">(</span><span class="n">exprs</span><span class="o">::</span><span class="kt">AbstractArray</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The current value of the expression (<code class="docutils literal notranslate"><span class="pre">LatticeExpr</span></code>) <code class="docutils literal notranslate"><span class="pre">expr</span></code>, or of each expression of an
+array (complex for an <code class="docutils literal notranslate"><span class="pre">h</span></code> term). Each <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code> used is computed with one <code class="docutils literal notranslate"><span class="pre">twiss</span></code>
+call, only at the locations and with the columns the expressions use.</p>
+</div>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">SciBmad.value_and_jacobian</span></code> — <em>Function</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">SciBmad</span><span class="o">.</span><span class="n">value_and_jacobian</span><span class="p">(</span><span class="n">exprs</span><span class="p">,</span><span class="w"> </span><span class="n">knobs</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">jacobian</span><span class="p">)</span>
+<span class="n">SciBmad</span><span class="o">.</span><span class="n">value_and_jacobian</span><span class="p">(</span><span class="n">exprs</span><span class="p">,</span><span class="w"> </span><span class="n">knobs</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">jacobian</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Not exported, because DifferentiationInterface exports a function of the same name: call it as
+<code class="docutils literal notranslate"><span class="pre">SciBmad.value_and_jacobian</span></code>.</p>
+<p>The current values of the expressions (<code class="docutils literal notranslate"><span class="pre">LatticeExpr</span></code>s) <code class="docutils literal notranslate"><span class="pre">exprs</span></code> and their exact derivatives
+in the <code class="docutils literal notranslate"><span class="pre">knobs</span></code> (<code class="docutils literal notranslate"><span class="pre">Knob</span></code>s, or <code class="docutils literal notranslate"><span class="pre">obj</span> <span class="pre">=&gt;</span> <span class="pre">:property</span></code> pairs): <code class="docutils literal notranslate"><span class="pre">jacobian[i,</span> <span class="pre">j]</span></code> is the derivative of
+<code class="docutils literal notranslate"><span class="pre">exprs[i]</span></code> (in the order of <code class="docutils literal notranslate"><span class="pre">vec(exprs)</span></code>) in <code class="docutils literal notranslate"><span class="pre">knobs[j]</span></code>. For a single expression, the value and its
+gradient are returned. With <code class="docutils literal notranslate"><span class="pre">x</span></code>, the knobs are first set to the values <code class="docutils literal notranslate"><span class="pre">x</span></code> (and stay there).</p>
+<p>The derivatives are computed by automatic differentiation: the knobs are made parameters of the
+truncated power series (GTPSA) of one <code class="docutils literal notranslate"><span class="pre">twiss</span></code> call per <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code>, with the truncation
+orders the expressions need, and the knobs are set back to their values afterwards.</p>
+</div>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">MatchProblem</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">MatchProblem</span><span class="p">(;</span><span class="w"> </span><span class="n">vary</span><span class="p">,</span><span class="w"> </span><span class="n">targets</span><span class="o">=</span><span class="p">[],</span><span class="w"> </span><span class="n">minimize</span><span class="o">=</span><span class="p">[],</span><span class="w"> </span><span class="n">minimize_weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A matching/optimization problem: the <code class="docutils literal notranslate"><span class="pre">Knob</span></code>s <code class="docutils literal notranslate"><span class="pre">vary</span></code> (or <code class="docutils literal notranslate"><span class="pre">obj</span> <span class="pre">=&gt;</span> <span class="pre">:property</span></code> pairs), the
+<code class="docutils literal notranslate"><span class="pre">Target</span></code>s to meet, and expressions <code class="docutils literal notranslate"><span class="pre">minimize</span></code> whose sum of squares should be as small as
+possible. <code class="docutils literal notranslate"><span class="pre">match!</span></code> solves it with its built-in solver. To use any other optimizer:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prob.x</span></code>, <code class="docutils literal notranslate"><span class="pre">prob.lower</span></code>, <code class="docutils literal notranslate"><span class="pre">prob.upper</span></code>: the current values and the bounds of the knobs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value(prob,</span> <span class="pre">x)</span></code>: the residual vector at the knob values <code class="docutils literal notranslate"><span class="pre">x</span></code>: for each target its weight times
+its distance from its goal (zero where it is met), then <code class="docutils literal notranslate"><span class="pre">minimize_weight</span></code> times each
+expression to minimize</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SciBmad.value_and_jacobian(prob,</span> <span class="pre">x)</span></code>: the residuals and their exact Jacobian in the knobs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">penalty(prob,</span> <span class="pre">x)</span></code>: the sum of the squared residuals, <code class="docutils literal notranslate"><span class="pre">Inf</span></code> where the lattice has no solution
+(for optimizers that take a scalar and no derivatives, e.g. genetic algorithms)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">setknobs!(prob,</span> <span class="pre">x)</span></code>: sets the knobs</p></li>
+</ul>
+<p>These functions leave the knobs at <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<p>The sum of the squared residuals is what is minimized, so targets and expressions to minimize
+are balanced against each other when they cannot all vanish. Larger target weights (or a smaller
+<code class="docutils literal notranslate"><span class="pre">minimize_weight</span></code>) hold the targets more tightly.</p>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="fma.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Frequency Map Analysis</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="parametric-nf.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Parametric Normal Form</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Matching and Optimization</a><ul>
+<li><a class="reference internal" href="#a-first-match">A First Match</a></li>
+<li><a class="reference internal" href="#quantities-and-locations">Quantities and Locations</a></li>
+<li><a class="reference internal" href="#targets">Targets</a></li>
+<li><a class="reference internal" href="#optimize-knobs">Knobs</a></li>
+<li><a class="reference internal" href="#orbit-correction">Orbit Correction</a></li>
+<li><a class="reference internal" href="#lines-that-are-not-periodic">Lines That Are Not Periodic</a></li>
+<li><a class="reference internal" href="#values-and-derivatives">Values and Derivatives</a></li>
+<li><a class="reference internal" href="#using-other-optimizers">Using Other Optimizers</a></li>
+<li><a class="reference internal" href="#how-it-works">How It Works</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=8a448e45"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=552d2a3d"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="_static/topbar-github.js?v=c13617d6"></script>
+    <script src="_static/sidebar-current.js?v=23c44312"></script>
+    </body>
+</html>

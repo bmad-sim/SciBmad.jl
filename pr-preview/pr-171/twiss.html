@@ -1,0 +1,1439 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Parametric Normal Form" href="parametric-nf.html"><link rel="prev" title="Dynamic Aperture" href="dynamic-aperture.html">
+        <link rel="prefetch" href="_static/SciBmad-Logo.png" as="image">
+        <link rel="prefetch" href="_static/SciBmad-Logo-dark.png" as="image">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Twiss - SciBmad Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0d90b94b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">SciBmad Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="_static/SciBmad-Logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="_static/SciBmad-Logo-dark.png" alt="Dark Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contents.html">Table of Contents</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="installation.html">Installation</a><input aria-label="Toggle navigation of Installation" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#updating-scibmad">Updating SciBmad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#jupyter-kernel-installation">Jupyter Kernel Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#adding-other-packages">Adding Other Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#adding-gpu-support">Adding GPU Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-scibmad-from-python">Using SciBmad from Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#a-simple-copy-paste-example">A Simple Copy-Paste Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-by-step-description">Step-By-Step Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#where-to-go-next">Where to Go Next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="element.html#element-kinds">Element Kinds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element.html#pgs">Parameter Groups</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#multiple-latelements-in-multiple-beamlines">Multiple LatElements in (multiple) Beamlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="def-tools.html#phase-trombone">Phase Trombone</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="track.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#saving-particle-data-at-certain-locations">Saving Particle Data at Certain Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-start">Starting at a Different Location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#saving-the-reference-time-energy">Saving the Reference Time/Energy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#spin-tracking">Spin Tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-config">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#tracking-a-different-species">Tracking a Different Species</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#track-callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#coordinates-number-type">Coordinates Number Type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track.html#gpuparallel">GPU Parallelization</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracking-methods.html#track-sagan">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#energy-ramping">Energy Ramping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timedependent.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#limitations">Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-aperture.html">Dynamic Aperture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Twiss</a><input aria-label="Toggle navigation of Twiss" checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twiss-rows">Choosing rows and columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twiss-orders">Chromatic and amplitude-dependent quantities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twiss-rf">Synchrotron motion and radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twiss-spin">Spin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twiss-open">Open lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twiss-part">A part of a beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twiss-h">Resonance driving terms and detuning (<code class="docutils literal notranslate"><span class="pre">h</span></code> columns)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reference">Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="parametric-nf.html">Parametric Normal Form</a><input aria-label="Toggle navigation of Parametric Normal Form" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="parametric-nf.html#derivatives-with-respect-to-lattice-parameters">Derivatives with respect to lattice parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametric-nf.html#taylor-series-in-the-parameters-with-gtpsa">Taylor series in the parameters with GTPSA</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="optimize.html">Matching and Optimization</a><input aria-label="Toggle navigation of Matching and Optimization" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#a-first-match">A First Match</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#quantities-and-locations">Quantities and Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#targets">Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#optimize-knobs">Knobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#orbit-correction">Orbit Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#lines-that-are-not-periodic">Lines That Are Not Periodic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#values-and-derivatives">Values and Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#using-other-optimizers">Using Other Optimizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimize.html#how-it-works">How It Works</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fma.html">Frequency Map Analysis</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/julia/ags-spin-ramp.html">AGS spin ramp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/python/ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#justification">Justification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#sc-ponder">Standing-Wave Ponderomotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sagancavity-physics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="miscellaneous.html#reference-time-in-misaligned-elements">Reference Time in Misaligned Elements</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#steering-committee">Steering Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#technical-committee">Technical Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#former-members">Former Members</a></li>
+<li class="toctree-l2"><a class="reference internal" href="governance.html#ai-contribution-guidelines">AI Contribution Guidelines</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/twiss.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/twiss.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="twiss">
+<span id="id1"></span><h1>Twiss<a class="headerlink" href="#twiss" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">twiss</span></code> is a general, all-encompassing function for doing analysis of any beamline, open or
+closed, via perturbation theory around the (closed) orbit. It computes the linear and nonlinear optics (e.g. amplitude-dependent tunes and resonance driving terms) and, with <code class="docutils literal notranslate"><span class="pre">spin=true</span></code>,
+the invariant spin field and the amplitude-dependent spin tune. The dependence of all
+of these on the relative momentum deviation δ (the coordinate <code class="docutils literal notranslate"><span class="pre">pz</span></code>) and on parameters of the
+lattice (magnet strengths, lengths, etc) can also be computed.</p>
+<section id="basics">
+<h2>Basics<a class="headerlink" href="#basics" title="Link to this heading">¶</a></h2>
+<p>All <code class="docutils literal notranslate"><span class="pre">twiss</span></code> needs is a beamline:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">  </span><span class="n">qf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="w">  </span><span class="n">qd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">n_steps</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="w">  </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SBend</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="n">angle</span><span class="o">=</span><span class="nb">pi</span><span class="o">/</span><span class="mi">20</span><span class="p">)</span>
+<span class="k">end</span>
+<span class="n">fodo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+<span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 0.1486522740866844
+ q2     = 0.1274197024658691
+ etac   = 0.1167873849217785
+ alphac = 0.11678738572770418
+
+df:
+<span class=" -Color -Color-Bold">10×26 DataFrame</span>
+<span class=" -Color -Color-Bold"> Row </span>│<span class=" -Color -Color-Bold"> index  name  kind        s     beta1     phi1        dx       x    beta2     phi2       dy </span> ⋯
+<span class=" -Color -Color-Bold">     </span>│                          [m]   [m]       [2π]        [m]      [m]  [m]       [2π]       [m] ⋯
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────
+   1 │     1  qf    Quadrupole  0.0   14.5586   0.0         4.04056  0.0   7.89014  0.0        3.3 ⋯
+   2 │     2  d     Drift       0.5   14.5586   0.00538543  4.04056  0.0   7.89014  0.0102447  3.3
+   3 │     3  b     SBend       1.5   12.1374   0.0173696   3.67416  0.0   9.55978  0.0286109  3.6
+   4 │     4  d     Drift       3.5    8.17725  0.0494053   3.05588  0.0  14.0726   0.0561922  4.2
+   5 │     5  qd    Quadrupole  4.5    6.69535  0.0709808   2.80529  0.0  16.9158   0.0665148  4.5 ⋯
+   6 │     5  qd    Quadrupole  4.75   6.53751  0.0770189   2.77402  0.0  17.2985   0.0688322  4.5
+   7 │     6  d     Drift       5.0    6.69535  0.0830569   2.80529  0.0  16.9158   0.0711496  4.5
+   8 │     7  b     SBend       6.0    8.17725  0.104632    3.05588  0.0  14.0726   0.0814722  4.2
+   9 │     8  d     Drift       8.0   12.1374   0.136668    3.67416  0.0   9.55978  0.109054   3.6 ⋯
+  10 │    -1  END   ---         9.0   14.5586   0.148652    4.04056  0.0   7.89014  0.12742    3.3
+<span class=" -Color -Color-Cyan">                                                                                  16 columns omitted</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The output is a <code class="docutils literal notranslate"><span class="pre">Twiss</span></code> structure. Shown first are the summary values, which describe the motion
+through the whole beamline: in this case, the tunes <code class="docutils literal notranslate"><span class="pre">q1</span></code> and <code class="docutils literal notranslate"><span class="pre">q2</span></code>, the slip factor <code class="docutils literal notranslate"><span class="pre">etac</span></code> and the
+momentum compaction <code class="docutils literal notranslate"><span class="pre">alphac</span></code>. Then follows a table of the s-dependent quantities, with one row per
+location: by default, every integration step through every element.</p>
+<p>If no initial lattice functions are provided (see <a class="reference internal" href="#twiss-open">Open lines</a>), <code class="docutils literal notranslate"><span class="pre">twiss</span></code> finds the
+closed orbit and computes the periodic solution. The map once through the beamline is computed as a
+Taylor series in the deviations of the six phase space coordinates from the closed orbit, using
+high-order automatic differentiation, and is then brought to normal form. The normalizing map is the
+change of coordinates in which the motion is a rotation in each mode (a damped one with radiation
+damping): mode 1 (horizontal-like), mode 2 (vertical-like) and, with RF cavities (synchrotron motion),
+mode 3 (longitudinal-like). The normalizing map is then tracked through the beamline, and the lattice
+functions at each location are computed from it.</p>
+<p>To first order, the default, the beta and alpha functions (Twiss parameters), the phase advances, the dispersion, the coupling along the beamline, and the tunes are computed. Summary values and columns carry the number of their mode, e.g. <code class="docutils literal notranslate"><span class="pre">q1</span></code> the horizontal-like tune and <code class="docutils literal notranslate"><span class="pre">beta2</span></code> the vertical-like beta function. Coupled motion is described in the Sagan-Rubin/Edwards-Teng formalism by default.</p>
+<p>The summary values are properties of <code class="docutils literal notranslate"><span class="pre">Twiss</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">q2</span><span class="w"> </span><span class="c"># (0.1486522740866844, 0.1274197024658691)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.1486522740866844, 0.1274197024658691)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Summary value</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code></p></td>
+<td><p>The tunes of modes 1 and 2 in units of 2π, whole oscillations included (for an open line, the phase advances through it)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">q3</span></code></p></td>
+<td><p>The synchrotron tune (with RF cavities, see <a class="reference internal" href="#twiss-rf">Synchrotron motion and radiation</a>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alphac</span></code></p></td>
+<td><p>The momentum compaction: the relative change of the length of the orbit per unit δ</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">etac</span></code></p></td>
+<td><p>The slip factor: the relative change of the time the particles take through the beamline per unit δ (to first order <code class="docutils literal notranslate"><span class="pre">alphac</span></code> − 1/γ², with γ the Lorentz factor)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">qspin</span></code></p></td>
+<td><p>The spin tune (with <code class="docutils literal notranslate"><span class="pre">spin=true</span></code>, see <a class="reference internal" href="#twiss-spin">Spin</a>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">damp1</span></code>, <code class="docutils literal notranslate"><span class="pre">damp2</span></code>, <code class="docutils literal notranslate"><span class="pre">damp3</span></code></p></td>
+<td><p>The damping decrements of the three modes (with radiation damping, see <a class="reference internal" href="#twiss-rf">Synchrotron motion and radiation</a>): in one pass through the beamline, the amplitude of each mode decreases by the factor <span class="math notranslate nohighlight">\(e^{-\mathrm{damp}}\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The columns of the table are <code class="docutils literal notranslate"><span class="pre">TwissColumn</span></code>s, and are read at locations of the beamline in the same
+way as <code class="docutils literal notranslate"><span class="pre">TrackColumn</span></code>s can be read:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="n">qd</span><span class="p">]</span><span class="w">    </span><span class="c"># 6.695 at the beginning of qd</span>
+<span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="o">:</span><span class="p">]</span><span class="w"> </span><span class="c"># [6.695, 6.538, 6.695] at every integration step of qd, both ends included</span>
+<span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[[</span><span class="n">d</span><span class="p">]]</span><span class="w">   </span><span class="c"># [14.56, 8.177, 6.695, 12.14] at every placement of d (four)</span>
+<span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w">   </span><span class="c"># 14.56 at the end of the beamline</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14.558553433187601
+</pre></div>
+</div>
+</div>
+</div>
+<p>All the ways to give a location:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Location</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[qd]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[5]</span></code></p></td>
+<td><p>At the beginning of an element, or of the element with that beamline index</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[[d]]</span></code></p></td>
+<td><p>At the beginning of every placement of an element</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[qd,</span> <span class="pre">:exit]</span></code></p></td>
+<td><p>At the end of the element (the beginning of the next one)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[qd,</span> <span class="pre">:]</span></code></p></td>
+<td><p>At every integration step of the element, both ends included</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[qd,</span> <span class="pre">1]</span></code></p></td>
+<td><p>One integration step after the beginning of the element</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[begin]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[end]</span></code></p></td>
+<td><p>At the beginning and the end of the beamline (<code class="docutils literal notranslate"><span class="pre">end</span></code> is the beamline index of the end: <code class="docutils literal notranslate"><span class="pre">end-1</span></code> is the last element)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[&quot;q*&quot;]</span></code></p></td>
+<td><p>At the elements found by name, see <a class="reference internal" href="beamline.html#search-name"><span class="std std-ref">Searching by Name</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[[qf,</span> <span class="pre">qd]]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[2:4]</span></code></p></td>
+<td><p>At each of these elements</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[(2.0,</span> <span class="pre">6.0)]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[:]</span></code></p></td>
+<td><p>At every integration step in an s-range, or of the whole beamline</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>If an element is placed more than once in the beamline, <code class="docutils literal notranslate"><span class="pre">tw.beta1[d]</span></code> is an error, because it
+is not clear which placement is meant. <code class="docutils literal notranslate"><span class="pre">tw.beta1[[d]]</span></code> gives the values at all of them. Names,
+vectors and ranges always give a vector, even if they match only one location.</p>
+<p>Expressions for <a class="reference internal" href="optimize.html"><span class="std std-doc">matching</span></a> and indexing a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code> use the same rules as above.</p>
+<p>A column can also be used as a whole, as the vector of all rows of the table. For example:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">CairoMakie</span>
+<span class="n">lines</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">)</span><span class="w">       </span><span class="c"># the beta function along the beamline</span>
+<span class="n">maximum</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">)</span><span class="w">           </span><span class="c"># 14.56</span>
+<span class="n">tw</span><span class="o">.</span><span class="n">dx</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="n">sqrt</span><span class="o">.</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">)</span><span class="w">    </span><span class="c"># [1.059, 1.059, ...] at every row</span>
+</pre></div>
+</div>
+<p>The underlying vector of a <code class="docutils literal notranslate"><span class="pre">TwissColumn</span></code> can be obtained with <code class="docutils literal notranslate"><span class="pre">collect(tw.beta1)</span></code>. The whole table, here <code class="docutils literal notranslate"><span class="pre">tw.df</span></code> is a <a class="reference external" href="https://dataframes.juliadata.org/stable/"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></a>.</p>
+<p>The default columns computed by <code class="docutils literal notranslate"><span class="pre">twiss</span></code> are:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Columns</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Units</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">s</span></code>, <code class="docutils literal notranslate"><span class="pre">index</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">kind</span></code></p></td>
+<td><p>The position along the beamline, and the beamline index, name and kind of the element</p></td>
+<td><p>m</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">beta1</span></code>, <code class="docutils literal notranslate"><span class="pre">beta2</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha1</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha2</span></code></p></td>
+<td><p>The Twiss parameters β and α of modes 1 and 2</p></td>
+<td><p>m, 1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phi1</span></code>, <code class="docutils literal notranslate"><span class="pre">phi2</span></code></p></td>
+<td><p>The phase advances from the start of the table (at its end, <code class="docutils literal notranslate"><span class="pre">q1</span></code> and <code class="docutils literal notranslate"><span class="pre">q2</span></code>)</p></td>
+<td><p>2π</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">px</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">py</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">pz</span></code></p></td>
+<td><p>The orbit (<code class="docutils literal notranslate"><span class="pre">pz</span></code> is δ)</p></td>
+<td><p>m, 1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dx</span></code>, <code class="docutils literal notranslate"><span class="pre">dpx</span></code>, <code class="docutils literal notranslate"><span class="pre">dy</span></code>, <code class="docutils literal notranslate"><span class="pre">dpy</span></code></p></td>
+<td><p>The dispersion: the derivatives of the orbit with respect to δ</p></td>
+<td><p>m, 1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gammac</span></code>, <code class="docutils literal notranslate"><span class="pre">c11</span></code>, <code class="docutils literal notranslate"><span class="pre">c12</span></code>, <code class="docutils literal notranslate"><span class="pre">c21</span></code>, <code class="docutils literal notranslate"><span class="pre">c22</span></code></p></td>
+<td><p>The coupling: the factor γ and the coupling matrix C of the Sagan-Rubin formalism (all zero, and γ = 1, without coupling)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">slip</span></code></p></td>
+<td><p>The change of the arrival time per unit δ from the start of the table, times −c (at its end, −c T <code class="docutils literal notranslate"><span class="pre">etac</span></code>, with T the time through the beamline; with synchrotron motion an approximation)</p></td>
+<td><p>m</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="twiss-rows">
+<span id="choosing-rows-and-columns"></span><h2>Choosing rows and columns<a class="headerlink" href="#twiss-rows" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">at</span></code> chooses the rows and <code class="docutils literal notranslate"><span class="pre">cols</span></code> the columns:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tws</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="o">=</span><span class="p">[</span><span class="n">qd</span><span class="p">],</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"beta1"</span><span class="p">,</span><span class="w"> </span><span class="s">"dx"</span><span class="p">])</span>
+<span class="n">tws</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="n">qd</span><span class="p">]</span><span class="w"> </span><span class="c"># 6.695</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>6.695347129538178
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">at</span></code> is a vector of elements (the beginning of every placement), beamline indexes and names (the
+beginning of the element), and s-ranges (every integration step in the range). Only these
+locations can then be read, and computing fewer rows is faster. With <code class="docutils literal notranslate"><span class="pre">at=[]</span></code> only the summary
+values are computed:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="o">=</span><span class="p">[])</span><span class="o">.</span><span class="n">q1</span><span class="w"> </span><span class="c"># 0.1486522740866844</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.1486522740866844
+</pre></div>
+</div>
+</div>
+</div>
+<p>A table of only the orbit (and, without RF cavities, the dispersion) is faster too. Besides the
+default columns, <code class="docutils literal notranslate"><span class="pre">cols</span></code> can ask for these (all are listed in the <code class="docutils literal notranslate"><span class="pre">twiss</span></code> docstring at the end of
+this page):</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Columns</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">d&lt;column&gt;_&lt;n&gt;</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">dbeta1</span></code>, <code class="docutils literal notranslate"><span class="pre">dx_2</span></code></p></td>
+<td><p>The n-th derivative of any numeric column with respect to δ (<code class="docutils literal notranslate"><span class="pre">_1</span></code> can be left out), see <a class="reference internal" href="#twiss-orders">Chromatic and amplitude-dependent quantities</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">w1</span></code>, <code class="docutils literal notranslate"><span class="pre">w2</span></code></p></td>
+<td><p>The Montague chromatic functions <span class="math notranslate nohighlight">\(W = \sqrt{a^2 + b^2}\)</span>, with <span class="math notranslate nohighlight">\(b = \frac{1}{\beta}\frac{\partial\beta}{\partial\delta}\)</span> (<code class="docutils literal notranslate"><span class="pre">w1b</span></code>, <code class="docutils literal notranslate"><span class="pre">w2b</span></code>) and <span class="math notranslate nohighlight">\(a = \frac{\partial\alpha}{\partial\delta} - \frac{\alpha}{\beta}\frac{\partial\beta}{\partial\delta}\)</span> (<code class="docutils literal notranslate"><span class="pre">w1a</span></code>, <code class="docutils literal notranslate"><span class="pre">w2a</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r11</span></code> … <code class="docutils literal notranslate"><span class="pre">r66</span></code></p></td>
+<td><p>The linear transfer matrix from the start of the table to the row</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">m11</span></code> … <code class="docutils literal notranslate"><span class="pre">m66</span></code></p></td>
+<td><p>The transfer matrix once through a periodic beamline, from the row back to it</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zx</span></code>, <code class="docutils literal notranslate"><span class="pre">zpx</span></code>, <code class="docutils literal notranslate"><span class="pre">zy</span></code>, <code class="docutils literal notranslate"><span class="pre">zpy</span></code></p></td>
+<td><p>The crab dispersion (with synchrotron motion)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n0x</span></code>, <code class="docutils literal notranslate"><span class="pre">n0y</span></code>, <code class="docutils literal notranslate"><span class="pre">n0z</span></code>, <code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, <code class="docutils literal notranslate"><span class="pre">nz</span></code></p></td>
+<td><p>The spin direction on the closed orbit, and the invariant spin field (with <code class="docutils literal notranslate"><span class="pre">spin=true</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">h&lt;ijkl&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">h&lt;ijklmn&gt;</span></code></p></td>
+<td><p>Resonance driving terms and detuning, see <a class="reference internal" href="#twiss-h">below</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N</span></code>, <code class="docutils literal notranslate"><span class="pre">Vi</span></code>, <code class="docutils literal notranslate"><span class="pre">H1</span></code> … <code class="docutils literal notranslate"><span class="pre">E3</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">a0</span></code>, <code class="docutils literal notranslate"><span class="pre">a1</span></code>, <code class="docutils literal notranslate"><span class="pre">a2</span></code>, <code class="docutils literal notranslate"><span class="pre">as</span></code></p></td>
+<td><p>Matrices and maps of the normal form</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="twiss-orders">
+<span id="chromatic-and-amplitude-dependent-quantities"></span><h2>Chromatic and amplitude-dependent quantities<a class="headerlink" href="#twiss-orders" title="Link to this heading">¶</a></h2>
+<p>Beyond first order, the Taylor series give the dependence of the optics on δ (chromatic
+quantities) and the nonlinear motion: amplitude-dependent tunes and resonance driving terms. For
+example the chromaticities, the first derivatives of the tunes with respect to δ, need the
+expansion to second order in δ, which the keyword argument <code class="docutils literal notranslate"><span class="pre">chrom</span></code> sets:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">twc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">chrom</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">twc</span><span class="o">.</span><span class="n">dq1</span><span class="p">,</span><span class="w"> </span><span class="n">twc</span><span class="o">.</span><span class="n">dq2</span><span class="w"> </span><span class="c"># (-0.10506231945773534, -0.1180234082730797)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(-0.10506231945773513, -0.11802340827307978)
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dq1</span></code> is the first derivative of <code class="docutils literal notranslate"><span class="pre">q1</span></code> with respect to δ. This naming works for any quantity:
+<code class="docutils literal notranslate"><span class="pre">d&lt;quantity&gt;_&lt;n&gt;</span></code> is its n-th derivative with respect to δ, and <code class="docutils literal notranslate"><span class="pre">_1</span></code> can be left out. The
+dispersion <code class="docutils literal notranslate"><span class="pre">dx</span></code> is itself the derivative of the orbit <code class="docutils literal notranslate"><span class="pre">x</span></code>. Derivatives of columns are asked for in
+<code class="docutils literal notranslate"><span class="pre">cols</span></code>, e.g. the second derivative of <code class="docutils literal notranslate"><span class="pre">x</span></code> (the second-order dispersion) and the first derivative
+of <code class="docutils literal notranslate"><span class="pre">beta1</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">twd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">chrom</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"dx_2"</span><span class="p">,</span><span class="w"> </span><span class="s">"dbeta1"</span><span class="p">])</span>
+<span class="n">twd</span><span class="o">.</span><span class="n">dx_2</span><span class="p">[</span><span class="n">qd</span><span class="p">],</span><span class="w"> </span><span class="n">twd</span><span class="o">.</span><span class="n">dbeta1</span><span class="p">[</span><span class="n">qd</span><span class="p">]</span><span class="w"> </span><span class="c"># (4.366, 0.7423)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(4.365559964845147, 0.7422943146852912)
+</pre></div>
+</div>
+</div>
+</div>
+<p>How far the expansion goes is set by two truncation orders: <code class="docutils literal notranslate"><span class="pre">chrom</span></code> for δ alone, and <code class="docutils literal notranslate"><span class="pre">order</span></code>
+for all six phase space coordinates (<code class="docutils literal notranslate"><span class="pre">chrom</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">order</span></code>).</p>
+<p>The orbit and the dispersion are known to the order of the expansion in δ. The other quantities
+(tunes, β, α, phase advances, …) come from the first-order terms of the map, so they are known
+to one order less in δ. With <code class="docutils literal notranslate"><span class="pre">chrom=2</span></code>, for example, the dispersion is known to second order in δ
+(<code class="docutils literal notranslate"><span class="pre">dx_2</span></code>), but the tunes only to first order (the chromaticities).</p>
+<p>The expansion in δ needs a beam without synchrotron motion, in which δ stays constant. For a
+beamline with RF cavities, also give <code class="docutils literal notranslate"><span class="pre">rf_on=false</span></code>, which turns the cavities off (see
+<a class="reference internal" href="#twiss-rf">Synchrotron motion and radiation</a>).</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">chrom</span></code> or <code class="docutils literal notranslate"><span class="pre">order</span></code> of 2 or more, the tunes are not numbers but Taylor series, and indexing
+them gives their derivatives:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">chrom</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">tw3</span><span class="o">.</span><span class="n">q1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
+ 0.14865227408668438 - 0.1050623194577349 δ + 1.6521679715922206 δ²
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw3</span><span class="o">.</span><span class="n">q1</span><span class="p">[</span><span class="n">delta</span><span class="o">=</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="c"># 3.304</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.3043359431844412
+</pre></div>
+</div>
+</div>
+</div>
+<p>These <code class="docutils literal notranslate"><span class="pre">AmplitudeDependentValue</span></code>s are Taylor series in δ and in the actions <code class="docutils literal notranslate"><span class="pre">J₁</span></code> and <code class="docutils literal notranslate"><span class="pre">J₂</span></code>, which
+measure the amplitudes of modes 1 and 2. Indexing gives a derivative: <code class="docutils literal notranslate"><span class="pre">tw3.q1[delta=2]</span></code> is
+<span class="math notranslate nohighlight">\(\partial^2 q_1/\partial\delta^2\)</span>, which can also be written <code class="docutils literal notranslate"><span class="pre">tw3.dq1_2</span></code>. For the coefficient of
+δ² as it is printed, i.e. the derivative divided by 2!, use <code class="docutils literal notranslate"><span class="pre">getterm(tw3.q1,</span> <span class="pre">delta=2)</span></code>.</p>
+<p>Derivatives with respect to the actions need <code class="docutils literal notranslate"><span class="pre">order</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">q1</span><span class="p">[</span><span class="n">J1</span><span class="o">=</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="c"># 0.6817, ∂q1/∂J1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.6816882828855374
+</pre></div>
+</div>
+</div>
+</div>
+<p>The truncation orders that some quantities need:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Quantity</p></th>
+<th class="head"><p>Needs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dq1</span></code> (<code class="docutils literal notranslate"><span class="pre">q1[delta=1]</span></code>), <code class="docutils literal notranslate"><span class="pre">dbeta1</span></code>, <code class="docutils literal notranslate"><span class="pre">dx_2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">chrom=2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dq1_2</span></code> (<code class="docutils literal notranslate"><span class="pre">q1[delta=2]</span></code>), <code class="docutils literal notranslate"><span class="pre">dbeta1_2</span></code>, <code class="docutils literal notranslate"><span class="pre">dx_3</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">chrom=3</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">q1[J1=1]</span></code>, <code class="docutils literal notranslate"><span class="pre">h2200</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">order=3</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">q1[delta=1,</span> <span class="pre">J1=1]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">order=4</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In general, an n-th derivative with respect to δ needs <code class="docutils literal notranslate"><span class="pre">chrom</span></code> of at least n+1 (for the orbit and
+the dispersion, n). With derivatives with respect to the actions too, it needs <code class="docutils literal notranslate"><span class="pre">order</span></code> of at least
+n+1, plus 2 for each of them. Asking for a derivative that the truncation does not resolve is an
+error that says which order is needed.</p>
+<p>Without <code class="docutils literal notranslate"><span class="pre">order</span></code> and <code class="docutils literal notranslate"><span class="pre">chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">twiss</span></code> uses the lowest orders that the requested columns need:
+<code class="docutils literal notranslate"><span class="pre">twiss(fodo,</span> <span class="pre">cols=[&quot;dx_2&quot;])</span></code> uses <code class="docutils literal notranslate"><span class="pre">chrom=2</span></code>, and <code class="docutils literal notranslate"><span class="pre">twiss(fodo,</span> <span class="pre">cols=[&quot;h3000&quot;])</span></code> <code class="docutils literal notranslate"><span class="pre">order=2</span></code>.
+Summary values are not columns, so for the chromaticities alone give <code class="docutils literal notranslate"><span class="pre">chrom</span></code>, as above.</p>
+<p>The maps can also be expanded in deviations of parameters of the lattice, e.g. a magnet
+strength: all of these quantities are then Taylor series in the parameters too, see
+<a class="reference internal" href="parametric-nf.html#pnf"><span class="std std-ref">Parametric Normal Form</span></a>.</p>
+</section>
+<section id="twiss-rf">
+<span id="synchrotron-motion-and-radiation"></span><h2>Synchrotron motion and radiation<a class="headerlink" href="#twiss-rf" title="Link to this heading">¶</a></h2>
+<p>With RF cavities, the longitudinal motion oscillates too, and <code class="docutils literal notranslate"><span class="pre">twiss</span></code> computes it as mode 3:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">  </span><span class="n">cav</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RFCavity</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="n">voltage</span><span class="o">=</span><span class="mf">5e6</span><span class="p">,</span><span class="w"> </span><span class="n">harmon</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="n">zero_phase</span><span class="o">=</span><span class="n">PhaseRef</span><span class="o">.</span><span class="n">AboveTransition</span><span class="p">)</span>
+<span class="k">end</span>
+<span class="n">fodorf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">cav</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span>
+<span class="w">                  </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+<span class="n">twr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">fodorf</span><span class="p">)</span>
+<span class="n">twr</span><span class="o">.</span><span class="n">q3</span><span class="w"> </span><span class="c"># -0.008711</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>-0.008711489063323393
+</pre></div>
+</div>
+</div>
+</div>
+<p>The synchrotron tune <code class="docutils literal notranslate"><span class="pre">q3</span></code> is negative above transition, as here, and positive below it, because
+the longitudinal motion turns the other way in the <code class="docutils literal notranslate"><span class="pre">z</span></code>-<code class="docutils literal notranslate"><span class="pre">pz</span></code> plane.</p>
+<p>The table now also has the longitudinal phase advance <code class="docutils literal notranslate"><span class="pre">phi3</span></code> and the damping decrements
+<code class="docutils literal notranslate"><span class="pre">dampdec1</span></code>, <code class="docutils literal notranslate"><span class="pre">dampdec2</span></code>, <code class="docutils literal notranslate"><span class="pre">dampdec3</span></code> from the start of the table. These are zero here, as there is
+no radiation damping. Radiation damping is turned on per element with <code class="docutils literal notranslate"><span class="pre">rad_damping=true</span></code> (see
+<a class="reference internal" href="tracking-methods.html#track-steps"><span class="std std-ref">Integration Steps and Slices</span></a>), and then also gives the summary values <code class="docutils literal notranslate"><span class="pre">damp1</span></code>,
+<code class="docutils literal notranslate"><span class="pre">damp2</span></code>, <code class="docutils literal notranslate"><span class="pre">damp3</span></code>.</p>
+<p>As the chromatic quantities need a beam without synchrotron motion, <code class="docutils literal notranslate"><span class="pre">twiss(fodorf,</span> <span class="pre">chrom=2)</span></code> is an
+error. <code class="docutils literal notranslate"><span class="pre">twiss(fodorf,</span> <span class="pre">chrom=2,</span> <span class="pre">rf_on=false)</span></code> computes them with the RF cavities turned off.</p>
+</section>
+<section id="twiss-spin">
+<span id="spin"></span><h2>Spin<a class="headerlink" href="#twiss-spin" title="Link to this heading">¶</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">spin=true</span></code>, <code class="docutils literal notranslate"><span class="pre">twiss</span></code> also computes the spin motion:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">twsp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">fodo</span><span class="p">,</span><span class="w"> </span><span class="n">spin</span><span class="o">=</span><span class="nb">true</span><span class="p">)</span>
+<span class="n">twsp</span><span class="o">.</span><span class="n">qspin</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
+ -0.042444434426474775 - 2.0424444326998827 δ
+</pre></div>
+</div>
+</div>
+</div>
+<p>The spin tune <code class="docutils literal notranslate"><span class="pre">qspin</span></code> is a Taylor series in δ here. With only horizontal bends, it is
+<span class="math notranslate nohighlight">\(-a\gamma\,\theta/2\pi\)</span> up to a whole number, where θ = π/10 is the total bending angle and
+aγ = 40.85 for 18 GeV electrons (<span class="math notranslate nohighlight">\(a\)</span> is the anomalous magnetic moment). It changes with δ as aγ
+does.</p>
+<p>The table now also has <code class="docutils literal notranslate"><span class="pre">n0x</span></code>, <code class="docutils literal notranslate"><span class="pre">n0y</span></code>, <code class="docutils literal notranslate"><span class="pre">n0z</span></code>: the spin direction on the closed orbit that repeats
+itself after each pass (here vertical: <code class="docutils literal notranslate"><span class="pre">twsp.n0y[qd]</span></code> is −1). The invariant spin field extends
+this direction to the phase space around the closed orbit: a spin along the field stays along the
+field, at the particle’s new position, after each pass. The columns <code class="docutils literal notranslate"><span class="pre">dnx</span></code>, <code class="docutils literal notranslate"><span class="pre">dny</span></code>, <code class="docutils literal notranslate"><span class="pre">dnz</span></code> are its
+derivatives with respect to δ.</p>
+</section>
+<section id="twiss-open">
+<span id="open-lines"></span><h2>Open lines<a class="headerlink" href="#twiss-open" title="Link to this heading">¶</a></h2>
+<p>An open line, such as a transfer line, has no closed orbit. Instead, the orbit and the lattice
+functions at its start are given with <code class="docutils literal notranslate"><span class="pre">initial</span></code>, and the normalizing map at the start is built
+from them:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nd">@elements</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">  </span><span class="n">qa</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">qb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.36</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">  </span><span class="n">qc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">Kn1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="k">end</span>
+<span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qa</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qb</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qc</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+<span class="n">twl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">initial</span><span class="o">=</span><span class="p">(</span><span class="n">beta1</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="n">alpha1</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">beta2</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="n">alpha2</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">dx</span><span class="o">=</span><span class="mf">0.2</span><span class="p">))</span>
+<span class="n">twl</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="c"># 12.30</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>12.297164887596177
+</pre></div>
+</div>
+</div>
+</div>
+<p>The values are given by the names of the columns: the Twiss parameters <code class="docutils literal notranslate"><span class="pre">beta1</span></code> and <code class="docutils literal notranslate"><span class="pre">beta2</span></code>
+(required), <code class="docutils literal notranslate"><span class="pre">alpha1</span></code> and <code class="docutils literal notranslate"><span class="pre">alpha2</span></code>, the dispersion <code class="docutils literal notranslate"><span class="pre">dx</span></code>, <code class="docutils literal notranslate"><span class="pre">dpx</span></code>, <code class="docutils literal notranslate"><span class="pre">dy</span></code>, <code class="docutils literal notranslate"><span class="pre">dpy</span></code>, the coupling <code class="docutils literal notranslate"><span class="pre">c11</span></code>,
+<code class="docutils literal notranslate"><span class="pre">c12</span></code>, <code class="docutils literal notranslate"><span class="pre">c21</span></code>, <code class="docutils literal notranslate"><span class="pre">c22</span></code>, and the orbit <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">px</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">py</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">pz</span></code> (the others are zero if not
+given). <code class="docutils literal notranslate"><span class="pre">initial</span></code> can also be a <code class="docutils literal notranslate"><span class="pre">Dict</span></code> (for example a Python dictionary), or a row of another
+table, e.g. to continue the periodic lattice functions of a cell into a line that starts with it:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qa</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qb</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+<span class="n">twcell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">twiss</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">initial</span><span class="o">=</span><span class="n">twcell</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="o">:</span><span class="p">],</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"beta1"</span><span class="p">,</span><span class="w"> </span><span class="s">"alpha1"</span><span class="p">,</span><span class="w"> </span><span class="s">"beta2"</span><span class="p">,</span><span class="w"> </span><span class="s">"alpha2"</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 0.054768420280691926
+ q2     = 0.05929180410695139
+ etac   = -8.059257018390056e-10
+ alphac = 3.101927297073854e-25
+
+df:
+<span class=" -Color -Color-Bold">7×8 DataFrame</span>
+<span class=" -Color -Color-Bold"> Row </span>│<span class=" -Color -Color-Bold"> index  name  kind        s    beta1    alpha1      beta2    alpha2    </span>
+<span class=" -Color -Color-Bold">     </span>│                          [m]  [m]      [1]         [m]      [1]       
+─────┼───────────────────────────────────────────────────────────────────────
+   1 │     1  qa    Quadrupole  0.0  13.7959  -1.23317    11.5123   1.05046
+   2 │     2  d     Drift       0.5  13.7959   1.23317    11.5123  -1.05046
+   3 │     3  qb    Quadrupole  1.5  11.5123   1.05046    13.7959  -1.23317
+   4 │     4  d     Drift       2.0  11.5123  -1.05046    13.7959   1.23317
+   5 │     5  qc    Quadrupole  3.0  13.7959  -1.23317    11.5123   1.05046
+   6 │     6  d     Drift       3.5  14.3549   0.133823   11.0582  -0.127155
+   7 │    -1  END   ---         4.5  14.1582   0.0629131  11.4044  -0.219048
+</pre></div>
+</div>
+</div>
+</div>
+<p>Through the first four elements these are the periodic lattice functions of the cell. The
+values may also be Taylor series in parameters, to see how the lattice functions along the line
+change with them (see <a class="reference internal" href="parametric-nf.html#pnf"><span class="std std-ref">Parametric Normal Form</span></a>), and they can be knobs of a match (see
+<a class="reference internal" href="optimize.html"><span class="std std-doc">Matching and Optimization</span></a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">initial</span></code> describes a beam without synchrotron motion, so a line with RF cavities needs
+<code class="docutils literal notranslate"><span class="pre">rf_on=false</span></code>. For a start with synchrotron motion, spin, or nonlinear terms, give instead the
+normalizing map at the start as <code class="docutils literal notranslate"><span class="pre">a_initial</span></code>. The normalizing map of a periodic beamline is the
+<code class="docutils literal notranslate"><span class="pre">a</span></code> column of its <code class="docutils literal notranslate"><span class="pre">twiss</span></code> table (the map with <code class="docutils literal notranslate"><span class="pre">as_taylor_series=true</span></code>, else only its matrix):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"a"</span><span class="p">],</span><span class="w"> </span><span class="n">as_taylor_series</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">twiss</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">a_initial</span><span class="o">=</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"beta1"</span><span class="p">,</span><span class="w"> </span><span class="s">"alpha1"</span><span class="p">,</span><span class="w"> </span><span class="s">"beta2"</span><span class="p">,</span><span class="w"> </span><span class="s">"alpha2"</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 0.054768420280691905
+ q2     = 0.05929180410695138
+ etac   = -8.059257018390056e-10
+ alphac = 3.101927297073854e-25
+
+df:
+<span class=" -Color -Color-Bold">7×8 DataFrame</span>
+<span class=" -Color -Color-Bold"> Row </span>│<span class=" -Color -Color-Bold"> index  name  kind        s    beta1    alpha1      beta2    alpha2    </span>
+<span class=" -Color -Color-Bold">     </span>│                          [m]  [m]      [1]         [m]      [1]       
+─────┼───────────────────────────────────────────────────────────────────────
+   1 │     1  qa    Quadrupole  0.0  13.7959  -1.23317    11.5123   1.05046
+   2 │     2  d     Drift       0.5  13.7959   1.23317    11.5123  -1.05046
+   3 │     3  qb    Quadrupole  1.5  11.5123   1.05046    13.7959  -1.23317
+   4 │     4  d     Drift       2.0  11.5123  -1.05046    13.7959   1.23317
+   5 │     5  qc    Quadrupole  3.0  13.7959  -1.23317    11.5123   1.05046
+   6 │     6  d     Drift       3.5  14.3549   0.133823   11.0582  -0.127155
+   7 │    -1  END   ---         4.5  14.1582   0.0629131  11.4044  -0.219048
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="twiss-part">
+<span id="a-part-of-a-beamline"></span><h2>A part of a beamline<a class="headerlink" href="#twiss-part" title="Link to this heading">¶</a></h2>
+<p>The keyword arguments <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span></code> restrict the analysis to a part of the beamline, e.g.
+a single cell of a line of several cells, as a periodic beamline by itself:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">cells</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">qd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">],</span>
+<span class="w">                 </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">18e9</span><span class="p">)</span>
+<span class="n">twp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span><span class="w"> </span><span class="c"># the second cell</span>
+<span class="n">twp</span><span class="o">.</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">twp</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="k">begin</span><span class="p">]</span><span class="w">    </span><span class="c"># (0.1487, 14.56), as for fodo</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.1486522740866844, 14.558553433187578)
+</pre></div>
+</div>
+</div>
+</div>
+<p>The part goes from the beginning of the element <code class="docutils literal notranslate"><span class="pre">start</span></code> to the beginning of <code class="docutils literal notranslate"><span class="pre">stop</span></code> (by default
+the end of the beamline). Its table is read like that of the whole beamline, except that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">twp.beta1[begin]</span></code> and <code class="docutils literal notranslate"><span class="pre">twp.beta1[end]</span></code> are the beginning and the end of the part;</p></li>
+<li><p>locations with several values (<code class="docutils literal notranslate"><span class="pre">:</span></code>, an s-range, …) give only those in the part;</p></li>
+<li><p>an element must be placed once in the part.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">s</span></code> and the beamline indexes stay those of the whole beamline, and the phases are counted from
+<code class="docutils literal notranslate"><span class="pre">start</span></code>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">initial</span></code> or <code class="docutils literal notranslate"><span class="pre">a_initial</span></code>, the part is an open line that starts at <code class="docutils literal notranslate"><span class="pre">start</span></code>. For example, from
+lattice functions given at the beginning of the second cell to the beginning of its <code class="docutils literal notranslate"><span class="pre">qd</span></code>
+(beamline index 13):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">two</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="n">stop</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span><span class="w"> </span><span class="n">initial</span><span class="o">=</span><span class="p">(</span><span class="n">beta1</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="n">beta2</span><span class="o">=</span><span class="mf">5.0</span><span class="p">))</span>
+<span class="n">two</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="k">end</span><span class="p">]</span><span class="w"> </span><span class="c"># 2.345</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2.3453307638692276
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="twiss-h">
+<span id="resonance-driving-terms-and-detuning-h-columns"></span><h2>Resonance driving terms and detuning (<code class="docutils literal notranslate"><span class="pre">h</span></code> columns)<a class="headerlink" href="#twiss-h" title="Link to this heading">¶</a></h2>
+<p>For a periodic beamline, the columns <code class="docutils literal notranslate"><span class="pre">h&lt;ijkl&gt;</span></code> (without synchrotron motion) and <code class="docutils literal notranslate"><span class="pre">h&lt;ijklmn&gt;</span></code>
+(with it) are the coefficients of the nonlinear effective Hamiltonian <span class="math notranslate nohighlight">\(h\)</span>, e.g. in a cell of
+thin quadrupoles with a thin sextupole:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tqf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Multipole</span><span class="p">(</span><span class="n">Kn1L</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">tqd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Multipole</span><span class="p">(</span><span class="n">Kn1L</span><span class="o">=-</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">sx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Multipole</span><span class="p">(</span><span class="n">Kn2L</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">thincell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Beamline</span><span class="p">([</span><span class="n">tqf</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">sx</span><span class="p">,</span><span class="w"> </span><span class="n">tqd</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">],</span><span class="w"> </span><span class="n">species_ref</span><span class="o">=</span><span class="n">Species</span><span class="p">(</span><span class="s">"electron"</span><span class="p">),</span><span class="w"> </span><span class="n">pc_ref</span><span class="o">=</span><span class="mf">1e9</span><span class="p">)</span>
+<span class="n">twh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">thincell</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"beta1"</span><span class="p">,</span><span class="w"> </span><span class="s">"phi1"</span><span class="p">,</span><span class="w"> </span><span class="s">"h3000"</span><span class="p">,</span><span class="w"> </span><span class="s">"h2100"</span><span class="p">])</span>
+<span class="n">twh</span><span class="o">.</span><span class="n">h3000</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="c"># 0.0002407 - 0.001088im at the start</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.00024074396998282022 - 0.0010882445118449418im
+</pre></div>
+</div>
+</div>
+</div>
+<p>In normalized coordinates, one pass through the beamline from the row back to it is the motion
+under <span class="math notranslate nohighlight">\(h\)</span> for one unit of time, followed by the rotation by the tunes. In the operator notation
+of the <a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart</span></a>,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathcal{M} = \mathcal{A}^{-1}\exp{(:h:)}\,\mathcal{R}\,\mathcal{A}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\mathcal{M}\)</span> is the map around the closed orbit once through the beamline from the row
+back to it, <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> the linear (Courant-Snyder) normalizing map at the row and
+<span class="math notranslate nohighlight">\(\mathcal{R}\)</span> the rotation by the tunes (with their dependence on δ and on parameters). <span class="math notranslate nohighlight">\(h\)</span> is a
+polynomial in the complex variables</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_{2k-1} = \frac{\tilde{x}_k + i\tilde{p}_k}{\sqrt{2}} = \sqrt{J_k}\,e^{-i\phi_k}, \qquad
+z_{2k} = \frac{\tilde{x}_k - i\tilde{p}_k}{\sqrt{2}} = \sqrt{J_k}\,e^{i\phi_k},\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\tilde{x}_k\)</span>, <span class="math notranslate nohighlight">\(\tilde{p}_k\)</span> are the normalized coordinates of mode <span class="math notranslate nohighlight">\(k\)</span>, <span class="math notranslate nohighlight">\(J_k\)</span> its action
+and <span class="math notranslate nohighlight">\(\phi_k\)</span> its angle. (<span class="math notranslate nohighlight">\(\mathcal{A}\)</span> takes the normalized coordinates to the laboratory
+coordinates: without coupling and dispersion, <span class="math notranslate nohighlight">\(\tilde{x}_1 = \sqrt{2J_1}\cos\phi_1\)</span> and
+<span class="math notranslate nohighlight">\(x = \sqrt{2\beta_1 J_1}\cos\phi_1\)</span>.) In these variables,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[h = \sum h_{ijklmn}\, z_1^i z_2^j z_3^k z_4^l z_5^m z_6^n ,\]</div>
+</div>
+<p>and <span class="math notranslate nohighlight">\(\exp(:h:)\)</span> is the motion given by Hamilton’s equations
+<span class="math notranslate nohighlight">\(d\tilde{x}_k/dt = \partial h/\partial\tilde{p}_k\)</span>,
+<span class="math notranslate nohighlight">\(d\tilde{p}_k/dt = -\partial h/\partial\tilde{x}_k\)</span>.</p>
+<p>The terms with equal exponents of <span class="math notranslate nohighlight">\(z_{2k-1}\)</span> and <span class="math notranslate nohighlight">\(z_{2k}\)</span> for every mode (e.g. <code class="docutils literal notranslate"><span class="pre">h2200</span></code>) change the
+tunes with the amplitudes (detuning). The others drive resonances. The column <code class="docutils literal notranslate"><span class="pre">h&lt;ijklmn&gt;</span></code> needs
+<code class="docutils literal notranslate"><span class="pre">order</span></code> of at least <span class="math notranslate nohighlight">\(i+j+k+l+m+n-1\)</span>.</p>
+<p>To first order in their strengths, thin multipoles add their Hamiltonians to <span class="math notranslate nohighlight">\(h\)</span>. For a normal
+multipole of order <span class="math notranslate nohighlight">\(n\)</span> (<code class="docutils literal notranslate"><span class="pre">Kn&lt;n&gt;L</span></code>) this is <span class="math notranslate nohighlight">\(K_nL\,\mathrm{Re}\,(x+iy)^{n+1}/(n+1)!\)</span>, with
+<span class="math notranslate nohighlight">\(x = \sqrt{\beta_1/2}\,(z_1e^{-i\varphi_1} + z_2e^{i\varphi_1})\)</span> and
+<span class="math notranslate nohighlight">\(y = \sqrt{\beta_2/2}\,(z_3e^{-i\varphi_2} + z_4e^{i\varphi_2})\)</span>. Here <span class="math notranslate nohighlight">\(\beta_k\)</span> are the beta
+functions at the multipole and <span class="math notranslate nohighlight">\(\varphi_k\)</span> the phase advances (in radians) from the row to the
+multipole, for uncoupled motion without dispersion at the multipole. For example:</p>
+<ul class="simple">
+<li><p>a thin sextupole gives <span class="math notranslate nohighlight">\(h_{3000} = K_2L\,\beta_1^{3/2}e^{-3i\varphi_1}/(12\sqrt{2})\)</span>,
+<span class="math notranslate nohighlight">\(h_{2100} = 3K_2L\,\beta_1^{3/2}e^{-i\varphi_1}/(12\sqrt{2})\)</span> and
+<span class="math notranslate nohighlight">\(h_{1020} = -K_2L\,\beta_1^{1/2}\beta_2\,e^{-i(\varphi_1+2\varphi_2)}/(4\sqrt{2})\)</span>;</p></li>
+<li><p>a thin octupole gives <span class="math notranslate nohighlight">\(h_{2200} = K_3L\,\beta_1^2/16\)</span> and
+<span class="math notranslate nohighlight">\(h_{4000} = K_3L\,\beta_1^2e^{-4i\varphi_1}/96\)</span>.</p></li>
+</ul>
+<p>For the sextupole above:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">β</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twh</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="n">sx</span><span class="p">]</span>
+<span class="n">φ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="nb">pi</span><span class="o">*</span><span class="n">twh</span><span class="o">.</span><span class="n">phi1</span><span class="p">[</span><span class="n">sx</span><span class="p">]</span>
+<span class="n">twh</span><span class="o">.</span><span class="n">h3000</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mf">0.01</span><span class="o">*</span><span class="n">β</span><span class="o">^</span><span class="mf">1.5</span><span class="o">/</span><span class="p">(</span><span class="mi">12</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">cis</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="n">φ</span><span class="p">)</span><span class="w">   </span><span class="c"># the column, and the formula</span>
+<span class="n">twh</span><span class="o">.</span><span class="n">h2100</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mi">3</span><span class="o">*</span><span class="mf">0.01</span><span class="o">*</span><span class="n">β</span><span class="o">^</span><span class="mf">1.5</span><span class="o">/</span><span class="p">(</span><span class="mi">12</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">cis</span><span class="p">(</span><span class="o">-</span><span class="n">φ</span><span class="p">)</span><span class="w">  </span><span class="c"># the same for h2100</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.0030092996247852617 - 0.0014574703283637574im, 0.003009299624785259 - 0.0014574703283637585im)
+</pre></div>
+</div>
+</div>
+</div>
+<p>Other nonlinear elements contribute too: the drifts, with their exact Hamiltonian, give
+detuning without any multipole (in this cell, <span class="math notranslate nohighlight">\(h_{2200} = 0.27\)</span> without the sextupole).</p>
+</section>
+<section id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">¶</a></h2>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">twiss</span></code> — <em>Function</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">twiss</span><span class="p">(</span><span class="n">bl</span><span class="o">::</span><span class="kt">Beamline</span><span class="p">;</span><span class="w"> </span><span class="n">kwargs</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>General function to compute the (parametric and nonlinear) optics of a <code class="docutils literal notranslate"><span class="pre">Beamline</span></code>.
+Returns a <code class="docutils literal notranslate"><span class="pre">Twiss</span></code> struct that contains the (amplitude-dependent) (spin) tunes/slip, and a
+dataframe of the lattice functions at each specified integration step. By default, lattice
+functions of the Sagan-Rubin/Edwards-Teng coupling formalism are computed in the dataframe
+at every integration step. The columns are read at locations of the beamline, e.g.
+<code class="docutils literal notranslate"><span class="pre">tw.beta1[qd]</span></code> at the beginning of the element <code class="docutils literal notranslate"><span class="pre">qd</span></code> (see <code class="docutils literal notranslate"><span class="pre">TwissColumn</span></code>), and the
+whole table is <code class="docutils literal notranslate"><span class="pre">tw.df</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">cols</span></code> keyword argument can be set to customize what quantities will be computed and
+stored as columns in the returned dataframe. E.g.,</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">bl</span><span class="p">;</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"beta1"</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>will compute only the horizontal-like beta function. We can also specify so-called
+“resonance driving terms”/”detune coefficients” of the nonlinear effective Hamiltonian,</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">bl</span><span class="p">;</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"beta1"</span><span class="p">,</span><span class="w"> </span><span class="s">"h3000"</span><span class="p">],</span><span class="w"> </span><span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where the total order of the <code class="docutils literal notranslate"><span class="pre">twiss</span></code> call has also been set appropriately to compute <code class="docutils literal notranslate"><span class="pre">h3000</span></code>
+(without <code class="docutils literal notranslate"><span class="pre">order</span></code> and <code class="docutils literal notranslate"><span class="pre">chrom</span></code>, the orders that the columns need are chosen).</p>
+<p>An arbitrary order chromatic derivative of any scalar-valued column can be taken using the
+syntax <code class="docutils literal notranslate"><span class="pre">d&lt;column&gt;_&lt;order&gt;</span></code>. If <code class="docutils literal notranslate"><span class="pre">order==1</span></code>, then the <code class="docutils literal notranslate"><span class="pre">_1</span></code> can be omitted. E.g., the linear and
+2nd order dispersions, as well as ∂β₁/∂δ can be computed with</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">twiss</span><span class="p">(</span><span class="n">bl</span><span class="p">;</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s">"dx"</span><span class="p">,</span><span class="w"> </span><span class="s">"dx_2"</span><span class="p">,</span><span class="s">"dbeta1"</span><span class="p">],</span><span class="w"> </span><span class="n">chrom</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where the <code class="docutils literal notranslate"><span class="pre">chrom</span></code> keyword argument, which specifies solely the truncation order of δ, has been
+set appropriately.</p>
+<p>Chromatic derivatives need a beam without synchrotron motion: <code class="docutils literal notranslate"><span class="pre">rf_on=false</span></code> if there are RF
+cavities.</p>
+<p>To customize the output, such as computing higher order (chromatic) lattice functions, spin
+lattice functions/tune, amplitude-dependent tunes, and parametric quantities, see the
+keyword arguments:</p>
+<p class="rubric">Keyword arguments</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">at::Union{Colon,</span> <span class="pre">AbstractVector}</span></code>: Where to compute the lattice functions (the rows of the
+table): a vector of locations, each as one index of a column (see <code class="docutils literal notranslate"><span class="pre">TwissColumn</span></code>):
+elements (at the beginning of each placement), beamline indexes, names (as for
+<code class="docutils literal notranslate"><span class="pre">findelements</span></code>), and s-ranges (tuples). Default <code class="docutils literal notranslate"><span class="pre">:</span></code>, every integration step and the end of
+the beamline. An entry that is not in the beamline is an error; in a part of the beamline
+(<code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>) only the locations in the part are computed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>: Elements (or their beamline indexes) to compute the optics of only
+a part of the beamline: from the beginning of <code class="docutils literal notranslate"><span class="pre">start</span></code> (default: the first element) to the
+beginning of <code class="docutils literal notranslate"><span class="pre">stop</span></code> (default: the end of the beamline). Without <code class="docutils literal notranslate"><span class="pre">initial</span></code> or <code class="docutils literal notranslate"><span class="pre">a_initial</span></code>
+these are the periodic optics of that part by itself (e.g. of one cell of a ring),
+with them those of an open line that starts at <code class="docutils literal notranslate"><span class="pre">start</span></code>. <code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">index</span></code> in the table are
+those of the whole beamline, phases are counted from <code class="docutils literal notranslate"><span class="pre">start</span></code>, and the last row is the
+beginning of <code class="docutils literal notranslate"><span class="pre">stop</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">in_body_coordinates::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code> the lattice functions inside misaligned elements are not
+transformed back to the reference curve coordinates. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rf_on::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">false</span></code>, then any <code class="docutils literal notranslate"><span class="pre">RFParams</span></code> in any <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>s are ignored for the
+entirety of the Twiss tracking and calculation. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">order::Integer</span></code>: TPSA truncation order for all phase space coordinates used in the Twiss
+calculation. If neither <code class="docutils literal notranslate"><span class="pre">order</span></code> nor <code class="docutils literal notranslate"><span class="pre">chrom</span></code> is given, both are chosen from <code class="docutils literal notranslate"><span class="pre">cols</span></code> (as
+<code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code> does): 1 for the default columns, higher for chromatic derivatives
+(<code class="docutils literal notranslate"><span class="pre">chrom</span></code>) and resonance driving terms (<code class="docutils literal notranslate"><span class="pre">order</span></code>). Default is 1 if only <code class="docutils literal notranslate"><span class="pre">chrom</span></code> is given</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chrom::Integer</span></code>: TPSA truncation order for only δ, default is <code class="docutils literal notranslate"><span class="pre">order</span></code> if <code class="docutils literal notranslate"><span class="pre">order</span></code> is given</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GTPSA_descriptor::Union{Descriptor,Nothing}</span></code>: Custom GTPSA <code class="docutils literal notranslate"><span class="pre">Descriptor</span></code> to use for the Twiss
+calculation, required to provide to do parametric normal form and lattice function
+calculations. Default is <code class="docutils literal notranslate"><span class="pre">Descriptor([order,</span> <span class="pre">order,</span> <span class="pre">order,</span> <span class="pre">order,</span> <span class="pre">order,</span> <span class="pre">chrom],</span> <span class="pre">max(order,chrom))</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initial</span></code>: The lattice functions at the start of an “open” line (e.g. a transfer line), by name:
+<code class="docutils literal notranslate"><span class="pre">beta1</span></code>, <code class="docutils literal notranslate"><span class="pre">beta2</span></code> (required), <code class="docutils literal notranslate"><span class="pre">alpha1</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha2</span></code>, the coupling <code class="docutils literal notranslate"><span class="pre">c11</span></code>, <code class="docutils literal notranslate"><span class="pre">c12</span></code>, <code class="docutils literal notranslate"><span class="pre">c21</span></code>, <code class="docutils literal notranslate"><span class="pre">c22</span></code>, the
+dispersion <code class="docutils literal notranslate"><span class="pre">dx</span></code>, <code class="docutils literal notranslate"><span class="pre">dpx</span></code>, <code class="docutils literal notranslate"><span class="pre">dy</span></code>, <code class="docutils literal notranslate"><span class="pre">dpy</span></code>, and the orbit <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">px</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">py</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">pz</span></code> (all 0 if
+not given; <code class="docutils literal notranslate"><span class="pre">pz</span></code> is δ, else <code class="docutils literal notranslate"><span class="pre">delta0</span></code>), with the meanings of the columns of the same names.
+A <code class="docutils literal notranslate"><span class="pre">NamedTuple</span></code>, a <code class="docutils literal notranslate"><span class="pre">Dict</span></code> (with <code class="docutils literal notranslate"><span class="pre">Symbol</span></code> or <code class="docutils literal notranslate"><span class="pre">String</span></code> keys), a <code class="docutils literal notranslate"><span class="pre">Context</span></code> (whose variables can
+then be knobs of a match), or a row of another table (<code class="docutils literal notranslate"><span class="pre">tw.df[end,</span> <span class="pre">:]</span></code>; its other columns are
+ignored). The values may be Taylor series in GTPSA parameters, not in the phase space
+variables or δ. The beam has no synchrotron motion: RF cavities with voltage need
+<code class="docutils literal notranslate"><span class="pre">rf_on=false</span></code> (or a 6D <code class="docutils literal notranslate"><span class="pre">a_initial</span></code>).
+Default is <code class="docutils literal notranslate"><span class="pre">nothing</span></code>, to compute the periodic (“closed”) lattice functions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a_initial::Union{DAMap,Nothing}</span></code>: A <code class="docutils literal notranslate"><span class="pre">DAMap</span></code> of the initial transformation from normal form
+coordinates to laboratory coordinates, to compute the lattice functions of an “open” line
+(instead of <code class="docutils literal notranslate"><span class="pre">initial</span></code>). A coasting <code class="docutils literal notranslate"><span class="pre">a_initial</span></code> (without synchrotron motion) also needs
+<code class="docutils literal notranslate"><span class="pre">rf_on=false</span></code> if the line has RF cavities with voltage. Default is <code class="docutils literal notranslate"><span class="pre">nothing</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">damping::Union{Bool,Nothing}</span></code>: Specifies if radiation damping is included. Default is <code class="docutils literal notranslate"><span class="pre">nothing</span></code>,
+which will auto-detect from <code class="docutils literal notranslate"><span class="pre">a_initial</span></code> or the periodic <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delta0</span></code>: If the beam is coasting (no longitudinal oscillations), then the optics will
+be computed around this delta-dependent orbit. Else, this will be an initial guess for the
+6D closed orbit calculation. Default is <code class="docutils literal notranslate"><span class="pre">0.</span></code>. If <code class="docutils literal notranslate"><span class="pre">a_initial</span></code> is provided then this will be ignored,
+UNLESS <code class="docutils literal notranslate"><span class="pre">a_initial</span></code> is coasting, in which case this will set the value for δ. With <code class="docutils literal notranslate"><span class="pre">initial</span></code>, it
+is δ if <code class="docutils literal notranslate"><span class="pre">initial</span></code> has no <code class="docutils literal notranslate"><span class="pre">pz</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">v0</span></code>: Initial guess for the closed orbit finder if <code class="docutils literal notranslate"><span class="pre">a_initial</span></code> is not provided, else setting this
+will override the orbit expansion origin coordinates in <code class="docutils literal notranslate"><span class="pre">a_initial.v0</span></code>. Not with <code class="docutils literal notranslate"><span class="pre">initial</span></code>,
+which gives the orbit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spin::Bool</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, spin is included in the Twiss calculation. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>, or <code class="docutils literal notranslate"><span class="pre">true</span></code> if
+<code class="docutils literal notranslate"><span class="pre">a_initial</span></code> includes spin.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base_cols</span></code>: A vector of “base columns”, that will always be included in the Twiss dataframe regardless
+of what is specified in <code class="docutils literal notranslate"><span class="pre">cols</span></code>. Defaults to the global variable <code class="docutils literal notranslate"><span class="pre">SciBmad.base_cols</span></code>, which defaults
+to <code class="docutils literal notranslate"><span class="pre">[&quot;index&quot;,</span> <span class="pre">&quot;name&quot;,</span> <span class="pre">&quot;kind&quot;,</span> <span class="pre">&quot;s&quot;]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cols</span></code>: A vector of columns to include in the Twiss dataframe. See the extended help for all possible
+columns.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">as_taylor_series::Union{Bool,Nothing}</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the lattice functions in the dataframe are
+returned as Taylor series types - this will be necessary if doing parametric normal form. Default
+is <code class="docutils literal notranslate"><span class="pre">nothing</span></code>, which autoselects to <code class="docutils literal notranslate"><span class="pre">false</span></code> if there are no parameters in the GTPSA, and <code class="docutils literal notranslate"><span class="pre">true</span></code> if
+there are parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coast_tol</span></code>: Tolerance for the first-order delta dependences on each of the phase space variables below
+which coasting beam is assumed, passed to <code class="docutils literal notranslate"><span class="pre">find_closed_orbit</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">1e-14</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">symplectic_tol::Float64</span></code>: Tolerance of symplectic condition violation, above which radiation damping
+is assumed. Default is <code class="docutils literal notranslate"><span class="pre">1e-8</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_index::Int</span></code>: If any element parameters are <code class="docutils literal notranslate"><span class="pre">BatchParam</span></code>, sets which index in the batch the <code class="docutils literal notranslate"><span class="pre">twiss</span></code>
+should be evaluated at. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>. Batched element lengths and a batched reference
+energy are not supported in <code class="docutils literal notranslate"><span class="pre">twiss</span></code> yet.</p></li>
+</ul>
+<p>To see a description of all quantities available to include in <code class="docutils literal notranslate"><span class="pre">cols</span></code>, see the extended help
+section using <code class="docutils literal notranslate"><span class="pre">??twiss</span></code></p>
+<p class="rubric">Extended help</p>
+<p>Columns to include in <code class="docutils literal notranslate"><span class="pre">cols</span></code> are detailed below. As a reminder, an arbitrary order chromatic derivative
+of <em>any</em> scalar-valued output can be computed using the syntax “d<column>_<order>” (e.g. “dx_1” is the
+linear dispersion).</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code>  : Beamline index of the containing <code class="docutils literal notranslate"><span class="pre">LatElement</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>   : Name of the containing <code class="docutils literal notranslate"><span class="pre">LatElement</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kind</span></code>   : Kind of the containing <code class="docutils literal notranslate"><span class="pre">LatElement</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>      : s-position of the row (may be inside of <code class="docutils literal notranslate"><span class="pre">LatElement</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta1</span></code>  : Horizontal-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta2</span></code>  : Vertical-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha1</span></code> : Horizontal-like alpha function of the Sagan-Rubin/Edwards-Teng coupling formalism</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha2</span></code> : Vertical-like alpha function of the Sagan-Rubin/Edwards-Teng coupling formalism</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phi1</span></code>   : Horizontal-like phase advance in units of [2π]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phi2</span></code>   : Vertical-like phase advance in units of [2π]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phi3</span></code>   : Longitudinal-like phase advance in units of [2π]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dampdec1</span></code>: Horizontal-like damping decrement</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dampdec2</span></code>: Vertical-like damping decrement</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dampdec3</span></code>: Longitudinal-like damping decrement</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slip</span></code>   : Derivative of z/β₀ with δ from the start of the table: -c times the change of the
+arrival time per unit δ [m]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code>      : Orbit canonical x coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">px</span></code>     : Orbit canonical px coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code>      : Orbit canonical y coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">py</span></code>     : Orbit canonical py coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">z</span></code>      : Orbit canonical z coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pz</span></code>     : Orbit canonical pz coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zx</span></code>     : Adiabatic dependence of x on initial longitudinal position/time (AKA “crab dispersion”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zpx</span></code>    : Adiabatic dependence of px on initial longitudinal position/time (AKA “crab dispersion”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zy</span></code>     : Adiabatic dependence of y on initial longitudinal position/time (AKA “crab dispersion”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zpy</span></code>    : Adiabatic dependence of py on initial longitudinal position/time (AKA “crab dispersion”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nx</span></code>     : Invariant spin field x-component (recommended to use with <code class="docutils literal notranslate"><span class="pre">as_taylor_series=true</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ny</span></code>     : Invariant spin field y-component (recommended to use with <code class="docutils literal notranslate"><span class="pre">as_taylor_series=true</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nz</span></code>     : Invariant spin field z-component (recommended to use with <code class="docutils literal notranslate"><span class="pre">as_taylor_series=true</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n0x</span></code>    : Closed orbit periodic spin direction x-component</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n0y</span></code>    : Closed orbit periodic spin direction y-component</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n0z</span></code>    : Closed orbit periodic spin direction z-component</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code>      : N matrix of the Sagan-Rubin coupling formalism</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Vi</span></code>     : V⁻¹ matrix of the Sagan-Rubin coupling formalism</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">c11</span></code>    : [1,1] component of the Sagan-Rubin coupling matrix C</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">c12</span></code>    : [1,2] component of the Sagan-Rubin coupling matrix C</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">c21</span></code>    : [2,1] component of the Sagan-Rubin coupling matrix C</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">c22</span></code>    : [2,2] component of the Sagan-Rubin coupling matrix C</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gammac</span></code> : Coupling factor of the Sagan-Rubin coupling formalism</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">r&lt;ij&gt;</span></code>  : Component [i,j] (i, j from 1 to 6) of the linear transfer matrix from the start of
+the table (the beginning of the beamline, <code class="docutils literal notranslate"><span class="pre">start</span></code>, or the start of an open line) to the
+row: ∂zᵢ/∂zⱼ, with z = (x, px, y, py, z, pz) at the row and zⱼ at the start, around the orbit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m&lt;ij&gt;</span></code>  : Component [i,j] of the periodic matrix at the row (periodic tables only: from the row
+once through the beamline, or the part from <code class="docutils literal notranslate"><span class="pre">start</span></code> to <code class="docutils literal notranslate"><span class="pre">stop</span></code>, back to the row)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w1a</span></code>    : Horizontal-like Montague function “a” component, requires <code class="docutils literal notranslate"><span class="pre">chrom</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> and/or <code class="docutils literal notranslate"><span class="pre">order</span> <span class="pre">&gt;</span> <span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w2a</span></code>    : Vertical-like Montague function “a” component, requires <code class="docutils literal notranslate"><span class="pre">chrom</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> and/or <code class="docutils literal notranslate"><span class="pre">order</span> <span class="pre">&gt;</span> <span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w1b</span></code>    : Horizontal-like Montague function “b” component, requires <code class="docutils literal notranslate"><span class="pre">chrom</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> and/or <code class="docutils literal notranslate"><span class="pre">order</span> <span class="pre">&gt;</span> <span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w2b</span></code>    : Vertical-like Montague function “b” component, requires <code class="docutils literal notranslate"><span class="pre">chrom</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> and/or <code class="docutils literal notranslate"><span class="pre">order</span> <span class="pre">&gt;</span> <span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w1</span></code>     : Horizontal-like Montague function, requires <code class="docutils literal notranslate"><span class="pre">chrom</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> and/or <code class="docutils literal notranslate"><span class="pre">order</span> <span class="pre">&gt;</span> <span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w2</span></code>     : Vertical-like Montague function, requires <code class="docutils literal notranslate"><span class="pre">chrom</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> and/or <code class="docutils literal notranslate"><span class="pre">order</span> <span class="pre">&gt;</span> <span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H1</span></code>     : De Moivre-Ripken H¹ matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H2</span></code>     : De Moivre-Ripken H² matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H3</span></code>     : De Moivre-Ripken H³ matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">B1</span></code>     : De Moivre-Ripken B¹ matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">B2</span></code>     : De Moivre-Ripken B² matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">B3</span></code>     : De Moivre-Ripken B³ matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">E1</span></code>     : De Moivre-Ripken E¹ matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">E2</span></code>     : De Moivre-Ripken E² matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">E3</span></code>     : De Moivre-Ripken E³ matrix (see E. Forest, <em>From Tracking Code to Analysis</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code>      : (Nonlinear) map to transform from Floquet variables to laboratory variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a0</span></code>     : (Nonlinear) map to transform to the parameter-dependent fixed point</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a1</span></code>     : Linear normalizing map around the parameter-dependent fixed point, including nonlinear parameter dependence</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a2</span></code>     : Nonlinear part of the normalizing map, around the parameter-dependent fixed point</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">as</span></code>     : (Nonlinear) spin normalizing map</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h&lt;ijkl&gt;</span></code>   : The “ijkl” resonance driving term/detune coefficient/nonlinear effective Hamiltonian monomial for the coasting beam case</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h&lt;ijklmn&gt;</span></code> : The “ijklmn” resonance driving term/detune coefficient/nonlinear effective Hamiltonian monomial including longitudinal oscillations</p></li>
+</ul>
+</div>
+<div class="julia-docstring docutils container">
+<p class="julia-docstring-header"><code class="julia-docstring-name docutils literal notranslate"><span class="pre">TwissColumn</span></code> — <em>Type</em>.</p>
+<div class="julia-docstring-signature highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">TwissColumn</span>
+</pre></div>
+</div>
+<p>A column of a <code class="docutils literal notranslate"><span class="pre">Twiss</span></code> table (e.g. <code class="docutils literal notranslate"><span class="pre">tw.beta1</span></code>), indexed with locations of the beamline exactly as
+the columns of a <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[qd]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[5]</span></code>: at the beginning of the element <code class="docutils literal notranslate"><span class="pre">qd</span></code> (one value; <code class="docutils literal notranslate"><span class="pre">qd</span></code> must be
+placed once in the beamline, else it is an error), or of the element with beamline index 5.
+Elements made from <code class="docutils literal notranslate"><span class="pre">qd</span></code> (copies, also of copies) are placements of <code class="docutils literal notranslate"><span class="pre">qd</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[[qd]]</span></code>: at the beginning of every placement of <code class="docutils literal notranslate"><span class="pre">qd</span></code>, in beamline order (a vector)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[begin]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[end]</span></code>: at the beginning and the end of the beamline (or of the part
+of it given with <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span></code>). As an index, <code class="docutils literal notranslate"><span class="pre">end</span></code> is the beamline index of the end (one
+more than the number of elements, or the index of <code class="docutils literal notranslate"><span class="pre">stop</span></code>), so <code class="docutils literal notranslate"><span class="pre">tw.beta1[end-1]</span></code> is at the
+beginning of the last element</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[5,</span> <span class="pre">:exit]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[qd,</span> <span class="pre">:exit]</span></code>: at the end of the element (the beginning of the
+next one). The end of the beamline is like a zero-length element: <code class="docutils literal notranslate"><span class="pre">[end]</span></code>, <code class="docutils literal notranslate"><span class="pre">[end,</span> <span class="pre">:entrance]</span></code>
+and <code class="docutils literal notranslate"><span class="pre">[end,</span> <span class="pre">:exit]</span></code> are the same location</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[5,</span> <span class="pre">:]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[qd,</span> <span class="pre">:]</span></code>: at every integration step of the element, both ends
+included (a vector)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[5,</span> <span class="pre">2]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[qd,</span> <span class="pre">2]</span></code>: two integration steps after the beginning of the element</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[&quot;q*&quot;]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[r&quot;...&quot;]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[[qf,</span> <span class="pre">qd]]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[2:5]</span></code>: at the beginning
+of the elements found by name (as for <code class="docutils literal notranslate"><span class="pre">findelements</span></code>), or of each element given (a vector).
+With a position, e.g. <code class="docutils literal notranslate"><span class="pre">tw.beta1[[qd],</span> <span class="pre">:exit]</span></code>, at that position of each</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tw.beta1[(2.0,</span> <span class="pre">10.0)]</span></code>, <code class="docutils literal notranslate"><span class="pre">tw.beta1[:]</span></code>: at every integration step in an s-range (and the end
+of the beamline if the range contains it), or of the whole beamline (a vector)</p></li>
+</ul>
+<p>In the table of a part of the beamline (<code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>), a vector has the locations in the part
+only, an element must be placed once in the part, and a beamline index outside it is an error.
+The table must have rows at these locations (it has with the default <code class="docutils literal notranslate"><span class="pre">at</span></code>). The column also
+iterates over all rows of the table, in order, and broadcasts (<code class="docutils literal notranslate"><span class="pre">tw.dbeta1</span> <span class="pre">./</span> <span class="pre">tw.beta1</span></code>) as a vector
+of them; <code class="docutils literal notranslate"><span class="pre">collect(tw.beta1)</span></code> (or <code class="docutils literal notranslate"><span class="pre">tw.df.beta1</span></code>) is that vector, and <code class="docutils literal notranslate"><span class="pre">first</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span></code> are its
+first and last rows.</p>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="parametric-nf.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Parametric Normal Form</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="dynamic-aperture.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Dynamic Aperture</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Twiss</a><ul>
+<li><a class="reference internal" href="#basics">Basics</a></li>
+<li><a class="reference internal" href="#twiss-rows">Choosing rows and columns</a></li>
+<li><a class="reference internal" href="#twiss-orders">Chromatic and amplitude-dependent quantities</a></li>
+<li><a class="reference internal" href="#twiss-rf">Synchrotron motion and radiation</a></li>
+<li><a class="reference internal" href="#twiss-spin">Spin</a></li>
+<li><a class="reference internal" href="#twiss-open">Open lines</a></li>
+<li><a class="reference internal" href="#twiss-part">A part of a beamline</a></li>
+<li><a class="reference internal" href="#twiss-h">Resonance driving terms and detuning (<code class="docutils literal notranslate"><span class="pre">h</span></code> columns)</a></li>
+<li><a class="reference internal" href="#reference">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=8a448e45"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=552d2a3d"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="_static/topbar-github.js?v=c13617d6"></script>
+    <script src="_static/sidebar-current.js?v=23c44312"></script>
+    </body>
+</html>
