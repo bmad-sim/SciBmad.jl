@@ -1,19 +1,25 @@
 
 """
-    phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0)
+    phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0, rf_on=true)
 
-Makes `ele` into a phase trombone - a matrix expanded around the _current_ closed orbit 
-(at the time of calling this function) which applies a linear rotation in normal form 
-coordinates (which are also computed at the time of calling this function). Useful for 
-creating zero-length elements where the phase advance can be tuned without impacting the 
-linear optics. The `LatElement` must be in a `Beamline` in order to 
+Makes `ele` into a phase trombone - a matrix expanded around the _current_ closed orbit
+(at the time of calling this function) which applies a linear rotation in normal form
+coordinates (which are also computed at the time of calling this function). Useful for
+creating zero-length elements where the phase advance can be tuned without impacting the
+linear optics. The `LatElement` must be in a `Beamline` in order to
 use this function.
 
-`phi1`, `phi2`, and `phi3` are the changes of the phase advances of the three normal modes, in 
-units of 2π (i.e. the changes of the tunes). The `LatElement` property `transport_map` is filled 
-with the corresponding phase trombone transport map, and `transport_map_params` with its parameters. 
-The first three entries of `transport_map_params` are `phi1`, `phi2`, and `phi3`, and can be 
+`phi1`, `phi2`, and `phi3` are the changes of the phase advances of the three normal modes, in
+units of 2π (i.e. the changes of the tunes). The `LatElement` property `transport_map` is filled
+with the corresponding phase trombone transport map, and `transport_map_params` with its parameters.
+The first three entries of `transport_map_params` are `phi1`, `phi2`, and `phi3`, and can be
 changed later to change the phase advances.
+
+With `rf_on=false`, the normal form is that of the beamline with its RF cavities turned off (as
+in `twiss`), and the map does not change δ. Use it if the beamline is analyzed without
+synchrotron motion, e.g. for its chromatic functions with `twiss(…; rf_on=false)`: with RF
+cavities on, the normal modes mix the transverse and longitudinal coordinates, and the map
+then changes δ, so that the beamline does not have a coasting beam with its cavities off.
 
 Spin tracking is NOT currently compatible with phase trombones.
   
@@ -21,10 +27,11 @@ Spin tracking is NOT currently compatible with phase trombones.
     If the closed orbit and/or linear optics at `ele` are changed *after* calling 
     this function, then the phase trombone map is no longer valid.
 """
-function phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0)
+function phase_trombone!(ele::LatElement; phi1=0, phi2=0, phi3=0, rf_on=true)
   bl = ele.beamline
   i = ele.beamline_index
-  tw = twiss(bl, base_cols=["index"], cols=["a", "x", "px", "y", "py", "z", "pz"], at=[i])
+  tw = twiss(bl, base_cols=["index"], cols=["a", "x", "px", "y", "py", "z", "pz"], at=[i],
+             rf_on=rf_on)
   a = SMatrix{6,6}(tw.a[i])
   ai = inv(a)
   ele.transport_map = _make_trombone_map()

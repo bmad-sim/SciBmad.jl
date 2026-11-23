@@ -25,6 +25,14 @@ Quickstart <quickstart>
 ```{toctree}
 :hidden:
 :maxdepth: 2
+:caption: Tutorial
+
+Ring Design Tutorial <ring-design/index>
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 2
 :caption: Lattice
 
 element

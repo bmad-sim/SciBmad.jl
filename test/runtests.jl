@@ -1581,6 +1581,31 @@ using Test
     @test t2.q2 ≈ t0.q2 - 0.05
   end
 
+  @testset "Phase trombone without synchrotron motion" begin
+      # Built with the RF cavities on, the trombone rotates the 6D normal modes and changes δ: the
+      # ring is then not coasting with rf_on=false. Built with rf_on=false it keeps δ, changes the
+      # coasting tunes by phi1 and phi2 and leaves the lattice functions and the dispersion
+      # unchanged (the trombone is at a place with dispersion)
+    tr = Marker()
+    cav = RFCavity(L=0.1, voltage=5e6, harmon=15, zero_phase=PhaseRef.AboveTransition)
+    ring = Beamline([Quadrupole(Kn1=0.36, L=0.5), Drift(L=1.0), SBend(L=2.0, angle=pi/20),
+                     Drift(L=1.0), tr, Quadrupole(Kn1=-0.36, L=0.5), Drift(L=1.0),
+                     SBend(L=2.0, angle=pi/20), Drift(L=1.0), cav];
+                    species_ref=Species("electron"), pc_ref=18e9)
+    t0 = twiss(ring; rf_on=false)
+    phase_trombone!(ring[tr]; phi1=0.1, phi2=-0.05)
+    @test_throws ErrorException twiss(ring; rf_on=false, chrom=2)
+    ring[tr].MapParams = nothing
+    phase_trombone!(ring[tr]; phi1=0.1, phi2=-0.05, rf_on=false)
+    t1 = twiss(ring; rf_on=false)
+    @test t1.q1 ≈ t0.q1 + 0.1
+    @test t1.q2 ≈ t0.q2 - 0.05
+    for c in (:beta1, :beta2, :alpha1, :alpha2, :dx, :dpx)
+      @test all(isapprox.(getproperty(t1, c), getproperty(t0, c); rtol=1e-10, atol=1e-12))
+    end
+    @test twiss(ring; rf_on=false, chrom=2).dq1 isa Real
+  end
+
   @testset "Momentum compaction and slip factor" begin
       # At low energy they differ by 1/γ²: Bmad gives Alpha_p = 2.54269E-02, Eta_p = 2.28225E-02 for
       # this ring (coasting). The δ dependence (to δ³) agrees with the derivatives of a polynomial fit
