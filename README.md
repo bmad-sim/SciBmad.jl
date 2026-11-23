@@ -17,46 +17,75 @@ SciBmad is a new open source, high-performance, CPU/GPU compatible, polymorphic,
 
 ## Project Status
 
-SciBmad development is progressing rapidly. Features included in the current state of the project (0.7.0) and currently being planned for later releases are:
+SciBmad development is progressing rapidly. Features included in the current state of the project (0.8.0) and currently being planned for later releases are:
 
-### Current Release 0.7
-- CPU/GPU parallelized 6D symplectic particle tracking including spin and radiation
-- Fully forwards-/backwards-/Taylor differentiable to extract gradients w.r.t. anything, including element lengths
-- Taylor series nonlinear normal form analysis (i.e. nonlinear periodic Twiss functions) including spin and radiation
-- Arbitrary time-dependent accelerator parameters (e.g. magnet strengths, reference energy, misalignments), seen by each particle at its own arrival time
-- CPU/GPU parallelized tracking and analysis over differing accelerator parameters (batch parameter evaluation)
-- Arbitrarily-interdependent accelerator parameters with lazily-evaluated deferred expressions
-- CPU/GPU parallelized dynamic aperture scans
-- Arbitrary placements and orientations of accelerator elements
-- CPU/GPU parallelized intrabeam scattering (IBS)
-- CPU/GPU parallelized Numerical Analysis of Fundamental Frequencies (NAFF)
-- CPU/GPU parallelized Newton root finder
-- CPU/GPU parallelized Levenberg-Marquardt
-- CPU/GPU parallelized and differentiable symplectic tracking through arbitrary electromagnetic fields (implicit integration)
-- Choice of tracking method per element: drift-kick, matrix-kick, bend-kick, and solenoid-kick symplectic integrators of order 2 to 10, exact maps, Runge-Kutta, and implicit symplectic integration
-- Twiss functions at every integration step (inside elements)
-- Resonance driving terms/detune coefficients (including parameter dependence) included in Twiss
-- Context-switching for evaluation of deferred expressions for accelerator parameters
-- Open lattice Twiss functions given initial normalizing transformation
-- Lower precision (32-bit) tracking on the CPU and GPU (including Apple Metal), including with time-dependent and batch parameters
-- Tracking of any particle species through a lattice designed for another (e.g. muons in an electron ring)
-- Splitting elements into slices, so that collective effects can be applied several times inside an element
+### Current Release 0.8
+
+**Tracking (all CPU/GPU parallelized)**
+- 6D symplectic particle tracking with spin and radiation
+- A choice of tracking method for each element: drift-kick, matrix-kick, bend-kick,
+  solenoid-kick, and implicit symplectic integrators (arbitrary electromagnetic fields) of order 2 to 10 (tested against PTC), exact maps, and Runge-Kutta
 - Exact electric dipole tracking
-- Bmad-style element searches by name, with wild cards, ranges, and regular expressions
+- Intrabeam scattering (IBS), with elements split into slices to apply it several times inside an
+  element
+- Tracking of any particle species including through lattices designed for other species (e.g. muons in an electron ring)
+- Arbitrary time-dependent parameters (e.g. magnet strengths, reference energy, even misalignments), seen by each particle at its own arrival time
+- Parallelizable over both particles _and lattices_ by setting lattice parameters to be a vector of many values with `BatchParam`
+- Particle coordinates saved at any element or anywhere inside elements, and tracking that starts
+  at any element
+- Dynamic aperture scans and frequency map analysis (NAFF)
 
-### Features in Future Releases
-- Easy optimization interface
-- Generalized gradient field description
+**Optics and nonlinear analysis**
+- Linear and nonlinear optics (Lie series normal form methods), including spin and radiation
+- High order Taylor maps using the Generalised Truncated Power Series Algebra (GTPSA) library
+- Optics anywhere: at every integration step inside elements, for a part of a beamline,
+  and for open lattices given the initial optics
+- Resonance driving terms and amplitude-dependent tunes
+- All of these as Taylor series in any lattice parameter (parametric normal form)
+- Truncation orders chosen automatically from the quantities asked, for a fastest calculation
+
+**Matching and derivatives**
+- Matching of any quantity computed by `twiss` (e.g. tunes, chromaticities, beta functions, Montague functions,
+  resonance driving terms, the invariant spin field, amplitude-dependent tunes) at any location, by varying any lattice
+  parameter, with exact derivatives computed by automatic differentiation
+- Values and exact derivatives of any of these quantities, to use with any other optimizer
+  (see `SciBmad.value_and_jacobian`)
+- Everything differentiable (forwards/backwards/Taylor mode) with respect to anything,
+  even element lengths
+
+**Lattices**
+- Interdependent parameters through lazily-evaluated deferred expressions, with switchable
+  contexts in which values can be tried and restored
+- Arbitrary placements and orientations of elements
+- Bmad-style element searches by name, with wild cards, ranges and regular expressions
+
+**Performance**
+- Parallel on CPUs and GPUs (NVIDIA, AMD, Intel and Apple): tracking, closed orbits, dynamic
+  aperture, IBS, NAFF, and Newton and Levenberg-Marquardt solvers
+- CPU/GPU parallelized over both particles _and lattices_ via `BatchParam`
+- Also supports 32-bit precision on CPUs and GPUs (including Apple Metal), including with time-dependent and batch parameters
+
+**Ease of use**
+- One way to read results: Twiss columns, tracking results and matching targets are all read at
+  an element, a name, a position inside an element, or a turn
+- Results plot directly with the Makie and Plots packages in Julia
+- Usable from Python through [juliacall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/)
+
+### Currently in Development
 - Wakefields
-- Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strong-strong beam beam)
+- Generalized gradient field description
 - Weak-strong symplectic beam-beam interaction
+- Forking/connecting lattice branches together
+- Space charge
+- Coherent synchrotron radiation
+
+### Planned for Future Releases
+- Backwards tracking
+- Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strong-strong beam beam)
 - PyTorch bindings
 - Exact multipoles in curved coordinate systems
 - Electric multipoles
-- Space charge
-- Coherent synchrotron radiation
 - Superposition of elements
-- Fork elements and connecting lattice branches together
 - [Other projects](https://github.com/bmad-sim/SciBmad.jl/issues/54)
 
 ## SciBmad Family
@@ -66,8 +95,9 @@ SciBmad consists of a set of modular packages:
 - **[`BeamTracking`](https://github.com/bmad-sim/BeamTracking.jl):** Universally polymorphic, differentiable, portable, and parallelized integrators for simulating charged particle beams on the CPU and various GPUs including NVIDIA CUDA, Apple Metal, Intel oneAPI, and AMD ROCm
 - **[`GTPSA`](https://github.com/bmad-sim/GTPSA.jl):** Fast high-order (Taylor mode) automatic differentiation using the Generalised Truncated Power Series Algebra (GTPSA) library
 - **[`Beamlines`](https://github.com/bmad-sim/Beamlines.jl):** Defines accelerator lattices in a fast, flexible, fully-polymorphic, and differentiable way, providing both eagerly- and lazily-evaluated deferred expressions for interdependent parameters
-- **[`NonlinearNormalForm`](https://github.com/bmad-sim/NonlinearNormalForm.jl):** Map-based perturbation theory of differential-algebraic maps, which may include spin and large damping, using Lie algebraic methods
+- **[`NonlinearNormalForm`](https://github.com/bmad-sim/NonlinearNormalForm.jl):** Map-based perturbation theory of differential-algebraic maps, which may include spin and large damping, using Lie methods
 - **[`FundamentalFrequencies`](https://github.com/bmad-sim/FundamentalFrequencies.jl):** GPU-batchable Numerical Analysis of Fundamental Frequencies (NAFF)
+- **[`BatchSolve`](https://github.com/mattsignorelli/BatchSolve.jl):** Batched root finding and least squares (Newton, Levenberg-Marquardt) for many problems at once on the CPU and GPU
 - **[`AtomicAndPhysicalConstants`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl):** Library providing physical constants and properties for any atomic or subatomic particle for use in simulations
 
 ## Paper and Citation

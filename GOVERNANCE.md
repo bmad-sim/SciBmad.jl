@@ -20,7 +20,7 @@ The SC can change the governance structure, but only in a unanimous vote.
 
 ### Decision Process
 
-Decision of the SC usually happen in the weekly SC meeting (initially Tuesdays at 4pm EST).
+Decisions of the SC usually happen in the weekly SC meeting (initially Tuesdays at 4pm EST).
 The weekly SC meeting is by invitation only, individual SC members can invite to the SC meeting.
 Decisions are made in a non-confidential manner, by majority on the cast votes of SC members.
 In tie situations, decisions will be postponed until an acceptable solution is found.

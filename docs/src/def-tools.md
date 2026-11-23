@@ -22,10 +22,7 @@ ENV["LINES"] = 30
 
 ## Phase Trombone
 
-A phase trombone is an element that changes the phase advances, and so the tunes, of a ring
-without changing the Twiss parameters anywhere else. This is useful e.g. for scanning the
-tunes in a study without having to rematch the optics. `phase_trombone!` turns any element in
-a `Beamline` into a phase trombone. For example, using a `Marker` at the end of a FODO cell:
+A phase trombone is an element that changes the phase advances without changing the Twiss parameters anywhere. This can be useful for dynamic aperture optimizations where the phase advance between arcs can have a significant impact on the nonlinear correction scheme. `phase_trombone!` turns any element in a `Beamline` into a phase trombone. For example, using a `Marker` at the end of a FODO cell:
 
 ```{code-cell} julia
 @elements begin
@@ -45,7 +42,7 @@ tw = twiss(fodo)
 println("Before: q1 = ", tw.q1, ", q2 = ", tw.q2)
 
 # Add 0.1 to the horizontal-like tune and subtract 0.05 from the vertical-like one:
-phase_trombone!(fodo[tr][1]; phi1=0.1, phi2=-0.05)
+phase_trombone!(fodo[tr]; phi1=0.1, phi2=-0.05)
 
 tw = twiss(fodo)
 println("After:  q1 = ", tw.q1, ", q2 = ", tw.q2)
@@ -53,20 +50,32 @@ println("After:  q1 = ", tw.q1, ", q2 = ", tw.q2)
 
 `phi1`, `phi2`, and `phi3` are stored as the first three entries of the element's
 `transport_map_params`, so they can be changed at any time without calling
-`phase_trombone!` again. `transport_map_params` is a tuple, which cannot be changed in place,
-so set a new one with `Base.setindex`:
+`phase_trombone!` again. `transport_map_params` is a tuple, which cannot be changed in place, so it's best to let them be deferred expressions stored in the beamline context:
 
 ```{code-cell} julia
-t = fodo[tr][1]
-# Now add 0.2 to the horizontal-like tune instead (the vertical-like stays -0.05):
-t.transport_map_params = Base.setindex(t.transport_map_params, 0.2, 1)
+# Remove the current phase trombone map by setting MapParams = nothing:
+fodo[tr].MapParams = nothing
 
 tw = twiss(fodo)
-println("Now:    q1 = ", tw.q1, ", q2 = ", tw.q2)
+println("Before: q1 = ", tw.q1, ", q2 = ", tw.q2)
+
+# Add variables to the context:
+fodo.context.tr_phi1 = 0.1
+fodo.context.tr_phi2 = -0.05
+
+# Set the phase trombone angles to be deferred expressions
+phase_trombone!(fodo[tr]; phi1=DefExpr(c -> c.tr_phi1), phi2=DefExpr(c -> c.tr_phi2))
+
+tw = twiss(fodo)
+println("After: q1 = ", tw.q1, ", q2 = ", tw.q2)
+
+# Change the context variables to adjust the phases
+fodo.context.tr_phi1 = 0.2
+tw = twiss(fodo)
+println("After again: q1 = ", tw.q1, ", q2 = ", tw.q2)
 ```
 
-The phase trombone is built from the closed orbit and the Twiss parameters at the element at
-the time `phase_trombone!` is called. If you change the lattice afterwards, call it again.
+The phase trombone is built from the closed orbit and the linear optics at the element at the time `phase_trombone!` is called. As such, if you plan to change the closed orbit and/or linear optics afterwards, first remove the phase trombone before doing anything, and then call `phase_trombone!` again when the orbit and linear optics are not changing anymore.
 
 ```{docstring} phase_trombone!
 ```

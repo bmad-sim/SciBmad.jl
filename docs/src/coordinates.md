@@ -5,15 +5,19 @@
 (s:phase.space)=
 ## Phase Space Coordinate System
 
-In construction...
+The phase space coordinates of a particle are the six coordinates `x`, `px`, `y`, `py`, `z`,
+`pz` of Bmad, with the position `s` along the reference curve as the independent variable. They
+are defined in [Track](#track1). The positions `x` and `y` are measured in the coordinate systems
+described below: the branch coordinates, or the element body coordinates inside a misaligned
+element.
 
 %---------------------------------------------------------------------------------------------------
 (s:nomen)=
 ## Nomenclature
 
-A `bend` element is any element that has a non-zero reference bend strength `g_ref`. 
-A `patch` element is any element that has a non-zero `PatchParams` parameters.
-No element is allowed to be both a bend and a patch element at the same time.
+A `bend` element is any element that has a non-zero reference bend strength `g_ref`.
+A `patch` element is any element that has non-zero `PatchParams` parameters.
+An element cannot be both a bend and a patch: no tracking method accepts such an element.
 
 %---------------------------------------------------------------------------------------------------
 (s:coords)=
@@ -32,8 +36,8 @@ alignment shifts (not "misaligned"), is the same as the branch coordinates.
 
 %---------------------------------------------------------------------------------------------------
 
-SciBmad uses two coordinate systems to describe a machine as illustrated in the figure above. 
-For each lattice branch, a `branch` coordinate system is used. This curvilinear coordinate
+SciBmad uses two coordinate systems to describe a machine as illustrated in the figure above.
+For each beamline (a branch of a lattice), a `branch` coordinate system is used. This curvilinear coordinate
 system defines the nominal position of the lattice elements.
 
 The `branch reference curve` is the {math}`x = y = 0` curve of the curvilinear coordinate system. 
@@ -55,7 +59,7 @@ If an element has no
 alignment shifts, the `body` coordinates of the element are aligned with the 
 `branch` coordinates.
 The transformation between `branch` and `body` coordinates is given in
-[xxx](#s:lab.body.transform).
+[Transformation Between Branch and Element Body Coordinates](#s:lab.body.transform).
 
 %---------------------------------------------------------------------------------------------------
 (s:ent.exi)=
@@ -90,13 +94,14 @@ segment with the {math}`x` and {math}`y` axes always pointing in the same direct
 For an element with [BendParams](#bend:params) parameters, 
 the reference curve is a segment of a circular arc as shown in
 {numref}`f:ele.coord.frame`B. With the `tilt_ref` parameter set to zero, the rotation axis
-between the entrance and exit frames is parallel to the {math}`y`-axis ([xxx](#s:floor)).
+between the entrance and exit frames is parallel to the {math}`y`-axis (see
+[Lattice Element Positioning](#s:ele.pos)).
 For [Patch](#patch:params)
 elements ({numref}`f:ele.coord.frame`C), the exit face can be
 arbitrarily oriented with respect to the entrance end.
 For elements with a `PatchParams` group, the interior reference curve 
-is dependent upon the patch parameter settings ([xxx](#patch:params)) and, in general,
-will have a discontinuity.
+is dependent upon the patch parameter settings (see [PatchParams](#patch:params)) and, in
+general, will have a discontinuity.
 
 %---------------------------------------------------------------------------------------------------
 (s:ref.construct)=
@@ -199,8 +204,8 @@ axis {math}`\bf u` (normalized to 1) and angle of rotation {math}`\beta`
 (s:ele.pos)=
 ## Lattice Element Positioning
 
-The lattice standard, again following MAD, computes {math}`\bf V` and {math}`\bf W` 
-by starting at the first element of the lattice and iteratively using the equations
+Again following MAD, {math}`\bf V` and {math}`\bf W` follow from those at the start of the
+beamline by iteratively using the equations
 ```{math}
 :label: wws
 \begin{align}
@@ -439,8 +444,8 @@ This is a rotation around the center of curvature of the bend and is given by
 Eq. [](#ustt) and Eq. [](#lrztt) with the substitution {math}`\alpha_b = (s - L/2)/\rho`
 and {math}`\theta_{tr} = 0`.
 
-Notice that with this definition of how elements are misaligned, the position of the center of a
-misaligned element depends only on the offsets and is independent of the rotations.
+Notice that with this definition of how elements are misaligned, the position of the center of
+the chord of a misaligned bend depends only on the offsets and is independent of the rotations.
 
 
 

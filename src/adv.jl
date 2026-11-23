@@ -1,10 +1,44 @@
+"""
+    AmplitudeDependentValue
+
+A value for the whole ring (e.g. a tune) as a Taylor series in δ (or the longitudinal action J₃
+with synchrotron motion) and the actions J₁, J₂, and in GTPSA parameters if there are any.
+
+- `q[delta=2]`, `q[J1=2, J2=1]`: a derivative, here ∂²q/∂δ² and ∂³q/∂J₁²∂J₂ (`q[delta=1]` is the
+  chromaticity)
+- `getterm(q; delta=2)`: the coefficient of that term of the Taylor series, i.e. the derivative
+  divided by the factorials (∂²q/∂δ²/2), as the series is printed
+
+With `as_taylor_series=true` the result is a Taylor series in the GTPSA parameters.
+"""
 struct AmplitudeDependentValue
   taylor_series::TPS64{GTPSA.Dynamic}
   coast::Bool
+  # Degree in the phase space variables of the map terms that give the value without amplitudes:
+  # 1 for the orbital tunes and the slip (from the linear part of the map), 0 for the spin tune
+  degree0::Int
 end
+AmplitudeDependentValue(taylor_series, coast) = AmplitudeDependentValue(taylor_series, coast, 1)
 
-Base.getindex(a::AmplitudeDependentValue; delta::Integer=0, J1::Integer=0, J2::Integer=0, J3::Integer=0, as_taylor_series::Bool=false) = _adv_get(a, delta, J1, J2, J3, Val{as_taylor_series}())
+Base.getindex(a::AmplitudeDependentValue; delta::Integer=0, J1::Integer=0, J2::Integer=0,
+              J3::Integer=0, as_taylor_series::Bool=false) =
+  factorial(delta)*factorial(J1)*factorial(J2)*factorial(J3) *
+  _adv_get(a, delta, J1, J2, J3, Val{as_taylor_series}())
+
+"""
+    getterm(q::AmplitudeDependentValue; delta=0, J1=0, J2=0, J3=0, as_taylor_series=false)
+
+The coefficient of the term δ^delta J₁^J1 J₂^J2 J₃^J3 of the Taylor series `q` (as it is printed).
+`q[delta=..., J1=...]` is the derivative instead (the coefficient times the factorials).
+"""
 getterm(a::AmplitudeDependentValue; delta::Integer=0, J1::Integer=0, J2::Integer=0, J3::Integer=0, as_taylor_series::Bool=false) = _adv_get(a, delta, J1, J2, J3, Val{as_taylor_series}())
+# A value computed at the truncation order 1 is a number: its only term is the constant
+function getterm(x::Real; delta::Integer=0, J1::Integer=0, J2::Integer=0, J3::Integer=0,
+                 as_taylor_series::Bool=false)
+  delta == J1 == J2 == J3 == 0 && return x
+  error("This value is a number, computed at the truncation order 1: its terms in δ and in the ",
+        "amplitudes need `chrom` (δ) or `order` (the amplitudes) of at least 2")
+end
 function _adv_get(a, delta, J1, J2, J3, ::Val{as_taylor_series}) where {as_taylor_series}
   if a.coast && J3 != 0
     error("`J3` is NOT an amplitude in this value (beam is coasting), use `delta` instead")
@@ -27,6 +61,20 @@ function _adv_get(a, delta, J1, J2, J3, ::Val{as_taylor_series}) where {as_taylo
 
   if !GTPSA.mad_desc_isvalidm(GTPSA.getdesc(tps).desc, Cint(nn), mono)
     error("Unable to get term (delta=$delta, J1=$J1, J2=$J2, J3=$J3): GTPSA truncation order(s) must be higher")
+  end
+  # The term comes from terms of the map of degree n = degree0 + delta + 2(J1 + J2 + J3) (the
+  # tunes are cut below the maximum order): a term in δ alone needs the maximum order n and δ to
+  # the power delta, a term in the amplitudes all phase space variables to order n (with lower
+  # orders of some variables it is inexact). With lower truncation orders it would be zero or
+  # wrong, silently
+  desc = unsafe_load(GTPSA.getdesc(tps).desc)
+  no = unsafe_wrap(Vector{UInt8}, desc.no, 6)
+  n = a.degree0 + delta + 2*(J1 + J2 + J3)
+  if desc.mo < n || (a.coast && no[6] < delta) ||
+     (J1 + J2 + J3 > 0 && minimum(view(no, 1:(a.coast ? 4 : 6))) < n)
+    error("The term (delta=$delta, J1=$J1, J2=$J2, J3=$J3) is not resolved by the truncation: ",
+          J1 + J2 + J3 == 0 ? "it needs `chrom` (or `order`) of at least $n" :
+                              "it needs `order` of at least $n")
   end
 
   if !as_taylor_series

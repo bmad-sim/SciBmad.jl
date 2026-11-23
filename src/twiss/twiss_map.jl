@@ -67,6 +67,18 @@ const _TWISS_FCN_MAP = Dict{String,Function}(
   "dampdec3" => _dampdec3,
 )
 
+# r11 ... r66: the transfer matrix from the start of the table; m11 ... m66: the one-turn matrix
+for i in 1:6, k in 1:6
+  f = Symbol("_r", i, k)
+  @eval @inline $f(j, twi, cache, ::Val{as_tps}) where {as_tps} =
+    _rik(j, twi, cache, Val{as_tps}(), $i, $k)
+  _TWISS_FCN_MAP["r$i$k"] = @eval $f
+  g = Symbol("_m", i, k)
+  @eval @inline $g(j, twi, cache, ::Val{as_tps}) where {as_tps} =
+    _mik(j, twi, cache, Val{as_tps}(), $i, $k)
+  _TWISS_FCN_MAP["m$i$k"] = @eval $g
+end
+
 const _INVERTED_TWISS_FCN_MAP = Dict(value => key for (key, value) in _TWISS_FCN_MAP)
 
 const _TWISS_COLUNIT_MAP = Dict{String,String}(
@@ -136,6 +148,11 @@ const _TWISS_COLUNIT_MAP = Dict{String,String}(
   "dampdec2" => ""   ,
   "dampdec3" => ""   ,
 )
+# (z = (x, px, y, py, z, pz): the odd ones in m, the even ones dimensionless)
+for i in 1:6, k in 1:6
+  _TWISS_COLUNIT_MAP["r$i$k"] = isodd(i) == isodd(k) ? "[1]" : isodd(i) ? "[m]" : "[1/m]"
+  _TWISS_COLUNIT_MAP["m$i$k"] = _TWISS_COLUNIT_MAP["r$i$k"]
+end
 
 @inline function _chrom_derivative(cfcn, order, j, twi, cache, ::Val{as_tps}) where {as_tps}
   x = cfcn(j, twi, cache, Val{true}()) # as_tps=true !!!!!

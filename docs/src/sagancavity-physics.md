@@ -9,7 +9,7 @@ has both longitudinal energy gain and transverse focusing effects.
 DC solenoid and multipole fields can be superimposed on the RF fields.
 For a listing of parameters used in the tracking, see the 
 [SaganCavity Tracking Method](#sagancavity.tracking) and 
-[RF parameter group](#rf:params) documentation .
+[RF parameter group](#rf:params) documentation.
 
 ## Justification
 
@@ -23,7 +23,7 @@ linacs.
 The model used for SaganCavity tracking is kick-drift-kick. 
 Rosenzweig--Serafini (R&S) {cite}`Rosenzweig:RF` edge focusing is
 included via a symplectic fringe Hamiltonian along with a
-pondermotive focusing term that is applied for standing-wave cavities.
+ponderomotive focusing term that is applied for standing-wave cavities.
 
 %---------------------------------------------------------------------------------------------------
 (sc:kdk)=
@@ -47,7 +47,7 @@ To simplify the algorithm,
 both the energy kicks at the cell ends and the edge kicks at the ends of the active region are
 applied by first converting from the standard $(z, p_z)$ **momentum** particle coordinates
 to $(t, p_E)$ **energy** coordinates where $t$ is the time and $p_E = E/P_0 c$ with E being 
-the energy, and $P_0$ beging the reference momentum. 
+the energy, and $P_0$ being the reference momentum. 
 After any kicks have been applied, a conversion back to momentum coordinates is done.
 
 %---------------------------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ with $V$ being the voltage.
 In the above equation, [$\phi_{RF}$](#sc:phase)
 is the RF phase and the plus sign applies at the entrance end of the active region
 and the minus sign at the exit end. 
-If `L_active` is zero (giving infinite gradient), the edge focusting is not applied.
+If `L_active` is zero (giving infinite gradient), the edge focusing is not applied.
 
 Applying Hamilton's equations in energy-time phase space coordinates
 yields the fringe kicks
@@ -143,7 +143,7 @@ significantly from the speed of light.
 
 %---------------------------------------------------------------------------------------------------
 (sc:ponder)=
-## Standing-Wave Pondermotive Focusing
+## Standing-Wave Ponderomotive Focusing
 
 For a *traveling-wave* cavity, there is a forward-propagating wave
 and this wave provides both acceleration and the edge kick of Section {ref}`sc:edge`.
@@ -151,20 +151,20 @@ A *standing-wave* cavity is modeled as the superposition of a
 forward-propagating and a backward-propagating wave of equal amplitude.
 The backward wave does not contribute to the net acceleration (its kick averages to zero
 for a particle traversing many cells), but the backwards wave
-produces a transverse focusing force called the pondermotive force.
+produces a transverse focusing force called the ponderomotive force.
 
 Because the phase of the backward wave as seen by a forward-traveling
-particle varies rapidly, the pondermotive kick is treated using a first-order approximation
-which give a time-averaged force.
+particle varies rapidly, the ponderomotive kick is treated using a first-order approximation
+which gives a time-averaged force.
 The appropriate Hamiltonian corresponding to R&S Eq. (4) with $\eta(\phi) = 1$ (no harmonics) is:
 ```{math}
 :label: eq:Hp
 H_p = \frac{\kappa_n \, L_\text{active} \, q^2 G^2}{16 N_c P_0^2 c^2 (1 + p_z)}
       (x^2 + y^2),
 ```
-The pondermotive kick is applied at each kick point. 
+The ponderomotive kick is applied at each kick point. 
 Like the edge focusing, if `L_active` is zero which would
-give an infinite $G$, the pondermotive kick is not applied.
+give an infinite $G$, the ponderomotive kick is not applied.
 
 The resulting phase-space kicks are
 ```{math}

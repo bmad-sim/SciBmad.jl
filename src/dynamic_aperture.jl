@@ -1,22 +1,43 @@
+# True if the lattice has BatchParams (in its kernel chains, as tracking with coordinates of type T
+# sees them: strengths, lengths, the reference energy, also through deferred expressions)
+function _has_batches(bl, T)
+  p = bl.p_over_q_ref
+  p = p isa TimeDependentParam ? p(0) : p
+  (p isa BatchParam || any(e -> e.L isa BatchParam, bl.line)) && return true
+  b = Bunch(zeros(T, 1, 6); p_over_q_ref=p, species=bl.species_ref, t_ref=zero(T))
+  for pc in BTBL.prepare(b, bl; notify=false)
+    kc = pc.kc
+    r = kc.ref
+    BeamTracking.static_batchcheck((r.L, r.ds_step, r.beta_gamma_enter, r.beta_gamma_exit)) &&
+      return true
+    any(c -> BeamTracking.static_batchcheck(c.args), kc.chain) && return true
+  end
+  return false
+end
+
 """
     dynamic_aperture(ring::Beamline; kwargs...) -> NTuple{2,Matrix{Float64}}
 
 Computes the acceptance of the ring by pushing a polar grid in `x/sig_x` and `y/sig_y` 
-space, for each of the provided `deltas`. Returns a tuple of two matrices defining the 
-first particle loss along the radius for a given angle on the polar grid, where the 
-first index corresponds to the line position in `x/sig_x` or `y/sig_y` space, and the 
-second index corresponds to that in `deltas`.
+space, for each of the provided `deltas`. The beam sizes `sig_x` and `sig_y` are those at the
+beginning of the beamline for the given emittances. Returns a tuple of two matrices `x_norm_da`,
+`y_norm_da`: `x_norm_da[j, i]`, `y_norm_da[j, i]` is the starting position, in units of
+`sig_x` and `sig_y`, of the first particle lost along the `j`-th angle of the grid for
+`deltas[i]`; `Inf` if no particle along that angle is lost, and the column `i` is zero if the
+particle on the closed orbit itself is lost. `BatchParam`s in the lattice are not supported (an
+error: each particle of the grid would see another entry).
 
 ## Required Keyword arguments
-- `n_r::Int`: Number of radial points to sample per angle on the polar grid
-- `n_theta::Int`: Number of angles to sample on the polar grid
+- `n_r::Int`: Number of radial points of the polar grid, from 0 to the maximum: each angle has
+    `n_r - 1` particles, and the closed orbit one for each δ
+- `n_theta::Int`: Number of angles to sample on the polar grid (see `theta_lims`)
 - `deltas::AbstractArray`: Array of each δ to compute the transverse acceptance
 - `max_sig_x::Real`: Maximum sigma-x of the polar grid, in units of sigma (e.g. 
     `max_sig_x=20` to check up to 20 sigma)
 - `max_sig_y::Real`: Maximum sigma-y of the polar grid, in units of sigma (e.g. 
     `max_sig_y=20` to check up to 20 sigma)
-- `emit_1::Real`: Horizontal-like emittance to assume
-- `emit_2::Real`: Vertical-like emittance to assume
+- `emit_1::Real`: Horizontal-like emittance to assume [m]
+- `emit_2::Real`: Vertical-like emittance to assume [m]
 - `n_turns::Int`: Number of turns to track
 
 ## Optional Keyword Arguments
@@ -28,15 +49,16 @@ second index corresponds to that in `deltas`.
     computed acceptance line will be centered around that δ-dependent closed orbit 
     (computed with `rf_on=false`). Else, all acceptance lines are centered around the 
     6D closed orbit. Default is `true` if coasting beam is detected, `false` if 
-    longitudinal motion is detected.
+    longitudinal motion is detected. The tracking itself includes RF cavities in either case,
+    unless `rf_on=false` is given too.
 - `theta_lims`: A tuple specifying the range of thetas to scan on the polar grid. Default 
-    is `(0, pi)`
+    is `(0, pi)`, the upper half plane (`y >= 0`)
 - `sig_pz::Real`: sigma-δ of the beam to assume, default is 0
-- `emit_3::Real`: Longitudinal-like emittance to assume
+- `emit_3::Real`: Longitudinal-like emittance to assume [m]
 - `output_file`: If provided, then a file containing the initial particle coordinates (w.r.t. 
     the closed orbit(s)) as rows, with the last column specifying the particle state at the 
     end of tracking, will be written to the file. Default is `nothing`.
-- `track_kwargs...`: Any of the settings in `TrackingConfig` except for `n_turns` and 
+- `track_kwargs...`: Any of the settings in `TrackConfig` except for `n_turns` and 
     `save_every_n_turns` may be provided to configure the tracking.
 """
 function dynamic_aperture(
@@ -60,9 +82,14 @@ function dynamic_aperture(
     delta_dependent_orbits::Bool=coast_check(bl),
     output_file=nothing,
     theta_lims=(0, pi),
-    track_kwargs... # Get passed to track!
+    track_kwargs... # Get passed to track
   )
   Base.require_one_based_indexing(deltas)
+  # The grid is one particle per point: with BatchParams in the lattice each particle would see
+  # another entry of them (a batched dynamic aperture will be a separate function)
+  !_has_batches(bl, coordinates_number_type) ||
+    error("dynamic_aperture does not support BatchParams in the lattice")
+  verbose = get(track_kwargs, :verbose, true)
   if delta_dependent_orbits && emit_3 != 0
     error("delta_dependent_orbits = true, but a nonzero emit_3 was provided. Instead specify sig_pz")
   elseif !delta_dependent_orbits && sig_pz != 0
@@ -122,7 +149,7 @@ function dynamic_aperture(
   rs = range(0, 1, length=n_r)[2:end]
 
   n_particles = n_deltas*(1+length(rs)*length(thetas))
-  println("Initializing dynamic_aperture with $n_particles particles")
+  verbose && println("Initializing dynamic_aperture with $n_particles particles")
   v0 = zeros(n_particles, 6)
   v = zeros(n_particles, 6)
   idx_particle = 1
@@ -146,26 +173,17 @@ function dynamic_aperture(
   end
 
   if !(backend isa KA.CPU)
-    println("Initializing bunch on GPU")
+    verbose && println("Initializing bunch on GPU")
     vt = KA.zeros(backend, coordinates_number_type, size(v))
     copy!(vt, v)
   else
-    vt = v
+    vt = coordinates_number_type == eltype(v) ? v : coordinates_number_type.(v)
   end
 
   b0 = Bunch(vt; p_over_q_ref=bl.p_over_q_ref, species=bl.species_ref)
-  # The kernel chains of the elements are built once for all turns; the other settings are passed
-  # to each launch
-  prep_keys = (:rf_on, :ramp_particle_energy_without_rf, :ramp_update_each_particle, :batch_start)
-  prep_kwargs = NamedTuple(k => v for (k, v) in pairs(track_kwargs) if k in prep_keys)
-  launch_kwargs = NamedTuple(k => v for (k, v) in pairs(track_kwargs) if !(k in prep_keys))
-  chains = BTBL.prepare(b0, bl; scalar_params=true, prep_kwargs...)
-  for i in 1:n_turns
-    track!(b0, chains; launch_kwargs...)
-    print("\rFinished turn $i out of $n_turns")
-    flush(stdout) 
-  end
-  println("\nTracking complete")
+  # Only the particles at the end are needed (no locations saved)
+  track(bl; bunch=b0, n_turns, at=[], merge((; scalar_params=true, verbose=true), track_kwargs)...)
+  verbose && println("Tracking complete")
 
   if !(backend isa KA.CPU)
     copy!(v, vt)
@@ -192,7 +210,8 @@ function dynamic_aperture(
       y = v0[idx_particle:idx_particle+length(rs)-1,3]./(max_sig_y.*sig_y)
       for (xi, yi) in zip(x,y)
             
-        if !(atan(yi,xi) ≈ thetas[j])
+        # (the angle modulo 2π: atan gives it in (-π, π], theta_lims may be outside)
+        if !isapprox(rem2pi(atan(yi, xi) - thetas[j], RoundNearest), 0; atol=sqrt(eps()))
           writedlm("error.dlm", hcat(v, state))
           println()
           error("Something went wrong with the analysis. Submit an issue including output files.")

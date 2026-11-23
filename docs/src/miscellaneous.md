@@ -1,22 +1,22 @@
 # Miscellaneous
 
-## Reference time for an element that has a finite misalignment. 
+## Reference Time in Misaligned Elements
 
-By convention, when a particle's position is expressed in element body coordinates,
-the reference time at any point in an element is independent of the element alignment. 
-This convention simplifies the conversion between phase space `z` and the absolute time since
-the conversion is independent of the alignment and only dependent upon where the particle is
-with respect to the element being tracked through.
+By convention, the reference time at a point in an element does not depend on the element's
+alignment. It is the same whether the particle's position is expressed in branch coordinates or
+in element body coordinates (see [Coordinates](#c:coords)). The conversion between the phase
+space coordinate `z` and the absolute time then depends only on where the particle is in the
+element, and not on how the element is aligned.
 
 ### Alignment transformation and reference time
 
-The reference time convention discussed above has the following consequence: 
-In the transformation from a particle at the 
-nominal (no alignment) element edge, with the particle's position expressed in branch coordinates,
-to the particle at the the actual element edge with the particle's position expressed in
-body coordinates, the particle must be "drifted" from the starting position to the actual element face.
-However, the reference time at the starting position, with branch coordinates, is the
-same as the ending position with body coordinates. Thus the drifting transformation
-of phase space `z` is different than the standard `z` transformation for an element that is a drift. 
-A similar situation happens when the particle exits the element and there is a transformation
-from body coordinate to branch coordinates along with a "drift" to the nominal downstream edge.
+This convention has a consequence for the transformation at the ends of a misaligned element.
+At the entrance, the particle starts at the nominal element edge (without alignment shifts), with
+its position in branch coordinates. It is transformed to body coordinates, and then "drifted" to
+the actual element face. The reference time at the start of this drift, in branch coordinates, is
+the same as at its end, in body coordinates. So no reference time passes during the drift, and
+`z` changes by the particle's whole path length, not, as in a drift element, by the difference
+from the reference particle.
+
+The same happens at the exit: the particle is transformed from body coordinates to branch
+coordinates and "drifted" to the nominal downstream edge.
