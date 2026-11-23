@@ -1,4 +1,5 @@
 using SciBmad
+using SciBmad: value_and_jacobian # (not exported: DifferentiationInterface exports one too)
 using GTPSA
 using DelimitedFiles
 using Test
@@ -358,6 +359,8 @@ using Test
     @test_throws ErrorException plain.q[]
     @test_throws ErrorException plain.t_ref[]
     one = track(bl; v0, n_turns=2, at=[qd]) # the only saved location need not be given
+    @test sprint(show, track(bl; v0, start=qd)) ==
+          "TrackResult(2 particles, 1 location, 2 saved turns, start = 3)"
     @test one.x[turn=1] == one.x[qd, turn=1] == one.data.v[:, 1, 1, 2]
     @test_throws ErrorException track(bl; v0, at=[]).x[]
     # Spins: a column read as res.q, from the array of track_spin of the saved quaternions
@@ -772,7 +775,8 @@ using Test
     v, J = value_and_jacobian(e, [kc])
     @test v[2] == ring[1].Bn1
     @test close_to(J, fdjac(e, [kc]))
-    @test_throws ErrorException value_and_jacobian(tw.q1, [@knob(qf.Kn1)]) # a deferred expression
+      # (qf itself is in no Beamline: its expression is evaluated in DEFAULT_CONTEXT, without k1)
+    @test_throws ErrorException value_and_jacobian(tw.q1, [@knob(qf.Kn1)])
     @test_throws ErrorException value_and_jacobian(tw.q1, [kc, Knob(ring.context, :k1)]) # twice
     @test ring.context.k1 === 0.36
     qf.Kn1 = 0.36
@@ -1729,5 +1733,67 @@ using Test
     @test isapprox(co.v0[1,4], 2.649765658093324e-4;  rtol=1e-3, atol=1e-9)
     @test isapprox(co.v0[1,5], 0.0; atol=1e-12)
     @test isapprox(co.v0[1,6], 0.0; atol=1e-12)
+  end
+
+  @testset "Closed orbit with batched lengths and energies" begin
+    # Each entry of a batched length or reference energy gives the closed orbit of the lattice with
+    # that value (the kick is unnormalized, so its angle depends on the energy), coasting and 6D
+    cav = RFCavity(L=1e-2, voltage=1e7, rf_frequency=1e9, zero_phase=PhaseRef.AboveTransition)
+    line(Ld, E; rf=false) = Beamline([Quadrupole(Kn1=0.36, L=0.5), Drift(L=Ld),
+        Quadrupole(Kn1=-0.36, L=0.5), SBend(L=1.2, angle=pi/132), HKicker(Bn0L=-1e-3),
+        (rf ? [cav] : [])...]; species_ref=Species("electron"), E_ref=E)
+    for rf in (false, true)
+      rb = find_closed_orbit(line(BatchParam([1.2, 1.3]), 18e9; rf); v0=zeros(2, 6))
+      eb = find_closed_orbit(line(1.2, BatchParam([18e9, 10e9]); rf); v0=zeros(2, 6))
+      @test rb.coasting_beam == eb.coasting_beam == !rf
+      for (k, (Ld, E)) in enumerate(((1.2, 18e9), (1.3, 18e9)))
+        @test rb.v0[k, :] ≈ find_closed_orbit(line(Ld, E; rf)).v0[1, :] rtol=1e-12 atol=1e-18
+      end
+      for (k, (Ld, E)) in enumerate(((1.2, 18e9), (1.2, 10e9)))
+        @test eb.v0[k, :] ≈ find_closed_orbit(line(Ld, E; rf)).v0[1, :] rtol=1e-12 atol=1e-18
+      end
+      @test !(eb.v0[1, 1] ≈ eb.v0[2, 1]) # (control: the energies give different orbits)
+    end
+  end
+
+  @testset "dynamic_aperture" begin
+    # Along each angle of the polar grid the boundary is the first particle lost, in units of the
+    # beam sizes at the beginning of the beamline (Inf if none is lost): checked against tracking the
+    # same grid points with track. The whole circle of angles, Float32 coordinates on the CPU,
+    # verbose=false, and BatchParams in the lattice (not supported: an error)
+    ring(s) = Beamline([Quadrupole(Kn1=0.36, L=0.5), Sextupole(Kn2=s, L=0.2),
+        SBend(L=1.2, angle=pi/132), Drift(L=0.1), Quadrupole(Kn1=-0.36, L=0.5),
+        Sextupole(Kn2=-s, L=0.2), SBend(L=1.2, angle=pi/132), Drift(L=0.1)];
+        species_ref=Species("electron"), pc_ref=18e9)
+    kw = (; n_turns=50, emit_1=1e-9, emit_2=1e-10, n_r=5, max_sig_x=1e3, max_sig_y=1e3,
+          verbose=false)
+    bl = ring(40.0)
+    x, y = dynamic_aperture(bl; kw..., n_theta=5, deltas=[0.0])
+    @test size(x) == size(y) == (5, 1) && any(isinf, x) && any(isfinite, x)
+    E = twiss(bl; at=[1], cols=["E1", "E2"], rf_on=false)
+    sx = sqrt(E.E1[1][1,1]*1e-9 + E.E2[1][1,1]*1e-10)
+    sy = sqrt(E.E1[1][3,3]*1e-9 + E.E2[1][3,3]*1e-10)
+    co = find_closed_orbit(bl; rf_on=false).v0
+    rs = range(0, 1, length=5)[2:end]
+    for (j, θ) in enumerate(range(0, pi, length=5))
+      v0 = reduce(vcat, [co .+ [1e3*r*cos(θ)*sx 0 1e3*r*sin(θ)*sy 0 0 0] for r in rs])
+      k = findfirst(!=(BeamTracking.STATE_ALIVE), track(bl; v0, n_turns=50).state[turn=50])
+      @test isnothing(k) ? (x[j] == y[j] == Inf) :
+            (x[j] ≈ 1e3*rs[k]*cos(θ) && y[j] ≈ 1e3*rs[k]*sin(θ))
+    end
+    xf, yf = dynamic_aperture(bl; kw..., n_theta=9, deltas=[0.0], theta_lims=(0, 2pi))
+    @test xf[1:5] ≈ x && yf[1:5] ≈ y && xf[9] ≈ xf[1]
+    x32, y32 = dynamic_aperture(bl; kw..., n_theta=5, deltas=[0.0], coordinates_number_type=Float32)
+    @test x32 ≈ x && y32 ≈ y
+    out = mktemp() do path, io
+      redirect_stdout(io) do
+        dynamic_aperture(bl; kw..., n_theta=3, deltas=[0.0])
+      end
+      flush(io)
+      read(path, String)
+    end
+    @test isempty(out)
+    @test_throws ErrorException dynamic_aperture(ring(BatchParam([40.0, 0.0])); kw..., n_theta=3,
+                                                 deltas=[0.0])
   end
 end

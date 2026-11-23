@@ -20,12 +20,10 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
-The `find_closed_orbit` function can be used to find the fixed point of a periodic beamline.
-It uses the Newton method implemented in the
-[`BatchSolve`](https://github.com/mattsignorelli/BatchSolve.jl) package. By default,
-automatic differentiation via
-[`ForwardDiff`](https://github.com/JuliaDiff/ForwardDiff.jl) is used to compute the
-Jacobian(s) each iteration.
+The `find_closed_orbit` function can be used to find the fixed point of a periodic beamline. It uses 
+the Newton  method implemented in the [`BatchSolve`](https://github.com/mattsignorelli/BatchSolve.jl) 
+package. By default, automatic differentiation via [`ForwardDiff`](https://github.com/JuliaDiff/ForwardDiff.jl) 
+is used to compute the Jacobian(s) each iteration.
 
 ```{code-cell} julia
 @elements begin
@@ -44,12 +42,15 @@ A `NamedTuple` is returned containing the properties:
 
 - `v0`: The closed orbit
 - `coasting_beam`: `true` if no longitudinal oscillations (4D closed orbit), `false` otherwise
-- `sol`: Another `NamedTuple` of the solution, outputted from `BatchSolve`, which contains:
-  - `u`: Solution array (same object as `x`, mutated in-place).
-  - `f`: Final residual vector (same object as `y`, mutated in-place).
-  - `jac`: Final Jacobian.
-  - `retcode`: `RETCODE_SUCCESS = 0x0`, `RETCODE_FAILURE = 0x1`, or `RETCODE_MAXITER = 0x2`.
-  - `iters`: Number of iterations taken (scalar, or array when `batchdim` is set).
+- `sol`: Another `NamedTuple` with details of the solution from `BatchSolve`:
+  - `u`: The coordinates the Newton method solved for: all six, or for a coasting beam only the
+    four transverse ones (δ is fixed), one row per particle.
+  - `f`: The final residual: the change of these coordinates over one turn, which is zero on the
+    closed orbit.
+  - `jac`: The Jacobian of the residual at the last iteration (of all particles together).
+  - `retcode`: `0x0` if the solution converged, `0x1` if the solver failed, `0x2` if it reached the
+    maximum number of iterations (one per particle with several particles).
+  - `iters`: The number of iterations taken (one per particle with several particles).
 
 An initial "guess" for the closed orbit can be provided by specifying a `1 x 6` matrix of
 particle phase space coordinates to the keyword argument `v0`. By default, it is
@@ -98,10 +99,12 @@ co_sol = find_closed_orbit(fodo, v0=v0)
 ## Closed Orbits with Batch Parameters
 
 If any element parameters are defined with [`BatchParam`s](batch.md), then as with `track`,
-each particle in the initial guess matrix will see that corresponding parameter.
+each particle in the initial guess matrix will see that corresponding parameter (with a guess of
+one row, the default `v0`, the first value). Element lengths and the reference energy can be
+batched too.
 
-Below, we find two closed orbits: one where `kick.Kn0L=1e-5` and `δ = 0.1e-2`, and another
-where `kick.Kn0L=2e-5` and `δ = 0.2e-2`:
+Below, we first find two closed orbits, one for `kick.Kn0L=1e-5` and one for `kick.Kn0L=2e-5`,
+and then the same with `δ = 0.1e-2` for the first and `δ = 0.2e-2` for the second:
 
 ```{code-cell} julia
 # With BatchParams

@@ -6,7 +6,7 @@
 
 An expression of lattice quantities: a quantity of a [`TwissExpr`](@ref) (`tw.beta1[ele]`), a
 [`Knob`](@ref), or arithmetic and functions of them (`tw.beta1[ele]^2 - 5*mean(tw.alpha1[ele, :])`).
-It is computed by [`value`](@ref), [`value_and_jacobian`](@ref) or [`match!`](@ref).
+It is computed by [`value`](@ref), [`SciBmad.value_and_jacobian`](@ref) or [`match!`](@ref).
 """
 abstract type LatticeExpr end
 
@@ -32,6 +32,9 @@ several correctors), the knob stands for one knob per entry, named `property[1]`
 each entry. `index` (or `@knob obj.property[index]`) is one entry alone.
 
 A `Knob` is also a [`LatticeExpr`](@ref), so it can be used in expressions and targets.
+
+Making a property a knob sets it, as `obj.property = value` does: if it was set to a deferred
+expression, that dependence is replaced by the value.
 
 ## Examples
 ```julia
@@ -143,14 +146,14 @@ end
     TwissExpr(bl::Beamline; kwargs...)
 
 The quantities of `twiss(bl; kwargs...)` as expressions ([`LatticeExpr`](@ref)), computed only
-when they are needed (by [`value`](@ref), [`value_and_jacobian`](@ref) or [`match!`](@ref)), and
+when they are needed (by [`value`](@ref), [`SciBmad.value_and_jacobian`](@ref) or [`match!`](@ref)), and
 then only at the locations used. `kwargs` are those of `twiss` (`rf_on`, `a_initial`, `spin`,
 `delta0`, ...) except `at`, `cols`, `base_cols`, `as_taylor_series` and `GTPSA_descriptor`, which
 are set from the expressions. The truncation orders are chosen from the quantities used; `order`
 can be given to use a higher one.
 
 `a_initial` may be the `a` of another `TwissExpr`, e.g. `TwissExpr(line; a_initial=tw.a[end])`,
-to continue the Twiss functions of another beamline. `initial` may be a `Context`, whose variables
+to continue the lattice functions of another beamline. `initial` may be a `Context`, whose variables
 can then be knobs, e.g. to match the Twiss parameters at the start of a line:
 `ini = Context(beta1=10.0, beta2=10.0)`, `TwissExpr(line; initial=ini)`, `@knob(ini.beta1)`.
 

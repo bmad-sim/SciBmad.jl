@@ -113,15 +113,21 @@ from juliacall import Main as jl
 jl.seval("using SciBmad")
 ```
 
-The first time, juliacall installs Julia and SciBmad, which takes a while. Julia functions are
-then called through `jl`, e.g. `tw = jl.twiss(ring)`, and Julia code without a Python equivalent,
-such as `@elements`, is run with `jl.seval("...")`. Results are Julia objects:
-`np.asarray(tw.beta1)` gives a column as a NumPy array, and `tw.beta1[jl.qd]` its value at the
-beginning of the element `qd`. Python has no keywords in indexing, so tracking results are read
-from their arrays instead:
-`np.asarray(res.data.v)[particle, coordinate, location, saved turn]`
-(counting from 0). Pass NumPy arrays to SciBmad as Julia arrays, e.g. `jl.Array(v0)`, for
-performance. The [examples](examples-index.md) include Python notebooks.
+The first time, juliacall installs Julia and SciBmad, which takes a while. The Julia code in this
+documentation then translates to Python as follows:
+
+```python
+import numpy as np
+
+q = jl.Quadrupole(L=0.5, Kn1=0.36)  # Julia functions through jl, with the same keyword arguments
+jl.seval("x = [1.0 2.0; 3.0 4.0]")  # Julia code without a Python equivalent, as a string
+a = np.asarray(jl.x)                # Julia arrays as NumPy arrays (indices count from 0)
+b = jl.Array(a)                     # NumPy arrays as Julia arrays, for performance
+```
+
+Some results in Julia are read with keywords inside the square brackets, such as `x[turn=3]`.
+Python has no such syntax: write `jl.getindex(x, turn=3)` instead (in general, `x[i, k=1]` is
+`jl.getindex(x, i, k=1)`). The [examples](examples-index.md) include Python notebooks.
 
 ## Next Steps
 

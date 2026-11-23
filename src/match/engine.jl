@@ -461,8 +461,11 @@ value(e::AbstractArray) =
   reshape(_evaluate(_flatten_exprs(e), Knob[], false; complex_ok=true)[1], size(e))
 
 """
-    value_and_jacobian(exprs, knobs) -> (values, jacobian)
-    value_and_jacobian(exprs, knobs, x) -> (values, jacobian)
+    SciBmad.value_and_jacobian(exprs, knobs) -> (values, jacobian)
+    SciBmad.value_and_jacobian(exprs, knobs, x) -> (values, jacobian)
+
+Not exported, because DifferentiationInterface exports a function of the same name: call it as
+`SciBmad.value_and_jacobian`.
 
 The current values of the expressions ([`LatticeExpr`](@ref)s) `exprs` and their exact derivatives
 in the `knobs` ([`Knob`](@ref)s, or `obj => :property` pairs): `jacobian[i, j]` is the derivative of
@@ -471,7 +474,7 @@ gradient are returned. With `x`, the knobs are first set to the values `x` (and 
 
 The derivatives are computed by automatic differentiation: the knobs are made parameters of the
 truncated power series (GTPSA) of one `twiss` call per [`TwissExpr`](@ref), with the truncation
-orders the expressions need, and the lattice is restored afterwards.
+orders the expressions need, and the knobs are set back to their values afterwards.
 """
 function value_and_jacobian(e::Union{LatticeExpr,Real}, knobs)
   vals, J = _evaluate(Any[e], _knobs(knobs), true; complex_ok=true)

@@ -70,9 +70,10 @@ and a few other settings, are set in the element's `UniversalParams`:
 sf = Sextupole(L=0.2, Kn2=1.2, n_steps=4, rad_damping=true)
 ```
 
-Patches, maps, and `SaganCavity` (whose kicks are set by `n_cells`) are always tracked in one
-step, so `n_steps` must be 1 for them. Elements with a patch or a map, and presently `SaganCavity`,
-also cannot be sliced.
+Patches, maps, and elements tracked with `SaganCavity` (see [Sagan Cavity](#track.sagan) below,
+whose kicks are set by `n_cells`) are always tracked in one step, so `n_steps` must be 1 for
+them. Elements with a patch or a map, and presently elements tracked with `SaganCavity`, also
+cannot be sliced.
 
 ## Symplectic Integrators
 
@@ -113,7 +114,7 @@ If an element is a pure drift, a pure bend, or a pure solenoid, it is tracked th
 exactly, and the order and number of steps don't change the result. The exception is when
 radiation is included, because the radiation is applied at each integration step. The steps
 are still taken in any case, so [callbacks](#track.callbacks) (e.g. used by `twiss` to
-compute the Twiss parameters inside elements) are executed at every step.
+compute its results inside elements) are executed at every step.
 
 ## Exact
 
@@ -136,6 +137,7 @@ as a function of the particle position and time in [EMFieldParams](#emfield.para
 together with any multipoles and bend in the element. It is not symplectic, and does not
 support spin tracking at the moment.
 
+(track.sagan)=
 ## Sagan Cavity
 
 ```{docstring} SaganCavity

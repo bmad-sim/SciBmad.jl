@@ -162,7 +162,8 @@ Eventually when backwards tracking is supported by SciBmad, there will be an opt
 ## Saving the Reference Time/Energy
 
 The reference time and energy at the chosen locations can be saved too, with `save_reference=true`:
-they are then `res.t_ref` and `res.beta_gamma_ref` (one value per location and turn). This extra save makes the tracking slightly slower, so it is off by default:
+they are then `res.t_ref` (in seconds) and `res.beta_gamma_ref` (the reference energy as
+$\beta\gamma$), one value per location and turn. This extra save makes the tracking slightly slower, so it is off by default:
 
 ```{code-cell} julia
 res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], save_reference=true)
@@ -262,7 +263,7 @@ The `Bunch` struct may also contain a tuple of functions `callbacks`. These func
 executed **every integration step**, and allow users to inject their own code into the
 tracking if desired. An element with `n_slices` slices of `n_steps` steps each (see
 [Integration Steps and Slices](#track.steps)) executes them `n_slices*n_steps` times, and
-elements without integration steps (patches, maps, and `SaganCavity`) once. For example, `twiss` uses callbacks to compute the Twiss parameters at every integration step, inside of elements.
+elements without integration steps (patches, maps, and elements tracked with `SaganCavity`) once. For example, `twiss` uses callbacks to compute its results at every integration step, inside of elements.
 
 Callbacks are required to have the function signature defined below
 

@@ -1,8 +1,7 @@
 # Examples
 
-These are complete, runnable Jupyter notebooks. They are committed already-executed,
-so the cells and their outputs (including figures) are rendered inline below - no
-kernel runs during the documentation build. The source notebooks live in the
+These are complete Jupyter notebooks that you can run yourself. The pages show them with the
+outputs, including figures, from when they were last run. The notebooks are in the
 [`examples/`](https://github.com/bmad-sim/SciBmad.jl/tree/main/examples) directory.
 
 ```{toctree}

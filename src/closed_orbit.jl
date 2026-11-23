@@ -97,10 +97,11 @@ function _co_res!(
     v_cache,
     rf_on,
     batch_start,
+    ref,
   )
   n_particles = size(v, 1)
   @assert length(v_res) == n_particles*6 "Incorrect size for residual vector"
-  b0 = Bunch(v_cache)
+  b0 = _co_bunch(v_cache, ref)
   set_kernel!(v_res, v_cache, v, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v))
   track!(b0, bl; scalar_params=true, rf_on, batch_start, notify=false)
@@ -119,12 +120,13 @@ function _co_res_coast!(
     v_constant,
     rf_on,
     batch_start,
+    ref,
   )
   n_particles = size(v_coast, 1)
   @assert length(v_res) == n_particles*4 "Incorrect size for residual vector"
   @assert n_particles == size(v_cache, 1) "Incorrect size for particle cache array given v_coast input"
   @assert n_particles == size(v_constant, 1) "Incorrect size for particle constant array given v_coast input"
-  b0 = Bunch(v_cache)
+  b0 = _co_bunch(v_cache, ref)
   set_kernel!(v_res, v_cache, v_constant, v_coast, n_particles; ndrange=n_particles)
   KA.synchronize(KA.get_backend(v_cache))
   track!(b0, bl; scalar_params=true, rf_on, batch_start, notify=false)
@@ -133,7 +135,23 @@ function _co_res_coast!(
   return v_res
 end
 
-function coast_check(bl, v0t=zeros(1,6), autodiff=AutoForwardDiff(), rf_on::Bool=true, batch_start=1, tol=1e-14)
+# The reference of the Bunch the residuals track (as track gives it): with a batched reference
+# energy or batched element lengths a BatchParam reference energy and time (one per batch entry),
+# else nothing: the Bunch takes the Beamline's reference
+function _co_reference(bl)
+  p = bl.p_over_q_ref
+  p = p isa TimeDependentParam ? p(0) : p
+  # (checking the lengths, 0.4 ms on ESR, is half the cost of summing them)
+  p isa BatchParam || any(e -> e.L isa BatchParam, bl.line) || return nothing
+  b = p isa BatchParam ? p.batch : bl.line[end].s_downstream.batch
+  t = similar(b, length(b))
+  t .= 0
+  return (p, BatchParam(t))
+end
+_co_bunch(v, ::Nothing) = Bunch(v)
+_co_bunch(v, (p, t)) = Bunch(v; p_over_q_ref=p, t_ref=t)
+
+function coast_check(bl, v0t=zeros(1,6), autodiff=AutoForwardDiff(), rf_on::Bool=true, batch_start=1, tol=1e-14, ref=_co_reference(bl))
   if isnothing(autodiff)
     autodiff=AutoForwardDiff()
   end
@@ -144,7 +162,7 @@ function coast_check(bl, v0t=zeros(1,6), autodiff=AutoForwardDiff(), rf_on::Bool
   jac = similar(v0, 6, 6)
   set_kernel! = set_v!(KA.get_backend(v))
   sub_kernel! = sub_v!(KA.get_backend(v))
-  DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache), DI.Constant(rf_on), DI.Constant(batch_start))
+  DI.value_and_jacobian!(_co_res!, v, jac, autodiff, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v_cache), DI.Constant(rf_on), DI.Constant(batch_start), DI.Constant(ref))
   return all(x-> abs(x) < tol, view(jac, 6, :))
 end
 
@@ -202,7 +220,7 @@ will use CUBLAS's batched linear system solvers for the Newton solve.
 qf = Quadrupole(Kn1=0.36, L=0.5)
 d = Drift(L=1.2)
 qd = Quadrupole(Kn1=-0.36, L=0.5)
-kick = LatElement(Kn0L=1e-5)
+kick = HKicker(Kn0L=1e-5)
 
 fodo = Beamline([qf, d, qd, d, kick], 
         species_ref=Species("electron"), E_ref=18e9) # some Beamline
@@ -240,7 +258,8 @@ function find_closed_orbit(
     batch_start::Int=1,
     v0=zeros(1,6), 
     coast_tol=1e-14,
-    coasting_beam=coast_check(bl, v0, autodiff, rf_on, batch_start, coast_tol),
+    ref=_co_reference(bl), # (internal: computed once)
+    coasting_beam=coast_check(bl, v0, autodiff, rf_on, batch_start, coast_tol, ref),
     batch::Val{_batch} = Val{size(v0, 1) > 1}(), # You can avoid type instabiltiy by specifying this
     warn=true,
   ) where {_batch}
@@ -262,14 +281,14 @@ function find_closed_orbit(
     v_coast .= view(v0, :, 1:4) 
     set_kernel! = set_v_coast!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0), DI.Constant(rf_on), DI.Constant(batch_start); newton_kwargs...)
+    sol = newton!(_co_res_coast!, v, v_coast, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(v0), DI.Constant(rf_on), DI.Constant(batch_start), DI.Constant(ref); newton_kwargs...)
     set_v_coast_final!(device)(v0, v_coast; ndrange=n_particles)
     KA.synchronize(device)
   else
     v = similar(v0)
     set_kernel! = set_v!(device)
     sub_kernel! = sub_v!(device)
-    sol = newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(rf_on), DI.Constant(batch_start); newton_kwargs...)
+    sol = newton!(_co_res!, v, v0, DI.Constant(bl), DI.Constant(set_kernel!), DI.Constant(sub_kernel!), DI.Cache(v0_cache), DI.Constant(rf_on), DI.Constant(batch_start), DI.Constant(ref); newton_kwargs...)
   end
 
   if warn

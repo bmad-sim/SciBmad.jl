@@ -57,9 +57,9 @@ base_cols::Vector{String} = ["index", "name", "kind", "s"]
 """
     twiss(bl::Beamline; kwargs...)
 
-General function to compute the (parametric and nonlinear) Twiss parameters of a `Beamline`. 
+General function to compute the (parametric and nonlinear) optics of a `Beamline`. 
 Returns a `Twiss` struct that contains the (amplitude-dependent) (spin) tunes/slip, and a 
-dataframe of the Twiss parameters at each specified integration step. By default, lattice 
+dataframe of the lattice functions at each specified integration step. By default, lattice 
 functions of the Sagan-Rubin/Edwards-Teng coupling formalism are computed in the dataframe 
 at every integration step. The columns are read at locations of the beamline, e.g. 
 `tw.beta1[qd]` at the beginning of the element `qd` (see [`TwissColumn`](@ref)), and the 
@@ -87,27 +87,28 @@ tw = twiss(bl; cols=["dx", "dx_2","dbeta1"], chrom=2)
 where the `chrom` keyword argument, which specifies solely the truncation order of δ, has been 
 set appropriately. 
 
-For chromatic derivative calculation, you may need to set the keyword argument `rf_on=false`.
+Chromatic derivatives need a beam without synchrotron motion: `rf_on=false` if there are RF
+cavities.
 
 To customize the output, such as computing higher order (chromatic) lattice functions, spin 
 lattice functions/tune, amplitude-dependent tunes, and parametric quantities, see the 
 keyword arguments:
 
 ## Keyword arguments
-- `at::Union{Colon, AbstractVector}`: Where to compute the Twiss parameters (the rows of the
+- `at::Union{Colon, AbstractVector}`: Where to compute the lattice functions (the rows of the
     table): a vector of locations, each as one index of a column (see [`TwissColumn`](@ref)):
     elements (at the beginning of each placement), beamline indexes, names (as for
     `findelements`), and s-ranges (tuples). Default `:`, every integration step and the end of
     the beamline. An entry that is not in the beamline is an error; in a part of the beamline
     (`start`, `stop`) only the locations in the part are computed.
-- `start`, `stop`: Elements (or their beamline indexes) to compute the Twiss parameters of only
+- `start`, `stop`: Elements (or their beamline indexes) to compute the optics of only
     a part of the beamline: from the beginning of `start` (default: the first element) to the
     beginning of `stop` (default: the end of the beamline). Without `initial` or `a_initial`
-    these are the periodic Twiss parameters of that part by itself (e.g. of one cell of a ring),
+    these are the periodic optics of that part by itself (e.g. of one cell of a ring),
     with them those of an open line that starts at `start`. `s` and `index` in the table are
     those of the whole beamline, phases are counted from `start`, and the last row is the
     beginning of `stop`.
-- `in_body_coordinates::Bool`: If `true` Twiss parameters inside misaligned elements are not
+- `in_body_coordinates::Bool`: If `true` the lattice functions inside misaligned elements are not
     transformed back to the reference curve coordinates. Default is `false`
 - `rf_on::Bool`: If `false`, then any `RFParams` in any `LatElement`s are ignored for the 
     entirety of the Twiss tracking and calculation. Default is `true`
@@ -119,7 +120,7 @@ keyword arguments:
 - `GTPSA_descriptor::Union{Descriptor,Nothing}`: Custom GTPSA `Descriptor` to use for the Twiss 
     calculation, required to provide to do parametric normal form and lattice function 
     calculations. Default is `Descriptor([order, order, order, order, order, chrom], max(order,chrom))`.
-- `initial`: The Twiss parameters at the start of an "open" line (e.g. a transfer line), by name:
+- `initial`: The lattice functions at the start of an "open" line (e.g. a transfer line), by name:
     `beta1`, `beta2` (required), `alpha1`, `alpha2`, the coupling `c11`, `c12`, `c21`, `c22`, the
     dispersion `dx`, `dpx`, `dy`, `dpy`, and the orbit `x`, `px`, `y`, `py`, `z`, `pz` (all 0 if
     not given; `pz` is δ, else `delta0`), with the meanings of the columns of the same names.
@@ -128,14 +129,14 @@ keyword arguments:
     ignored). The values may be Taylor series in GTPSA parameters, not in the phase space
     variables or δ. The beam has no synchrotron motion: RF cavities with voltage need
     `rf_on=false` (or a 6D `a_initial`).
-    Default is `nothing`, to compute the periodic ("closed") lattice Twiss functions
+    Default is `nothing`, to compute the periodic ("closed") lattice functions
 - `a_initial::Union{DAMap,Nothing}`: A `DAMap` of the initial transformation from normal form 
-    coordinates to laboratory coordinates, to compute "open" lattice Twiss functions (instead of
-    `initial`). A coasting `a_initial` (without synchrotron motion) also needs `rf_on=false` if
-    the line has RF cavities with voltage. Default is `nothing`
+    coordinates to laboratory coordinates, to compute the lattice functions of an "open" line
+    (instead of `initial`). A coasting `a_initial` (without synchrotron motion) also needs
+    `rf_on=false` if the line has RF cavities with voltage. Default is `nothing`
 - `damping::Union{Bool,Nothing}`: Specifies if radiation damping is included. Default is `nothing`,
     which will auto-detect from `a_initial` or the periodic `a`.
-- `delta0`: If the beam is coasting (no longitudinal oscillations), then the Twiss parameters will 
+- `delta0`: If the beam is coasting (no longitudinal oscillations), then the optics will 
     be computed around this delta-dependent orbit. Else, this will be an initial guess for the 
     6D closed orbit calculation. Default is `0.`. If `a_initial` is provided then this will be ignored, 
     UNLESS `a_initial` is coasting, in which case this will set the value for δ. With `initial`, it
@@ -159,7 +160,8 @@ keyword arguments:
 - `symplectic_tol::Float64`: Tolerance of symplectic condition violation, above which radiation damping 
     is assumed. Default is `1e-8`.
 - `batch_index::Int`: If any element parameters are `BatchParam`, sets which index in the batch the `twiss`
-    should be evaluated at. Default is `1`.
+    should be evaluated at. Default is `1`. Batched element lengths and a batched reference
+    energy are not supported in `twiss` yet.
 
 To see a description of all quantities available to include in `cols`, see the extended help 
 section using `??twiss`
@@ -173,7 +175,7 @@ linear dispersion).
 - `index`  : Beamline index of the containing `LatElement`
 - `name`   : Name of the containing `LatElement`
 - `kind`   : Kind of the containing `LatElement`
-- `s`      : s-position of the Twiss parameter calculation (may be inside of `LatElement`)
+- `s`      : s-position of the row (may be inside of `LatElement`)
 - `beta1`  : Horizontal-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism
 - `beta2`  : Vertical-like beta function of the Sagan-Rubin/Edwards-Teng coupling formalism
 - `alpha1` : Horizontal-like alpha function of the Sagan-Rubin/Edwards-Teng coupling formalism
@@ -184,7 +186,8 @@ linear dispersion).
 - `dampdec1`: Horizontal-like damping decrement
 - `dampdec2`: Vertical-like damping decrement
 - `dampdec3`: Longitudinal-like damping decrement
-- `slip`   : Slip factor in units cΔt [m]
+- `slip`   : Derivative of z/β₀ with δ from the start of the table: -c times the change of the
+    arrival time per unit δ [m]
 - `x`      : Orbit canonical x coordinate
 - `px`     : Orbit canonical px coordinate
 - `y`      : Orbit canonical y coordinate
@@ -211,8 +214,8 @@ linear dispersion).
 - `r<ij>`  : Component [i,j] (i, j from 1 to 6) of the linear transfer matrix from the start of
     the table (the beginning of the beamline, `start`, or the start of an open line) to the
     row: ∂zᵢ/∂zⱼ, with z = (x, px, y, py, z, pz) at the row and zⱼ at the start, around the orbit
-- `m<ij>`  : Component [i,j] of the one-turn matrix at the row (periodic tables only: from the row
-    once around the ring, or around the part from `start` to `stop`, back to the row)
+- `m<ij>`  : Component [i,j] of the periodic matrix at the row (periodic tables only: from the row
+    once through the beamline, or the part from `start` to `stop`, back to the row)
 - `w1a`    : Horizontal-like Montague function "a" component, requires `chrom > 1` and/or `order > 1`
 - `w2a`    : Vertical-like Montague function "a" component, requires `chrom > 1` and/or `order > 1`
 - `w1b`    : Horizontal-like Montague function "b" component, requires `chrom > 1` and/or `order > 1`
@@ -391,7 +394,7 @@ function twiss(
   if !coast && chrom != order
     error("""
     You specified `chrom`, but this beamline has synchrotron motion. Please turn off RF 
-    cavities to get delta-dependent Twiss functions.
+    cavities to get delta-dependent lattice functions.
     """)
   end
 

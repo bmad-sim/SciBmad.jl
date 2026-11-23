@@ -22,8 +22,11 @@ All are local clones in `~/.julia/dev` (local branches may be ahead of GitHub):
 - `GTPSA` (+ `GTPSA_jll`), `TPSAInterface`: truncated power series.
 - `BatchSolve` (batched Newton), `FundamentalFrequencies` (NAFF), `AtomicAndPhysicalConstants`.
 
-Versions are coupled: SciBmad 0.7 needs BeamTracking 0.9, Beamlines 0.12, AtomicAndPhysicalConstants 0.12.
-SciBmad 0.8 will need Beamlines 0.13 (contexts without the global stack, below).
+Versions are coupled: SciBmad 0.8 needs BeamTracking 0.10.3, Beamlines 0.14.1, AtomicAndPhysicalConstants
+0.12, NonlinearNormalForm 0.5.5, GTPSA 1.5.6, TPSAInterface 0.3.1, BatchSolve 0.1.7, FundamentalFrequencies
+0.1.2 (SciBmad 0.7: BeamTracking 0.9, Beamlines 0.12). BeamTracking 0.10.3 works with Beamlines 0.13 and 0.14
+(its batch, time and Exact tests pass with 0.13.0, Nov 22 2026). Release order: Beamlines 0.14.1, BeamTracking
+0.10.3, then SciBmad 0.8.0 (checked Nov 22 2026: the other packages are at their registered versions).
 
 ## How to work here
 
@@ -259,7 +262,12 @@ plainly what was not verified and what could be wrong. Never present unverified 
    ring started at its largest dispersion gave 1.4166 instead of 1.1693). `twiss` therefore refines
    the fixed point (Nov 2026): it tracks `a0` (the translation to the fixed point) and takes `a`
    from the one-turn map around it, ⌈log2(maximum order)⌉ times (the error of the fixed point is
-   squared each time). It must be `a0` and not `a`: with these Descriptors `a` carries incomplete
+   squared each time; the linear part is that at the previous fixed point, so its error lags one
+   step: after k steps it is O(δ^(2^k)) in x·δ^(2^k) terms, which the truncation drops when
+   2^k ≥ maximum order. The minimum, measured Nov 22 2026 on the docs FODO with a skew quadrupole,
+   `chrom=3` against `order=3`: 0 steps dq1 0.12 off, 1 step dq1 exact but dq1_2 1.15 and
+   dbeta1_2 1693 off, 2 steps all ≤ 2e-9, 3 steps no change). It must be `a0` and not `a`: with
+   these Descriptors `a` carries incomplete
    second order terms (x·y but not x²), and composing with the first order part of the orbit
    in δ turns them into wrong first order terms (uncoupled lattices were right either way, coupled
    ones with dispersion wrong). Now `chrom=n` equals `order=n` to 1e-13 (n = 2, 3; coupled, with
@@ -475,7 +483,26 @@ values kept alive for the save). With it off the kernels' native code is identic
   ESR tunes 5 vs 4+5; a tune with max β <= 6: met vs not met; three problems neither solves. It
   evaluates the residual at the trial point and then residual and Jacobian again at the same
   point; it has no bounds and no step limits.
-- `match!`: residuals = weight × distance from the goal (zero inside an interval, its Jacobian
+- `match!` defaults to BatchSolve's `levenberg_marquardt!` (`solver=:levenberg_marquardt`); the
+  own method below is `solver=:gauss_newton`. With more knobs than targets, only Gauss-Newton
+  takes minimum-norm steps (Nov 22 2026, one tune with two quadrupoles: the change is along the
+  gradient, cos 1.0000; Levenberg-Marquardt: cos 0.39). `value(prob, x)`, `value_and_jacobian` and
+  `penalty` leave the knobs at `x` (documented in `optimize.md`).
+- A knob on a parameter set to a deferred expression replaces the expression by a constant, also
+  in `value`/`value_and_jacobian` (maintainer, Nov 22 2026: making it a knob sets it, as
+  `qf.Kn1 = 0.38` does, which breaks the dependence by design; not a bug). On an element that is
+  in no Beamline it errors only because DEFAULT_CONTEXT lacks the variable. Setting a number into
+  a parameter group that held a `DefExpr` stores a constant `DefExpr`, so `rawget(...) isa
+  DefExpr` does not tell a real expression; `_knob_value`'s `x isa DefExpr` check is unreachable
+  for element parameters (`getproperty` evaluates). Setting a dependent property (e.g. `Kn1`
+  when `Bn1` is stored) makes it the stored one, by the same rule.
+  If a `DefExpr` ever needs to know that it is a constant, do it as `TimeDependentParam` does
+  (maintainer, Nov 22 2026; `BeamTracking/src/time.jl`): a `_isconst::Bool` field, not another
+  type or type parameter. It is `true` when built from a number (`DefExpr{T}(a::Number)`, `convert`,
+  `zero`, `one`), inherited by conversions, kept by an operation with a number, and `true` for an
+  operation of two only if both are constant; comparisons (`==`, `isapprox`) are then
+  meaningful only for constants.
+- `match!` (`solver=:gauss_newton`): residuals = weight × distance from the goal (zero inside an interval, its Jacobian
   row zero) and `minimize_weight` × the expressions to minimize; steps from the SVD of the
   Jacobian of the knobs not held at a bound. Trials per iteration: the Gauss-Newton step, 1/2,
   1/4, 1/8 of it, then Levenberg-Marquardt steps (Nielsen's update); the first trial is evaluated
@@ -544,6 +571,24 @@ values kept alive for the save). With it off the kernels' native code is identic
   advance from the row to it: h3000 = K2L β^{3/2} e^{-3iφ}/(12√2), h2100 = 3× that with
   e^{-iφ}, h1020 = -K2L β₁^{1/2} β₂ e^{-i(φ₁+2φ₂)}/(4√2), h2200 = K3L β²/16, h4000 = K3L β²
   e^{-4iφ}/96 (all to 6 digits at several positions).
+- `slip` column (coasting): d(z/β₀)/dδ from the start of the table = −c dΔt/dδ, so at the end
+  `etac` = −slip/(c T₀). Checked against tracking the δ = ±1e-6 closed orbits (docs FODO, 18 GeV
+  and 10 MeV, where z/β₀ and z differ: 1.0290 vs 1.0276 m). With RF it is `B3[5,6] sin(2π q3)/β`.
+  Truncation needed (Nov 22 2026, docs FODO): orbit and dispersion columns to the map's order in
+  δ (`dx_n`: `chrom` ≥ n), other columns and the tunes one less (`dbeta1_n`, `q1[delta=n]`: n+1);
+  amplitude terms of total order m in J: `order` ≥ n+2m+1 (`q1[delta=1, J1=1]` 4, `q1[J1=2]` 5).
+  The exact drifts alone give detuning: h2200 = 0.265 in the thin-quadrupole cell of `twiss.md`
+  (a thin octupole adds K3L β²/16 = 0.146 for K3L = 1, as the formula below).
+- Damping decrements (`damp1`…, `dampdec1`…) are −ln|λ| of the one-turn matrix eigenvalues (to
+  1e-10, docs FODO with RF and radiation): the amplitude falls by e^(−damp) per pass. `q3` is
+  negative above transition and positive below (checked both sides). Spin tune of the docs FODO:
+  −aγθ/2π up to a whole number, to 1e-9, δ term likewise. These are on `twiss.md` (Nov 22 2026).
+- Amplitude detuning checked against NAFF of tracking (Nov 22 2026, FODO of `fma.md`, sextupoles
+  Kn2 20/−30, 1024 turns; NAFF converged to 1e-11 with 4096): `q1[J1=0] + q1[J1=1] J +
+  q1[J1=2] J²/2` agrees to 4e-12 at x = 1 mm, 4e-9 at 3 mm, 3e-7 at 6 mm, **with J the nonlinear
+  normal-form action** (from `inv(a)` of the `a` column at `order=5`). With the linear action
+  γx²/2 it was off by 2-15% of the shift: the two differ at first order in the amplitude (2.4% at
+  1 mm, 16% at 6 mm). `naff` fails on Metal (Float64 inside, and Metal.jl has no FFT).
 - `etac` and `alphac` with RF: `B3[5,6] sin(2π q3)`. The branch with GTPSA parameters (maximum
   order above 1) lacked the sine: -0.666 instead of 0.0205 on a small ring. Fixed; values and
   derivatives in quadrupole strengths, a length and the RF voltage agree with differences.
@@ -816,10 +861,30 @@ Open items:
   each Jacobian) once (Newton converges in one step from the zero guess), and preparing costs 
   5.5-6 ms per type, more than the plain turn (13.3 -> 14.4 ms; reverted). It would pay off only 
   with two or more evaluations per type (several Newton iterations).
+- `dynamic_aperture` (Nov 22 2026; there were no tests, now testset "dynamic_aperture"): the
+  boundary along each angle is the first lost particle of the grid (checked against tracking the
+  grid points with `track`), `Inf` if none, a zero column if the particle on the closed orbit is
+  lost; `n_r` counts the radius 0. Fixed: `coordinates_number_type` was ignored on the CPU (Float32
+  now half the time); `theta_lims` beyond π failed the sanity check (angles now compared modulo
+  2π); `verbose=false` still printed; `BatchParam`s in the lattice gave a meaningless result
+  silently (each grid particle saw another entry), now an error (`_has_batches`: the prepared
+  chains' arguments and reference, ~60 ms on ESR, first call 4.62 -> 4.78 s). Default results
+  bitwise unchanged (coasting, 6D, limited angles). With `delta_dependent_orbits` forced on a ring
+  with RF, the orbits are computed without RF but tracking runs with RF on unless `rf_on=false` is
+  passed: intentional (maintainer, Nov 2026; documented). A ramped reference energy fails in the
+  closed orbit (not defined): left as is (maintainer).
 - `Experimental.dynamic_aperture` sets `RFParams = nothing` on the cavities and restores them only 
   after steps that can throw (the main `dynamic_aperture` uses `rf_on=false` instead).
-- `BatchParam` element lengths: `find_closed_orbit` fails (its Bunch `t_ref` is a Float64; `track` 
-  uses a `BatchParam` `t_ref`), and `twiss` would need each length's `batch_index` element for `s`. 
+- Batched element lengths and reference energies: `find_closed_orbit` gives its Bunch a
+  `BatchParam` `t_ref` (and `p_over_q_ref` for a batched energy) as `track` does (Nov 22 2026;
+  `_co_reference`, computed once per call and passed to the residuals: before, both failed). Each
+  entry equals the unbatched lattice's orbit (coasting and 6D; test "Closed orbit with batched
+  lengths and energies", which errors without the fix); unbatched results bitwise unchanged (11
+  cases incl. ESR and `twiss`); detecting batched lengths costs ~0.4 ms on ESR (`find_closed_orbit`
+  13.3 -> 13.7-14.1 ms; summing the lengths, as `track` does, cost 0.8 ms). Still open: `twiss`
+  with `batch_index` fails for batched lengths (it would need each length's `batch_index` entry
+  for `s`) and for batched reference energies (`Cannot convert BatchParam to Float64`); batched
+  element strengths work.
   A batched `dynamic_aperture` will be a separate function (its particles are initialized on a grid 
   and pushed differently).
 - `twiss` without `order` and `chrom` takes the orders the columns need (`_twiss_auto_orders`,
@@ -858,7 +923,11 @@ Open items:
   `coast_check` ignores its `v0`; derivative columns have no units; to check: the 6D dispersion 
   `H3[k,6]` without normalization by `H3[6,6]`.
 - Docs (`docs/`) were updated page by page in TOC order (`docs/toctree.md`, see "Writing docs"); 
-  all pages are done (README, `lattices/RCSV5S0.jl` too). `coordinates.md` no longer describes 
+  all pages are done (README, `lattices/RCSV5S0.jl` too). A second review in the settled style
+  (Nov 22 2026) went through every page (twiss, parametric-nf, optimize, fma rewritten; physics
+  pages checked against the kernels); Sphinx builds without warnings. Release texts for 0.8:
+  `~/scibmad-release/scibmad-0.8-release-notes.md`, `scibmad-0.8-pr.md` (the whole branch),
+  `slack-0.8.md`. `coordinates.md` no longer describes 
   what SciBmad does not have (floor coordinates, `FloorParams`, `Girder`, `Fork`, reversed 
   elements, reflection patches); it keeps the frame math the misalignment sections use. 
   `twiss.md` has an open-lattice example (`initial` and `a_initial`, tested in "Open-lattice Twiss"
@@ -867,26 +936,37 @@ Open items:
   - A showcase draft (README gallery, first-look example, Speed section, a Performance page with
     figures) is on the local branch `docs-showcase`, not for release; figure data and scripts in
     `~/scibmad-benchmarks/docs-figures/`.
+  - SaganCavity: an element with `dE_ref` carries `InitialBeamlineParams`, so it must be the first
+    element of a `Beamline` (a `Branch` splits there; BeamTracking's tests use `Branch`). On crest
+    (default `zero_phase`), 1 MV gives an electron 1 MeV: `dE_ref = 1e6` leaves pz at 5e-17
+    (checked Nov 22 2026; the old docs example had 1 MV with `dE_ref = 0.1e9`, pz −0.09). The
+    tracking and physics pages were checked against the kernels (cells, `L_active`, edge,
+    energy and ponderomotive kicks, misalignment frames of `coordinates.md`: all agree).
   - SaganCavity spin: the energy kick rotates the spin twice (before and after the kick) with the 
     full `dE*c/P0c` field each time, i.e. twice ∫E_z (the fringe uses half of its field each 
     time). Bmad's lcavity (`this_energy_kick` in `track_a_lcavity.f90`) does the same; tracked 
     alone, the kick rotates exactly 2x the Thomas-BMT angle as dE → 0, and with half the field 
     it matches to the trapezoidal error. Reported to Bmad; fix both after confirmation.
-- Python (juliacall) cannot index with keywords: `res.x[turn=3]` has no Python syntax, so
-  Python users read `np.asarray(res.data.v)[particle, coordinate, location, saved turn]`
-  (documented in `installation.md`, "Using SciBmad from Python"). Twiss columns work
-  (`tw.beta1[jl.qd]` is one value; checked Nov 19 2026). Idea
-  (maintainer, Nov 2026: in the Python wrapper, no Julia changes; not
-  done, untested): `res.x[qd, turn=3]` is `getindex(res.x, qd; turn=3)`, and juliacall passes
-  Python keywords as Julia keywords, so `jl.getindex(res.x, jl.qd, turn=3, particle=1)` should
-  work as is. The wrapper would wrap result objects so that `res.x(qd, turn=3)` and
+- Python (juliacall) has no keywords in indexing: `res.x[turn=3]` is written
+  `jl.getindex(res.x, turn=3)` (juliacall passes Python keywords as Julia keywords; checked Nov 22
+  2026 for `res.x` with and without a location and `tw.q1[delta=1]`). `installation.md` ("Using
+  SciBmad from Python") states this generally, without results the reader does not know yet.
+  Twiss columns index as usual (`tw.beta1[jl.qd]`; `np.asarray(tw.beta1)` is a float64 array).
+  Idea (maintainer, Nov 2026: in the Python wrapper, no Julia changes; not done): the wrapper
+  would wrap result objects so that `res.x(qd, turn=3)` and
   `tw.beta1(qd, "exit")` call it, translating a name for `end`, `slice(None)`/"all" to a Julia
   colon, Python ranges/lists to Julia vectors, strings like "exit" to symbols.
 - Notebooks (`examples/julia`) are rerun with `jupyter nbconvert --to notebook --execute --inplace` 
   (condamatt env) and `JUPYTER_PATH=<scratch>/jupyter`, holding a kernelspec with the notebooks' 
-  kernel name that runs a scratch environment (plus Plots, CairoMakie, LaTeXStrings, Metal, IJulia), 
+  kernel name that runs a scratch environment (plus Plots, CairoMakie, LaTeXStrings, Metal, IJulia),
   so the notebook metadata and `~/Library/Jupyter` stay unchanged. Check every number quoted in 
   the markdown against the new output (orbit-response quoted a stale dy/dtilt, 3% off).
+  The kernelspec needs `--color=yes` in its `argv` (as IJulia's `installkernel` writes it):
+  without it `Base.have_color` is `nothing`, IJulia passes that as `:color` of its stderr, and
+  GPUCompiler's `__init__` fails ("Cannot convert Nothing to Bool") on `using SciBmad`. Execute into
+  the scratch directory first (`--output-dir`), compare the outputs with the committed notebook,
+  then copy it back. Last run: `ags-spin-ramp` (Julia), Nov 22 2026: only the `TrackResult`
+  display and the elapsed time changed.
   IJulia ≥ 1.34 has no `src/kernel.jl`: the kernelspec runs `-e "import IJulia;
   IJulia.run_kernel()" {connection_file}`. The Python notebooks run through juliacall with
   `PYTHON_JULIAPKG_PROJECT=<env>`, `PYTHON_JULIAPKG_OFFLINE=yes`, `PYTHON_JULIAPKG_EXE=<julia>`;
@@ -895,22 +975,155 @@ Open items:
 
 ### Writing docs
 
-- Readers know nothing about the internals and often little physics: say what a feature does for 
-  them in plain words, without implementation details (e.g. "with 32-bit coordinates all numbers in 
-  the tracking are 32-bit", not how they are lowered). Keep the tone of the surrounding page.
-- Run every code cell of a changed page as a script (`awk` the `{code-cell}` blocks) before 
-  reporting, and check printed values in the text against the output. Don't add helper functions 
-  to examples: show the plain call and write the result in a comment next to it. Write loops as plain 
-  `for` loops, not `foreach(...) do` blocks.
-- Examples must be physically sensible: e.g. a positron at an electron ring's rigidity bends the 
-  wrong way in every dipole and is lost within a few turns, so "another species" examples use a 
-  species with the same sign of charge (muons in an electron ring).
-- Check docstrings against the code while documenting a feature (`phase_trombone!` described its 
-  stored parameters wrongly) and fix them in the same round.
-- Keep the existing wording. Change a sentence only if it is wrong or no longer true, and then 
-  change as little as needed (e.g. "a `GPUArray`" → "a `BatchParam` of a `GPUArray`"); don't 
-  rephrase or restructure text that is correct.
-- Check every claim of a page by running it, including "X cannot be done" limitations, and check 
-  that what runs is also physically right (a time dependent `g_ref` runs, but would put particles 
-  in different coordinate systems, so it stays a limitation). Bugs found this way (time dependent 
-  `Kn0` in a bend, tilts of another number type) are fixed with tests, not documented around.
+This is how the maintainer wants documentation written. It was worked out page by page with them
+(Nov 2026), above all on `docs/src/twiss.md`, which is the model page: read it before writing a
+page. The maintainer rejected several drafts before this; the rules below are what made the
+difference. Docstrings follow the same rules.
+
+**The goal.** Two readers must both be served. A newcomer, who knows nothing about SciBmad's
+internals and often little physics, must be able to follow from top to bottom. An expert, who
+reads every word, must not find any statement imprecise, awkward or slightly wrong. Keep the
+physics light, but every nuance correct. Text that reads like generic AI output (long sentences
+of clauses chained with commas, semicolons and colons; vague words; explanations of everything
+up front) is rejected: the maintainer said such a paragraph made them feel their "brain
+dissociating".
+
+**Structure of a page** (as `track.md` and `twiss.md`):
+- A short introduction: what the function or feature is for, in one or two paragraphs. Not a
+  summary of every option.
+- Then a `Basics` section that starts with the simplest call and its output, and only then
+  explains that output (what is shown, what it means, how it was computed).
+- Every further section starts with an example of its case, then explains it, then shows the next
+  complication. Never explain all concepts up front and give the examples afterwards: the
+  maintainer asked twice to "break up the paragraphs around the whole page for a simpler build
+  up".
+- Ideas go where they are first needed. E.g. on `twiss.md` the modes are introduced in Basics
+  where `q1`/`beta2` first appear, `chrom` in the chromatic section, `initial` in Open lines,
+  `start`/`stop` in their own section after Open lines (because its open-line example uses
+  `initial`).
+- Lists of options, columns, values or rules go in a table or a bulleted list, not in one long
+  sentence. The `{docstring}` reference goes at the end of the page (or of its section).
+
+**Sentences and paragraphs.**
+- One idea per paragraph. Short sentences. Avoid chains like "A, so B; C (D), and E: F".
+  Rejected example (the location rules on `twiss.md`): "An element gives one value, so it must be
+  in the beamline once (else it is an error); in a vector, `tw.beta1[[d]]`, it gives one value
+  per placement, in beamline order. Names, vectors and ranges always give a vector. The end of
+  the beamline is like a zero-length element: ..." Accepted: "If an element is placed more than
+  once in the beamline, `tw.beta1[d]` is an error, because it is not clear which placement is
+  meant. `tw.beta1[[d]]` gives the values at all of them. Names, vectors and ranges always give a
+  vector, even if they match only one location." (and the corner case left to the docstring).
+- No vague words or placeholders: "the central one", "stuff", "etc." for something that matters.
+- Say *why* where it helps the reader decide (e.g. "the chromaticities need a beam without
+  synchrotron motion, in which δ stays constant").
+- Keep the tone of the surrounding pages. Don't add exclamations or marketing.
+- Describe the physics and the method where the reader needs them (what `twiss` computes and
+  how), but not software internals: say what a feature does for the reader in plain words (e.g.
+  "with 32-bit coordinates all numbers in the tracking are 32-bit", not how they are lowered).
+
+**Precision.** Every statement must be exactly true, including its scope:
+- Name the conditions: tunes exist only for periodic beamlines (an open line has phase advances);
+  the normal-form motion is "a rotation in each mode (a damped one with radiation damping)";
+  "rotation by the tunes" is wrong at higher orders (the angle depends on the amplitude); the
+  actions J "measure" the amplitudes (they are not the amplitudes); resonance driving terms are
+  part of the nonlinear motion, not "a dependence on the amplitudes".
+- Describe what the code really does. `twiss` does not "bring the map to normal form": it finds
+  the closed orbit, computes the map once through the beamline as a Taylor series, computes its
+  normal form (tunes and normalizing map), then tracks the normalizing map through the beamline
+  and computes the lattice functions from it. Read the source before describing a method.
+- Never overclaim. Measure before stating ("more knobs than targets: the knobs change as little
+  as possible" was false for the default solver), and quantify approximations ("hardly depends on
+  the misalignments (here 2e-4 of its size)" instead of "does not depend").
+- Distinguish derivatives from Taylor coefficients, a column from a summary value, the stored
+  value of a parameter from a derived one.
+- Every number has its units; every printed value in a comment matches the output.
+
+**Terminology** (use consistently on every page and in docstrings):
+- "Twiss parameters" are only β, α and γ = (1+α²)/β. Phase advances, dispersion, coupling and
+  tunes are not: say "lattice functions", "optics", "linear optics", or "what `twiss` computes".
+- "Periodic" (or "closed") beamline, never "ring" for it: one cell of a ring can be analyzed as a
+  periodic beamline by itself. "Ring" only for an actual ring. Open line: a transfer line, or a
+  section of a ring given starting values.
+- "Summary values" for the values for the whole beamline (`tw.q1`, `tw.etac`, ...); "columns" for
+  the table; "normalizing map"; "mode 1 (horizontal-like)", "mode 2 (vertical-like)", "mode 3
+  (longitudinal-like, synchrotron motion, only with RF cavities)".
+- δ is the relative momentum deviation, the coordinate `pz`. "Branch" coordinates: a `Beamline`
+  is a branch of a lattice (Beamlines' `Branch`), so the term is kept on the physics pages.
+- One name per concept on a page; define it once.
+
+**Nothing before its introduction.** Read the page in order and check that every term, keyword
+argument, function, variable and symbol is introduced before it is used, in text and in code
+cells (found on `twiss.md`: `chrom` used in a cell before it was explained, `rf_on`, "the map",
+γ in `etac` (say "the Lorentz factor"), "invariant spin field"). Don't reuse a variable name for
+something else later on the same page (`twc` was the chromatic table and later a cell's table;
+redefining `qf` in a later section changed an earlier example's digits): give new objects new
+names (`qa`, `twcell`, `thincell`). A later section may use objects from Basics.
+
+**Examples (code cells).**
+- Physically sensible values. Checked cases: an RF cavity with a realistic voltage for its length
+  and a frequency that is a harmonic of the revolution frequency (`harmon=15`); `dE_ref` equal to
+  the energy gain (the old example had 100 times the voltage); "another species" with the same
+  sign of charge as the reference (muons in an electron ring, not positrons).
+- The plain call, with the result in a comment next to it (`tw.beta1[qd] # 6.695 at the beginning
+  of qd`). Round comment values to what matters (4 digits) unless the digits are the point. No
+  helper functions; plain `for` loops, not `foreach(...) do`.
+- Use the `remove-cell` tag only for setup the reader does not need (and save and restore real
+  values there, never hard-code numbers that can drift).
+- Prefer an example that also checks something independent where it is cheap (e.g. `fma.md`
+  compares NAFF of tracked particles with the tune of `twiss`; `twiss.md` compares the `h3000`
+  column with the thin-sextupole formula).
+
+**Verify every claim.**
+- Run every code cell of a changed page as a script (`awk` the `{code-cell}` blocks; to print the
+  commented values, wrap each commented expression line in `println`), and compare every number
+  in the text and comments with the output.
+- Check every statement by running it, including "X cannot be done" and "X is an error", and
+  check against the source that it is what happens and why (e.g. that the parent element of a
+  placement errors for another reason than the one the test comment claimed).
+- Check physics against an independent result: finite differences (with a convergence check in
+  the step), tracking (orbits at ±δ, NAFF), Tao/Bmad, analytic formulas. Record the facts and
+  numbers in this file (a physics guide is planned: keep derivations, conventions and measured
+  facts here, e.g. the fixed-point refinement of `twiss`, the RF phase convention, the slip
+  factor, the `h` columns, the detuning check against NAFF).
+- Check docstrings against the code while documenting (`phase_trombone!` described its stored
+  parameters wrongly) and fix them in the same round. Bugs found this way are fixed with a test
+  and a negative control (or reported when they need a decision), not documented around. When
+  the maintainer decides a behavior is intended (e.g. a knob replaces a deferred expression, as
+  setting the parameter does), document it as the rule.
+- Say in the report what was verified and how, and what was not (e.g. CUDA could not be tested).
+
+**The maintainer's own edits.** They often edit a page while it is being reviewed. Their wording
+is the source of truth: keep it, build around it, and only fix what is wrong (a typo, an inverted
+condition such as "mode 3 if no RF cavities", a missing word) and say so in the report. Rewrap
+their lines to 100 characters without changing words. When told "do it like I would", apply all
+of the above to the whole page, not only to the paragraph mentioned.
+
+**Process for a page.**
+1. Back up the page to the scratch directory.
+2. Read it in full as a newcomer and as a careful reader; list every problem (wrong, unclear,
+   used before introduced, terminology, overclaims, examples that are not physical).
+3. Run its code and check its claims (above), including against the source.
+4. Rewrite: keep correct text unless the structure or style rules require a change; then reread
+   the whole page imagining the maintainer's objections (run-on paragraphs, explanations before
+   examples, undefined terms, awkward wording for experts, vague words, "ring" for periodic, a
+   misused "Twiss parameters", an unverified number) and fix them.
+5. Rerun the code; check line lengths (≤ 100 characters except tables); check links and labels
+   with Sphinx (below).
+6. Report concisely: what changed and why, what was verified and how, what is open.
+
+**Mechanics.**
+- MyST heading anchors are off: link to `(label)=` targets (`[Open lines](#twiss.open)`), and
+  give sections that are linked to a label (`(twiss.orders)=`). Link to a page by file
+  (`[Twiss](twiss.md)`) when its label has the page's name (`(twiss)=`): `#twiss` is ambiguous.
+- Pages with code cells have the jupytext front matter and the `remove-cell` setup cell (see
+  `twiss.md`).
+- Check links, labels and MyST syntax with Sphinx alone, without executing code and without
+  touching `docs/Project.toml` or `~/Library/Jupyter` (which `docs/build.py` changes): a venv in
+  the scratch directory with `docs/requirements.txt`, an `rsync` copy of the repository, and
+  `sphinx-build -b html -D nb_execution_mode=off -q . <out>` in its `docs/src`. Only the
+  `{docstring}` lookups warn then (they need the docs' Julia environment). The `{docstring}`
+  directive evaluates the name in `Main` after `using SciBmad`: unexported names need the module
+  (`{docstring} SciBmad.value_and_jacobian`).
+- Every name used in examples must work as written after `using SciBmad` (unexported functions
+  are written with `SciBmad.`, e.g. `SciBmad.value_and_jacobian`, which is not exported because
+  DifferentiationInterface exports a function of the same name).

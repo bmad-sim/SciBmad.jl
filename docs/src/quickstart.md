@@ -12,7 +12,7 @@ kernelspec:
 
 # Quickstart Guide
 
-The following is an introduction to SciBmad in one copy-and-pastable block: build a FODO cell, compute linear, nonlinear, chromatic and spin Twiss parameters, adjust the sextupoles to set the chromaticities, and track particles with spin. The rest of this page walks through it step by step. To easily copy a block of code anywhere in the documentation, move your cursor to the top right of the code block and select to copy.
+The following is an introduction to SciBmad in one copy-and-pastable block: build a FODO cell, compute its linear, nonlinear, chromatic and spin optics, adjust the sextupoles to set the chromaticities, and track particles with spin. The rest of this page walks through it step by step. To easily copy a block of code anywhere in the documentation, move your cursor to the top right of the code block and select to copy.
 
 ```{code-cell} julia
 :tags: [remove-cell]
@@ -61,7 +61,7 @@ quads = fodo[x -> x.kind == "Quadrupole"]; # Lambda function
 quads = fodo["Quadrupole::*"];             # Classic Bmad syntax
 quads = fodo[r"q.*"];                      # Regex match on name
 
-# Compute the periodic Twiss parameters
+# Compute the periodic optics
 tw = twiss(fodo)
 
 #= 
@@ -84,7 +84,7 @@ tw = twiss(fodo)
 @show tw.beta1[(0, 1.23)] # Every integration step between s=0, s=1.23
 
 #=
-  Compute only specific Twiss parameters
+  Compute only specific quantities
   "beta1" = horizontal-like beta
   "phi2" = vertical-like phase advance,
   "dx" = horizontal dispersion
@@ -159,6 +159,8 @@ To do this, we will define six `LatElement`s, one for each kind of object in the
 lengths of each object are specified by `L` (in meters), and the quadrupole strengths can be
 set using the property `Kn1`, where `n` means the "normal" multipole (`s` would be "skew")
 and `1` means 1st order multipole (quadrupole). The normal sextupole strength is thus `Kn2`.
+These strengths are normalized by the magnetic rigidity of the reference particle: `Kn1` is in
+1/m² and `Kn2` in 1/m³.
 For the bend, the `angle` parameter sets both the curvature of the coordinate system and the
 corresponding magnetic field so that a "reference particle" will follow the coordinate
 system curvature exactly. The coordinate system curvature and normalized field strength can
@@ -181,6 +183,10 @@ end
 fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
         species_ref=Species("electron"), pc_ref=18e9)
 ```
+
+Wrapping the definitions in `@elements` sets the `name` of each element to the name of its
+variable (`qf.name` is `"qf"`). The `Beamline` is designed for a reference particle, here an
+electron with the momentum `pc_ref` = 18 GeV/c.
 
 All element "kinds" (`Sextupole`, `Quadrupole`, etc.) are one single type `LatElement` 
 under the hood. Therefore, there is nothing preventing you from writing e.g.
@@ -208,9 +214,9 @@ rebuild `fodo` or search-and-replace through its element list (see
 
 The [`AtomicAndPhysicalConstants`](https://github.com/bmad-sim/AtomicAndPhysicalConstants.jl)
 package is used for specifying particle species, and so any species defined by that package
-may be provided. Also, instead of specifying the reference momentum `pc_ref`, we
-alternatively could have specified the total reference energy `E_ref`, or the _signed_
-magnetic rigidity `p_over_q_ref`.
+may be provided. Also, instead of specifying the reference momentum `pc_ref` (in eV/c), we
+alternatively could have specified the total reference energy `E_ref` (in eV), or the _signed_
+magnetic rigidity `p_over_q_ref` (in T·m).
 
 We can find instances of elements in a `Beamline`, by searching in the following manners:
 
@@ -234,18 +240,20 @@ To see all the ways you can search for elements, see [Defining a Beamline](beaml
 
 ### Twiss
 
-Once a `Beamline` is defined, we can compute the Twiss parameters with `twiss`:
+Once a `Beamline` is defined, we can compute its optics with `twiss`:
 
 ```{code-cell} julia
-# Compute the periodic Twiss parameters
+# Compute the periodic optics
 tw = twiss(fodo)
 
-# Compute the Twiss parameters of fodo as an open line (not a ring), from given
+# Compute the optics of fodo as an open line (not a ring), from given
 # initial Twiss parameters at its beginning
 two = twiss(fodo, initial=(beta1=13, alpha1=-1, beta2=10, alpha2=1))
 ```
 
 By default this computes the closed orbit, tunes/phase advances and, in the Sagan-Rubin/Edwards-Teng coupling formalism, the beta functions, alpha functions, coupling matrix, phase advances/slip, and (crab) dispersions at _all integration steps_. The table itself is `tw.df`, a [`DataFrame`](https://dataframes.juliadata.org/stable/).
+The numbers `1` and `2` in names such as `beta1` and `q1` refer to the two transverse normal
+modes, which are horizontal-like and vertical-like (`x` and `y` when there is no coupling).
 
 The values for the whole ring, such as the tunes, are properties of `tw`:
 ```{code-cell} julia
@@ -275,7 +283,7 @@ the columns returned) to exactly what you ask for, which can save computation ti
 
 ```{code-cell} julia
 #=
-  Compute only specific periodic Twiss parameters
+  Compute only specific quantities of the periodic optics
   "beta1" = horizontal-like beta
   "phi2" = vertical-like phase advance,
   "dx" = horizontal dispersion
@@ -393,7 +401,8 @@ te = TwissExpr(fodo)
 
 Because `TwissExpr` allows expressions for any output from `twiss`, the `cols` keyword argument does not need to, and cannot, be provided.
 
-We can now form the two target expressions using our `TwissExpr`, specifying that we want the chromaticities `dq1` and `dq2` to be `+1`.
+We can now form the two target expressions using our `TwissExpr`, specifying that we want the chromaticities `dq1` and `dq2` to be `+1` (with a `TwissExpr`,
+`==` does not compare two numbers: it makes a target).
 
 ```{code-cell} julia
 [te.dq1 == 1, te.dq2 == 1]
@@ -487,11 +496,11 @@ This guide only scratched the surface. The rest of the documentation covers:
 
 - [Matching and Optimization](optimize.md): optimize tunes, beta functions, chromaticities,
   resonance driving terms and more, at any location, by varying any element parameter, with
-  exact derivatives; or get the values and derivatives of any Twiss quantity for your own
+  exact derivatives; or get the values and derivatives of any quantity computed by `twiss` for your own
   optimizer
 - [Twiss](twiss.md): all the Twiss columns, reading them at elements and inside elements, Twiss
   of a part of a beamline and of open lines, resonance driving terms and detuning coefficients
-- [Parametric Normal Form](parametric-nf.md): Twiss quantities and tunes as Taylor series in
+- [Parametric Normal Form](parametric-nf.md): the results of `twiss`, such as the tunes, as Taylor series in
   magnet strengths, lengths or any other parameter
 - [Track](track.md): saving particles anywhere, other species, 32-bit coordinates, CPU and GPU
   parallelization; with [Tracking Methods](tracking-methods.md) per element,

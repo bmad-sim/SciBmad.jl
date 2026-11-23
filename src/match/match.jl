@@ -83,7 +83,7 @@ possible. [`match!`](@ref) solves it with its built-in solver. To use any other 
 - `value(prob, x)`: the residual vector at the knob values `x`: for each target its weight times
   its distance from its goal (zero where it is met), then `minimize_weight` times each
   expression to minimize
-- `value_and_jacobian(prob, x)`: the residuals and their exact Jacobian in the knobs
+- `SciBmad.value_and_jacobian(prob, x)`: the residuals and their exact Jacobian in the knobs
 - `penalty(prob, x)`: the sum of the squared residuals, `Inf` where the lattice has no solution
   (for optimizers that take a scalar and no derivatives, e.g. genetic algorithms)
 - `setknobs!(prob, x)`: sets the knobs
@@ -265,7 +265,7 @@ Given a `Beamline`, `targets` (and `minimize`) may be functions of its `TwissExp
 match!(cell; vary=[@knob(qf.Kn1), @knob(qd.Kn1)], targets = tw -> [tw.q1 == 0.25, tw.q2 == 0.25])
 ```
 
-The derivatives are exact (see [`value_and_jacobian`](@ref)). The solver is the
+The derivatives are exact (see [`SciBmad.value_and_jacobian`](@ref)). The solver is the
 Levenberg-Marquardt method of `BatchSolve` (`BatchSolve.levenberg_marquardt!`): steps that do
 not reduce the residuals, or where the lattice has no solution (e.g. it is unstable), are
 rejected and shorter ones taken, so there may be fewer, as many, or more targets than knobs.
@@ -283,7 +283,7 @@ another optimizer, see [`MatchProblem`](@ref).
 - `rcond`: For `solver=:gauss_newton`, singular values of the Jacobian below `rcond` times the
     largest are ignored (knob combinations the targets do not respond to). Default is `1e-10`
 
-Returns a [`MatchResult`](@ref). A `continue` with `match!(res)` starts from the current lattice.
+Returns a [`MatchResult`](@ref). `match!(res)` continues the match from the current lattice.
 """
 function match!(prob::MatchProblem; maxiter::Integer=50, verbose::Bool=false,
                 solver::Symbol=:levenberg_marquardt, rcond::Real=1e-10)

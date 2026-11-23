@@ -35,20 +35,20 @@ SciBmad development is progressing rapidly. Features included in the current sta
 - Dynamic aperture scans and frequency map analysis (NAFF)
 
 **Optics and nonlinear analysis**
-- Twiss functions, linear and nonlinear (Lie series normal form methods), including spin and radiation
+- Linear and nonlinear optics (Lie series normal form methods), including spin and radiation
 - High order Taylor maps using the Generalised Truncated Power Series Algebra (GTPSA) library
-- Twiss functions anywhere: at every integration step inside elements, for a part of a beamline,
+- Optics anywhere: at every integration step inside elements, for a part of a beamline,
   and for open lattices given the initial optics
 - Resonance driving terms and amplitude-dependent tunes
 - All of these as Taylor series in any lattice parameter (parametric normal form)
 - Truncation orders chosen automatically from the quantities asked for
 
 **Matching and derivatives**
-- Matching of any Twiss quantity (e.g. tunes, chromaticities, beta functions, Montague functions,
+- Matching of any quantity computed by `twiss` (e.g. tunes, chromaticities, beta functions, Montague functions,
   resonance driving terms, the invariant spin field, amplitude-dependent tunes) at any location, by varying any lattice
   parameter, with exact derivatives computed by automatic differentiation
-- Values and exact derivatives of any Twiss quantity, to use with any other optimizer
-  (see `value_and_jacobian`)
+- Values and exact derivatives of any of these quantities, to use with any other optimizer
+  (see `SciBmad.value_and_jacobian`)
 - Everything differentiable (forwards/backwards/Taylor mode) with respect to anything,
   even element lengths
 

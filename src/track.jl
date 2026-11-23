@@ -22,11 +22,12 @@ Defines configuration settings for a particles tracking run.
 - `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
     energy is a `TimeFunction`), then particle energies will be artificially ramped with 
     the reference energy. Default is `false`
-- `ramp_update_each_particle::Bool`: If `true` when ramping, then the z-offset/time-offset 
-    of each individual particle at the element entrances is taken into account when 
-    tracking particles through the time-dependent element parameters. Usually only needed 
-    if ramping is fast compared to the time scale of bunch passage through elements. 
-    Default is `false`.
+- `ramp_update_each_particle::Bool`: If `true` when ramping, then each particle sees the
+    reference energy at its own time (from its z-offset) at the element entrances, and the
+    reference energy also changes through each element. If `false`, all particles see the
+    reference energy at the reference time at each element entrance. Usually only needed if
+    ramping is fast compared to the time scale of bunch passage through elements. (Time-dependent
+    element parameters are always evaluated at each particle's own time.) Default is `false`.
 - `batch_start::Int`: Specifies the starting index for `BatchParam`s that particles in a 
     bunch will see. E.g., if `batch_start=3`, then particle 1 sees index 3 in all 
     `BatchParam`s, particle 2 sees index 4, etc. Indexing of `BatchParam`s will loop 
@@ -344,11 +345,12 @@ settings specified by the keyword arguments `kwargs`.
 - `ramp_particle_energy_without_rf::Bool`: If `true` when ramping (`Beamline`'s reference 
     energy is a `TimeFunction`), then particle energies will be artificially ramped with 
     the reference energy. Default is `false`
-- `ramp_update_each_particle::Bool`: If `true` when ramping, then the z-offset/time-offset 
-    of each individual particle at the element entrances is taken into account when 
-    tracking particles through the time-dependent element parameters. Usually only needed 
-    if ramping is fast compared to the time scale of bunch passage through elements. 
-    Default is `false`.
+- `ramp_update_each_particle::Bool`: If `true` when ramping, then each particle sees the
+    reference energy at its own time (from its z-offset) at the element entrances, and the
+    reference energy also changes through each element. If `false`, all particles see the
+    reference energy at the reference time at each element entrance. Usually only needed if
+    ramping is fast compared to the time scale of bunch passage through elements. (Time-dependent
+    element parameters are always evaluated at each particle's own time.) Default is `false`.
 - `batch_start::Int`: Specifies the starting index for `BatchParam`s that particles in a 
     bunch will see. E.g., if `batch_start=3`, then particle 1 sees index 3 in all 
     `BatchParam`s, particle 2 sees index 4, etc. Indexing of `BatchParam`s will loop 
