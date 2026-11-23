@@ -30,6 +30,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
   element
 - Tracking of any particle species including through lattices designed for other species (e.g. muons in an electron ring)
 - Arbitrary time-dependent parameters (e.g. magnet strengths, reference energy, even misalignments), seen by each particle at its own arrival time
+- Parallelizable over both particles _and lattices_ by setting lattice parameters to be a vector of many values with `BatchParam`
 - Particle coordinates saved at any element or anywhere inside elements, and tracking that starts
   at any element
 - Dynamic aperture scans and frequency map analysis (NAFF)
@@ -41,7 +42,7 @@ SciBmad development is progressing rapidly. Features included in the current sta
   and for open lattices given the initial optics
 - Resonance driving terms and amplitude-dependent tunes
 - All of these as Taylor series in any lattice parameter (parametric normal form)
-- Truncation orders chosen automatically from the quantities asked for
+- Truncation orders chosen automatically from the quantities asked, for a fastest calculation
 
 **Matching and derivatives**
 - Matching of any quantity computed by `twiss` (e.g. tunes, chromaticities, beta functions, Montague functions,
@@ -60,28 +61,31 @@ SciBmad development is progressing rapidly. Features included in the current sta
 
 **Performance**
 - Parallel on CPUs and GPUs (NVIDIA, AMD, Intel and Apple): tracking, closed orbits, dynamic
-  aperture, IBS, NAFF (not yet on Apple GPUs), and Newton and Levenberg-Marquardt solvers
+  aperture, IBS, NAFF, and Newton and Levenberg-Marquardt solvers
 - CPU/GPU parallelized over both particles _and lattices_ via `BatchParam`
-- Also supports 32-bit precision on CPUs and GPUs (including Apple Metal), also with time-dependent and batch parameters
+- Also supports 32-bit precision on CPUs and GPUs (including Apple Metal), including with time-dependent and batch parameters
 
 **Ease of use**
 - One way to read results: Twiss columns, tracking results and matching targets are all read at
   an element, a name, a position inside an element, or a turn
-- Results plot directly with the Makie and Plots packages in Julia (e.g. `lines(tw.s, tw.beta1)`)
+- Results plot directly with the Makie and Plots packages in Julia
 - Usable from Python through [juliacall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/)
 
-### Features in Future Releases
-- Generalized gradient field description
+### Currently in Development
 - Wakefields
-- Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strong-strong beam beam)
+- Generalized gradient field description
 - Weak-strong symplectic beam-beam interaction
+- Forking/connecting lattice branches together
+- Space charge
+- Coherent synchrotron radiation
+
+### Planned for Future Releases
+- Backwards tracking
+- Bindings to [WarpX](https://github.com/BLAST-WarpX/warpx) for collective effects (e.g. strong-strong beam beam)
 - PyTorch bindings
 - Exact multipoles in curved coordinate systems
 - Electric multipoles
-- Space charge
-- Coherent synchrotron radiation
 - Superposition of elements
-- Fork elements and connecting lattice branches together
 - [Other projects](https://github.com/bmad-sim/SciBmad.jl/issues/54)
 
 ## SciBmad Family

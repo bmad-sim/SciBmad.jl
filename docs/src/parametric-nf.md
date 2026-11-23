@@ -48,10 +48,7 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
         species_ref=Species("electron"), pc_ref=18e9)
 ```
 
-The quantities are written with `TwissExpr`. It takes the same arguments as `twiss`, and its
-quantities are read like the summary values and columns of a `twiss` result (see
-[Twiss](twiss.md)), but nothing is computed yet. The parameters are given as knobs, e.g.
-`@knob(qf.Kn1)` for the strength of `qf`:
+We first construct a `TwissExpr`, which is basically a lazily-evaluated `twiss` call. It takes the same arguments as `twiss`, except  `at`, `cols`, `base_cols`, `as_taylor_series` and `GTPSA_descriptor`, which are determined automatically given what you request. `TwissExpr` quantities are read identically as the summary values and columns of a `twiss` result are read(see [Twiss](twiss.md)), but nothing is computed yet. The parameters are given as knobs, e.g. `@knob(qf.Kn1)` for the strength of `qf`:
 
 ```{code-cell} julia
 tw = TwissExpr(fodo)
@@ -60,8 +57,8 @@ kd = @knob(qd.Kn1)
 ```
 
 `SciBmad.value_and_jacobian` computes the values of the quantities and their derivatives with
-respect to the knobs. (It is not exported, because DifferentiationInterface exports a function of
-the same name.) The Jacobian has one row per quantity and one column per knob:
+respect to the knobs. It is not exported, because `DifferentiationInterface` exports a function of
+the same name. The Jacobian has one row per quantity and one column per knob:
 
 ```{code-cell} julia
 v, J = SciBmad.value_and_jacobian([tw.q1, tw.q2], [kf, kd])
@@ -87,7 +84,7 @@ No truncation order has to be chosen: each quantity knows the order it needs, he
 order in δ for the chromaticities.
 
 Any parameter that can be set with `object.parameter = value` can be a knob: an element's
-strength, length or misalignment, or a variable of a [deferred expression](defexpr.md) (see
+strength, length or misalignment, or a variable of [context](defexpr.md) (see
 [Knobs](#optimize.knobs)).
 
 `value` computes only the values. `deriv(quantity, knob)` is the derivative as a new quantity,

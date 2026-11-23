@@ -20,11 +20,11 @@ ENV["LINES"] = 30
 ```
 
 Matching means varying parameters of a lattice (the "knobs") until quantities such as the tunes,
-the beta functions at some point, or the chromaticities have the values you want. In SciBmad you
-write down the quantities and their goals, say what may be varied, and call `match!`.
+the beta functions at some point, chromaticities, etc have the values you want. In SciBmad all you
+need to do is write down the quantities and their goals, say what knobs should be varied to achieve that goal, and call `match!`.
 
 Most optimizers need the derivatives of the quantities with respect to the knobs. In
-non-differentiable codes these are computed with finite differences, which are approximate and
+non-differentiable codes, these are computed with finite differences, which are approximate and
 need one more calculation per knob. Because SciBmad is fully differentiable, `match!` gets the
 *exact* derivatives with respect to all knobs from a single calculation.
 
@@ -49,9 +49,7 @@ fodo = Beamline([qf, sf, d, b, d, qd, sd, d, b, d],
         species_ref=Species("electron"), pc_ref=18e9)
 ```
 
-First we need a way to refer to what `twiss` computes for `fodo`. `TwissExpr` gives exactly that.
-It takes the same arguments as [`twiss`](twiss.md), and its quantities are read like the summary
-values and columns of a `twiss` result, but nothing is computed yet.
+First we need a way to refer to what `twiss` computes for `fodo`: `TwissExpr` gives exactly that. It is a lazily-evaluated `twiss` call that can be read in the same way that `twiss` can, however nothing is actually computed until it is requested. Furthermore, it will automatically infer the  `at`, `cols`, `base_cols`, `as_taylor_series` and `GTPSA_descriptor` keyword arguments to `twiss` based on what you request. Other than those inputs, `TwissExpr` accepts all the same arguments as [`twiss`](twiss.md).
 
 ```{code-cell} julia
 tw = TwissExpr(fodo)
@@ -92,25 +90,22 @@ res = match!(vary    = [@knob(sf.Kn2), @knob(sd.Kn2)],
              targets = [tw.dq1 == 1, tw.dq2 == 1])
 ```
 
-You do not need to set any truncation order: each quantity knows the order it needs.
-
 ## Quantities and Locations
 
 Every summary value and every numeric column of [`twiss`](twiss.md) is available from a
 `TwissExpr`, written in the same way as for the result of `twiss`: `tw.q1`, `tw.dq1`,
 `tw.q1[J1=1]`, `tw.beta1[qd]`, `tw.beta1[qd, :exit]`, `tw.beta1[[b], :]`, `tw.beta1["q*"]`,
 `tw.dbeta1[qd]`, `tw.h3000[1]`, and so on. Unlike for `twiss`, you do not choose truncation
-orders or rows: each quantity knows what it needs.
+orders or rows: `TwissExpr` will knows what you need based on what you ask for.
 
-The `h` terms are complex numbers. `value` gives them as such, but a target or `minimize` needs
-their `abs`, `real` or `imag`.
-
-These expressions can be combined with ordinary arithmetic and functions. For example, the square
-of the beta function at `qd` minus five times the average of the alpha function through the bends:
+You can form arbitrary expressions with the Twiss output to serve as targets/minimization goals using ordinary arithmetic and functions. For example, the square of the beta function at `qd` minus five times the average of the alpha function through the bends:
 
 ```{code-cell} julia
 e = tw.beta1[qd]^2 - 5*mean(tw.alpha1[[b], :])
 ```
+
+The `h` terms are complex numbers. `value` gives them as such, but a target or `minimize` needs
+their `real` and `imag` parts separately.
 
 `value` computes an expression. Only the rows and columns of `twiss` that it needs are computed:
 
@@ -168,15 +163,14 @@ solutions exist, and `match!` returns one near the starting point. With
 targets to first order. With more targets than can be met, `match!` returns the closest it can
 get (in the least-squares sense) and reports the match as not converged.
 
-`minimize` is for quantities that should just be as small as possible, for example driving terms
-of a ring with four sextupole families:
+`minimize` is for quantities that should just be as small as possible. For example, we can minimize the driving terms of a ring with four sextupoles while also requiring that the chromaticities are +1 with (using `reim` which returns a tuple of the real and imaginary parts, and then splatting those values with `...` into the vector):
 
 ```julia
 twc = TwissExpr(ring; rf_on=false)
 match!(vary = [@knob(s1.Kn2), @knob(s2.Kn2), @knob(s3.Kn2), @knob(s4.Kn2)],
        targets = [Target(twc.dq1, 1; weight=100, tol=1e-4),
                   Target(twc.dq2, 1; weight=100, tol=1e-4)],
-       minimize = [abs(twc.h3000[1]), abs(twc.h2100[1]), abs(twc.h1020[1])])
+       minimize = [reim(twc.h3000[1])..., reim(twc.h2100[1])..., reim(twc.h1020[1])...])
 ```
 
 The sum of the squares of the expressions in `minimize` and of the distances from the targets
@@ -231,8 +225,7 @@ also an expression, so it can appear in targets: `@knob(qf.Kn1) + @knob(qd.Kn1) 
 
 ## Orbit Correction
 
-The closed orbit is a column of `twiss` like any other (`tw.x[bpm]`, `tw.y[bpm]`, ...), so orbit
-correction is a match too. Here is a ring of ten cells, each with a misaligned quadrupole, a
+The closed orbit is a column of `twiss` like any other (`tw.x[bpm]`, `tw.y[bpm]`, ...), so `match!` can do orbit correction too. Here is a ring of ten cells, each with a misaligned quadrupole, a
 horizontal corrector and a BPM. The strengths of all correctors come from one vector variable of
 the context, `kicks` (and gradient errors of the quadrupoles from another, `dk`, used below):
 
