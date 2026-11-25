@@ -1160,3 +1160,32 @@ of the above to the whole page, not only to the paragraph mentioned.
 - Every name used in examples must work as written after `using SciBmad` (unexported functions
   are written with `SciBmad.`, e.g. `SciBmad.value_and_jacobian`, which is not exported because
   DifferentiationInterface exports a function of the same name).
+
+### The Claude Code skill (`skills/scibmad/`)
+
+The repository is a Claude Code plugin and its own marketplace (`.claude-plugin/plugin.json`,
+`.claude-plugin/marketplace.json`); users install it as described in `installation.md`. The
+skill is `skills/scibmad/`: `SKILL.md` (loaded whenever the skill triggers), `references/*.md`
+(one per topic, read only when needed), `scripts/overview.jl` (a tested lattice summary),
+`evals/` (cases for `claude plugin eval`), `benchmark/` (the ring design tutorial chapters with
+their `match!` cells removed, graded against the solution lattices; README there).
+
+How it was built (Nov 2026), and how to change it:
+- **Update it in the same PR as the API change** it describes, and keep the version stamp in
+  `SKILL.md` and `plugin.json` at the SciBmad release.
+- **General, never fitted to a test.** A failing benchmark or eval run is fixed by the general
+  rule it exposes (how to choose knobs, rows, orders; what to report), never by task-specific
+  values or steps. Keep non-tutorial cases in the test set.
+- **Content is what the docs do not say:** pitfalls, conventions and the maintainer's judgment
+  (e.g. trust the code's output and cross-check only when asked; odd results → more `n_steps`
+  first; optimize with `match!`; complex terms as separate real and imaginary entries; s-
+  dependent driving terms for the DA; dispersion with RF is an approximation; never describe
+  `twiss` as evaluating integrals; read the user's lattice file first). API details belong to
+  docstrings and the online docs: link them, don't copy them. Users have no local clone.
+- **Every snippet is run as written** before it goes in, and every claim checked against the
+  code (a wrong `angle`, an invalid splat and a wrong `minimize` form were caught this way).
+- **Lean:** `SKILL.md` is the per-use cost; keep it to pitfalls and judgment, push detail into
+  the references, and put repeated exploration into tested scripts.
+- **Testing costs the maintainer's usage limits:** state the cost before running anything.
+  Prefer one targeted run on Sonnet at low effort over broad reruns; scan the run transcripts
+  for reads of the solution files; validate with `claude plugin validate .`.

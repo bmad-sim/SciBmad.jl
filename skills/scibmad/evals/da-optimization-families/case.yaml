@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: da-optimization-families
+expected_outcome: |
+  Uses the four existing sextupole families (s1..s4) as knobs, holds dq1 = dq2 = 1 (rf_on not needed: no RF),
+  ranks driving terms/detuning by their effect at the beam amplitudes, optimizes proxies with match!,
+  and shows the dynamic aperture before and after with dynamic_aperture.

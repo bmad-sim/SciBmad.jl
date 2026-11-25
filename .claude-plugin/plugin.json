@@ -1,0 +1,8 @@
+{
+  "name": "scibmad",
+  "description": "Expert guidance for SciBmad: lattices, twiss, tracking, closed orbits, dynamic aperture, matching and optimization, orbit correction, nonlinear dynamics.",
+  "version": "0.8.0",
+  "author": { "name": "bmad-sim" },
+  "homepage": "https://bmad-sim.github.io/SciBmad.jl/",
+  "repository": "https://github.com/bmad-sim/SciBmad.jl"
+}

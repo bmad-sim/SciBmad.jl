@@ -1,0 +1,14 @@
+{
+  "name": "bmad-sim",
+  "description": "Claude Code plugins for the bmad-sim accelerator physics packages",
+  "owner": {
+    "name": "bmad-sim"
+  },
+  "plugins": [
+    {
+      "name": "scibmad",
+      "source": "./",
+      "description": "Expert guidance for SciBmad: lattices, twiss, tracking, closed orbits, dynamic aperture, matching and optimization, orbit correction, nonlinear dynamics."
+    }
+  ]
+}

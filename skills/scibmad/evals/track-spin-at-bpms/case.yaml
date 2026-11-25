@@ -1,0 +1,5 @@
+schema_version: "1.1"
+name: track-spin-at-bpms
+expected_outcome: |
+  A script that tracks with spin=true, saves at bpm1, bpm2 and the end of the beamline, and
+  reports (a) 0.0015196 m, (b) 3, (c) 0.63195, (d) 0.0031719 m.

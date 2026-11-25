@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: bmad-lattice-translation
+expected_outcome: |
+  A faithful translation (E_ref = 3e9, Kn1/Kn2, the tilted quadrupole, SBend angle) whose
+  results agree with Tao: tunes 0.258799 and 0.214986, chromaticities 0.2967 and 0.3109 (Tao
+  0.2971, 0.3108), momentum compaction 0.015939.
