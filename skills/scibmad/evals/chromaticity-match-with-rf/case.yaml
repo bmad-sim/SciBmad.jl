@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: chromaticity-match-with-rf
+expected_outcome: |
+  A script that matches the chromaticities with the RF cavity turned off for the chromatic
+  calculation (rf_on=false), runs, and reports sf.Kn2 = 24.857, sd.Kn2 = -28.033, chromaticities
+  2 and 2, synchrotron tune -0.003565 (RF on), and dx at qd 1.5505 m (6D) or 1.5374 m (RF off).

@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: tune-match-deferred-knob
+expected_outcome: |
+  A script that varies the context variable kq (keeping the DefExpr link), finds kq = 0.394108,
+  q2 = 0.140294 there, exact derivatives dq1/dkq = 0.33958 and dq2/dkq = 0.38093 (automatic
+  differentiation, e.g. SciBmad.value_and_jacobian or deriv), and shows that the quads still follow kq.

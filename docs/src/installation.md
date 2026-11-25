@@ -129,6 +129,23 @@ Some results in Julia are read with keywords inside the square brackets, such as
 Python has no such syntax: write `jl.getindex(x, turn=3)` instead (in general, `x[i, k=1]` is
 `jl.getindex(x, i, k=1)`). The [examples](examples-index.md) include Python notebooks.
 
+## Using SciBmad with Claude Code
+
+[Claude Code](https://claude.com/claude-code) can write and run SciBmad code for you. SciBmad
+provides a skill for it: instructions and reference material that teach Claude how SciBmad is
+used, which mistakes to avoid, and how to approach tasks such as matching, orbit correction and
+dynamic aperture optimization. Install it in Claude Code with
+
+```
+/plugin marketplace add bmad-sim/SciBmad.jl
+/plugin install scibmad@bmad-sim
+```
+
+Claude then uses the skill whenever a request involves SciBmad, for example "match the tunes of
+my ring to 0.22 and 0.18" or "correct the orbit of `ring.jl` with its corrector coils". The skill
+is written for the current version of SciBmad. To update it, run
+`/plugin marketplace update bmad-sim`.
+
 ## Next Steps
 
 Once SciBmad is installed, head to the [Quickstart Guide](quickstart.md).
