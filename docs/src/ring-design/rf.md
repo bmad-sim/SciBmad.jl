@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 (rd.refenergy)=
 ## Reference Energy
 
@@ -41,6 +49,17 @@ q1 = Quadrupole(L=0.1, Kn1=0.14)
 q2 = Quadrupole(L=0.1)
 lat = Beamline([q1, q2], species_ref=Species("proton"), pc_ref=1e9)
 lat[q2].Bn1 = lat.p_over_q_ref*lat[q1].Kn1 # The same field gradient as q1 [T/m]
+lat[q1].Bn1, lat[q2].Kn1
+```
+
+```{code-cell} python
+import numpy as np
+import scibmad as sb
+
+q1 = sb.Quadrupole(L=0.1, Kn1=0.14)
+q2 = sb.Quadrupole(L=0.1)
+lat = sb.Beamline([q1, q2], species_ref=sb.Species("proton"), pc_ref=1e9)
+lat[q2].Bn1 = lat.p_over_q_ref*lat[q1].Kn1  # The same field gradient as q1 [T/m]
 lat[q1].Bn1, lat[q2].Kn1
 ```
 
@@ -76,6 +95,13 @@ res = track(lat, v0=[0 0 0 0 1e-3 0])
 res.pz[turn=1] # ≈ (1 MeV/18 GeV) sin(2π (1 mm)/(0.6 m))
 ```
 
+```{code-cell} python
+cav = sb.RFCavity(L=0.5, voltage=1e6, rf_frequency=500e6, zero_phase=sb.PhaseRef.AboveTransition)
+lat = sb.Beamline([cav], species_ref=sb.Species("electron"), E_ref=18e9)
+res = sb.track(lat, v0=[[0, 0, 0, 0, 1e-3, 0]])
+res.pz(turn=1)  # ≈ (1 MeV/18 GeV) sin(2π (1 mm)/(0.6 m))
+```
+
 ## Adding RF Cavities
 
 In a real machine, electrons emit synchrotron radiation as they bend around the ring, so the energy
@@ -100,6 +126,10 @@ FODO cell with RF cavities.
 include("lattices/07-tune-cell.jl");
 ```
 
+```{code-cell} python
+from lattices.ch07_tune_cell import *
+```
+
 2. Define the RF cavities and the drifts. The drift length is computed from the length of the
    straight section cell. The harmonic number `harmon` is the RF frequency in units of the
    revolution frequency (the RF frequency is then computed from the length of the ring). Start
@@ -113,10 +143,21 @@ include("lattices/07-tune-cell.jl");
 end;
 ```
 
+```{code-cell} python
+with sb.elements():
+    rf0 = sb.RFCavity(L=3.41, harmon=7560, voltage=68e6/18,
+                      zero_phase=sb.PhaseRef.AboveTransition)
+    drf = sb.Drift(L=((1.241 + 5.855 + 0.609) - 2*3.41)/3)
+```
+
 3. Define the `fodorf` cell:
 
 ```{code-cell} julia
 fodorf = [qfss, drf, rf0, drf, rf0, drf, qdss, drf, rf0, drf, rf0, drf];
+```
+
+```{code-cell} python
+fodorf = [qfss, drf, rf0, drf, rf0, drf, qdss, drf, rf0, drf, rf0, drf]
 ```
 
 4. Replace the 4 FODO cells of the 10 o'clock section by `fodorf` cells, in the sextants 9 and 11:
@@ -131,11 +172,23 @@ ring = Beamline([sextant1; sextant3; sextant5; sextant7; sextant9; sextant11],
                 species_ref=electron, pc_ref=pc_ref)
 ```
 
+```{code-cell} python
+sextant9 = fodossf*4 + ss_to_arcf + fodoaf*20 + arc_to_ssf + fodossf*2 + fodorf*2
+sextant11 = fodorf*2 + fodossr*2 + ss_to_arcr + fodoar*20 + arc_to_ssr + fodossr*4
+
+ring = sb.Beamline(sextant1 + sextant3 + sextant5 + sextant7 + sextant9 + sextant11,
+                   species_ref=electron, pc_ref=pc_ref)
+```
+
 With RF cavities, the longitudinal motion oscillates too, and `twiss` computes it as the third
 normal mode: the synchrotron tune is `q3`.
 
 ```{code-cell} julia
 twiss(ring, at=[])
+```
+
+```{code-cell} python
+sb.twiss(ring, at=[])
 ```
 
 The synchrotron tune is negative above transition, because the longitudinal motion turns the other
@@ -149,12 +202,22 @@ tw_ring = TwissExpr(ring)
 match!(vary=[@knob(rf0.voltage)], targets=[tw_ring.q3 == -0.05])
 ```
 
+```{code-cell} python
+tw_ring = sb.TwissExpr(ring)
+sb.match(vary=[sb.Knob(rf0, "voltage")], targets=[tw_ring.q3 == -0.05])
+```
+
 The momentum compaction $\alpha_c$, the relative change of the length of the closed orbit with
 $\delta$, is defined without synchrotron motion: compute it with the cavities turned off, with
 `rf_on=false`.
 
 ```{code-cell} julia
 tw = twiss(ring, rf_on=false, at=[])
+tw.alphac
+```
+
+```{code-cell} python
+tw = sb.twiss(ring, rf_on=False, at=[])
 tw.alphac
 ```
 

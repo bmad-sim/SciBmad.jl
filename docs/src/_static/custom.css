@@ -119,3 +119,36 @@ body {
     margin-bottom: 0.25rem;
     border-bottom: none;
 }
+
+/* Julia / Python switch in the top bar (language-switch.js) */
+.language-switch {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.75rem;
+    border: 1px solid var(--color-background-border);
+    border-radius: 0.4rem;
+    overflow: hidden;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.language-switch-option {
+    padding: 0.3rem 0.6rem;
+    color: var(--color-foreground-secondary);
+    text-decoration: none;
+}
+
+.language-switch-option:hover {
+    color: var(--color-foreground-primary);
+    background: var(--color-background-hover);
+}
+
+.language-switch-option.active {
+    color: var(--color-background-primary);
+    background: var(--color-brand-primary);
+    font-weight: 600;
+}
+
+.language-switch-option.active:hover {
+    color: var(--color-background-primary);
+}

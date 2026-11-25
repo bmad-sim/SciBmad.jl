@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 Up to this point, tracking has implicitly been limited to tracking once through the lattice, which
 `twiss` does to compute the closed orbit and the lattice functions. SciBmad's `track` tracks any
 number of particles over any number of turns, with spin, radiation, intra-beam scattering, and
@@ -41,8 +49,18 @@ beam = [0  0  0  0  0     0
         0  0  0  0  0     0.03]
 ```
 
+```{code-cell} python
+beam = np.array([[0, 0, 0, 0, 0,     0],
+                 [0, 0, 0, 0, 0.1,   0],
+                 [0, 0, 0, 0, 0.15,  0],
+                 [0, 0, 0, 0, 0,    -0.01],
+                 [0, 0, 0, 0, 0,     0.015],
+                 [0, 0, 0, 0, 0,     0.02],
+                 [0, 0, 0, 0, 0,     0.03]])
+```
+
 Such a matrix can also be read from a file, for example a text file with one row per particle with
-`readdlm` of the `DelimitedFiles` package.
+{jl}`readdlm`{jltext}` of the `{jl}`DelimitedFiles`{jltext}` package`{py}`np.loadtxt`.
 
 ## Tracking
 
@@ -56,6 +74,12 @@ for ele in ring.line
 end
 ```
 
+```{code-cell} python
+from lattices.ch09_rf import *
+for ele in ring.line:
+    ele.rad_damping = True
+```
+
 With radiation damping, the electrons lose energy in every bend, which the RF cavities replace.
 The closed orbit is then not zero: it has a small $p_z$, which changes along the ring (the energy
 is lost in the bends and gained in the cavities), and a $z$ such that the cavities restore the
@@ -67,12 +91,24 @@ v0 = co .+ beam
 res = track(ring, v0=v0, n_turns=30)
 ```
 
+```{code-cell} python
+co = sb.find_closed_orbit(ring).v0  # 1×6 array
+v0 = co + beam
+res = sb.track(ring, v0=v0, n_turns=30)
+res
+```
+
 The tracking saves the particles at the end of the ring after every turn. The state of each particle
-after the last turn is in `res.state`: `0x1` is alive, and other values are the ways a particle
+after the last turn is in `res.state`: {jl}`0x1`{py}`1` is alive, and other values are the ways a
+particle
 can be lost (see [Track](../track.md)):
 
 ```{code-cell} julia
 res.state[turn=30]
+```
+
+```{code-cell} python
+res.state(turn=30)
 ```
 
 The particles with the largest $z$ or $p_z$ are lost: they started outside of the RF bucket, the
@@ -90,7 +126,20 @@ axislegend(ax, position=:rb)
 fig
 ```
 
-`res.z[turn=:, particle=i]` is $z$ of particle `i` after every turn, from turn 0 (the initial
+```{code-cell} python
+from matplotlib.figure import Figure
+fig = Figure(figsize=(7, 4.5), layout="constrained")
+ax = fig.subplots()
+for i in range(1, 8):
+    ax.scatter(res.z(turn=..., particle=i), res.pz(turn=..., particle=i), s=10,
+               label=f"particle {i}")
+ax.set(xlabel="z [m]", ylabel="pz", xlim=(-0.3, 0.3), ylim=(-0.04, 0.04))
+ax.legend(loc="lower right")
+fig
+```
+
+{jl}`res.z[turn=:, particle=i]`{py}`res.z(turn=..., particle=i)` is $z$ of particle `i` after every
+turn, from turn 0 (the initial
 coordinates) to turn 30. The coordinates of a lost particle stay at the values it had where it was
 lost (here outside of the plot). The RF wavelength, the length of the ring divided by the harmonic
 number, is 0.51 m.
@@ -119,6 +168,23 @@ end
 tws = twiss(simple_ring, cols=["a"], at=[1])
 ```
 
+```{code-cell} python
+with sb.elements():
+    q1 = sb.Quadrupole(L=0.45, Kn1=1.0, tilt=0.01)  # Tilted to couple the modes
+    q2 = sb.Quadrupole(L=0.55, Kn1=-1.0)
+    d = sb.Drift(L=0.3)
+    bs = sb.SBend(L=0.5, angle=0.01)
+    rf = sb.RFCavity(L=0.1, rf_frequency=500e6, voltage=1e8,
+                     zero_phase=sb.PhaseRef.AboveTransition)
+simple_ring = sb.Beamline([d, q1, d, bs, d, q2, d, rf, bs]*10,
+                          species_ref=sb.Species("positron"), pc_ref=13e9)
+for ele in simple_ring.line:
+    ele.rad_damping = True
+    ele.rad_fluctuations = True
+tws = sb.twiss(simple_ring, cols=["a"], at=[1])
+tws
+```
+
 The summary values `damp1`, `damp2`, `damp3` are the damping decrements per turn: the amplitudes of
 the modes decrease by the factor $e^{-\mathrm{damp}}$ per turn, and the emittances by
 $e^{-2\,\mathrm{damp}}$. The column `a` is the matrix $A$ of the normalizing map at the start of the
@@ -142,6 +208,18 @@ v0 = co_s .+ xn*A'
 res = track(simple_ring, v0=v0, n_turns=20000, save_every_n_turns=100)
 ```
 
+```{code-cell} python
+rng = np.random.default_rng(1)
+A = tws.a[1]
+co_s = sb.find_closed_orbit(simple_ring).v0
+n = 100
+emit0 = np.array([1e-9, 1e-12, 1e-8])  # Initial emittances of the three modes [m]
+xn = rng.standard_normal((n, 6)) * np.sqrt(np.repeat(emit0, 2))
+v0 = co_s + xn @ A.T
+res = sb.track(simple_ring, v0=v0, n_turns=20000, save_every_n_turns=100)
+res
+```
+
 The emittance of mode 1 after each saved turn:
 
 ```{code-cell} julia
@@ -150,6 +228,17 @@ emit1 = [mean(sum(abs2, ((res.v[turn=t] .- co_s)*Ai')[:, 1:2], dims=2))/2 for t 
 fig = Figure(size=(700, 350))
 ax = Axis(fig[1, 1], xlabel="turn", ylabel="ε₁ [m]")
 lines!(ax, res.turns, emit1)
+fig
+```
+
+```{code-cell} python
+Ai = np.linalg.inv(A)
+emit1 = [np.mean(np.sum((((res.v(turn=t) - co_s) @ Ai.T)[:, :2])**2, axis=1))/2
+         for t in res.turns]
+fig = Figure(figsize=(7, 3.5), layout="constrained")
+ax = fig.subplots()
+ax.plot(res.turns, emit1)
+ax.set(xlabel="turn", ylabel="ε₁ [m]")
 fig
 ```
 

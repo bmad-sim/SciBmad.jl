@@ -21,6 +21,21 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx_copybutton',
     'juliadocstrings',  # docs/_ext/juliadocstrings.py -- the `{docstring}` directive
+    'dual_language',    # docs/_ext/dual_language.py -- the Julia and Python versions of the pages
+]
+
+# The language of the code examples: "julia" (the default) or "python", for the Python version
+# of the site (`sphinx-build -D docs_language=python ...`, which docs/build.py puts under
+# python/). See docs/_ext/dual_language.py.
+docs_language = 'julia'
+# The Ring Design Tutorial's lattice files `lattices/05-ring.jl` are `lattices/ch05_ring.py` in
+# Python (a package whose modules import each other as the Julia files include each other)
+docs_python_rewrites = [
+    # The example notebooks of the Python version are those in examples/python
+    (r'examples/julia/', r'examples/python/'),
+    (r'lattices/(\d\d)-([a-z]+)-([a-z]+)-([a-z]+)\.jl', r'lattices/ch\1_\2_\3_\4.py'),
+    (r'lattices/(\d\d)-([a-z]+)-([a-z]+)\.jl', r'lattices/ch\1_\2_\3.py'),
+    (r'lattices/(\d\d)-([a-z]+)\.jl', r'lattices/ch\1_\2.py'),
 ]
 
 # -- Copy button on code blocks ----------------------------------------------
@@ -101,8 +116,17 @@ intersphinx_mapping = {
               (os.path.join(_docs_dir, 'api', 'build', 'objects.inv'),))
 }
 
-# Subpath where API docs live in the combined site (gh-pages/api/)
+# Subpath where API docs live in the combined site (gh-pages/api/), from the root of this
+# build: the Python version of the site is in gh-pages/python/
 _api_subpath = 'api/'
+
+
+def _set_api_subpath(app, config):
+    global _api_subpath
+    _api_subpath = '../api/' if config.docs_language == 'python' else 'api/'
+    # Each version shows the example notebooks of its language only
+    other = 'julia' if config.docs_language == 'python' else 'python'
+    config.exclude_patterns.append(f'examples/{other}/*')
 
 def _fix_intersphinx_refs(app, doctree, docname):
     """Rewrite intersphinx absolute URLs to relative paths for local browsing."""
@@ -294,6 +318,7 @@ _patch_coalesce_streams()
 
 def setup(app):
     app.add_domain(_JuliaDomain)
+    app.connect('config-inited', _set_api_subpath)
     app.connect('doctree-resolved', _fix_intersphinx_refs)
     app.connect('build-finished', _fail_on_execution_error)
     # Furo is loaded as a theme, i.e. after conf.py's setup(), so its own
@@ -331,7 +356,7 @@ html_theme_options = {
 html_title = 'SciBmad Documentation'
 html_static_path = ['_static']
 html_css_files = ['custom.css']
-html_js_files = ['topbar-github.js', 'sidebar-current.js']
+html_js_files = ['language-switch.js', 'topbar-github.js', 'sidebar-current.js']
 
 
 # -- Options for MyST --------------------------------------------------------

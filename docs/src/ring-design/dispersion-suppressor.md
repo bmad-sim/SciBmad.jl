@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Introduction
 
 To connect an arc to the following straight section in a sextant, the dispersion in the straight
@@ -49,6 +57,10 @@ dispersion suppressor is left as an exercise.
 include("lattices/01-fodo.jl");
 ```
 
+```{code-cell} python
+from lattices.ch01_fodo import *
+```
+
 2. Define a new half-strength bend `bh`, and the two special quadrupoles that will be varied to
    make the dispersion $\eta_x$ and its derivative $\eta_x'$ zero. Because these special
    quadrupoles are in the forward sextants (F), and are the first special quadrupoles (1), they are
@@ -62,12 +74,25 @@ include("lattices/01-fodo.jl");
 end;
 ```
 
+```{code-cell} python
+with sb.elements():
+    bh = sb.SBend(L=Lc*(θ/2)/(2*np.sin(θ/4)), angle=θ/2, e1=θ/4, e2=θ/4)  # Half-strength bend
+    qff1 = sb.Quadrupole(L=0.5, Kn1=0.3)
+    qdf1 = sb.Quadrupole(L=0.5, Kn1=-0.3)
+```
+
 3. Define the line of the figure above, with the half-strength bends and the special
    quadrupoles, and a `Beamline` with it:
 
 ```{code-cell} julia
 dispsupf = [qf, d1, bh, d2, qd, d1, bh, d2, qff1, d1, bh, d2, qdf1, d1, bh, d2]
 ds_f = Beamline(dispsupf, species_ref=electron, pc_ref=pc_ref)
+```
+
+```{code-cell} python
+dispsupf = [qf, d1, bh, d2, qd, d1, bh, d2, qff1, d1, bh, d2, qdf1, d1, bh, d2]
+ds_f = sb.Beamline(dispsupf, species_ref=electron, pc_ref=pc_ref)
+ds_f
 ```
 
 4. The dispersion suppressor is not periodic: it is an open line, and its lattice functions are
@@ -80,6 +105,11 @@ ds_f = Beamline(dispsupf, species_ref=electron, pc_ref=pc_ref)
 tw_dsf = TwissExpr(ds_f, a_initial=tw_af.a[end])
 ```
 
+```{code-cell} python
+tw_dsf = sb.TwissExpr(ds_f, a_initial=tw_af.a[-1])
+tw_dsf
+```
+
    The dispersion suppressor now always starts with the periodic lattice functions of the arc
    cell, also when the strengths of `qf` and `qd` change.
 
@@ -88,6 +118,10 @@ tw_dsf = TwissExpr(ds_f, a_initial=tw_af.a[end])
 
 ```{code-cell} julia
 value([tw_dsf.dx[end], tw_dsf.dpx[end]])
+```
+
+```{code-cell} python
+sb.value([tw_dsf.dx[-1], tw_dsf.dpx[-1]])
 ```
 
    `value` computes the values of expressions. To see the dispersion through the line, compute
@@ -101,11 +135,26 @@ lines!(ax, value(tw_dsf.s[:]), value(tw_dsf.dx[:]), label="before")
 fig
 ```
 
+```{code-cell} python
+from matplotlib.figure import Figure
+fig = Figure(figsize=(7, 3), layout="constrained")
+ax = fig.subplots()
+ax.plot(sb.value(tw_dsf.s[:]), sb.value(tw_dsf.dx[:]), label="before")
+ax.set_xlabel("s [m]")
+ax.set_ylabel("η [m]")
+fig
+```
+
 6. The match varies `qff1` and `qdf1`:
 
 ```{code-cell} julia
 match!(vary=[@knob(qff1.Kn1), @knob(qdf1.Kn1)],
        targets=[tw_dsf.dx[end] == 0, tw_dsf.dpx[end] == 0])
+```
+
+```{code-cell} python
+sb.match(vary=[sb.Knob(qff1, "Kn1"), sb.Knob(qdf1, "Kn1")],
+         targets=[tw_dsf.dx[-1] == 0, tw_dsf.dpx[-1] == 0])
 ```
 
    The dispersion and its derivative are now zero to within the tolerance of the targets
@@ -114,6 +163,12 @@ match!(vary=[@knob(qff1.Kn1), @knob(qdf1.Kn1)],
 ```{code-cell} julia
 lines!(ax, value(tw_dsf.s[:]), value(tw_dsf.dx[:]), label="after")
 axislegend(ax, position=:lb)
+fig
+```
+
+```{code-cell} python
+ax.plot(sb.value(tw_dsf.s[:]), sb.value(tw_dsf.dx[:]), label="after")
+ax.legend(loc="lower left")
 fig
 ```
 
@@ -138,12 +193,15 @@ fig
 
 4. **Second-order dispersion:** The suppressor makes the dispersion $\partial x/\partial\delta$ zero,
    but not the second-order dispersion $\partial^2 x/\partial\delta^2$, the column `dx_2`. Compute it at the
-   end of the suppressor, as a `TwissExpr` quantity: `value(tw_dsf.dx_2[end])`. Is it zero? Why
+   end of the suppressor, as a `TwissExpr` quantity:
+   {jl}`value(tw_dsf.dx_2[end])`{py}`sb.value(tw_dsf.dx_2[-1])`. Is it zero? Why
    not?
 
-5. **Setting optimization parameters:** `match!` stops after at most 50 iterations by default.
-   Which keyword argument of `match!` changes this? Hint: look at the documentation with
-   `?match!`.
+5. **Setting optimization parameters:** {jl}`match!`{py}`sb.match` stops after at most 50 iterations
+   by default.
+   Which keyword argument of {jl}`match!`{py}`sb.match` changes this? Hint: look at the
+   documentation with
+   {jl}`?match!`{py}`help(sb.match)`.
 
 6. **Strength of bends:** [Warning! This is a difficult problem!] To a good approximation, a
    dispersion suppressor from an arc FODO line to a straight FODO line (where the straight FODO

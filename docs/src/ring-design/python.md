@@ -1,38 +1,25 @@
 (rd.python)=
 # Appendix: SciBmad from Python
 
-SciBmad can also be used from Python, through
-[juliacall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/), which runs Julia inside
-Python. How to install it is described in [Using SciBmad from Python](../installation.md).
-
-```python
-from juliacall import Main as jl
-jl.seval("using SciBmad")
-```
-
-Julia functions are called through `jl`, with the same keyword arguments. Julia code that has no
-Python equivalent, such as the macros `@elements` and `@knob` and the targets written with `==`, is
-given as a string to `jl.seval`. A lattice file of this tutorial can be included in the same way,
-after which its variables are available through `jl`:
+Every example of this tutorial is also written in Python: switch to it with the "Julia | Python"
+button at the top of the page. The Python examples use the Python package `scibmad`, which runs
+SciBmad (see [Installation](../installation.md)), with the lattice of each chapter in the
+package [`lattices`](https://github.com/bmad-sim/SciBmad.jl/tree/main/docs/src/ring-design/lattices)
+(`from lattices.ch05_ring import *`), the Python version of the Julia lattice files.
 
 ```python
 import numpy as np
+import scibmad as sb
+from lattices.ch02_dispersion_suppressor import *
 
-jl.seval('include("lattices/02-dispersion-suppressor.jl")')
-tw = jl.twiss(jl.cell_af)
-beta1 = np.asarray(tw.beta1)    # The column as a NumPy array
-tw.q1                           # A summary value
+tw = sb.twiss(cell_af)
+beta1 = np.asarray(tw.beta1)  # The column as a NumPy array
+tw.q1                         # A summary value
+
+sb.match(vary=[sb.Knob(qff1, "Kn1"), sb.Knob(qdf1, "Kn1")],
+         targets=[tw_dsf.dx[-1] == 0, tw_dsf.dpx[-1] == 0])
 ```
 
-Matching works the same way:
-
-```python
-jl.seval("""
-match!(vary=[@knob(qff1.Kn1), @knob(qdf1.Kn1)],
-       targets=[tw_dsf.dx[end] == 0, tw_dsf.dpx[end] == 0])
-""")
-jl.qff1.Kn1
-```
-
-Results that are read with keywords inside the square brackets in Julia, such as `res.x[turn=3]`,
-are read with `jl.getindex(res.x, turn=3)` in Python.
+What Python writes differently from Julia (for example `res.x(turn=3)` for Julia's
+`res.x[turn=3]`, and `sb.Knob(qf, "Kn1")` for `@knob(qf.Kn1)`) is described in
+[SciBmad from Python](../python.md).

@@ -21,9 +21,11 @@ All are local clones in `~/.julia/dev` (local branches may be ahead of GitHub):
 - `NonlinearNormalForm` (NNF): `DAMap`, `normal`, `factorise`, vector fields.
 - `GTPSA` (+ `GTPSA_jll`), `TPSAInterface`: truncated power series.
 - `BatchSolve` (batched Newton), `FundamentalFrequencies` (NAFF), `AtomicAndPhysicalConstants`.
+- `PySciBmad` (Python package `pyscibmad`, `import scibmad as sb`): SciBmad from Python, a thin
+  generic layer on juliacall; see "PySciBmad" at the end of this file.
 
 Versions are coupled: SciBmad 0.8 needs BeamTracking 0.10.3, Beamlines 0.14.1, AtomicAndPhysicalConstants
-0.12, NonlinearNormalForm 0.5.5, GTPSA 1.5.6, TPSAInterface 0.3.1, BatchSolve 0.1.7, FundamentalFrequencies
+0.12, NonlinearNormalForm 0.5.5, GTPSA 1.5.6, TPSAInterface 0.3.1, BatchSolve 0.1.8, FundamentalFrequencies
 0.1.2 (SciBmad 0.7: BeamTracking 0.9, Beamlines 0.12). BeamTracking 0.10.3 works with Beamlines 0.13 and 0.14
 (its batch, time and Exact tests pass with 0.13.0, Nov 22 2026). Release order: Beamlines 0.14.1, BeamTracking
 0.10.3, then SciBmad 0.8.0 (checked Nov 22 2026: the other packages are at their registered versions).
@@ -1160,3 +1162,70 @@ of the above to the whole page, not only to the paragraph mentioned.
 - Every name used in examples must work as written after `using SciBmad` (unexported functions
   are written with `SciBmad.`, e.g. `SciBmad.value_and_jacobian`, which is not exported because
   DifferentiationInterface exports a function of the same name).
+
+**Julia and Python versions of the pages** (`docs/_ext/dual_language.py`, Nov 2026): the site is
+built twice from the same pages, Julia at the root and Python under `python/` (`sphinx-build -D
+docs_language=python`, done by `docs/build.py`), with a "Julia | Python" switch in the top bar
+(`_static/language-switch.js`: same page and section, the choice remembered in localStorage).
+- Every Julia `{code-cell}` is followed by its Python version, a `{code-cell} python` (also the
+  hidden `remove-cell` setup cells); a ```` ```julia ```` block by a ```` ```python ```` block.
+  The Python build fails on a Julia cell without one (unless tagged `julia-only`).
+- Text for one language: `:::{only} julia` / `:::{only} python` blocks (the closing `:::` alone on
+  its line, and no headings inside: headings stay the same in both versions), inline
+  `` {jl}`code` ``/`` {py}`code` `` (code) and `` {jltext}`...` ``/`` {pytext}`...` `` (text).
+  In the Python build, `` `true` ``, `` `false` ``, `` `nothing` `` in inline code become `True`,
+  `False`, `None` by themselves; `docs_python_rewrites` in `conf.py` maps paths (the tutorial's
+  `lattices/05-ring.jl` -> `lattices/ch05_ring.py`, `examples/julia/` -> `examples/python/`).
+- The Python examples follow PySciBmad's rules (`docs/src/python.md`): `import scibmad as sb`,
+  `with sb.elements():`, `sb.Knob(qf, "Kn1")`, `res.x(turn=3)`, `-1` for `end`, `0:1.23` for an
+  s-range, `"exit"` for `:exit`, `sb.match`, NumPy, Matplotlib (`matplotlib.figure.Figure`, which
+  a notebook shows once when it is the cell's value), `np.random.default_rng` (not Julia's RNG;
+  no prose quotes the random numbers).
+- Check a page's Python version by running its cells as a notebook would, against the Julia
+  output: every page and the whole Ring Design tutorial gave the Julia numbers (bitwise where
+  compared: the chapter 14 lattice, all matched knobs and columns). Recipe (scratch scripts):
+  apply `transform(text, "python")` of the extension, `exec` each python cell, `eval` the last
+  expression; and build both versions with Sphinx without execution (no warnings besides the
+  docstring lookups).
+- The example notebooks have Python versions in `examples/python` (each built from the Julia
+  notebook: its markdown, Python code; executed with nbconvert and `SCIBMAD_JULIA`/
+  `SCIBMAD_PROJECT` set). The tutorial's lattices are the Python package
+  `docs/src/ring-design/lattices` (`ch01_fodo.py` ...).
+
+## PySciBmad
+
+`~/.julia/dev/PySciBmad` (README there describes the layout). Facts and decisions (Nov 2026):
+- Generic: no list of SciBmad's API. Proxies by category of the Julia value (number-like when
+  `+(::T, ::Float64)` exists, array, collection, function/type, module); attributes are Julia
+  properties, `obj[...]` Julia indexing (negative integers from `end`, `sb.end`/`sb.begin`,
+  slices of floats are s-ranges), `obj(...)` a call, or indexing with keywords when the value is
+  not callable. Julia arrays of plain numbers are NumPy arrays (CPU: views of Julia's memory);
+  other arrays index from 0 like NumPy. Beamline indexes, particle numbers and the entry of
+  `Knob(obj, prop, i)` stay Julia's (from 1): translating them would need knowledge of every
+  index-like value (e.g. `beamline_index`) and break with new ones (decision to confirm).
+- Strings are passed as Symbols where a function has no String method (`callfunc` in
+  `_glue.jl`: retry on a MethodError of the called function, or a keyword TypeError).
+- `sb.DefExpr(f)` calls `f` once with symbolic context variables (`ctxvar`) and keeps the Julia
+  `DefExpr` built by the operators: no Python at evaluation (traced and Julia closures gave
+  bitwise equal tutorial results); `math.*`, `if`s, `np.clip` fall back to calling Python.
+- Display: `show` with `IOContext(:python => true)`; SciBmad uses it for its hints of indexing
+  with keywords (`_kwindex` in `track.jl`: `x(turn=n)` for Python, unchanged in Julia).
+- Runtime: the Julia is chosen at `import scibmad` (explicit, env vars, config, juliacall's env
+  vars, the conda distribution in the environment, juliapkg). juliacall's Python package must be
+  PythonCall's exact version (an assert): for a given project and the distribution, the copy in
+  PythonCall's `pysrc` is put first on `sys.path`. `PYTHON_JULIACALL_HANDLE_SIGNALS=yes` by
+  default: without Julia's signal handlers, any second Julia thread (threads > 1, and the wait
+  thread of Metal.jl) crashes the process at a GC safepoint (SIGBUS in `ijl_process_events`,
+  seen with the GPU dynamic aperture). Julia's SIGINT handler would then end the process on
+  Ctrl-C (in Python code too), so Python's handler is put back after Julia starts: Ctrl-C raises
+  KeyboardInterrupt when Julia returns (checked both ways). juliacall's IPython extension is not
+  autoloaded (scibmad redirects Julia's stdout to the notebook itself, flushed after each cell;
+  90 kB of progress lines checked).
+- The SciBmad distribution needs two PythonCall patches to be started from Python
+  (`SciBmad-Distribution/meta/patches/PythonCall`: `src/Core/stdlib.jl`, `ROOT_DIR` baked in;
+  `src/C/C.jl`, no bundled Python when embedded). Tested on a hard-linked copy of the installed
+  0.6 distribution.
+- Tests: `PySciBmad/tests` (each feature against Julia), with `SCIBMAD_JULIA`/`SCIBMAD_PROJECT`
+  pointing to a Julia project with the dev'd packages and PythonCall. In this sandbox, Pkg
+  operations that need the network hang when run in the background: run them in the foreground.
+

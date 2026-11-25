@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 While operating accelerators, the orbit of the beam is measured with beam position monitors
 (BPMs). The accelerator is designed with ideal BPM readings in mind, which are often 0. After
 extended operational experience, operators learn good readings for all BPMs, which are referred to
@@ -39,6 +47,10 @@ Start with the ring with sextupoles of [chapter 12](dynamic-aperture.md):
 include("lattices/12-sextupoles.jl");
 ```
 
+```{code-cell} python
+from lattices.ch12_sextupoles import *
+```
+
 1. Corrector coils are placed in the `d1` drifts, 6.4 cm away from the quadrupoles: downstream of the
    quadrupoles in the forward cells and upstream in the reverse cells. Horizontal correctors are put
    next to focusing quadrupoles, where the horizontal beta function is large, and vertical
@@ -51,6 +63,13 @@ include("lattices/12-sextupoles.jl");
   d1c2 = Drift(L=0.609 - 0.064 - 0.2)
   bpm = Marker()
 end;
+```
+
+```{code-cell} python
+with sb.elements():
+    d1c1 = sb.Drift(L=0.064)
+    d1c2 = sb.Drift(L=0.609 - 0.064 - 0.2)
+    bpm = sb.Marker()
 ```
 
 2. Each corrector must be an element of its own, so that its kick can be set by itself. So instead of
@@ -97,11 +116,43 @@ ring = Beamline(elements, species_ref=electron, pc_ref=pc_ref, context=ring.cont
 length(hkickers), length(vkickers), length(ring[[bpm]])
 ```
 
+```{code-cell} python
+line = sextant1 + sextant3 + sextant5 + sextant7 + sextant9 + sextant11
+n = len(line)
+elements = []
+hkickers = []
+vkickers = []
+for i in range(n):
+    ele = line[i]
+    if ele is d1:
+        # The quadrupole next to d1: before it in forward cells, after it in reverse cells (the
+        # next element of the ring after the last one is the first one)
+        forward = line[i-1].kind == "Quadrupole"
+        j = i - 1 if forward else (i + 1) % n
+        while line[j].kind != "Quadrupole":
+            j = (j + 1) % n
+        if line[j].Kn1 > 0:
+            kicker = sb.HKicker(name=f"ch_{len(hkickers) + 1}", L=0.2)
+            hkickers.append(kicker)
+        else:
+            kicker = sb.VKicker(name=f"cv_{len(vkickers) + 1}", L=0.2)
+            vkickers.append(kicker)
+        elements += [d1c1, kicker, d1c2] if forward else [d1c2, kicker, d1c1]
+    else:
+        elements.append(ele)
+    if ele is b or ele is bh or ele is db:
+        elements.append(bpm)
+
+ring = sb.Beamline(elements, species_ref=electron, pc_ref=pc_ref, context=ring.context)
+len(hkickers), len(vkickers), len(ring[[bpm]])
+```
+
    The new ring keeps the context of the previous one, which holds the variables of the sextupoles
    and the phase trombones.
 
 3. A phase trombone is a matrix applied around the closed orbit at its place, built from the
-   closed orbit and the lattice functions at the time `phase_trombone!` is called. The radiation
+   closed orbit and the lattice functions at the time {jl}`phase_trombone!`{py}`sb.phase_trombone`
+   is called. The radiation
    and the correctors change the closed orbit, so the phase trombones are taken out now, and put
    back at the very end, after the orbit correction:
 
@@ -109,6 +160,11 @@ length(hkickers), length(vkickers), length(ring[[bpm]])
 for tr in (tr_f, tr_r, tr_m)
   ring[tr].MapParams = nothing
 end
+```
+
+```{code-cell} python
+for tr in (tr_f, tr_r, tr_m):
+    ring[tr].MapParams = None
 ```
 
 ## Example: Radiation-Induced Sawtooth Orbit Correction
@@ -139,6 +195,20 @@ lines!(ax2, tw.s, tw.pz)
 fig
 ```
 
+```{code-cell} python
+for ele in ring.line:
+    ele.rad_damping = True
+tw = sb.twiss(ring, cols=["x", "pz"])
+from matplotlib.figure import Figure
+fig = Figure(figsize=(8, 4), layout="constrained")
+ax, ax2 = fig.subplots(2, 1)
+ax.plot(tw.s, 1e3*tw.x)
+ax.set_ylabel("x [mm]")
+ax2.plot(tw.s, tw.pz)
+ax2.set(xlabel="s [m]", ylabel="pz")
+fig
+```
+
 2. Correct the orbit with the horizontal correctors: make the orbit at the BPMs as small as possible
    (in the least-squares sense), with `minimize` (see [Orbit Correction](../optimize.md)). There
    are more BPM readings than correctors, so the orbit cannot be zero at all of them. Each corrector
@@ -150,9 +220,21 @@ res = match!(vary=[Knob(kicker, :Kn0L) for kicker in hkickers], minimize=tw_orbi
 res.converged, res.iterations
 ```
 
+```{code-cell} python
+tw_orbit = sb.TwissExpr(ring)
+res = sb.match(vary=[sb.Knob(kicker, "Kn0L") for kicker in hkickers], minimize=tw_orbit.x[[bpm]])
+res.converged, res.iterations
+```
+
 ```{code-cell} julia
 tw2 = twiss(ring, cols=["x"])
 lines!(ax, tw2.s, 1e3 .* tw2.x)
+fig
+```
+
+```{code-cell} python
+tw2 = sb.twiss(ring, cols=["x"])
+ax.plot(tw2.s, 1e3*tw2.x)
 fig
 ```
 
@@ -163,12 +245,19 @@ fig
 
 1. Every placement of a quadrupole such as `qf` is the same element, with the same parameters. To
    misalign each quadrupole by itself, first make a copy of the ring in which every element is an
-   element of its own. `deepcopy` copies an element of a beamline into a new, independent element,
+   element of its own. {jl}`deepcopy`{py}`copy.deepcopy` copies an element of a beamline into a new,
+   independent element,
    with its parameters (including deferred expressions). The copy keeps the context of the ring:
 
 ```{code-cell} julia
 ring_err = Beamline(deepcopy.(ring.line), species_ref=electron, pc_ref=pc_ref,
                     context=ring.context)
+```
+
+```{code-cell} python
+import copy
+ring_err = sb.Beamline([copy.deepcopy(ele) for ele in ring.line], species_ref=electron,
+                       pc_ref=pc_ref, context=ring.context)
 ```
 
    Its elements are new, so they are found by their names, e.g. `ring_err["bpm"]` for all BPMs.
@@ -190,12 +279,29 @@ tw_err = TwissExpr(ring_err)
 maximum(abs, value(tw_err.x["bpm"])) # The largest BPM reading [m]
 ```
 
+```{code-cell} python
+rng = np.random.default_rng(1)
+for q in ring_err["Quadrupole::*"]:
+    dx = 1e-5*rng.standard_normal()
+    while abs(dx) > 3e-5:
+        dx = 1e-5*rng.standard_normal()
+    q.x_offset = dx
+tw_err = sb.TwissExpr(ring_err)
+np.max(np.abs(sb.value(tw_err.x["bpm"])))  # The largest BPM reading [m]
+```
+
 3. Correct the orbit with the same process:
 
 ```{code-cell} julia
 res = match!(vary=[Knob(kicker, :Kn0L) for kicker in ring_err["HKicker::*"]],
              minimize=tw_err.x["bpm"])
 maximum(abs, value(tw_err.x["bpm"]))
+```
+
+```{code-cell} python
+res = sb.match(vary=[sb.Knob(kicker, "Kn0L") for kicker in ring_err["HKicker::*"]],
+               minimize=tw_err.x["bpm"])
+np.max(np.abs(sb.value(tw_err.x["bpm"])))
 ```
 
 4. If the misalignments are large, the closed orbit can become unstable, and then there is no closed
@@ -220,6 +326,15 @@ phase_trombone!(ring[tr_m]; phi1=DefExpr(c -> -c.x1 - c.x2), phi2=DefExpr(c -> -
 maximum(abs, value(tw_orbit.x[[bpm]]) .- reading) # The change of the BPM readings [m]
 ```
 
+```{code-cell} python
+reading = sb.value(tw_orbit.x[[bpm]])  # The BPM readings without the phase trombones
+sb.phase_trombone(ring[tr_f], phi1=sb.DefExpr(lambda c: c.x1), phi2=sb.DefExpr(lambda c: c.y1))
+sb.phase_trombone(ring[tr_r], phi1=sb.DefExpr(lambda c: c.x2), phi2=sb.DefExpr(lambda c: c.y2))
+sb.phase_trombone(ring[tr_m], phi1=sb.DefExpr(lambda c: -c.x1 - c.x2),
+                  phi2=sb.DefExpr(lambda c: -c.y1 - c.y2))
+np.max(np.abs(sb.value(tw_orbit.x[[bpm]]) - reading))  # The change of the BPM readings [m]
+```
+
 If the orbit is corrected again later, the phase trombones are taken out first, in the same way.
 
 ## Exercises
@@ -236,5 +351,11 @@ If the orbit is corrected again later, the phase trombones are taken out first, 
    (without misalignments): multiply the `Kn0`, `Kn1` and `Kn2` of each element by $1 + p_z$ of the
    closed orbit at it. What happens to the orbit?
 
+:::{only} julia
 The lattice file of this chapter is
 [`lattices/14-orbit-correction.jl`](https://github.com/bmad-sim/SciBmad.jl/tree/main/docs/src/ring-design/lattices/14-orbit-correction.jl).
+:::
+:::{only} python
+The lattice file of this chapter is
+[`lattices/ch14_orbit_correction.py`](https://github.com/bmad-sim/SciBmad.jl/tree/main/docs/src/ring-design/lattices/ch14_orbit_correction.py).
+:::

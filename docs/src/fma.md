@@ -20,6 +20,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 Frequency map analysis finds the tunes of tracked particles from their coordinates turn by turn.
 The function `naff` (Numerical Analysis of Fundamental Frequencies) computes the main frequencies
 of signals, one signal per row of a matrix. For example, the horizontal tunes of four particles
@@ -48,6 +56,28 @@ q, amp = naff(x .- im .* (β .* px .+ α .* x))
 q # 4×1 matrix: 0.15497, 0.15497, 0.15493, 0.15483
 ```
 
+```{code-cell} python
+with sb.elements():
+    qf = sb.Quadrupole(Kn1=0.36, L=0.5)
+    sf = sb.Sextupole(Kn2=20.0, L=0.2)
+    d = sb.Drift(L=1.0)
+    b = sb.SBend(L=2.0, angle=np.pi/20)
+    qd = sb.Quadrupole(Kn1=-0.36, L=0.5)
+    sd = sb.Sextupole(Kn2=-30.0, L=0.2)
+fodo = sb.Beamline([qf, sf, d, b, d, qd, sd, d, b, d], species_ref=sb.Species("electron"),
+                   pc_ref=18e9)
+
+v0 = np.zeros((4, 6))
+v0[:, 0] = [1e-4, 1e-3, 3e-3, 6e-3]  # x in m
+res = sb.track(fodo, v0=v0, n_turns=1023)
+
+tw = sb.twiss(fodo)
+β, α = tw.beta1[1], tw.alpha1[1]
+x, px = res.x(turn=...), res.px(turn=...)  # [particle, turn]
+q, amp = sb.naff(x - 1j*(β*px + α*x))
+q  # 4×1 array: 0.15497, 0.15497, 0.15493, 0.15483
+```
+
 Each row of the matrix is the signal of one particle, from turn 0 to turn 1023. The complex
 signal $x - i(\beta p_x + \alpha x)$, with the Twiss parameters at the start, turns in one
 direction in the complex plane, so its frequency is the tune including its sign. A real signal,
@@ -60,12 +90,17 @@ At small amplitude, the tune agrees with the tune `q1` of `twiss`, here to 5e-8:
 q[1], tw.q1 # (0.1549708764, 0.1549709220)
 ```
 
+```{code-cell} python
+q[0, 0], tw.q1  # (0.1549708764, 0.1549709220)
+```
+
 At larger amplitudes the tune decreases. This is the detuning with amplitude, which `twiss` gives
 as the derivatives of `q1` with respect to the action `J₁` (see
 [Chromatic and amplitude-dependent quantities](#twiss.orders)).
 
 `naff(data, n)` computes the first `n` frequencies of each signal, and their complex amplitudes.
-The algorithm works on all signals at once, so with the data on a GPU (e.g. a `CUDA.CuArray`),
+The algorithm works on all signals at once, so with the data on a GPU (e.g. a
+{jl}`CUDA.CuArray`{py}`sb.device("cuda").asarray(data)`),
 all signals are analyzed in parallel there.
 
 ```{docstring} naff

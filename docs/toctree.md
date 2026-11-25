@@ -20,6 +20,7 @@ Table of Contents <contents>
 
 installation
 Quickstart <quickstart>
+SciBmad from Python <python>
 ```
 
 ```{toctree}

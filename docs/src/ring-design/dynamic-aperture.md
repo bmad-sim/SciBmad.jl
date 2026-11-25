@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 The dynamic aperture (DA) is a measure of the stable phase space in an accelerator over a specified
 number of turns. Particles outside of the DA will be driven to large amplitudes, where they are
 lost. In the following sections, strategies for increasing the DA will be shown for our ring.
@@ -38,6 +46,10 @@ Start with the ring with the RF cavities of [chapter 9](rf.md):
 include("lattices/09-rf.jl");
 ```
 
+```{code-cell} python
+from lattices.ch09_rf import *
+```
+
 The DA for the emittances $\varepsilon_1 = 2\cdot10^{-8}$ m and $\varepsilon_2 = 10^{-8}$ m, with
 200 turns, for δ from 0 to 1%:
 
@@ -48,7 +60,15 @@ da_settings = (n_turns=200, emit_1=2e-8, emit_2=1e-8, n_r=21, n_theta=9, max_sig
 x0, y0 = dynamic_aperture(ring; da_settings...);
 ```
 
-`x0[j, i]` and `y0[j, i]` are the boundary along the angle `j` for `deltas[i]`, in units of the beam
+```{code-cell} python
+deltas = np.linspace(0, 0.01, 6)
+da_settings = dict(n_turns=200, emit_1=2e-8, emit_2=1e-8, n_r=21, n_theta=9, max_sig_x=30,
+                   max_sig_y=60, deltas=deltas, verbose=False)
+x0, y0 = sb.dynamic_aperture(ring, **da_settings)
+```
+
+`x0[j, i]` and `y0[j, i]` are the boundary along the angle `j` for
+`deltas[i]`{pytext}` (NumPy indexes, from 0)`, in units of the beam
 sizes. A column of zeros means that already the particle on the closed orbit is lost. Radiation
 is left out here (see exercise 4). DA
 calculations can be slow, so it is sometimes advisable to reduce the accuracy (here 1.5σ in $x$ and
@@ -63,6 +83,17 @@ for i in eachindex(deltas)
   lines!(ax, x0[:, i], y0[:, i], label="δ = $(100*deltas[i])%")
 end
 Legend(fig[1, 2], ax)
+fig
+```
+
+```{code-cell} python
+from matplotlib.figure import Figure
+fig = Figure(figsize=(7, 3.8), layout="constrained")
+ax = fig.subplots()
+for i in range(len(deltas)):
+    ax.plot(x0[:, i], y0[:, i], label=f"δ = {100*deltas[i]:g}%")
+ax.set(xlabel="x/σx", ylabel="y/σy", title='No sextupoles', xlim=(-30, 30), ylim=(0, 60))
+ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
 fig
 ```
 
@@ -91,6 +122,16 @@ fodossf = [qfss, d1, db, d2s1, sdss, d2s2, qdss, d1, db, d2s1, sfss, d2s2]
 fodossr = [qfss, d2s2, sfss, d2s1, db, d1, qdss, d2s2, sdss, d2s1, db, d1];
 ```
 
+```{code-cell} python
+with sb.elements():
+    d2s1 = sb.Drift(L=0.501)
+    d2s2 = sb.Drift(L=0.156)
+    sfss = sb.Sextupole(L=0.584, Kn2=0.0)
+    sdss = sb.Sextupole(L=0.584, Kn2=0.0)
+fodossf = [qfss, d1, db, d2s1, sdss, d2s2, qdss, d1, db, d2s1, sfss, d2s2]
+fodossr = [qfss, d2s2, sfss, d2s1, db, d1, qdss, d2s2, sdss, d2s1, db, d1]
+```
+
 2. Define the chromatic sextupoles: these control the chromaticity, and therefore have to be placed
    where there is dispersion, in the arcs. Two families per plane in each arc will be used: the
    sextupoles `sf1` and `sf2` near the focusing quadrupoles alternate from one FODO cell to the
@@ -117,6 +158,22 @@ for i in 1:6
   end
   push!(arcs, repeat(cells, 10))
 end
+```
+
+```{code-cell} python
+arcs = []
+for i in range(6):  # arcs[i] is the arc of sextant 2i+1
+    sf1 = sb.Sextupole(name=f"sf1_{2*i+1}", L=0.584, Kn2=sb.DefExpr(lambda c: c.k2f + c.xf[i]))
+    sf2 = sb.Sextupole(name=f"sf2_{2*i+1}", L=0.584, Kn2=sb.DefExpr(lambda c: c.k2f - c.xf[i]))
+    sd1 = sb.Sextupole(name=f"sd1_{2*i+1}", L=0.584, Kn2=sb.DefExpr(lambda c: c.k2d + c.xd[i]))
+    sd2 = sb.Sextupole(name=f"sd2_{2*i+1}", L=0.584, Kn2=sb.DefExpr(lambda c: c.k2d - c.xd[i]))
+    if i % 2 == 0:  # Forward sextants 1, 5, 9
+        cells = [qf, d1, b, d2s1, sd1, d2s2, qd, d1, b, d2s1, sf1, d2s2,
+                 qf, d1, b, d2s1, sd2, d2s2, qd, d1, b, d2s1, sf2, d2s2]
+    else:           # Reverse sextants 3, 7, 11
+        cells = [qf, d2s2, sf1, d2s1, b, d1, qd, d2s2, sd1, d2s1, b, d1,
+                 qf, d2s2, sf2, d2s1, b, d1, qd, d2s2, sd2, d2s1, b, d1]
+    arcs.append(cells*10)
 ```
 
 3. Finally, the sextants and the ring are built with the new cells. Also added are markers for the
@@ -148,6 +205,29 @@ ring.context.xf = zeros(6)
 ring.context.xd = zeros(6);
 ```
 
+```{code-cell} python
+with sb.elements():
+    tr_m = sb.Marker()
+    tr_f = sb.Marker()
+    tr_r = sb.Marker()
+    end_7 = sb.Marker()
+
+sextant1 = [tr_m] + fodossf*4 + ss_to_arcf + arcs[0] + arc_to_ssf_2 + fodossf_2*4
+sextant3 = fodossr_2*4 + ss_to_arcr_2 + arcs[1] + arc_to_ssr + fodossr*4
+sextant5 = fodossf*4 + ss_to_arcf + arcs[2] + arc_to_ssf + fodossf + [tr_f] + ipf
+sextant7 = ipr + [tr_r] + fodossr + ss_to_arcr + arcs[3] + [end_7] + arc_to_ssr + fodossr*4
+sextant9 = fodossf*4 + ss_to_arcf + arcs[4] + arc_to_ssf + fodossf*2 + fodorf*2
+sextant11 = fodorf*2 + fodossr*2 + ss_to_arcr + arcs[5] + arc_to_ssr + fodossr*4
+
+ring = sb.Beamline(sextant1 + sextant3 + sextant5 + sextant7 + sextant9 + sextant11,
+                   species_ref=electron, pc_ref=pc_ref)
+
+ring.context.k2f = 1.0
+ring.context.k2d = -2.0
+ring.context.xf = np.zeros(6)
+ring.context.xd = np.zeros(6)
+```
+
 ## Example: Chromaticity Correction
 
 The first step in chromatic correction is to use the chromatic sextupoles to correct the linear
@@ -166,6 +246,12 @@ match!(vary=[@knob(ring.context.k2f), @knob(ring.context.k2d)],
        targets=[tw_chrom.dq1 == 1, tw_chrom.dq2 == 1])
 ```
 
+```{code-cell} python
+tw_chrom = sb.TwissExpr(ring, rf_on=False)
+sb.match(vary=[sb.Knob(ring.context, "k2f"), sb.Knob(ring.context, "k2d")],
+         targets=[tw_chrom.dq1 == 1, tw_chrom.dq2 == 1])
+```
+
 The DA now:
 
 ```{code-cell} julia
@@ -176,6 +262,17 @@ for i in eachindex(deltas)
   lines!(ax, x1[:, i], y1[:, i], label="δ = $(100*deltas[i])%")
 end
 Legend(fig[1, 2], ax)
+fig
+```
+
+```{code-cell} python
+x1, y1 = sb.dynamic_aperture(ring, **da_settings)
+fig = Figure(figsize=(7, 3.8), layout="constrained")
+ax = fig.subplots()
+for i in range(len(deltas)):
+    ax.plot(x1[:, i], y1[:, i], label=f"δ = {100*deltas[i]:g}%")
+ax.set(xlabel="x/σx", ylabel="y/σy", title='Chromaticity corrected', xlim=(-30, 30), ylim=(0, 60))
+ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
 fig
 ```
 
@@ -213,6 +310,25 @@ scatter!(ax, real(total), imag(total))
 fig
 ```
 
+```{code-cell} python
+tw = sb.twiss(ring, rf_on=False, cols=["beta1", "phi1"])
+families = ["sf1_1", "sf2_1"]
+s = np.concatenate([tw.s[name] for name in families])
+β = np.concatenate([tw.beta1[name] for name in families])
+# Phase advance from the start [rad]:
+φ = 2*np.pi*np.concatenate([tw.phi1[name] for name in families])
+K2L = ring["sf1_1"][0].Kn2*0.584
+h = K2L*β**1.5/(12*np.sqrt(2))*np.exp(-3j*φ)
+h = h[np.argsort(s)]  # In the order of the sextupoles along the arc
+total = np.cumsum(np.concatenate([[0], h]))
+fig = Figure(figsize=(5, 4.5), layout="constrained")
+ax = fig.subplots()
+ax.plot(total.real, total.imag)
+ax.scatter(total.real, total.imag)
+ax.set(xlabel="Re h₃₀₀₀", ylabel="Im h₃₀₀₀", aspect="equal")
+fig
+```
+
 Each sextupole moves the sum by the same amount (the beta functions at all of them are equal), in a
 direction that turns by $3 \cdot 90° = 270°$ from one cell to the next. After four cells the sum is
 back at zero: the next sextupole of the same family, two cells later, takes back what the first one
@@ -226,6 +342,11 @@ the beginning of the ring with the contribution of one sextupole:
 ```{code-cell} julia
 twh = twiss(ring, rf_on=false, cols=["h3000"], at=[1])
 abs(twh.h3000[1]), ring["sf1_1"][1].Kn2*0.584*tw.beta1["sf1_1"][1]^1.5/(12*sqrt(2))
+```
+
+```{code-cell} python
+twh = sb.twiss(ring, rf_on=False, cols=["h3000"], at=[1])
+abs(twh.h3000[1]), ring["sf1_1"][0].Kn2*0.584*tw.beta1["sf1_1"][0]**1.5/(12*np.sqrt(2))
 ```
 
 ## Advanced Chromatic Correction
@@ -250,6 +371,17 @@ ax = Axis(fig[1, 1], xlabel="s [m]", ylabel="W", title="Chromaticity corrected")
 lines!(ax, tww.s, tww.w1, label="W₁")
 lines!(ax, tww.s, tww.w2, label="W₂")
 axislegend(ax, position=:lt)
+fig
+```
+
+```{code-cell} python
+tww = sb.twiss(ring, rf_on=False, chrom=2, cols=["w1", "w2"])
+fig = Figure(figsize=(8, 3), layout="constrained")
+ax = fig.subplots()
+ax.plot(tww.s, tww.w1, label="W₁")
+ax.plot(tww.s, tww.w2, label="W₂")
+ax.set(xlabel="s [m]", ylabel="W", title="Chromaticity corrected")
+ax.legend(loc="upper left")
 fig
 ```
 
@@ -281,6 +413,19 @@ phase_trombone!(ring[tr_m]; phi1=DefExpr(c -> -c.x1 - c.x2), phi2=DefExpr(c -> -
                 rf_on=false);
 ```
 
+```{code-cell} python
+ring.context.x1 = 0.0
+ring.context.x2 = 0.0
+ring.context.y1 = 0.0
+ring.context.y2 = 0.0
+sb.phase_trombone(ring[tr_f], phi1=sb.DefExpr(lambda c: c.x1), phi2=sb.DefExpr(lambda c: c.y1),
+                  rf_on=False)
+sb.phase_trombone(ring[tr_r], phi1=sb.DefExpr(lambda c: c.x2), phi2=sb.DefExpr(lambda c: c.y2),
+                  rf_on=False)
+sb.phase_trombone(ring[tr_m], phi1=sb.DefExpr(lambda c: -c.x1 - c.x2),
+                  phi2=sb.DefExpr(lambda c: -c.y1 - c.y2), rf_on=False)
+```
+
 2. The W function is often corrected by making it zero at specific locations in the ring. We make it
    zero at the IP and at the end of arc 7 (`end_7`), with the families of the arcs 5 and 7, on both
    sides of the IP, and the phase trombones. $W$ is zero when both $A$ and $B$ are, so these are the
@@ -297,6 +442,19 @@ match!(vary=[@knob(ring.context.xf[3]), @knob(ring.context.xd[3]),
                 tw_chrom.w2a[end_7] == 0, tw_chrom.w2b[end_7] == 0])
 ```
 
+```{code-cell} python
+# (the entries 3 and 4 of xf and xd, numbered from 1 by Knob as by Julia: the arcs of the
+# sextants 5 and 7)
+sb.match(vary=[sb.Knob(ring.context, "xf", 3), sb.Knob(ring.context, "xd", 3),
+               sb.Knob(ring.context, "xf", 4), sb.Knob(ring.context, "xd", 4),
+               sb.Knob(ring.context, "x1"), sb.Knob(ring.context, "x2"),
+               sb.Knob(ring.context, "y1"), sb.Knob(ring.context, "y2")],
+         targets=[tw_chrom.w1a[ip6] == 0, tw_chrom.w1b[ip6] == 0,
+                  tw_chrom.w2a[ip6] == 0, tw_chrom.w2b[ip6] == 0,
+                  tw_chrom.w1a[end_7] == 0, tw_chrom.w1b[end_7] == 0,
+                  tw_chrom.w2a[end_7] == 0, tw_chrom.w2b[end_7] == 0])
+```
+
 The W function is now corrected in the IR and over one arc:
 
 ```{code-cell} julia
@@ -306,6 +464,17 @@ ax = Axis(fig[1, 1], xlabel="s [m]", ylabel="W", title="W corrected")
 lines!(ax, tww.s, tww.w1, label="W₁")
 lines!(ax, tww.s, tww.w2, label="W₂")
 axislegend(ax, position=:lt)
+fig
+```
+
+```{code-cell} python
+tww = sb.twiss(ring, rf_on=False, chrom=2, cols=["w1", "w2"])
+fig = Figure(figsize=(8, 3), layout="constrained")
+ax = fig.subplots()
+ax.plot(tww.s, tww.w1, label="W₁")
+ax.plot(tww.s, tww.w2, label="W₂")
+ax.set(xlabel="s [m]", ylabel="W", title="W corrected")
+ax.legend(loc="upper left")
 fig
 ```
 
@@ -319,6 +488,18 @@ for i in eachindex(deltas)
   lines!(ax, x2[:, i], y2[:, i], label="δ = $(100*deltas[i])%")
 end
 Legend(fig[1, 2], ax)
+fig
+```
+
+```{code-cell} python
+x2, y2 = sb.dynamic_aperture(ring, **da_settings)
+fig = Figure(figsize=(7, 3.8), layout="constrained")
+ax = fig.subplots()
+for i in range(len(deltas)):
+    ax.plot(x2[:, i], y2[:, i], label=f"δ = {100*deltas[i]:g}%")
+ax.set(xlabel="x/σx", ylabel="y/σy", title='Chromaticity and W corrected', xlim=(-30, 30),
+       ylim=(0, 60))
+ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
 fig
 ```
 

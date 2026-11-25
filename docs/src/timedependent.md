@@ -20,6 +20,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Time-Dependent Parameters
 
 In SciBmad, almost any `LatElement` parameter may be set to have an arbitrary time-dependence
@@ -30,6 +38,11 @@ frequency `1e6` rad/s, we can simply write
 ```{code-cell} julia
 t = Time()
 ac_kicker = VKicker(L=0.5, Ks0=1e-4*sin(1e6*t));
+```
+
+```{code-cell} python
+t = sb.Time()
+ac_kicker = sb.VKicker(L=0.5, Ks0=1e-4*np.sin(1e6*t))
 ```
 
 Here, `Time()` refers to the wall-clock, global reference time, also called the "absolute"
@@ -47,12 +60,19 @@ the entrance of each slice.
 :::
 
 Note that any expression including `Time()` builds up a function, stored as a
-`TimeFunction`. This can be evaluated for time using the natural syntax
+`TimeFunction`{pytext}` (in Python too: the operators and NumPy functions such as np.sin of a Time are Julia's)`.
+This can be evaluated for time using the natural syntax
 
 ```{code-cell} julia
 tf = 1e-4*sin(1e6*t)
 println(tf(0))
 println(tf(pi/(2e6)))
+```
+
+```{code-cell} python
+tf = 1e-4*np.sin(1e6*t)
+print(tf(0))
+print(tf(np.pi/(2e6)))
 ```
 
 As long as the function you write is GPU-compatible, such as in the above example, then it
@@ -62,6 +82,11 @@ Really, anything can be a time-dependent parameter. Even misalignments:
 
 ```{code-cell} julia
 earthquake = Quadrupole(Kn1=0.36, L=0.5, x_offset=0.1*sin(120*t), y_offset=0.1*sin(120*t));
+```
+
+```{code-cell} python
+earthquake = sb.Quadrupole(Kn1=0.36, L=0.5, x_offset=0.1*np.sin(120*t),
+                          y_offset=0.1*np.sin(120*t))
 ```
 
 A time-dependent parameter can also differ from particle to particle, by using a
@@ -75,6 +100,14 @@ ac_kicker2 = VKicker(L=0.5, Ks0=1e-4*sin(ω*t))
 bl = Beamline([Drift(L=1.0), ac_kicker2], species_ref=Species("electron"), E_ref=18e9)
 res = track(bl, v0=zeros(3, 6))
 res.py[turn=1] # vertical kicks of the three particles
+```
+
+```{code-cell} python
+ω = sb.BatchParam([1e6, 2e6, 3e6])
+ac_kicker2 = sb.VKicker(L=0.5, Ks0=1e-4*np.sin(ω*t))
+bl = sb.Beamline([sb.Drift(L=1.0), ac_kicker2], species_ref=sb.Species("electron"), E_ref=18e9)
+res = sb.track(bl, v0=np.zeros((3, 6)))
+res.py(turn=1)  # vertical kicks of the three particles
 ```
 
 ## Energy Ramping
@@ -97,6 +130,20 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d], species_ref=Species("electron"))
 fodo.E_ref = 18e9 + 4e11*Time();
 ```
 
+```{code-cell} python
+with sb.elements():
+    qf = sb.Quadrupole(Kn1=0.36, L=0.5)
+    sf = sb.Sextupole(Kn2=1.2, L=0.2)
+    d = sb.Drift(L=0.1)
+    b = sb.SBend(L=1.2, angle=np.pi/132)
+    qd = sb.Quadrupole(Kn1=-0.36, L=0.5)
+    sd = sb.Sextupole(Kn2=-1.2, L=0.2)
+
+fodo = sb.Beamline([qf, sf, b, d, qd, sd, b, d], species_ref=sb.Species("electron"))
+
+fodo.E_ref = 18e9 + 4e11*sb.Time()
+```
+
 Now, the unnormalized magnetic field strengths are time-dependent too, as they are derived
 from the reference energy (here `Kn1` is the independent variable, so the fields are ramped
 with the energy):
@@ -104,6 +151,11 @@ with the energy):
 ```{code-cell} julia
 println(fodo[1].Bn1(0))
 println(fodo[1].Bn1(1e-3))
+```
+
+```{code-cell} python
+print(fodo[1].Bn1(0))
+print(fodo[1].Bn1(1e-3))
 ```
 
 The reference energy is evaluated at the reference time at the entrance of each element slice.

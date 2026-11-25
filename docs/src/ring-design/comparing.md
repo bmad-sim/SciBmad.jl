@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 Bmad's program Tao keeps three copies of a lattice: the "design" lattice as read from the lattice
 file, which never changes, the "model" lattice, which the commands of Tao change, and a "base"
 lattice, a copy of the model made at some point to compare with. In SciBmad, a lattice is a set of
@@ -46,6 +54,22 @@ initial = (beta1=10.0, beta2=10.0)
 tw_design = twiss(simple, initial=initial)
 ```
 
+```{code-cell} python
+import numpy as np
+import scibmad as sb
+
+with sb.elements():
+    d = sb.Drift(L=0.5)
+    b = sb.SBend(L=0.5, g_ref=1.0, Kn0=1.001, e1=0.1)
+    q = sb.Quadrupole(L=0.6, Kn1=0.23)
+for ele in (d, b, q):
+    ele.n_steps = 10  # For smooth plots
+simple = sb.Beamline([d, b, q], species_ref=sb.Species("electron"), E_ref=10e6)
+initial = dict(beta1=10.0, beta2=10.0)
+tw_design = sb.twiss(simple, initial=initial)
+tw_design
+```
+
 The field of the bend `Kn0` is a little stronger than the curvature `g_ref` of the reference
 trajectory, so the orbit is not zero. Now the lattice is changed: a vertical kick of −0.5 mrad is
 added to the drift (a skew dipole field, `Ks0L`), and a horizontal kick of 1 mrad to the quadrupole
@@ -55,6 +79,13 @@ added to the drift (a skew dipole field, `Ks0L`), and a horizontal kick of 1 mra
 d.Ks0L = -0.0005
 q.Kn0L = -0.001
 tw = twiss(simple, initial=initial)
+```
+
+```{code-cell} python
+d.Ks0L = -0.0005
+q.Kn0L = -0.001
+tw = sb.twiss(simple, initial=initial)
+tw
 ```
 
 The orbit of the changed lattice, and its difference from the design:
@@ -72,6 +103,20 @@ lines!(ax2, tw.s, 1e3 .* (tw.y .- tw_design.y), label="y")
 fig
 ```
 
+```{code-cell} python
+from matplotlib.figure import Figure
+fig = Figure(figsize=(7, 5), layout="constrained")
+ax1, ax2 = fig.subplots(2, 1)
+ax1.plot(tw.s, 1e3*tw.x, label="x")
+ax1.plot(tw.s, 1e3*tw.y, label="y")
+ax1.set_ylabel("orbit [mm]")
+ax1.legend(loc="upper left")
+ax2.plot(tw.s, 1e3*(tw.x - tw_design.x), label="x")
+ax2.plot(tw.s, 1e3*(tw.y - tw_design.y), label="y")
+ax2.set(xlabel="s [m]", ylabel="orbit - design [mm]")
+fig
+```
+
 To compare with another state than the design, keep another `twiss` result, as Tao's "base"
 lattice:
 
@@ -82,8 +127,16 @@ tw = twiss(simple, initial=initial)
 maximum(abs, tw.y .- tw_base.y), maximum(abs, tw.x .- tw_base.x)
 ```
 
+```{code-cell} python
+tw_base = tw
+q.Ks0L = 0.0005
+tw = sb.twiss(simple, initial=initial)
+np.max(np.abs(tw.y - tw_base.y)), np.max(np.abs(tw.x - tw_base.x))
+```
+
 To set the lattice back, set the parameters back (`d.Ks0L = 0` etc.). A match can be undone with
-`undo!` of its result, e.g. `res = match!(...)`, then `undo!(res)`.
+{jl}`undo!`{py}`sb.undo` of its result, e.g. {jl}`res = match!(...)`{py}`res = sb.match(...)`, then
+{jl}`undo!(res)`{py}`sb.undo(res)`.
 
 ## Exercises
 

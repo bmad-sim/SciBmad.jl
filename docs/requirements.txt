@@ -4,3 +4,9 @@ furo
 linkify-it-py
 sphinxcontrib-bibtex
 sphinx-copybutton      # "copy" button on every code block
+# The Python version of the site (docs/build.py): the pages run in a Python kernel with the
+# Python package scibmad (pyscibmad), which build.py installs if it is missing
+ipykernel
+numpy
+matplotlib
+scipy

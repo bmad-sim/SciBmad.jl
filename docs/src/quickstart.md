@@ -21,6 +21,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+# Hidden setup: keep printed tables narrow enough for the page.
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## A Simple Copy-Paste Example
 
 ```julia
@@ -147,6 +155,122 @@ n_particles = 10
 res = track(fodo, v0=rand(n_particles, 6).*1e-5, n_turns=10, spin=true)
 ```
 
+```python
+import re
+import numpy as np
+import scibmad as sb
+
+# Define lattice elements, named after their variables
+with sb.elements():
+    qf = sb.Quadrupole(Kn1=0.36, L=0.5)
+    sf = sb.Sextupole(Kn2=1.2, L=0.2)
+    d = sb.Drift(L=0.1)
+    b = sb.SBend(L=1.2, angle=np.pi/132)
+    qd = sb.Quadrupole(Kn1=-0.36, L=0.5)
+    sd = sb.Sextupole(Kn2=-1.2, L=0.2)
+
+# Construct a Beamline and define the reference species + momentum
+fodo = sb.Beamline([qf, sf, b, d, qd, sd, b, d],
+                   species_ref=sb.Species("electron"), pc_ref=18e9)
+
+# Change the quadrupole strengths
+qf.Kn1 = 0.37
+qd.Kn1 = -0.37
+
+# Set number of integration steps in qd to 3
+qd.n_steps = 3
+
+# Find the single instance of `qf` in fodo:
+qf_in_fodo = fodo[qf]
+
+# Find the drifts `d` in `fodo`
+ds = fodo[[d]]
+
+# Get the first element of `fodo`
+first_ele = fodo[1]
+
+# Gets all quadrupoles
+quads = fodo[lambda x: x.kind == "Quadrupole"]  # Lambda function
+quads = fodo["Quadrupole::*"]                   # Classic Bmad syntax
+quads = fodo[re.compile("q.*")]                 # Regex match on name
+
+# Compute the periodic optics
+tw = sb.twiss(fodo)
+
+# Print the tunes, phase slip factor (etac), momentum compaction (alphac)
+print("tw.q1 =", tw.q1)          # Horizontal-like tune
+print("tw.q2 =", tw.q2)          # Vertical-like tune
+print("tw.etac =", tw.etac)      # Phase slip factor
+print("tw.alphac =", tw.alphac)  # Momentum compaction
+
+# Print the horizontal-like beta function at various locations
+# including inside elements
+print(tw.beta1[qd])          # Beginning of element qd
+print(tw.beta1[qd, "exit"])  # End of qd
+print(tw.beta1[qd, :])       # Every integration step inside qd
+print(tw.beta1[qd, 2])       # 2nd integration step inside qd
+print(tw.beta1[4, :])        # Every integration step of element 4
+print(tw.beta1[0:1.23])      # Every integration step between s=0, s=1.23
+
+# Compute only specific quantities
+#   "beta1" = horizontal-like beta
+#   "phi2" = vertical-like phase advance,
+#   "dx" = horizontal dispersion
+tw = sb.twiss(fodo, cols=["beta1", "phi2", "dx"])
+
+# Compute higher order chromatic quantities such as
+# the chromaticity, Montague W functions ("w1", "w2"),
+# and 2nd order dispersions ("dx_2", "dy_2") by setting
+# the order of δ (chrom) equal to 2
+tw = sb.twiss(fodo, cols=["w1", "w2", "dx_2", "dy_2"], chrom=2)
+print(repr(tw.q2))
+# Prints:
+#   AmplitudeDependentValue:
+#    0.05401330001000863 - 0.008253153240321323 δ
+
+# Get the y-chromaticity
+chromy = tw.q2(delta=1)
+chromy = tw.dq2  # or equivalently tw.dq2_1
+
+# Resonance driving terms h3000, h2100
+tw = sb.twiss(fodo, cols=["h3000", "h2100"])
+
+# Spin analysis (invariant spin field as Taylor series,
+# amplitude-dependent spin tune).
+tw = sb.twiss(fodo, cols=["nx", "ny", "nz"], spin=True,
+              as_taylor_series=True, order=2)
+print(repr(tw.qspin))
+# Prints:
+#   AmplitudeDependentValue:
+#    -0.3094612779434053 - 0.3094612776559473 δ - 4.0543183384536337e-10 J₁
+#    + 28.127501690102246 J₂ - 2.950933476050364e-10 δ²
+
+# Adjust the sextupoles to make chromaticities to be +1
+# using SciBmad's autodiff + parametric normal form
+te = sb.TwissExpr(fodo)
+sol = sb.match(vary=[sb.Knob(sf, "Kn2"), sb.Knob(sd, "Kn2")],
+               targets=[te.dq1 == 1, te.dq2 == 1])
+
+# Track a particle with [x, px, y, py, z, pz]
+# = [1e-3, 0, 0, 0, 0, 1e-3] for n_turns=10
+res = sb.track(fodo, v0=[[1e-3, 0, 0, 0, 0, 1e-3]], n_turns=10)
+
+# Also do spin quaternion tracking:
+res = sb.track(fodo, v0=[[1e-3, 0, 0, 0, 0, 1e-3]], n_turns=10, spin=True)
+# Apply spin quaternion to horizontal initial spin direction (FAST):
+s = sb.track_spin(res.q, [1, 0, 0])
+
+# Track a bunch, give an array of size n_particles x 6:
+n_particles = 10
+res = sb.track(fodo, v0=np.random.rand(n_particles, 6)*1e-5, n_turns=10, spin=True)
+```
+
+:::{only} python
+SciBmad is a Julia package, and the Python package `scibmad` runs it: every name of SciBmad is
+a name of `scibmad`, with the same arguments. How Python writes the few things that Julia writes
+differently is described in [SciBmad from Python](python.md).
+:::
+
 ## Step-By-Step Description
 
 ### Constructing a Beamline
@@ -184,8 +308,35 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
         species_ref=Species("electron"), pc_ref=18e9)
 ```
 
+```{code-cell} python
+import re
+import numpy as np
+import scibmad as sb
+
+# Define lattice elements, named after their variables
+with sb.elements():
+    qf = sb.Quadrupole(Kn1=0.36, L=0.5)
+    sf = sb.Sextupole(Kn2=1.2, L=0.2)
+    d = sb.Drift(L=0.1)
+    b = sb.SBend(L=1.2, angle=np.pi/132)
+    qd = sb.Quadrupole(Kn1=-0.36, L=0.5)
+    sd = sb.Sextupole(Kn2=-1.2, L=0.2)
+
+# Construct a Beamline and define the reference species + momentum
+fodo = sb.Beamline([qf, sf, b, d, qd, sd, b, d],
+                   species_ref=sb.Species("electron"), pc_ref=18e9)
+```
+
+:::{only} julia
 Wrapping the definitions in `@elements` sets the `name` of each element to the name of its
-variable (`qf.name` is `"qf"`). The `Beamline` is designed for a reference particle, here an
+variable (`qf.name` is `"qf"`).
+:::
+:::{only} python
+Defining the elements in a `with sb.elements():` block sets the `name` of each element to the
+name of its variable (`qf.name` is `"qf"`).
+:::
+
+The `Beamline` is designed for a reference particle, here an
 electron with the momentum `pc_ref` = 18 GeV/c.
 
 All element "kinds" (`Sextupole`, `Quadrupole`, etc.) are one single type `LatElement` 
@@ -200,6 +351,15 @@ element definition. For example, retuning the quadrupole strengths or number of 
 steps
 
 ```{code-cell} julia
+# Change the quadrupole strengths
+qf.Kn1 = 0.37
+qd.Kn1 = -0.37
+
+# Set number of integration steps in qd to 3
+qd.n_steps = 3
+```
+
+```{code-cell} python
 # Change the quadrupole strengths
 qf.Kn1 = 0.37
 qd.Kn1 = -0.37
@@ -236,6 +396,27 @@ quads = fodo["Quadrupole::*"];             # Classic Bmad syntax
 quads = fodo[r"q.*"];                      # Regex match on name
 ```
 
+```{code-cell} python
+# Find the *single* instance of `qf` in fodo:
+qf_in_fodo = fodo[qf]
+
+# Find *all* the drifts `d` in `fodo` (note the extra [])
+ds = fodo[[d]]
+
+# Get the first element of `fodo`
+first_ele = fodo[1]
+
+# Gets all quadrupoles
+quads = fodo[lambda x: x.kind == "Quadrupole"]  # Lambda function
+quads = fodo["Quadrupole::*"]                   # Classic Bmad syntax
+quads = fodo[re.compile("q.*")]                 # Regex match on name
+```
+
+:::{only} python
+`fodo[1]` is the first element: the elements of a beamline are numbered from 1, as in Julia
+(see [SciBmad from Python](python.md)).
+:::
+
 To see all the ways you can search for elements, see [Defining a Beamline](beamline.md).
 
 ### Twiss
@@ -251,6 +432,15 @@ tw = twiss(fodo)
 two = twiss(fodo, initial=(beta1=13, alpha1=-1, beta2=10, alpha2=1))
 ```
 
+```{code-cell} python
+# Compute the periodic optics
+tw = sb.twiss(fodo)
+
+# Compute the optics of fodo as an open line (not a ring), from given
+# initial Twiss parameters at its beginning
+two = sb.twiss(fodo, initial=dict(beta1=13, alpha1=-1, beta2=10, alpha2=1))
+```
+
 By default this computes the closed orbit, tunes/phase advances and, in the Sagan-Rubin/Edwards-Teng coupling formalism, the beta functions, alpha functions, coupling matrix, phase advances/slip, and (crab) dispersions at _all integration steps_. The table itself is `tw.df`, a [`DataFrame`](https://dataframes.juliadata.org/stable/).
 The numbers `1` and `2` in names such as `beta1` and `q1` refer to the two transverse normal
 modes, which are horizontal-like and vertical-like (`x` and `y` when there is no coupling).
@@ -263,7 +453,16 @@ The values for the whole ring, such as the tunes, are properties of `tw`:
 @show tw.alphac; # Momentum compaction
 ```
 
+```{code-cell} python
+print("tw.q1 =", tw.q1)          # Horizontal-like tune
+print("tw.q2 =", tw.q2)          # Vertical-like tune
+print("tw.etac =", tw.etac)      # Phase slip factor
+print("tw.alphac =", tw.alphac)  # Momentum compaction
+```
+
+:::{only} julia
 In Julia, the `@` sign specifies a macro, which modifies the code it acts on. In this case, `@show tw.q1` is syntactic sugar that replaces the line of code with `println("tw.q1 = ", tw.q1)`.
+:::
 
 The columns of the Twiss table contain the s-dependent values, and can be read at any location, for example the beginning/ends of elements, or every integration step over an s-range.
 
@@ -276,6 +475,20 @@ The columns of the Twiss table contain the s-dependent values, and can be read a
 @show tw.beta1[4, :]      # Every integration step of element 4
 @show tw.beta1[(0, 1.23)]; # Every integration step between s=0, s=1.23
 ```
+
+```{code-cell} python
+# Betas at various locations:
+print(tw.beta1[qd])          # Beginning of element qd
+print(tw.beta1[qd, "exit"])  # End of qd
+print(tw.beta1[qd, :])       # Every integration step inside qd
+print(tw.beta1[qd, 2])       # 2nd integration step inside qd
+print(tw.beta1[4, :])        # Every integration step of element 4
+print(tw.beta1[0:1.23])      # Every integration step between s=0, s=1.23
+```
+
+:::{only} python
+An s-range is a slice of floats (`0:1.23`, in Julia the tuple `(0, 1.23)`).
+:::
 All of the ways to specify a location are described in [Twiss](twiss.md).
 
 If only a subset of quantities is needed, the `cols` keyword restricts the computation (and
@@ -289,6 +502,15 @@ the columns returned) to exactly what you ask for, which can save computation ti
   "dx" = horizontal dispersion
 =#
 tw = twiss(fodo, cols=["beta1", "phi2", "dx"])
+```
+
+```{code-cell} python
+# Compute only specific quantities of the periodic optics
+#   "beta1" = horizontal-like beta
+#   "phi2" = vertical-like phase advance,
+#   "dx" = horizontal dispersion
+tw = sb.twiss(fodo, cols=["beta1", "phi2", "dx"])
+tw
 ```
 
 To see all available columns that can be provided to `cols`, see the [`twiss`](twiss.md)
@@ -325,6 +547,15 @@ is the second derivative w.r.t. δ.
 tw = twiss(fodo, cols=["w1", "w2", "dx_2", "dy_2"], chrom=2)
 ```
 
+```{code-cell} python
+# Compute higher order chromatic quantities such as
+# the chromaticity, Montague W functions ("w1", "w2"),
+# and 2nd order dispersions ("dx_2", "dy_2") by setting
+# the order of δ (chrom) equal to 2
+tw = sb.twiss(fodo, cols=["w1", "w2", "dx_2", "dy_2"], chrom=2)
+tw
+```
+
 When computed to a higher order, amplitude- and energy-dependent quantities, such as the tunes
 `q1`/`q2`, are returned not as plain numbers but as `AmplitudeDependentValue`s - Taylor series
 in the actions `J₁`, `J₂` (the amplitudes of the oscillations in the two transverse modes) and
@@ -334,20 +565,40 @@ the energy deviation `δ`:
 @show tw.q2
 ```
 
-Derivatives of an `AmplitudeDependentValue` can be extracted by indexing the quantity with the order of the derivative in each variable. For example, the linear chromaticity in `y` is $\partial q_2/\partial\delta$:
+```{code-cell} python
+tw.q2
+```
+
+Derivatives of an `AmplitudeDependentValue` can be extracted by indexing the quantity with the order
+of the derivative in each
+variable{pytext}` (in Python with a call, as Python has no keywords in indexing)`. For example, the
+linear chromaticity in `y` is $\partial q_2/\partial\delta$:
 
 ```{code-cell} julia
 # Get the y-chromaticity
 chromy = tw.q2[delta=1]
 ```
 
+```{code-cell} python
+# Get the y-chromaticity
+chromy = tw.q2(delta=1)
+chromy
+```
+
 For chromatic derivatives only, you can also use the shorthand `d<quantity>_<order>` notation:
 
 ```{code-cell} julia
-chromy = tw.dq2 # or equivalently tw.dq2_1 
+chromy = tw.dq2 # or equivalently tw.dq2_1
 ```
 
-Likewise, `tw.q2[delta=2]` (or `tw.dq2_2`) is $\partial^2 q_2/\partial\delta^2$. The same mechanism extends naturally to purely amplitude-dependent tune shifts (once `order`
+```{code-cell} python
+chromy = tw.dq2  # or equivalently tw.dq2_1
+chromy
+```
+
+Likewise, {jl}`tw.q2[delta=2]`{py}`tw.q2(delta=2)` (or `tw.dq2_2`) is $\partial^2
+q_2/\partial\delta^2$. The same mechanism extends naturally to purely amplitude-dependent tune
+shifts (once `order`
 is raised high enough to resolve them), using the `J1` and `J2` keyword arguments to extract tune derivatives w.r.t. the action variables.
 
 We can also extract any so-called resonance driving term/detune coefficient - monomials of the nonlinear effective Hamiltonian in linear action-angle variables. And, if the beam is
@@ -358,11 +609,18 @@ coasting (without synchrotron oscillations, e.g. without RF cavities), we can ev
 tw = twiss(fodo, cols=["h3000", "h2100"])
 ```
 
+```{code-cell} python
+# Resonance driving terms h3000, h2100
+tw = sb.twiss(fodo, cols=["h3000", "h2100"])
+tw
+```
+
 To compute these quantities, technically `order=2` is required. However, `twiss` will automatically resolve the internal orders given the requested columns if not explicitly provided.
 
 ### Spin Analysis
 
-`twiss` can additionally analyze the spin dynamics by setting `spin=true`. This enables
+`twiss` can additionally analyze the spin dynamics by setting {jl}`spin=true`{py}`spin=True`. This
+enables
 computation of the invariant spin field (as a Taylor series in the phase space coordinates if requested) and the amplitude-dependent spin tune:
 
 ```{code-cell} julia
@@ -375,11 +633,25 @@ tw = twiss(fodo, cols=["nx", "ny", "nz"], spin=true,
 n = [tw.nx[1], tw.ny[1], tw.nz[1]] # ISF at first element
 ```
 
-With `as_taylor_series=true`, the components of the ISF are returned as full Taylor series in
+```{code-cell} python
+# Spin analysis (invariant spin field as Taylor series,
+# amplitude-dependent spin tune).
+tw = sb.twiss(fodo, cols=["nx", "ny", "nz"], spin=True,
+              as_taylor_series=True, order=2)
+n = [tw.nx[1], tw.ny[1], tw.nz[1]]  # ISF at first element
+n
+```
+
+With {jl}`as_taylor_series=true`{py}`as_taylor_series=True`, the components of the ISF are returned
+as full Taylor series in
 the phase space variables $(x,p_x,y,p_y,z,\delta)$, rather than just returning $\hat{n}_0$ (the invariant spin field on the closed orbit). The spin tune, accessible as `tw.qspin`, is likewise an `AmplitudeDependentValue`:
 
 ```{code-cell} julia
 @show tw.qspin
+```
+
+```{code-cell} python
+tw.qspin
 ```
 
 As with the orbital tunes, individual derivatives, such as the spin tune's linear dependence on energy, or on its amplitude `J₂`, can be indexed.
@@ -393,10 +665,21 @@ tw = twiss(fodo, chrom=2)
 @show tw.dq2
 ```
 
+```{code-cell} python
+tw = sb.twiss(fodo, chrom=2)
+print("tw.dq1 =", tw.dq1)
+print("tw.dq2 =", tw.dq2)
+```
+
 We want to adjust the sextupoles `sf` and `sd` so that these values are both `+1`. To do this, we first form a `TwissExpr` of our Beamline - this allows us to form mathematical expressions for _any_ output of regular `twiss`, which we can then use in optimizations.
 
 ```{code-cell} julia
 te = TwissExpr(fodo)
+```
+
+```{code-cell} python
+te = sb.TwissExpr(fodo)
+te
 ```
 
 Because `TwissExpr` allows expressions for any output from `twiss`, the `cols` keyword argument does not need to, and cannot, be provided.
@@ -408,18 +691,35 @@ We can now form the two target expressions using our `TwissExpr`, specifying tha
 [te.dq1 == 1, te.dq2 == 1]
 ```
 
-Lastly, we need to specify our "knobs" - the things we want to change to achieve our targets. This is done using `@knob` with the normal sextupole strengths `Kn2` of `sf` and `sd`:
+```{code-cell} python
+[te.dq1 == 1, te.dq2 == 1]
+```
+
+Lastly, we need to specify our "knobs" - the things we want to change to achieve our targets. This
+is done using {jl}`@knob`{py}`sb.Knob` with the normal sextupole strengths `Kn2` of `sf` and `sd`:
 
 ```{code-cell} julia
 [@knob(sf.Kn2), @knob(sd.Kn2)]
 ```
 
-Putting this all together into SciBmad's `match!` function, we can now run the optimization:
+```{code-cell} python
+[sb.Knob(sf, "Kn2"), sb.Knob(sd, "Kn2")]
+```
+
+Putting this all together into SciBmad's {jl}`match!`{py}`match` function, we can now run the
+optimization:
 
 ```{code-cell} julia
 te = TwissExpr(fodo)
 sol = match!(vary = [@knob(sf.Kn2), @knob(sd.Kn2)],
              targets = [te.dq1 == 1, te.dq2 == 1])
+```
+
+```{code-cell} python
+te = sb.TwissExpr(fodo)
+sol = sb.match(vary=[sb.Knob(sf, "Kn2"), sb.Knob(sd, "Kn2")],
+               targets=[te.dq1 == 1, te.dq2 == 1])
+sol
 ```
 
 We see that the match has been achieved, and can verify it with a regular `twiss` call:
@@ -428,15 +728,20 @@ We see that the match has been achieved, and can verify it with a regular `twiss
 twiss(fodo, chrom=2)
 ```
 
-Under the hood, `match!` uses SciBmad's automatic differentiation and parametric normal form to achieve an exact, and fast, match.
+```{code-cell} python
+sb.twiss(fodo, chrom=2)
+```
+
+Under the hood, {jl}`match!`{py}`match` uses SciBmad's automatic differentiation and parametric
+normal form to achieve an exact, and fast, match.
 
 `TwissExpr` enables powerful accelerator lattice design and optimization workflows. Outputs of `TwissExpr` (such as the optics functions) can be passed into other `TwissExpr`s as initial conditions. For example, after matching arc FODO cells, one can pass the output values easily into another `TwissExpr` that is then used to match the arc FODO cells to a straight section. Derivatives of various quantities including w.r.t. knobs can also be matched through the same interface, for example as done in the Linear Optics from Closed Orbits (LOCO) algorithm. For all details, see the [Matching and Optimization](optimize.md) section of the documentation.
 
 ### Track
 
 To do particle tracking, a single function `track` is provided, which accepts initial phase
-space coordinates as an `n_particle x 6` matrix (the coordinates are described on the
-[Track](track.md) page):
+space coordinates as an `n_particle x 6` matrix{pytext}` (a NumPy array, or a list of lists)` (the
+coordinates are described on the [Track](track.md) page):
 
 ```{code-cell} julia
 #=
@@ -455,6 +760,22 @@ n_particles = 10
 res = track(fodo, v0=rand(n_particles, 6).*1e-5, n_turns=10, spin=true)
 ```
 
+```{code-cell} python
+# Track a particle with [x, px, y, py, z, pz]
+# = [1e-3, 0, 0, 0, 0, 1e-3] for n_turns=10
+res = sb.track(fodo, v0=[[1e-3, 0, 0, 0, 0, 1e-3]], n_turns=10)
+
+# Also do spin quaternion tracking:
+res = sb.track(fodo, v0=[[1e-3, 0, 0, 0, 0, 1e-3]], n_turns=10, spin=True)
+# Apply spin quaternion to horizontal initial spin direction (FAST):
+s = sb.track_spin(res.q, [1, 0, 0])
+
+# Track a bunch, give an array of size n_particles x 6:
+n_particles = 10
+res = sb.track(fodo, v0=np.random.rand(n_particles, 6)*1e-5, n_turns=10, spin=True)
+res
+```
+
 The particles are saved at the end of the beamline after every turn by default (turn 0 holds the initial coordinates), and are read by turn and particle:
 
 ```{code-cell} julia
@@ -462,11 +783,25 @@ res.x[turn=10]               # x of all particles after turn 10
 res.x[turn=:, particle=1]    # x of particle 1 at turns 0 to 10
 ```
 
-To save them at other places, give the elements (or positions inside elements) with `at`, and read them with the element first, as for the `twiss` results, e.g. `res.x[qd, turn=10]`. See the [Track](track.md) page for more details.
+```{code-cell} python
+print(res.x(turn=10))                # x of all particles after turn 10
+print(res.x(turn=..., particle=1))   # x of particle 1 at turns 0 to 10
+```
+
+:::{only} python
+Python has no keywords in indexing: where Julia writes `res.x[turn=10]`, Python calls the
+column, `res.x(turn=10)`, and `...` stands for Julia's `:` there.
+:::
+
+To save them at other places, give the elements (or positions inside elements) with `at`, and read
+them with the element first, as for the `twiss` results, e.g.
+{jl}`res.x[qd, turn=10]`{py}`res.x(qd, turn=10)`. See the [Track](track.md) page for more details.
 
 On the CPU, all tracking will automatically be parallelized using single instruction,
 multiple data (SIMD) if your hardware supports it. CPU multithreading can also be enabled by
-starting Julia with threads, and setting `use_cpu_multithreading=true`. For more details,
+starting Julia with threads, and setting
+{jl}`use_cpu_multithreading=true`{py}`use_cpu_multithreading=True`{pytext}` (Julia's threads are set with sb.init(threads=...) before the first use of SciBmad)`.
+For more details,
 see the [CPU Parallelization](#cpuparallel) section of the manual.
 
 For GPU parallelized tracking, simply initialize your initial particle coordinates as a GPU
@@ -479,6 +814,13 @@ v0 = CUDA.rand(Float64, n_particles, 6) .* 1e-5
 res = track(fodo, v0=v0, n_turns=10, spin=true)
 ```
 
+```python
+gpu = sb.device("cuda")
+n_particles = 100000  # 100,000 particles
+v0 = gpu.asarray(np.random.rand(n_particles, 6) * 1e-5)
+res = sb.track(fodo, v0=v0, n_turns=10, spin=True)
+```
+
 Apple Metal GPUs only support 32-bit floats, so on a Mac use `Float32` coordinates; all of
 the tracking will then be done in 32-bit:
 
@@ -486,6 +828,12 @@ the tracking will then be done in 32-bit:
 using Metal
 v0 = MtlArray(rand(Float32, n_particles, 6) .* 1f-5)
 res = track(fodo, v0=v0, n_turns=10, spin=true)
+```
+
+```python
+gpu = sb.device("metal")
+v0 = gpu.asarray(np.random.rand(n_particles, 6) * 1e-5, dtype=np.float32)
+res = sb.track(fodo, v0=v0, n_turns=10, spin=True)
 ```
 
 For more details, see the [GPU Parallelization](#gpuparallel) section of the manual.

@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Chapter 1: FODO Cells
 
 **Exercises 1 to 3:** See the lattice file
@@ -45,6 +53,20 @@ tw = twiss(thin)
 tw.q1, tw.q2, tw.beta1[tqf], tw.beta2[tqf]
 ```
 
+```{code-cell} python
+import numpy as np
+import scibmad as sb
+f = 9.21/np.sqrt(2)
+with sb.elements():
+    tqf = sb.Multipole(Kn1L=1/f)
+    tqd = sb.Multipole(Kn1L=-1/f)
+    dd = sb.Drift(L=9.21)
+thin = sb.Beamline([tqf, dd, tqd, dd], species_ref=sb.Species("electron"),
+                   pc_ref=17.846262612447e9)
+tw = sb.twiss(thin)
+tw.q1, tw.q2, tw.beta1[tqf], tw.beta2[tqf]
+```
+
 **Exercise 5:** The reverse cell is the forward cell in reverse order, started at another element.
 Starting at another point of a periodic cell does not change its tunes, and neither does reversing
 the order of its elements (the transfer matrix of the reversed cell has the same trace). So the
@@ -59,6 +81,11 @@ the reversal changes the sign of α.
 6.86*θ/(2*sin(θ/2)) - 6.86 # [m]
 ```
 
+```{code-cell} python
+θ = np.pi/132
+6.86*θ/(2*np.sin(θ/2)) - 6.86  # [m]
+```
+
 ## Chapter 2: Dispersion Suppressor
 
 **Exercise 3:** In a drift, $dx/ds = p_x/\sqrt{(1 + p_z)^2 - p_x^2 - p_y^2}$. Its derivative with
@@ -66,7 +93,7 @@ respect to δ at $p_x = p_y = 0$ (on the closed orbit of our ring) is
 $d\eta_x/ds = \partial p_x/\partial\delta$, the column `dpx`. With an orbit, the two differ, by the
 derivative of the denominator.
 
-**Exercise 5:** `maxiter`, e.g. `match!(...; maxiter=100)`.
+**Exercise 5:** `maxiter`, e.g. {jl}`match!(...; maxiter=100)`{py}`sb.match(..., maxiter=100)`.
 
 ## Chapter 4: Machine Coordinates
 
@@ -101,6 +128,27 @@ end
 X, Z, θ # Bmad: -0.43292, 1.93274, 0.28540
 ```
 
+```{code-cell} python
+with sb.elements():
+    b4 = sb.SBend(L=0.5, angle=0.5)
+    p4 = sb.Patch(dz=1.0, dy_rot=np.pi/4)
+    q4 = sb.Quadrupole(L=0.6, Kn1=0.23)
+patched = sb.Beamline([b4, p4, q4], species_ref=sb.Species("electron"), E_ref=10e6)
+X, Z, θ = 0.0, 0.0, 0.0
+for ele in patched.line:
+    if ele.kind == "Patch":
+        lx, lz, dθ = 0.0, ele.dz, -ele.dy_rot
+    elif ele.g_ref == 0:
+        lx, lz, dθ = 0.0, ele.L, 0.0
+    else:
+        g, L = ele.g_ref, ele.L
+        lx, lz, dθ = (np.cos(g*L) - 1)/g, np.sin(g*L)/g, g*L
+    X += lx*np.cos(θ) + lz*np.sin(θ)
+    Z += -lx*np.sin(θ) + lz*np.cos(θ)
+    θ -= dθ
+X, Z, θ  # Bmad: -0.43292, 1.93274, 0.28540
+```
+
 ## Chapter 8: Particle Phase Space Coordinates
 
 **Exercise 1:** The phase space momenta $p_x$, $p_y$ and $p_z$ do not change through a drift, and
@@ -122,6 +170,11 @@ drift = Beamline([Drift(L=2.0)], species_ref=Species("proton"), E_ref=1e12)
 track(drift, v0=[0 0.2 0 0 0 1.0]).v[turn=1, particle=1]
 ```
 
+```{code-cell} python
+drift = sb.Beamline([sb.Drift(L=2.0)], species_ref=sb.Species("proton"), E_ref=1e12)
+sb.track(drift, v0=[[0, 0.2, 0, 0, 0, 1.0]]).v(turn=1, particle=1)
+```
+
 ## Chapter 9: RF Cavities
 
 **Exercise 2:** The cavity is short, so the particle crosses it at nearly the same time $t$ relative
@@ -137,13 +190,24 @@ v = track(lat, v0=[0 0 0 0 1e-3 0]).v[turn=1, particle=1]
 v[5]/1e-3, β(1e9*(1 + v[6]))/β(1e9) # The ratio of z, and the ratio of the velocities
 ```
 
+```{code-cell} python
+p = sb.Species("proton")
+cav = sb.RFCavity(L=1e-6, voltage=1e9, rf_frequency=1e9, zero_phase=sb.PhaseRef.Accelerating)
+lat = sb.Beamline([cav], species_ref=p, pc_ref=1e9)
+v = sb.track(lat, v0=[[0, 0, 0, 0, 1e-3, 0]]).v(turn=1, particle=1)
+def β(pc):
+    return pc/np.sqrt(pc**2 + sb.massof(p)**2)
+v[4]/1e-3, β(1e9*(1 + v[5]))/β(1e9)  # The ratio of z, and the ratio of the velocities
+```
+
 The two ratios differ by $1.4\cdot10^{-4}$: inside the cavity, the particle and the reference particle
 move with different velocities, which changes $t - t_\mathrm{ref}$ a little. This is proportional to
 the length of the cavity: with `L = 1e-9`, the ratios agree to $1.4\cdot10^{-7}$.
 
 ## Chapter 11: Deferred Expressions and Contexts
 
-**Exercise 1:** `q.Kn1 = DefExpr(c -> 0.7*clamp(c.hh, 0, 1))`
+**Exercise 1:**
+{jl}`q.Kn1 = DefExpr(c -> 0.7*clamp(c.hh, 0, 1))`{py}`q.Kn1 = sb.DefExpr(lambda c: 0.7*np.clip(c.hh, 0, 1))`{pytext}` (np.clip is not traced into Julia: this function is called from Julia each time, which is slower)`
 
 **Exercise 2:**
 
@@ -158,13 +222,25 @@ moving.context.ds = 0.1
 moving[bb].s, sum(ele.L for ele in moving.line)
 ```
 
-**Exercise 3:** With a variable for the offset, e.g. `q.x_offset = DefExpr(c -> c.girder_dx)` and
-`b.x_offset = DefExpr(c -> c.girder_dx)`. (A girder also moves its elements when it is rotated, which
+```{code-cell} python
+with sb.elements():
+    dd = sb.Drift(L=sb.DefExpr(lambda c: 0.5 + c.ds))
+    bb = sb.SBend(L=0.5, angle=0.1)
+    de = sb.Drift(L=sb.DefExpr(lambda c: 0.5 - c.ds))
+moving = sb.Beamline([dd, bb, de], species_ref=sb.Species("electron"), E_ref=10e6)
+moving.context.ds = 0.1
+moving[bb].s, sum(ele.L for ele in moving.line)
+```
+
+**Exercise 3:** With a variable for the offset, e.g.
+{jl}`q.x_offset = DefExpr(c -> c.girder_dx)`{py}`q.x_offset = sb.DefExpr(lambda c: c.girder_dx)` and
+{jl}`b.x_offset = DefExpr(c -> c.girder_dx)`{py}`b.x_offset = sb.DefExpr(lambda c: c.girder_dx)`. (A
+girder also moves its elements when it is rotated, which
 this does not describe.)
 
 ## Chapter 13: Comparing Lattices
 
-**Exercise 2:** `setit(k) = (q.Ks0L = k)`
+**Exercise 2:** {jl}`setit(k) = (q.Ks0L = k)`{py}`def setit(k): q.Ks0L = k`
 
 ## Chapter 15: Spin Tracking with Ramping
 
@@ -187,6 +263,24 @@ for Gγ in (45.5, 46.0, 51.82)
   ring.E_ref = Gγ/G*m
   println("Gγ = ", Gγ, ": spin tune ", twiss(ring, spin=true, at=[]).qspin)
 end
+```
+
+```{code-cell} python
+from lattices.ch15_spin import *
+# A transport map runs inside the tracking (for every particle, also on GPUs): it is Julia code
+snake = sb.julia.seval("""
+function snake(v, q, p)
+  q === nothing && return v, q # Without spin tracking
+  c, s = cos(p/2), sin(p/2)
+  return v, (c*q[1] - s*q[4], c*q[2] - s*q[3], c*q[3] + s*q[2], c*q[4] + s*q[1])
+end""")
+ring[csnk].transport_map = snake
+ring[csnk].transport_map_params = np.deg2rad(18.3)
+ring[wsnk].transport_map = snake
+ring[wsnk].transport_map_params = np.deg2rad(10.57)
+for Gγ in (45.5, 46.0, 51.82):
+    ring.E_ref = Gγ/G*m
+    print(f"Gγ = {Gγ}: spin tune", sb.twiss(ring, spin=True, at=[]).qspin)
 ```
 
 With the snakes, the closed-orbit spin is no longer vertical everywhere, and its spin tune is not

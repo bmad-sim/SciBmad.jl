@@ -20,6 +20,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 `twiss` is a general, all-encompassing function for doing analysis of any beamline, open or
 closed, via perturbation theory around the (closed) orbit. It computes the linear and nonlinear optics (e.g. amplitude-dependent tunes and resonance driving terms) and, with `spin=true`,
 the invariant spin field and the amplitude-dependent spin tune. The dependence of all
@@ -39,6 +47,18 @@ All `twiss` needs is a beamline:
 end
 fodo = Beamline([qf, d, b, d, qd, d, b, d], species_ref=Species("electron"), pc_ref=18e9)
 tw = twiss(fodo)
+```
+
+```{code-cell} python
+with sb.elements():
+    qf = sb.Quadrupole(Kn1=0.36, L=0.5)
+    d = sb.Drift(L=1.0)
+    qd = sb.Quadrupole(Kn1=-0.36, L=0.5, n_steps=2)
+    b = sb.SBend(L=2.0, angle=np.pi/20)
+fodo = sb.Beamline([qf, d, b, d, qd, d, b, d], species_ref=sb.Species("electron"),
+                   pc_ref=18e9)
+tw = sb.twiss(fodo)
+tw
 ```
 
 The output is a `Twiss` structure. Shown first are the summary values, which describe the motion
@@ -63,6 +83,10 @@ The summary values are properties of `Twiss`:
 tw.q1, tw.q2 # (0.1486522740866844, 0.1274197024658691)
 ```
 
+```{code-cell} python
+tw.q1, tw.q2  # (0.1486522740866844, 0.1274197024658691)
+```
+
 | Summary value | Meaning |
 |---|---|
 | `q1`, `q2` | The tunes of modes 1 and 2 in units of 2π, whole oscillations included (for an open line, the phase advances through it) |
@@ -82,8 +106,16 @@ tw.beta1[[d]]   # [14.56, 8.177, 6.695, 12.14] at every placement of d (four)
 tw.beta1[end]   # 14.56 at the end of the beamline
 ```
 
+```{code-cell} python
+print(tw.beta1[qd])     # 6.695 at the beginning of qd
+print(tw.beta1[qd, :])  # [6.695, 6.538, 6.695] at every integration step of qd, both ends included
+print(tw.beta1[[d]])    # [14.56, 8.177, 6.695, 12.14] at every placement of d (four)
+print(tw.beta1[-1])     # 14.56 at the end of the beamline
+```
+
 All the ways to give a location:
 
+:::{only} julia
 | Location | Meaning |
 |---|---|
 | `tw.beta1[qd]`, `tw.beta1[5]` | At the beginning of an element, or of the element with that beamline index |
@@ -95,6 +127,22 @@ All the ways to give a location:
 | `tw.beta1["q*"]` | At the elements found by name, see [Searching by Name](#search:name) |
 | `tw.beta1[[qf, qd]]`, `tw.beta1[2:4]` | At each of these elements |
 | `tw.beta1[(2.0, 6.0)]`, `tw.beta1[:]` | At every integration step in an s-range, or of the whole beamline |
+:::
+:::{only} python
+| Location | Meaning |
+|---|---|
+| `tw.beta1[qd]`, `tw.beta1[5]` | At the beginning of an element, or of the element with that beamline index |
+| `tw.beta1[[d]]` | At the beginning of every placement of an element |
+| `tw.beta1[qd, "exit"]` | At the end of the element (the beginning of the next one) |
+| `tw.beta1[qd, :]` | At every integration step of the element, both ends included |
+| `tw.beta1[qd, 1]` | One integration step after the beginning of the element |
+| `tw.beta1[sb.begin]`, `tw.beta1[-1]` | At the beginning and the end of the beamline (`-1`, or `sb.end`, is the beamline index of the end: `-2`, or `sb.end - 1`, is the last element) |
+| `tw.beta1["q*"]` | At the elements found by name, see [Searching by Name](#search:name) |
+| `tw.beta1[[qf, qd]]`, `tw.beta1[2:5]` | At each of these elements (a Python slice, without its stop: elements 2, 3 and 4) |
+| `tw.beta1[2.0:6.0]`, `tw.beta1[:]` | At every integration step in an s-range (a slice of floats), or of the whole beamline |
+
+Beamline indexes start at 1, as in Julia; the NumPy arrays that a column gives start at 0.
+:::
 
 If an element is placed more than once in the beamline, `tw.beta1[d]` is an error, because it
 is not clear which placement is meant. `tw.beta1[[d]]` gives the values at all of them. Names,
@@ -110,7 +158,16 @@ lines(tw.s, tw.beta1)       # the beta function along the beamline
 maximum(tw.beta1)           # 14.56
 tw.dx ./ sqrt.(tw.beta1)    # [1.059, 1.059, ...] at every row
 ```
-The underlying vector of a `TwissColumn` can be obtained with `collect(tw.beta1)`. The whole table, here `tw.df` is a [`DataFrame`](https://dataframes.juliadata.org/stable/). 
+
+```python
+import matplotlib.pyplot as plt
+plt.plot(tw.s, tw.beta1)    # the beta function along the beamline
+max(tw.beta1)               # 14.56
+tw.dx / np.sqrt(tw.beta1)   # [1.059, 1.059, ...] at every row
+```
+The underlying vector of a `TwissColumn` can be obtained with
+{jl}`collect(tw.beta1)`{py}`np.asarray(tw.beta1)`. The whole table, here `tw.df` is a
+[`DataFrame`](https://dataframes.juliadata.org/stable/).
 
 The default columns computed by `twiss` are:
 
@@ -134,6 +191,11 @@ tws = twiss(fodo, at=[qd], cols=["beta1", "dx"])
 tws.beta1[qd] # 6.695
 ```
 
+```{code-cell} python
+tws = sb.twiss(fodo, at=[qd], cols=["beta1", "dx"])
+tws.beta1[qd]  # 6.695
+```
+
 `at` is a vector of elements (the beginning of every placement), beamline indexes and names (the
 beginning of the element), and s-ranges (every integration step in the range). Only these
 locations can then be read, and computing fewer rows is faster. With `at=[]` only the summary
@@ -141,6 +203,10 @@ values are computed:
 
 ```{code-cell} julia
 twiss(fodo, at=[]).q1 # 0.1486522740866844
+```
+
+```{code-cell} python
+sb.twiss(fodo, at=[]).q1  # 0.1486522740866844
 ```
 
 A table of only the orbit (and, without RF cavities, the dispersion) is faster too. Besides the
@@ -171,6 +237,11 @@ twc = twiss(fodo, chrom=2)
 twc.dq1, twc.dq2 # (-0.10506231945773534, -0.1180234082730797)
 ```
 
+```{code-cell} python
+twc = sb.twiss(fodo, chrom=2)
+twc.dq1, twc.dq2  # (-0.10506231945773534, -0.1180234082730797)
+```
+
 `dq1` is the first derivative of `q1` with respect to δ. This naming works for any quantity:
 `d<quantity>_<n>` is its n-th derivative with respect to δ, and `_1` can be left out. The
 dispersion `dx` is itself the derivative of the orbit `x`. Derivatives of columns are asked for in
@@ -180,6 +251,11 @@ of `beta1`:
 ```{code-cell} julia
 twd = twiss(fodo, chrom=2, cols=["dx_2", "dbeta1"])
 twd.dx_2[qd], twd.dbeta1[qd] # (4.366, 0.7423)
+```
+
+```{code-cell} python
+twd = sb.twiss(fodo, chrom=2, cols=["dx_2", "dbeta1"])
+twd.dx_2[qd], twd.dbeta1[qd]  # (4.366, 0.7423)
 ```
 
 How far the expansion goes is set by two truncation orders: `chrom` for δ alone, and `order`
@@ -202,12 +278,22 @@ tw3 = twiss(fodo, chrom=3)
 tw3.q1
 ```
 
+```{code-cell} python
+tw3 = sb.twiss(fodo, chrom=3)
+tw3.q1
+```
+
 ```{code-cell} julia
 tw3.q1[delta=2] # 3.304
 ```
 
+```{code-cell} python
+tw3.q1(delta=2)  # 3.304
+```
+
 These `AmplitudeDependentValue`s are Taylor series in δ and in the actions `J₁` and `J₂`, which
-measure the amplitudes of modes 1 and 2. Indexing gives a derivative: `tw3.q1[delta=2]` is
+measure the amplitudes of modes 1 and 2. Indexing gives a derivative:
+{jl}`tw3.q1[delta=2]`{py}`tw3.q1(delta=2)` is
 $\partial^2 q_1/\partial\delta^2$, which can also be written `tw3.dq1_2`. For the coefficient of
 δ² as it is printed, i.e. the derivative divided by 2!, use `getterm(tw3.q1, delta=2)`.
 
@@ -217,14 +303,18 @@ Derivatives with respect to the actions need `order`:
 twiss(fodo, order=3).q1[J1=1] # 0.6817, ∂q1/∂J1
 ```
 
+```{code-cell} python
+sb.twiss(fodo, order=3).q1(J1=1)  # 0.6817, ∂q1/∂J1
+```
+
 The truncation orders that some quantities need:
 
 | Quantity | Needs |
 |---|---|
-| `dq1` (`q1[delta=1]`), `dbeta1`, `dx_2` | `chrom=2` |
-| `dq1_2` (`q1[delta=2]`), `dbeta1_2`, `dx_3` | `chrom=3` |
-| `q1[J1=1]`, `h2200` | `order=3` |
-| `q1[delta=1, J1=1]` | `order=4` |
+| `dq1` ({jl}`q1[delta=1]`{py}`q1(delta=1)`), `dbeta1`, `dx_2` | `chrom=2` |
+| `dq1_2` ({jl}`q1[delta=2]`{py}`q1(delta=2)`), `dbeta1_2`, `dx_3` | `chrom=3` |
+| {jl}`q1[J1=1]`{py}`q1(J1=1)`, `h2200` | `order=3` |
+| {jl}`q1[delta=1, J1=1]`{py}`q1(delta=1, J1=1)` | `order=4` |
 
 In general, an n-th derivative with respect to δ needs `chrom` of at least n+1 (for the orbit and
 the dispersion, n). With derivatives with respect to the actions too, it needs `order` of at least
@@ -254,6 +344,15 @@ twr = twiss(fodorf)
 twr.q3 # -0.008711
 ```
 
+```{code-cell} python
+with sb.elements():
+    cav = sb.RFCavity(L=0.1, voltage=5e6, harmon=15, zero_phase=sb.PhaseRef.AboveTransition)
+fodorf = sb.Beamline([qf, d, b, d, qd, d, b, d, cav], species_ref=sb.Species("electron"),
+                     pc_ref=18e9)
+twr = sb.twiss(fodorf)
+twr.q3  # -0.008711
+```
+
 The synchrotron tune `q3` is negative above transition, as here, and positive below it, because
 the longitudinal motion turns the other way in the `z`-`pz` plane.
 
@@ -273,6 +372,11 @@ With `spin=true`, `twiss` also computes the spin motion:
 
 ```{code-cell} julia
 twsp = twiss(fodo, spin=true)
+twsp.qspin
+```
+
+```{code-cell} python
+twsp = sb.twiss(fodo, spin=True)
 twsp.qspin
 ```
 
@@ -305,16 +409,32 @@ twl = twiss(line, initial=(beta1=10.0, alpha1=-1.0, beta2=5.0, alpha2=0.5, dx=0.
 twl.beta1[end] # 12.30
 ```
 
+```{code-cell} python
+with sb.elements():
+    qa = sb.Quadrupole(Kn1=0.36, L=0.5)
+    qb = sb.Quadrupole(Kn1=-0.36, L=0.5)
+    qc = sb.Quadrupole(Kn1=0.2, L=0.5)
+line = sb.Beamline([qa, d, qb, d, qc, d], species_ref=sb.Species("electron"), pc_ref=18e9)
+twl = sb.twiss(line, initial=dict(beta1=10.0, alpha1=-1.0, beta2=5.0, alpha2=0.5, dx=0.2))
+twl.beta1[-1]  # 12.30
+```
+
 The values are given by the names of the columns: the Twiss parameters `beta1` and `beta2`
 (required), `alpha1` and `alpha2`, the dispersion `dx`, `dpx`, `dy`, `dpy`, the coupling `c11`,
 `c12`, `c21`, `c22`, and the orbit `x`, `px`, `y`, `py`, `z`, `pz` (the others are zero if not
-given). `initial` can also be a `Dict` (for example a Python dictionary), or a row of another
+given). `initial` can also be a {jl}`Dict`{py}`dict` (or a `Context`), or a row of another
 table, e.g. to continue the periodic lattice functions of a cell into a line that starts with it:
 
 ```{code-cell} julia
 cell = Beamline([qa, d, qb, d], species_ref=Species("electron"), pc_ref=18e9)
 twcell = twiss(cell)
 twiss(line, initial=twcell.df[1, :], cols=["beta1", "alpha1", "beta2", "alpha2"])
+```
+
+```{code-cell} python
+cell = sb.Beamline([qa, d, qb, d], species_ref=sb.Species("electron"), pc_ref=18e9)
+twcell = sb.twiss(cell)
+sb.twiss(line, initial=twcell.df[1, :], cols=["beta1", "alpha1", "beta2", "alpha2"])
 ```
 
 Through the first four elements these are the periodic lattice functions of the cell. The
@@ -332,6 +452,11 @@ a = twiss(cell, cols=["a"], as_taylor_series=true, at=[1]).a[1]
 twiss(line, a_initial=a, cols=["beta1", "alpha1", "beta2", "alpha2"])
 ```
 
+```{code-cell} python
+a = sb.twiss(cell, cols=["a"], as_taylor_series=True, at=[1]).a[1]
+sb.twiss(line, a_initial=a, cols=["beta1", "alpha1", "beta2", "alpha2"])
+```
+
 (twiss.part)=
 ## A part of a beamline
 
@@ -345,11 +470,20 @@ twp = twiss(cells, start=9) # the second cell
 twp.q1, twp.beta1[begin]    # (0.1487, 14.56), as for fodo
 ```
 
+```{code-cell} python
+cells = sb.Beamline([qf, d, b, d, qd, d, b, d, qf, d, b, d, qd, d, b, d],
+                    species_ref=sb.Species("electron"), pc_ref=18e9)
+twp = sb.twiss(cells, start=9)  # the second cell
+twp.q1, twp.beta1[sb.begin]     # (0.1487, 14.56), as for fodo
+```
+
 The part goes from the beginning of the element `start` to the beginning of `stop` (by default
 the end of the beamline). Its table is read like that of the whole beamline, except that:
 
-- `twp.beta1[begin]` and `twp.beta1[end]` are the beginning and the end of the part;
-- locations with several values (`:`, an s-range, ...) give only those in the part;
+- {jl}`twp.beta1[begin]`{py}`twp.beta1[sb.begin]` and {jl}`twp.beta1[end]`{py}`twp.beta1[-1]` are
+  the beginning and the end of the part;
+- locations with several values (`:`, an s-range, {jltext}`...`{pytext}`etc.`) give only those in
+  the part;
 - an element must be placed once in the part.
 
 `s` and the beamline indexes stay those of the whole beamline, and the phases are counted from
@@ -362,6 +496,11 @@ lattice functions given at the beginning of the second cell to the beginning of 
 ```{code-cell} julia
 two = twiss(cells, start=9, stop=13, initial=(beta1=10.0, beta2=5.0))
 two.beta1[end] # 2.345
+```
+
+```{code-cell} python
+two = sb.twiss(cells, start=9, stop=13, initial=dict(beta1=10.0, beta2=5.0))
+two.beta1[-1]  # 2.345
 ```
 
 (twiss.h)=
@@ -378,6 +517,15 @@ sx = Multipole(Kn2L=0.01)
 thincell = Beamline([tqf, d, sx, tqd, d], species_ref=Species("electron"), pc_ref=1e9)
 twh = twiss(thincell, cols=["beta1", "phi1", "h3000", "h2100"])
 twh.h3000[1] # 0.0002407 - 0.001088im at the start
+```
+
+```{code-cell} python
+tqf = sb.Multipole(Kn1L=0.8)
+tqd = sb.Multipole(Kn1L=-0.7)
+sx = sb.Multipole(Kn2L=0.01)
+thincell = sb.Beamline([tqf, d, sx, tqd, d], species_ref=sb.Species("electron"), pc_ref=1e9)
+twh = sb.twiss(thincell, cols=["beta1", "phi1", "h3000", "h2100"])
+twh.h3000[1]  # 0.0002407 - 0.001088j at the start
 ```
 
 In normalized coordinates, one pass through the beamline from the row back to it is the motion
@@ -435,6 +583,13 @@ For the sextupole above:
 φ = 2pi*twh.phi1[sx]
 twh.h3000[1], 0.01*β^1.5/(12*sqrt(2))*cis(-3φ)   # the column, and the formula
 twh.h2100[1], 3*0.01*β^1.5/(12*sqrt(2))*cis(-φ)  # the same for h2100
+```
+
+```{code-cell} python
+β = twh.beta1[sx]
+φ = 2*np.pi*twh.phi1[sx]
+print(twh.h3000[1], 0.01*β**1.5/(12*np.sqrt(2))*np.exp(-3j*φ))   # the column, and the formula
+print(twh.h2100[1], 3*0.01*β**1.5/(12*np.sqrt(2))*np.exp(-1j*φ))  # the same for h2100
 ```
 
 Other nonlinear elements contribute too: the drifts, with their exact Hamiltonian, give

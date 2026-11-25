@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Coordinate Systems
 
 ```{figure} ../figures/coordinates.svg
@@ -125,8 +133,36 @@ for ele in simple.line
 end
 ```
 
-These are the global coordinates at the exit end of each element. (In a script, the `global`
-keyword is needed to change a variable defined outside of a loop.)
+```{code-cell} python
+import numpy as np
+import scibmad as sb
+
+with sb.elements():
+    d = sb.Drift(L=0.5)
+    # g_ref = 1/ρ: the curvature of the reference
+    b = sb.SBend(L=0.5, g_ref=1.0, Kn0=1.001, e1=0.1)
+    q = sb.Quadrupole(L=0.6, Kn1=0.23)
+simple = sb.Beamline([d, b, q], species_ref=sb.Species("electron"), E_ref=10e6)
+
+X, Z, θ = 0.0, 0.0, 0.0
+for ele in simple.line:
+    L = ele.L
+    g = ele.g_ref
+    # Displacement through the element in its entrance coordinates (x, z)
+    if g == 0:
+        lx, lz = 0.0, L
+    else:
+        lx, lz = (np.cos(g*L) - 1)/g, np.sin(g*L)/g
+    # Rotate by θ into global coordinates
+    X += lx*np.cos(θ) + lz*np.sin(θ)
+    Z += -lx*np.sin(θ) + lz*np.cos(θ)
+    θ -= g*L
+    print(f"{ele.name:3s} X = {round(X, 5)}  Z = {round(Z, 5)}  θ = {round(θ, 5)}")
+```
+
+These are the global coordinates at the exit end of each
+element.{jltext}` (In a script, the `{jl}`global`{jltext}`
+keyword is needed to change a variable defined outside of a loop.)`
 
 ## Element Misalignments
 
@@ -166,6 +202,13 @@ qm = Quadrupole(L=1.0, Kn1=0.23, x_offset=1e-3, y_rot=4e-4)
 misalign = Beamline([qm], species_ref=Species("electron"), E_ref=10e6)
 res = track(misalign, v0=zeros(1, 6))
 res.v[turn=1, particle=1] # x, px, y, py, z, pz at the exit
+```
+
+```{code-cell} python
+qm = sb.Quadrupole(L=1.0, Kn1=0.23, x_offset=1e-3, y_rot=4e-4)
+misalign = sb.Beamline([qm], species_ref=sb.Species("electron"), E_ref=10e6)
+res = sb.track(misalign, v0=np.zeros((1, 6)))
+res.v(turn=1, particle=1)  # x, px, y, py, z, pz at the exit
 ```
 
 The particle comes out of the quadrupole displaced and with a horizontal momentum, as if kicked by a
@@ -208,6 +251,13 @@ p = Patch(dz=1.0, dy_rot=pi/4)
 patched = Beamline([p], species_ref=Species("electron"), E_ref=10e6)
 res = track(patched, v0=[1e-3 0 0 0 0 0])
 res.v[turn=1, particle=1]
+```
+
+```{code-cell} python
+p = sb.Patch(dz=1.0, dy_rot=np.pi/4)
+patched = sb.Beamline([p], species_ref=sb.Species("electron"), E_ref=10e6)
+res = sb.track(patched, v0=[[1e-3, 0, 0, 0, 0, 0]])
+res.v(turn=1, particle=1)
 ```
 
 The particle started at $x$ = 1 mm moving along the entrance $z$ axis. In the exit coordinates it
