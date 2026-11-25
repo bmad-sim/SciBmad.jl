@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg1"
+   width="480"
+   height="356"
+   viewBox="0 0 480 356"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <rect x="-10%" y="-10%" width="120%" height="120%" fill="white"/>
+  <defs
+     id="defs1" />
+  <g
+     id="layer-MC0">
+    <path
+       id="path1"
+       d="M 0,0 C 27.6,58.667 162.4,173.333 252.945,187.728"
+       style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,73.867867,341.21747)" />
+    <path
+       id="path2"
+       d="M 0,0 13.791,5.617 -2.364,5.35 Z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,409.06507,94.998667)" />
+    <text
+       id="text2"
+       xml:space="preserve"
+       transform="matrix(1.3333333,0,0,1.3333333,404.88933,114.22267)"><tspan
+         id="tspan2"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="0"
+         y="0">Reference</tspan><tspan
+         id="tspan3"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="0"
+         y="12">Orbit</tspan></text>
+    <text
+       id="text3"
+       xml:space="preserve"
+       transform="matrix(1.3333333,0,0,1.3333333,315.33333,16.000667)"><tspan
+         id="tspan4"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="0"
+         y="0">Actual</tspan></text>
+    <text
+       id="text4"
+       xml:space="preserve"
+       transform="matrix(1.3333333,0,0,1.3333333,315.33333,32.000667)"><tspan
+         id="tspan5"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="0"
+         y="0">Orbit</tspan></text>
+    <path
+       id="path5"
+       d="M 0,0 C 27.6,58.667 159.599,170 252.945,187.729"
+       style="fill:none;stroke:#d60de9;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,1.8678667,292.68493)" />
+    <path
+       id="path6"
+       d="M 0,0 12.893,6.497 -3.145,5.168 Z"
+       style="fill:#d60de9;fill-opacity:1;fill-rule:nonzero;stroke:#eb09ef;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,337.67453,46.735733)" />
+    <text
+       id="text6"
+       xml:space="preserve"
+       transform="matrix(1.3333333,0,0,1.3333333,318.89067,312)"><tspan
+         id="tspan6"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="0"
+         y="0">Center of</tspan><tspan
+         id="tspan7"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="0"
+         y="12">Curvature</tspan><tspan
+         id="tspan8"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="-136.5"
+         y="-92.496002">x</tspan><tspan
+         id="tspan9"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="-80.160004"
+         y="-140.664">y</tspan><tspan
+         id="tspan10"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="-49.5"
+         y="-126">z</tspan><tspan
+         id="tspan11"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="56.832001"
+         y="-171.168">s</tspan><tspan
+         id="tspan12"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Times New Roman';writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="-22.5"
+         y="-56.051998">|</tspan><tspan
+         id="tspan13"
+         style="font-variant:normal;font-weight:700;font-stretch:normal;font-size:12px;font-family:'Times New Roman';writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="-20.1"
+         y="-55.056">g</tspan><tspan
+         id="tspan14"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Times New Roman';writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="-14.1"
+         y="-56.051998"
+         dy="0 0.99599999">| = 1</tspan><tspan
+         id="tspan15"
+         style="font-variant:normal;font-weight:700;font-stretch:normal;font-size:12px;font-family:'Times New Roman';writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="7.0679998"
+         y="-55.056">/</tspan><tspan
+         id="tspan16"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Symbol;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="10.404"
+         y="-55.056">ρ</tspan><tspan
+         id="tspan17"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="-164.84399"
+         y="26.988001">s = 0</tspan></text>
+    <path
+       id="path17"
+       d="M 0,0 16.2,-3.201"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,65.867867,332.32813)" />
+    <path
+       id="path18"
+       d="M 0,0 -155.4,88"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,357.06773,288.5964)" />
+    <path
+       id="path19"
+       d="m 0,0 -12.78,4.037 8.041,-7.756 z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,155.52533,170.25067)" />
+    <path
+       id="path20"
+       d="M 0,0 V 53.601"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,202.13213,199.88547)" />
+    <path
+       id="path21"
+       d="M 0,0 -3.66,9.107 -7.32,0 Z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,206.95307,130.63733)" />
+    <path
+       id="path22"
+       d="M 0,0 48.599,37.2"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,201.86787,200.06253)" />
+    <path
+       id="path23"
+       d="M 0,0 6.212,8.47 -5.52,3.206 Z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,268.11587,154.2468)" />
+    <path
+       id="path24"
+       d="m 0,0 c 0,-1.738 -2.114,-3.149 -4.725,-3.149 -2.611,0 -4.725,1.411 -4.725,3.149 0,1.742 2.114,3.15 4.725,3.15 C -2.114,3.15 0,1.742 0,0"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,182.6628,222.1588)" />
+    <path
+       id="path25"
+       d="m 0,0 c 0,-1.112 -1.354,-2.016 -3.023,-2.016 -1.673,0 -3.024,0.904 -3.024,2.016 0,1.115 1.351,2.017 3.024,2.017 C -1.354,2.017 0,1.115 0,0"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,360.56507,287.88547)" />
+    <path
+       id="path26"
+       d="m 0,0 c 0,-1.739 -2.113,-3.151 -4.725,-3.151 -2.611,0 -4.724,1.412 -4.724,3.151 0,1.741 2.113,3.15 4.724,3.15 C -2.113,3.15 0,1.741 0,0"
+       style="fill:#0a16ff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,131.63347,156.32813)" />
+    <text
+       id="text26"
+       xml:space="preserve"
+       transform="matrix(1.3333333,0,0,1.3333333,40.445333,134.66667)"><tspan
+         id="tspan26"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="0"
+         y="0">Particle</tspan><tspan
+         id="tspan27"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="111"
+         y="104.664">Reference</tspan><tspan
+         id="tspan28"
+         style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="111"
+         y="116.664">Particle</tspan></text>
+    <path
+       id="path28"
+       d="M 0,0 29.913,-8.227"
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,70.423867,138.91467)" />
+    <path
+       id="path29"
+       d="M 0,0 9.322,-0.94 1.954,2.981 Z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,106.9876,151.2532)" />
+    <path
+       id="path30"
+       d="M 0,0 -25.447,19.407"
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.3333333,0,0,-1.3333333,224.8972,258.57293)" />
+    <path
+       id="path31"
+       d="M 0,0 -7.925,4.134 -1.65,-2.878 Z"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,193.78387,232.1588)" />
+    <path
+       id="path32"
+       d="M 0,0 -30.609,17.137"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,248.89453,226.7604)" />
+    <path
+       id="path33"
+       d="M 0,0 0.095,-2.697 0.003,-2.704 -2.549,0.437 C -3.551,1.328 -4.554,2.219 -5.556,3.11 -4.273,2.722 -2.989,2.333 -1.704,1.944 L 2.306,1.411 2.355,1.338 0,0"
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="matrix(1.3333333,0,0,-1.3333333,208.84373,204.3372)" />
+  </g>
+</svg>

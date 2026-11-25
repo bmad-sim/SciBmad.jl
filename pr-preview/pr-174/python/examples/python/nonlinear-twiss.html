@@ -1,0 +1,964 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Dynamic Aperture" href="dynamic-aperture-gpu.html"><link rel="prev" title="Examples" href="../../examples-index.html">
+        <link rel="prefetch" href="../../_static/SciBmad-Logo.png" as="image">
+        <link rel="prefetch" href="../../_static/SciBmad-Logo-dark.png" as="image">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Nonlinear Twiss - SciBmad Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4fe4be39" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">SciBmad Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../../_static/SciBmad-Logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../../_static/SciBmad-Logo-dark.png" alt="Dark Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contents.html">Table of Contents</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../installation.html">Installation</a><input aria-label="Toggle navigation of Installation" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#jupyter-kernel-installation">Jupyter Kernel Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#adding-other-packages">Adding Other Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#adding-gpu-support">Adding GPU Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#julia-and-python">Julia and Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#a-simple-copy-paste-example">A Simple Copy-Paste Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#step-by-step-description">Step-By-Step Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#where-to-go-next">Where to Go Next</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../python.html">SciBmad from Python</a><input aria-label="Toggle navigation of SciBmad from Python" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../python.html#what-python-writes-differently">What Python Writes Differently</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python.html#numbers-arrays-and-indexes">Numbers, Arrays and Indexes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python.html#values-and-operators">Values and Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python.html#python-defexpr">Deferred Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python.html#python-gpu">GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python.html#the-julia-session">The Julia Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python.html#limitations">Limitations</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../ring-design/index.html">Ring Design Tutorial</a><input aria-label="Toggle navigation of Ring Design Tutorial" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../ring-design/index.html#how-the-tutorial-works">How the tutorial works</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../element.html#element-kinds">Element Kinds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../element.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../element.html#pgs">Parameter Groups</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../beamline.html#multiple-latelements-in-multiple-beamlines">Multiple LatElements in (multiple) Beamlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../def-tools.html#phase-trombone">Phase Trombone</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#saving-particle-data-at-certain-locations">Saving Particle Data at Certain Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#track-start">Starting at a Different Location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#saving-the-reference-time-energy">Saving the Reference Time/Energy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#spin-tracking">Spin Tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#track-config">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#tracking-a-different-species">Tracking a Different Species</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#track-callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#coordinates-number-type">Coordinates Number Type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../track.html#gpuparallel">GPU Parallelization</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tracking-methods.html#track-sagan">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timedependent.html#energy-ramping">Energy Ramping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timedependent.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../batch.html#limitations">Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../dynamic-aperture.html">Dynamic Aperture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#twiss-rows">Choosing rows and columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#twiss-orders">Chromatic and amplitude-dependent quantities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#twiss-rf">Synchrotron motion and radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#twiss-spin">Spin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#twiss-open">Open lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#twiss-part">A part of a beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#twiss-h">Resonance driving terms and detuning (<code class="docutils literal notranslate"><span class="pre">h</span></code> columns)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../twiss.html#reference">Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../parametric-nf.html">Parametric Normal Form</a><input aria-label="Toggle navigation of Parametric Normal Form" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../parametric-nf.html#derivatives-with-respect-to-lattice-parameters">Derivatives with respect to lattice parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../parametric-nf.html#taylor-series-in-the-parameters-with-gtpsa">Taylor series in the parameters with GTPSA</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../optimize.html">Matching and Optimization</a><input aria-label="Toggle navigation of Matching and Optimization" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#a-first-match">A First Match</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#quantities-and-locations">Quantities and Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#targets">Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#optimize-knobs">Knobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#orbit-correction">Orbit Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#lines-that-are-not-periodic">Lines That Are Not Periodic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#values-and-derivatives">Values and Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#using-other-optimizers">Using Other Optimizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../optimize.html#how-it-works">How It Works</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../fma.html">Frequency Map Analysis</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-tracking.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#justification">Justification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#sc-ponder">Standing-Wave Ponderomotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sagancavity-physics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../miscellaneous.html#reference-time-in-misaligned-elements">Reference Time in Misaligned Elements</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../governance.html#steering-committee">Steering Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../governance.html#technical-committee">Technical Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../governance.html#former-members">Former Members</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../governance.html#ai-contribution-guidelines">AI Contribution Guidelines</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/examples/python/nonlinear-twiss.ipynb?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/examples/python/nonlinear-twiss.ipynb" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="nonlinear-twiss">
+<h1>Nonlinear Twiss<a class="headerlink" href="#nonlinear-twiss" title="Link to this heading">¶</a></h1>
+<p>This Jupyter notebook introduces SciBmad’s parametric nonlinear normal form routines, with the goal of familiarizing users with Truncated Power Series Algebra (TPSA) methods in accelerator physics. Various “nonlinear Twiss” calculations are made using the Electron Storage Ring of the Electron-Ion Collider. E.g., we will compute the beta function as a Taylor series in the momentum deviation <span class="math notranslate nohighlight">\(\delta\)</span>, and can also do so as a Taylor series in variations of some parameters, e.g. sextupole strengths.</p>
+<p>Map-based perturbation theory is an approach to perturbation theory introduced by Dragt and Finn, and developed in great detail for accelerator physics applications by Forest back in the early 90s. It is the only fully general and self consistent way to compute all such important quantities of the map, without any approximations up to the truncation order of the Taylor series. <em>All</em> quantities computed by SciBmad use this most powerful and general formalism.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scibmad</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sb</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ESR lattice in the lattices directory of the SciBmad repository</span>
+<span class="n">ring</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">julia</span><span class="o">.</span><span class="n">include</span><span class="p">(</span><span class="s2">"../../lattices/esr-v6.3.1.jl"</span><span class="p">)</span><span class="o">.</span><span class="n">ring</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s start by just calling <code class="docutils literal notranslate"><span class="pre">twiss</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
+<span class="n">tw</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 48.07999999808012
+ q2     = 44.140000003805
+ etac   = 0.0006088732861226077
+ alphac = 0.0006088741059934764
+
+df:
+6271×26 DataFrame
+  Row │ index  name        kind        s          beta1       phi1       dx            x             beta2     phi2    ⋯
+      │                                [m]        [m]         [2π]       [m]           [m]           [m]       [2π]    ⋯
+──────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1 │     1  IP6         Marker         0.0       0.589999   0.0        4.74366e-8    0.0            0.057    0.0    ⋯
+    2 │     2  DRIFT0      Drift          0.0       0.589999   0.0        4.74366e-8    0.0            0.057    0.0
+    3 │     3  Q1ER_6      Quadrupole     5.3      48.2002     0.232355   6.01291e-7    0.0          492.864    0.2482
+    4 │     4  DRIFT1      Drift          7.1     151.952      0.236135   1.05195e-6    0.0          443.806    0.2488
+    5 │     5  Q2ER_6      Quadrupole     7.6     220.652      0.236569   1.26542e-6    0.0          337.908    0.2490 ⋯
+    6 │     6  DRIFT2      Drift          9.0     333.073      0.237332   1.5499e-6     0.0          210.908    0.2499
+    7 │     7  D2ER_6      SBend         16.75    233.455      0.241756   1.27366e-6    0.0          140.331    0.2571
+    8 │     8  DRIFT3      Drift         22.2501  173.733      0.246103  -0.054998      6.93889e-18   99.3116   0.2645
+    9 │     9  SQ3ER_6     Quadrupole    42.0647   34.08       0.287554  -0.451304      7.56846e-17   14.3839   0.3523 ⋯
+   10 │    10  DRIFT4      Drift         42.3147   33.0731     0.288739  -0.456304      7.6552e-17    13.9426   0.3551
+   11 │    11  Q3ER_6      Quadrupole    42.4647   32.4781     0.289467  -0.459304      7.70724e-17   13.6853   0.3568
+   12 │    12  DRIFT5      Drift         43.0647   30.9912     0.292491  -0.477448      8.01853e-17   12.3713   0.3641
+  ⋮   │   ⋮        ⋮           ⋮           ⋮          ⋮           ⋮           ⋮             ⋮           ⋮          ⋮   ⋱
+ 6261 │  6261  D2EF_6      SBend       3799.84    206.54      47.8317    -0.0219773    -4.85391e-16  129.123   43.8666 ⋯
+ 6262 │  6262  DRIFT2659   Drift       3802.56    252.266     47.8336    -0.0010574    -5.16948e-16  136.248   43.8699
+ 6263 │  6263  D1EF_6      SBend       3802.82    256.84      47.8338    -0.000669813  -5.19637e-16  136.937   43.8702
+ 6264 │  6264  DRIFT2660   Drift       3803.71    272.942     47.8343    -1.29802e-6   -5.28765e-16  139.336   43.8712
+ 6265 │  6265  MCOLL_MASK  Marker      3821.63    701.78      47.8408    -2.01029e-6   -7.1141e-16   194.398   43.8886 ⋯
+ 6266 │  6266  Q1EF_6      Quadrupole  3821.63    701.78      47.8408    -2.01029e-6   -7.1141e-16   194.398   43.8886
+ 6267 │  6267  DRIFT2661   Drift       3823.24    575.384     47.8412    -1.81637e-6   -6.36815e-16  255.945   43.8898
+ 6268 │  6268  Q0EF_6      Quadrupole  3827.0     109.246     47.8436    -7.80829e-7   -2.57638e-16  642.313   43.8913
+ 6269 │  6269  DRIFT2662   Drift       3828.2      57.607     47.8461    -5.58669e-7   -1.71732e-16  590.232   43.8916 ⋯
+ 6270 │  6270  IP6         Marker      3834.0       0.589999  48.08       4.74366e-8    9.5421e-17     0.057   44.14
+ 6271 │    -1  END         ---         3834.0       0.589999  48.08       4.74366e-8    9.5421e-17     0.057   44.14
+                                                                                        17 columns and 6248 rows omitted
+</pre></div>
+</div>
+</div>
+</div>
+<p>To see what properties <code class="docutils literal notranslate"><span class="pre">tw</span></code> has, use <code class="docutils literal notranslate"><span class="pre">dir</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">tw</span><span class="p">)])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>['alpha1', 'alpha2', 'alphac', 'beta1', 'beta2', 'c11', 'c12', 'c21', 'c22', 'dpx', 'dpy', 'dx', 'dy', 'etac', 'gammac', 'index', 'kind', 'name', 'phi1', 'phi2', 'px', 'py', 'pz', 'q1', 'q2', 's', 'slip', 'x', 'y', 'z']
+</pre></div>
+</div>
+</div>
+</div>
+<p>The output columns of <code class="docutils literal notranslate"><span class="pre">twiss</span></code> can be customized using the <code class="docutils literal notranslate"><span class="pre">cols</span></code> keyword argument. For all possible columns, see <code class="docutils literal notranslate"><span class="pre">help(sb.twiss)</span></code>.</p>
+<p>We can plot the betas:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\beta_1$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">beta2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\beta_2$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"s [m]"</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">"Beta Function [m]"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/e9867a20f80206721289f6a9830df1c2c6907eee2e3ca34127b83afb738b5800.png" src="../../_images/e9867a20f80206721289f6a9830df1c2c6907eee2e3ca34127b83afb738b5800.png" />
+</div>
+</div>
+<p>Note that the plot shows <span class="math notranslate nohighlight">\(\beta_1\)</span> and <span class="math notranslate nohighlight">\(\beta_2\)</span> using a Teng-Edwards coupling formalism.</p>
+<p>The closed orbit can be accessed from fields <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">px</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">py</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code>, and <code class="docutils literal notranslate"><span class="pre">pz</span></code>, and the periodic dispersion can be obtained from <code class="docutils literal notranslate"><span class="pre">dx</span></code>, <code class="docutils literal notranslate"><span class="pre">dpx</span></code>, <code class="docutils literal notranslate"><span class="pre">dy</span></code>, and <code class="docutils literal notranslate"><span class="pre">dpy</span></code>. The syntax <code class="docutils literal notranslate"><span class="pre">d&lt;column&gt;_&lt;order&gt;</span></code> can be used for <em>any</em> scalar-valued to take a chromatic derivative, and by omitting <code class="docutils literal notranslate"><span class="pre">_&lt;order&gt;</span></code> the order is assumed to be 1.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">dx</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\eta_x$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">dy</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\eta_y$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"s [m]"</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">"Dispersion [m]"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/10fab1e1cfa1a6fee8638091f539131570500beaccc599ac106a6bedd2750116.png" src="../../_images/10fab1e1cfa1a6fee8638091f539131570500beaccc599ac106a6bedd2750116.png" />
+</div>
+</div>
+<p>Higher order chromatic quantities can be computed by setting the chromatic order <code class="docutils literal notranslate"><span class="pre">chrom</span></code> appropriately, and requesting the corresponding column in the <code class="docutils literal notranslate"><span class="pre">twiss</span></code> result using <code class="docutils literal notranslate"><span class="pre">cols</span></code>. E.g., to get the second order dispersions <span class="math notranslate nohighlight">\(\frac{\partial^2x}{\partial\delta^2}\)</span>, <span class="math notranslate nohighlight">\(\frac{\partial^2y}{\partial\delta^2}\)</span> as well as the chromatic beta beat <span class="math notranslate nohighlight">\(\frac{\partial\beta_1}{\partial\delta}\)</span>, <span class="math notranslate nohighlight">\(\frac{\partial\beta_2}{\partial\delta}\)</span>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw2</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"dx_2"</span><span class="p">,</span> <span class="s2">"dy_2"</span><span class="p">,</span> <span class="s2">"beta1"</span><span class="p">,</span> <span class="s2">"dbeta1"</span><span class="p">,</span> <span class="s2">"beta2"</span><span class="p">,</span> <span class="s2">"dbeta2"</span><span class="p">],</span> <span class="n">chrom</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">tw2</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 48.07999999808012 + 1.0002276718873708 δ
+ q2     = 44.140000003805 + 1.0008473253740475 δ
+ etac   = 0.0006088732861225831 + 0.0011325507772318268 δ
+ alphac = 0.00060887410599342 + 0.0011325483186177044 δ
+
+df:
+6271×10 DataFrame
+  Row │ index  name        kind        s          dx_2       dy_2          beta1       dbeta1      beta2     dbeta2    ⋯
+      │                                [m]                                 [m]                     [m]                 ⋯
+──────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1 │     1  IP6         Marker         0.0      -13.9699   4.89151e-5     0.589999    -4.13539    0.057       0.718 ⋯
+    2 │     2  DRIFT0      Drift          0.0      -13.9699   4.89151e-5     0.589999    -4.13539    0.057       0.718
+    3 │     3  Q1ER_6      Quadrupole     5.3       32.5881   0.00436896    48.2002     167.133    492.864   -7162.17
+    4 │     4  DRIFT1      Drift          7.1       63.3539   0.00413133   151.952      500.61     443.806   -6116.26
+    5 │     5  Q2ER_6      Quadrupole     7.6       77.1023   0.00360006   220.652      693.403    337.908   -4467.09  ⋯
+    6 │     6  DRIFT2      Drift          9.0       96.3624   0.00282745   333.073     1087.41     210.908   -2380.96
+    7 │     7  D2ER_6      SBend         16.75      88.5706   0.00219472   233.455     1616.29     140.331     158.314
+    8 │     8  DRIFT3      Drift         22.2501    83.1513   0.00174523   173.733     1823.29      99.3116   1385.57
+    9 │     9  SQ3ER_6     Quadrupole    42.0647    64.0225   0.000124665   34.08      1409.73      14.3839   1843.05  ⋯
+   10 │    10  DRIFT4      Drift         42.3147    63.7812   0.000104218   33.0731    1392.92      13.9426   1809.19
+   11 │    11  Q3ER_6      Quadrupole    42.4647    63.6364   9.19504e-5    32.4781    1382.69      13.6853   1788.4
+   12 │    12  DRIFT5      Drift         43.0647    63.9108   4.18807e-5    30.9912    1376.1       12.3713   1656.61
+  ⋮   │   ⋮        ⋮           ⋮           ⋮          ⋮           ⋮            ⋮           ⋮          ⋮           ⋮    ⋱
+ 6261 │  6261  D2EF_6      SBend       3799.84     -99.7285  -0.00252814   206.54      2966.98     129.123    3787.18  ⋯
+ 6262 │  6262  DRIFT2659   Drift       3802.56    -113.691   -0.00255463   252.266     3139.15     136.248    3232.71
+ 6263 │  6263  D1EF_6      SBend       3802.82    -115.011   -0.00255712   256.84      3154.04     136.937    3178.14
+ 6264 │  6264  DRIFT2660   Drift       3803.71    -119.565   -0.00256571   272.942     3203.51     139.336    2987.24
+ 6265 │  6265  MCOLL_MASK  Marker      3821.63    -211.083   -0.0027384    701.78      3571.71     194.398   -1711.76  ⋯
+ 6266 │  6266  Q1EF_6      Quadrupole  3821.63    -211.083   -0.0027384    701.78      3571.71     194.398   -1711.76
+ 6267 │  6267  DRIFT2661   Drift       3823.24    -192.16    -0.00311756   575.384     2860.56     255.945   -2849.64
+ 6268 │  6268  Q0EF_6      Quadrupole  3827.0      -86.4911  -0.00489041   109.246      627.472    642.313   -9215.67
+ 6269 │  6269  DRIFT2662   Drift       3828.2      -64.9202  -0.00467868    57.607      355.031    590.232   -8655.41  ⋯
+ 6270 │  6270  IP6         Marker      3834.0      -13.9699   4.89151e-5     0.589999    -4.13539    0.057       0.718
+ 6271 │    -1  END         ---         3834.0      -13.9699   4.89151e-5     0.589999    -4.13539    0.057       0.718
+                                                                                          1 column and 6248 rows omitted
+</pre></div>
+</div>
+</div>
+</div>
+<p>Note the chromaticities have also been computed</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dx_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\partial_\delta\eta_x$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dy_2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\partial_\delta\eta_y$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"s [m]"</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">"Second Order Dispersion [m]"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/3cdf0394a92b63f905ddab4bfa8f79556e10a30852bb70a4e7d00c49c2503668.png" src="../../_images/3cdf0394a92b63f905ddab4bfa8f79556e10a30852bb70a4e7d00c49c2503668.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dbeta1</span> <span class="o">/</span> <span class="n">tw2</span><span class="o">.</span><span class="n">beta1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\partial_\delta\beta_1$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw2</span><span class="o">.</span><span class="n">dbeta2</span> <span class="o">/</span> <span class="n">tw2</span><span class="o">.</span><span class="n">beta2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\partial_\delta\beta_2$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"s [m]"</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">"Chromatic Beta-Beat"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/88d839f7243eae9532bde153eea07e27b00f7dba815f97a2eaaa1895a5b3f693.png" src="../../_images/88d839f7243eae9532bde153eea07e27b00f7dba815f97a2eaaa1895a5b3f693.png" />
+</div>
+</div>
+<p>We can also write the Montague functions, which are phase invariants in achromatic regions, as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[W = \sqrt{A^2+B^2} \ , \ A=\frac{\partial\alpha}{\partial\delta}-\frac{\alpha}{\beta}\frac{\partial\beta}{\partial\delta} \ , \ B=\frac{1}{\beta}\frac{\partial\beta}{\partial\delta} \ .\]</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tww</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"w1"</span><span class="p">,</span> <span class="s2">"w2"</span><span class="p">],</span> <span class="n">chrom</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">tww</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 48.07999999808012 + 1.0002276718873708 δ
+ q2     = 44.140000003805 + 1.0008473253740475 δ
+ etac   = 0.0006088732861225831 + 0.0011325507772318268 δ
+ alphac = 0.00060887410599342 + 0.0011325483186177044 δ
+
+df:
+6271×6 DataFrame
+  Row │ index  name        kind        s          w1        w2
+      │                                [m]        [1]       [1]
+──────┼──────────────────────────────────────────────────────────────
+    1 │     1  IP6         Marker         0.0      9.45204   13.0064
+    2 │     2  DRIFT0      Drift          0.0      9.45204   13.0064
+    3 │     3  Q1ER_6      Quadrupole     5.3     16.8513    90.6522
+    4 │     4  DRIFT1      Drift          7.1     34.6455   105.245
+    5 │     5  Q2ER_6      Quadrupole     7.6     47.3488   119.518
+    6 │     6  DRIFT2      Drift          9.0     59.043    132.939
+    7 │     7  D2ER_6      SBend         16.75    60.1801   133.801
+    8 │     8  DRIFT3      Drift         22.2501  60.9898   134.423
+    9 │     9  SQ3ER_6     Quadrupole    42.0647  63.9039   136.647
+   10 │    10  DRIFT4      Drift         42.3147  63.9407   136.675
+   11 │    11  Q3ER_6      Quadrupole    42.4647  63.9628   136.692
+   12 │    12  DRIFT5      Drift         43.0647  64.0044   136.792
+  ⋮   │   ⋮        ⋮           ⋮           ⋮         ⋮         ⋮
+ 6261 │  6261  D2EF_6      SBend       3799.84    73.7095   137.617
+ 6262 │  6262  DRIFT2659   Drift       3802.56    72.8592   137.586
+ 6263 │  6263  D1EF_6      SBend       3802.82    72.7788   137.583
+ 6264 │  6264  DRIFT2660   Drift       3803.71    72.5013   137.575
+ 6265 │  6265  MCOLL_MASK  Marker      3821.63    66.9226   137.415
+ 6266 │  6266  Q1EF_6      Quadrupole  3821.63    66.9226   137.415
+ 6267 │  6267  DRIFT2661   Drift       3823.24    60.7257   134.087
+ 6268 │  6268  Q0EF_6      Quadrupole  3827.0     13.2809   111.098
+ 6269 │  6269  DRIFT2662   Drift       3828.2      7.82958  105.719
+ 6270 │  6270  IP6         Marker      3834.0      9.45204   13.0064
+ 6271 │    -1  END         ---         3834.0      9.45204   13.0064
+                                                    6248 rows omitted
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tww</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tww</span><span class="o">.</span><span class="n">w1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$W_1$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tww</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tww</span><span class="o">.</span><span class="n">w2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$W_2$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"s [m]"</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">"Montague Function"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/e241c984163f12039c261d05ec0ee52741382790012059f519009899645368ff.png" src="../../_images/e241c984163f12039c261d05ec0ee52741382790012059f519009899645368ff.png" />
+</div>
+</div>
+<p>Using the operator notation, the nonlinear effective Hamiltonian is defined as the polynomial <span class="math notranslate nohighlight">\(h\)</span> in</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathcal{M} = \mathcal{A}_{cs}^{-1}\exp{(: h : )} \mathcal{R} \mathcal{A}_{cs}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\mathcal{M}\)</span> is the compositional operator representing the one turn map and <span class="math notranslate nohighlight">\(\mathcal{A}_{cs}\)</span> is the compositional operator representing only a linear (Courant Snyder) normalizing transformation. Monomials of <span class="math notranslate nohighlight">\(h\)</span> are sometimes referred to as “resonance driving terms” and “detune coefficients”.</p>
+<p>We can extract any monomial of the nonlinear effective Hamiltonian by simply setting the <code class="docutils literal notranslate"><span class="pre">order</span></code> of <code class="docutils literal notranslate"><span class="pre">twiss</span></code> appropriately (must be at least one less than the total order of the monomial). And, if the beam is coasting, we can take chromatic derivatives.</p>
+<p>For example to compute <span class="math notranslate nohighlight">\(\frac{\partial h_{2000}}{\partial\delta}\)</span>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">twh</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"dh2000"</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">twh</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 48.07999999808012 + 1.0002276718873144 δ
+ q2     = 44.140000003805 + 1.0008473253738335 δ
+ etac   = 0.0006088732861226077 + 0.0011325507772322252 δ
+ alphac = 0.0006088741059934445 + 0.0011325483186181028 δ
+
+df:
+6271×5 DataFrame
+  Row │ index  name        kind        s          dh2000
+      │                                [m]
+──────┼───────────────────────────────────────────────────────────────
+    1 │     1  IP6         Marker         0.0     0.743645-2.15193im
+    2 │     2  DRIFT0      Drift          0.0     0.743645-2.15193im
+    3 │     3  Q1ER_6      Quadrupole     5.3       1.1817+3.88328im
+    4 │     4  DRIFT1      Drift          7.1      3.30673+7.66223im
+    5 │     5  Q2ER_6      Quadrupole     7.6      4.81905+10.3371im
+    6 │     6  DRIFT2      Drift          9.0      6.15191+12.8227im
+    7 │     7  D2ER_6      SBend         16.75     5.47572+13.422im
+    8 │     8  DRIFT3      Drift         22.2501   4.75662+13.8997im
+    9 │     9  SQ3ER_6     Quadrupole    42.0647  -3.07905+15.0819im
+   10 │    10  DRIFT4      Drift         42.3147  -3.30707+15.0426im
+   11 │    11  Q3ER_6      Quadrupole    42.4647  -3.44692+15.0166im
+   12 │    12  DRIFT5      Drift         43.0647  -4.02341+14.8829im
+  ⋮   │   ⋮        ⋮           ⋮           ⋮               ⋮
+ 6261 │  6261  D2EF_6      SBend       3799.84    -11.4217-13.5934im
+ 6262 │  6262  DRIFT2659   Drift       3802.56    -10.9573-13.7093im
+ 6263 │  6263  D1EF_6      SBend       3802.82    -10.9165-13.717im
+ 6264 │  6264  DRIFT2660   Drift       3803.71    -10.7798-13.7398im
+ 6265 │  6265  MCOLL_MASK  Marker      3821.63    -8.81775-13.4946im
+ 6266 │  6266  Q1EF_6      Quadrupole  3821.63    -8.81775-13.4946im
+ 6267 │  6267  DRIFT2661   Drift       3823.24    -8.07258-12.1981im
+ 6268 │  6268  Q0EF_6      Quadrupole  3827.0     -2.60198-1.86111im
+ 6269 │  6269  DRIFT2662   Drift       3828.2     -1.86129-0.304146im
+ 6270 │  6270  IP6         Marker      3834.0     0.743645-2.15193im
+ 6271 │    -1  END         ---         3834.0     0.743645-2.15193im
+                                                     6248 rows omitted
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">twh</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">twh</span><span class="o">.</span><span class="n">dh2000</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$|\partial h_</span><span class="si">{2000}</span><span class="s2">/\partial\delta|$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"s [m]"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/45ad71eadb54d4b2219ac2e83573dd42716e6cecf69ffbb70a3f06c727d3af5f.png" src="../../_images/45ad71eadb54d4b2219ac2e83573dd42716e6cecf69ffbb70a3f06c727d3af5f.png" />
+</div>
+</div>
+<p>Notice that this looks quite a lot like the Montague function - this is correct, and can be intuitively understood because <span class="math notranslate nohighlight">\(h_{2000}\)</span> quantifies the beta-beating oscillating at <span class="math notranslate nohighlight">\(2\times\)</span> the betatron frequency, and <span class="math notranslate nohighlight">\(\partial h_{2000}/\partial\delta\)</span> describes how that depends on <span class="math notranslate nohighlight">\(\delta\)</span>.</p>
+<p>Of course we can also look at geometric terms:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">twh2</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"h3000"</span><span class="p">,</span> <span class="s2">"h2100"</span><span class="p">,</span> <span class="s2">"h1020"</span><span class="p">,</span> <span class="s2">"h1101"</span><span class="p">,</span> <span class="s2">"h1002"</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"h3000"</span><span class="p">,</span> <span class="s2">"h2100"</span><span class="p">,</span> <span class="s2">"h1020"</span><span class="p">,</span> <span class="s2">"h1101"</span><span class="p">,</span> <span class="s2">"h1002"</span><span class="p">]:</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">twh2</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">twh2</span><span class="p">,</span> <span class="n">name</span><span class="p">)),</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"$|h_</span><span class="se">{{</span><span class="si">{</span><span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="se">}}</span><span class="s2">|$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"s [m]"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/ff808ac30b4afd5d7498e9a4aaa31a0893ffe60655517cf164b346543bf02e06.png" src="../../_images/ff808ac30b4afd5d7498e9a4aaa31a0893ffe60655517cf164b346543bf02e06.png" />
+</div>
+</div>
+<p>Because the sextupoles in the arcs have been arranged in <span class="math notranslate nohighlight">\(-I\)</span> pairs, the geometric terms cancel themselves locally.</p>
+<p>Spin analysis is also provided in <code class="docutils literal notranslate"><span class="pre">twiss</span></code>, by setting <code class="docutils literal notranslate"><span class="pre">spin=True</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tws</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tws</span><span class="o">.</span><span class="n">dnx</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\partial n_x/\partial\delta$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tws</span><span class="o">.</span><span class="n">dny</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\partial n_y/\partial\delta$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tws</span><span class="o">.</span><span class="n">dnz</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$\partial n_z/\partial\delta$"</span><span class="p">)</span>
+<span class="n">dn_amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">dnx</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">dny</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">dnz</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">dn_amp</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$|\partial \hat</span><span class="si">{n}</span><span class="s2">/\partial\delta|$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"s [m]"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper right"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/2f70a1d55208d2c6b871d65f67ea3d68aa1626c2a12afb7df51a1495551a581d.png" src="../../_images/2f70a1d55208d2c6b871d65f67ea3d68aa1626c2a12afb7df51a1495551a581d.png" />
+</div>
+</div>
+<p>Also note the (amplitude-dependent) spin tune will be calculated:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tws</span><span class="o">.</span><span class="n">qspin</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
+ -0.4999997778639269 - 39.9999997367878 δ
+</pre></div>
+</div>
+</div>
+</div>
+<p>For higher order tunes, set the order higher:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">twtune</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="p">[],</span> <span class="n">spin</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># at=[] means only compute tunes</span>
+<span class="n">twtune</span><span class="o">.</span><span class="n">qspin</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>AmplitudeDependentValue:
+ -0.4999997778639269 - 39.9999997367878 δ - 0.05106264795980088 J₁ + 2377.9662316135586 J₂ - 1.5845345679169045 δ² + 262.58859924109555 δ J₁ + 245142.30931396713 δ J₂ + 468.7335796509802 δ³
+</pre></div>
+</div>
+</div>
+</div>
+<p>To get a particular term in the Taylor series, use the function <code class="docutils literal notranslate"><span class="pre">getterm</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sb</span><span class="o">.</span><span class="n">getterm</span><span class="p">(</span><span class="n">twtune</span><span class="o">.</span><span class="n">qspin</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">J1</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>262.58859924109555
+</pre></div>
+</div>
+</div>
+</div>
+<p>Finally, ,more advanced users who have become familiar with <a class="reference external" href="https://bmad-sim.github.io/GTPSA.jl/stable/quickstart/"><code class="docutils literal notranslate"><span class="pre">GTPSA.jl</span></code></a> can get the output as Taylor series by setting the flag <code class="docutils literal notranslate"><span class="pre">as_taylor_series=True</span></code>. A custom GTPSA descriptor can also be provided with <code class="docutils literal notranslate"><span class="pre">GTPSA_descriptor</span></code> for doing parametric normal form analysis (see the <code class="docutils literal notranslate"><span class="pre">orbit-response.ipynb</span></code> example notebook).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">twisf</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"nx"</span><span class="p">,</span> <span class="s2">"ny"</span><span class="p">,</span> <span class="s2">"nz"</span><span class="p">],</span> <span class="n">spin</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">as_taylor_series</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="p">[</span><span class="n">twisf</span><span class="o">.</span><span class="n">nx</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">twisf</span><span class="o">.</span><span class="n">ny</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">twisf</span><span class="o">.</span><span class="n">nz</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+<span class="n">n</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[TPS64{GTPSA.Dynamic}:
+Descriptor(NV=6, MO=1)
+ COEFFICIENT             ORDER   EXPONENTS
+-1.7014762942609857E-15    0     0 0  0 0  0 0
+ 2.9437795671891087E-04    1     1 0  0 0  0 0
+-4.1507516882558846E+01    1     0 1  0 0  0 0
+-3.3567033718986136E+02    1     0 0  1 0  0 0
+-3.1223550771310529E+00    1     0 0  0 1  0 0
+-4.3422439755247755E-06    1     0 0  0 0  0 1
+,
+ TPS64{GTPSA.Dynamic}:
+Descriptor(NV=6, MO=1)
+ COEFFICIENT             ORDER   EXPONENTS
+ 1.9500601133870532E-10    0     0 0  0 0  0 0
+-1.3657465543940380E-04    1     1 0  0 0  0 0
+ 1.2501396756456440E-04    1     0 1  0 0  0 0
+-5.6419852071752892E+01    1     0 0  1 0  0 0
+-2.4600820432436976E+01    1     0 0  0 1  0 0
+-1.5707985192657588E+00    1     0 0  0 0  0 1
+,
+ TPS64{GTPSA.Dynamic}:
+Descriptor(NV=6, MO=1)
+ COEFFICIENT             ORDER   EXPONENTS
+-1.0000000000000000E+00    0     0 0  0 0  0 0
+-2.6633109359471688E-14    1     1 0  0 0  0 0
+ 9.5002310367242166E-14    1     0 1  0 0  0 0
+-1.1001636479876143E-08    1     0 0  1 0  0 0
+-4.7973006456281294E-09    1     0 0  0 1  0 0
+-3.0631502889363634E-10    1     0 0  0 0  0 1
+]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="dynamic-aperture-gpu.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Dynamic Aperture</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../../examples-index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Examples</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script>window.SCIBMAD_DOCS_LANGUAGE = 'python';</script>
+    <script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=552d2a3d"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../../_static/language-switch.js?v=f13d272b"></script>
+    <script src="../../_static/topbar-github.js?v=c13617d6"></script>
+    <script src="../../_static/sidebar-current.js?v=23c44312"></script>
+    </body>
+</html>

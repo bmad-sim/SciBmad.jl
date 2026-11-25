@@ -1,0 +1,940 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="2. Dispersion Suppressor" href="dispersion-suppressor.html"><link rel="prev" title="Ring Design Tutorial" href="index.html">
+        <link rel="prefetch" href="../_static/SciBmad-Logo.png" as="image">
+        <link rel="prefetch" href="../_static/SciBmad-Logo-dark.png" as="image">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>1. FODO Cells - SciBmad Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4fe4be39" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">SciBmad Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/SciBmad-Logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/SciBmad-Logo-dark.png" alt="Dark Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contents.html">Table of Contents</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../installation.html">Installation</a><input aria-label="Toggle navigation of Installation" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#jupyter-kernel-installation">Jupyter Kernel Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#adding-other-packages">Adding Other Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#adding-gpu-support">Adding GPU Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#plotting">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#julia-and-python">Julia and Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../quickstart.html">Quickstart</a><input aria-label="Toggle navigation of Quickstart" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#a-simple-copy-paste-example">A Simple Copy-Paste Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#step-by-step-description">Step-By-Step Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html#where-to-go-next">Where to Go Next</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../python.html">SciBmad from Python</a><input aria-label="Toggle navigation of SciBmad from Python" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#what-python-writes-differently">What Python Writes Differently</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#numbers-arrays-and-indexes">Numbers, Arrays and Indexes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#values-and-operators">Values and Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#python-defexpr">Deferred Expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#python-gpu">GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#the-julia-session">The Julia Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#limitations">Limitations</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Ring Design Tutorial</a><input aria-label="Toggle navigation of Ring Design Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="reference internal" href="index.html#how-the-tutorial-works">How the tutorial works</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lattice</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../element.html">Defining a LatElement</a><input aria-label="Toggle navigation of Defining a LatElement" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../element.html#element-kinds">Element Kinds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../element.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../element.html#pgs">Parameter Groups</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../beamline.html">Defining a Beamline</a><input aria-label="Toggle navigation of Defining a Beamline" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../beamline.html#finding-latelements-in-a-beamline">Finding LatElements in a Beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../beamline.html#multiple-latelements-in-multiple-beamlines">Multiple LatElements in (multiple) Beamlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../beamline.html#beamline-dependent-latelement-parameters">Beamline-Dependent LatElement Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../defexpr.html">Deferred Expressions and Contexts</a><input aria-label="Toggle navigation of Deferred Expressions and Contexts" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../defexpr.html#getting-the-deferred-expression-itself">Getting the Deferred Expression Itself</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../def-tools.html">Definition Tools</a><input aria-label="Toggle navigation of Definition Tools" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../def-tools.html#phase-trombone">Phase Trombone</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Particle Tracking</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../track.html">Track</a><input aria-label="Toggle navigation of Track" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#saving-particle-data-at-certain-locations">Saving Particle Data at Certain Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#track-start">Starting at a Different Location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#saving-the-reference-time-energy">Saving the Reference Time/Energy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#spin-tracking">Spin Tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#track-config">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#the-bunch-struct">The Bunch Struct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#tracking-a-different-species">Tracking a Different Species</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#track-callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#coordinates-number-type">Coordinates Number Type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#cpuparallel">CPU Parallelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../track.html#gpuparallel">GPU Parallelization</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tracking-methods.html">Tracking Methods</a><input aria-label="Toggle navigation of Tracking Methods" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tracking-methods.html#track-steps">Integration Steps and Slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tracking-methods.html#symplectic-integrators">Symplectic Integrators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tracking-methods.html#exact">Exact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tracking-methods.html#runge-kutta">Runge Kutta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tracking-methods.html#track-sagan">Sagan Cavity</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../collective.html">Collective Effects</a><input aria-label="Toggle navigation of Collective Effects" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../collective.html#intra-beam-scattering">Intra-Beam Scattering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../timedependent.html">Time-Dependent Parameters and Ramping</a><input aria-label="Toggle navigation of Time-Dependent Parameters and Ramping" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../timedependent.html#time-dependent-parameters">Time-Dependent Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timedependent.html#energy-ramping">Energy Ramping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../timedependent.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../batch.html">Batch Parameters</a><input aria-label="Toggle navigation of Batch Parameters" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../batch.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch.html#limitations">Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch.html#gpu-batch-parameter-simulation">GPU Batch Parameter Simulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../co.html">(GPU-)Batched Closed Orbit Finder</a><input aria-label="Toggle navigation of (GPU-)Batched Closed Orbit Finder" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../co.html#dependent-closed-orbits">δ-Dependent Closed Orbits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../co.html#closed-orbits-with-batch-parameters">Closed Orbits with Batch Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dynamic-aperture.html">Dynamic Aperture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Analysis</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../twiss.html">Twiss</a><input aria-label="Toggle navigation of Twiss" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#twiss-rows">Choosing rows and columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#twiss-orders">Chromatic and amplitude-dependent quantities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#twiss-rf">Synchrotron motion and radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#twiss-spin">Spin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#twiss-open">Open lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#twiss-part">A part of a beamline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#twiss-h">Resonance driving terms and detuning (<code class="docutils literal notranslate"><span class="pre">h</span></code> columns)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../twiss.html#reference">Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../parametric-nf.html">Parametric Normal Form</a><input aria-label="Toggle navigation of Parametric Normal Form" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../parametric-nf.html#derivatives-with-respect-to-lattice-parameters">Derivatives with respect to lattice parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parametric-nf.html#taylor-series-in-the-parameters-with-gtpsa">Taylor series in the parameters with GTPSA</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../optimize.html">Matching and Optimization</a><input aria-label="Toggle navigation of Matching and Optimization" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#a-first-match">A First Match</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#quantities-and-locations">Quantities and Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#targets">Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#optimize-knobs">Knobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#orbit-correction">Orbit Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#lines-that-are-not-periodic">Lines That Are Not Periodic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#values-and-derivatives">Values and Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#using-other-optimizers">Using Other Optimizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optimize.html#how-it-works">How It Works</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../fma.html">Frequency Map Analysis</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples-index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/python/nonlinear-twiss.html">Nonlinear Twiss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/python/dynamic-aperture-gpu.html">Dynamic aperture (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/python/ad-examples.html">Automatic differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/python/orbit-response.html">Orbit response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/python/ags-spin-ramp.html">AGS spin ramp</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Physics</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../coordinates.html">Coordinates</a><input aria-label="Toggle navigation of Coordinates" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-phase-space">Phase Space Coordinate System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-nomen">Nomenclature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-coords">Coordinate Systems Used to Describe a Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-ent-exi">Element Entrance and Exit Coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-ref-construct">Branch Coordinate Construction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-floor">Coordinate Frames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-ele-pos">Lattice Element Positioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-position-transform">Particle Position Transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coordinates.html#s-lab-body-transform">Transformation Between Branch and Element Body Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sagancavity-tracking.html">SaganCavity Tracking</a><input aria-label="Toggle navigation of SaganCavity Tracking" class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-tracking.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-tracking.html#sagancavity-parameters">SaganCavity Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-tracking.html#rf-parameters">RF Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-tracking.html#other-parameters">Other Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sagancavity-physics.html">SaganCavity Physics</a><input aria-label="Toggle navigation of SaganCavity Physics" class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#justification">Justification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#sc-kdk">Kick-Drift-Kick Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#sc-edge">Edge Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#sc-energy">Energy Kick</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#sc-phase">RF Phase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#sc-ponder">Standing-Wave Ponderomotive Focusing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#solenoid-and-multipole-components">Solenoid and Multipole Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sagancavity-physics.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../miscellaneous.html">Miscellaneous</a><input aria-label="Toggle navigation of Miscellaneous" class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../miscellaneous.html#reference-time-in-misaligned-elements">Reference Time in Misaligned Elements</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../governance.html">Governance</a><input aria-label="Toggle navigation of Governance" class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../governance.html#steering-committee">Steering Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../governance.html#technical-committee">Technical Committee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../governance.html#former-members">Former Members</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../governance.html#ai-contribution-guidelines">AI Contribution Guidelines</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/blob/main/docs/src/ring-design/fodo.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/bmad-sim/SciBmad.jl/edit/main/docs/src/ring-design/fodo.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="rd-fodo">
+<span id="fodo-cells"></span><span id="1-fodo-cells"></span><h1>1. FODO Cells<a class="headerlink" href="#rd-fodo" title="Link to this heading">¶</a></h1>
+<figure class="align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/fodoaf.svg"><img alt="../_images/fodoaf.svg" src="../_images/fodoaf.svg" style="width: 95%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 1 </span><span class="caption-text">Forward arc FODO cell. QF, QD: focusing and defocusing quadrupoles. SF, SD: sextupoles near the
+focusing and defocusing quadrupoles.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/fodoar.svg"><img alt="../_images/fodoar.svg" src="../_images/fodoar.svg" style="width: 95%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 2 </span><span class="caption-text">Reverse arc FODO cell.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id3">
+<a class="reference internal image-reference" href="../_images/sextant.svg"><img alt="../_images/sextant.svg" src="../_images/sextant.svg" style="width: 80%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 3 </span><span class="caption-text">A sextant of the ring.</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>In the arc FODO cells of the Electron Storage Ring (ESR), a sextupole, a bend, and a corrector
+coil all need to fit in between each pair of quadrupoles. To accommodate the sextupoles, the
+quadrupoles cannot be centered between the bends. As a result, there are two types of FODO cells
+in the ESR: one which has the sextupoles placed before the quadrupoles and one which has the
+sextupoles placed after the quadrupoles. We’ll call these the “forward” and “reverse” cells
+respectively, shown in the figures above. This tutorial will use the convention that all FODO
+cells start with a full-length horizontally focusing (<span class="math notranslate nohighlight">\(K_1 &gt; 0\)</span>) quadrupole.</p>
+<p>The ring is made up of 6 sextants, as discussed in <a class="reference internal" href="ring.html"><span class="std std-doc">Constructing the Ring</span></a>. There are
+two types of sextants: forward sextants with forward FODO cells and reverse sextants with reverse
+FODO cells. The two types of sextants have mirror symmetry with respect to one another. Each
+sextant consists of two half-length straight sections with an arc section in between, as shown
+above.</p>
+<p>The first straight section, in which the dispersion is zero, is followed by a dispersion
+“creator” to match to the periodic dispersion in the arc. After the arc, there is a dispersion
+“suppressor” to match to the dispersion-free second straight section.</p>
+</section>
+<section id="example-forward-arc-fodo-cell">
+<h2>Example: Forward Arc FODO Cell<a class="headerlink" href="#example-forward-arc-fodo-cell" title="Link to this heading">¶</a></h2>
+<p>The phase advance per FODO cell for the lattice to be designed is chosen to be 90° to achieve
+the emittance requirements. Construction of the forward arc FODO cell without sextupoles is
+demonstrated below. Later in the tutorial the sextupoles and corrector coils will be added in.
+Left as an exercise is the construction of the reverse arc FODO cell without sextupoles, along
+with the forward and reverse straight section FODO cells.</p>
+<figure class="align-default" id="id4">
+<a class="reference internal image-reference" href="../_images/fodoaf-dim.svg"><img alt="../_images/fodoaf-dim.svg" src="../_images/fodoaf-dim.svg" style="width: 95%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 4 </span><span class="caption-text">Forward arc FODO cell with lengths specified.</span><a class="headerlink" href="#id4" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The figure shows the lengths of each element in the forward arc FODO cell. The ESR uses
+rectangular bends in the arcs. A rectangular bend has straight, parallel pole faces, and the
+length given for it (<span class="math notranslate nohighlight">\(L_\mathrm{chord}\)</span> = 6.86 m) is the length of the straight line between the
+centers of its pole faces. SciBmad has only sector bends (<code class="docutils literal notranslate"><span class="pre">SBend</span></code>), whose length <code class="docutils literal notranslate"><span class="pre">L</span></code> is the length
+of the arc that the reference trajectory follows. A rectangular bend is a sector bend with the
+edge angles <code class="docutils literal notranslate"><span class="pre">e1</span></code> and <code class="docutils literal notranslate"><span class="pre">e2</span></code> both half the bend angle <span class="math notranslate nohighlight">\(\theta\)</span>, and with the arc length
+<span class="math notranslate nohighlight">\(L = L_\mathrm{chord}\,\theta / (2\sin(\theta/2))\)</span>.</p>
+<p>Our collider ring will have 132 arc FODO cells, and so each bend must bend the orbit by an angle
+of <span class="math notranslate nohighlight">\(2\pi/(2 \cdot 132)\)</span>. Choosing initially arbitrary quadrupole strengths <code class="docutils literal notranslate"><span class="pre">Kn1</span></code> (the normal
+quadrupole strength <span class="math notranslate nohighlight">\(K_1\)</span>, in 1/m²), the lattice for this cell is:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scibmad</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sb</span>
+
+<span class="n">θ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">132</span>  <span class="c1"># Bend angle of the arc bends [rad]: 264 of them make 2π</span>
+<span class="n">Lc</span> <span class="o">=</span> <span class="mf">6.86</span>      <span class="c1"># Chord length of the arc bends [m]</span>
+
+<span class="k">with</span> <span class="n">sb</span><span class="o">.</span><span class="n">elements</span><span class="p">():</span>
+    <span class="n">qf</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">Kn1</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+    <span class="n">qd</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">Kn1</span><span class="o">=-</span><span class="mf">0.4</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">SBend</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="n">Lc</span><span class="o">*</span><span class="n">θ</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">θ</span><span class="o">/</span><span class="mi">2</span><span class="p">)),</span> <span class="n">angle</span><span class="o">=</span><span class="n">θ</span><span class="p">,</span> <span class="n">e1</span><span class="o">=</span><span class="n">θ</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">e2</span><span class="o">=</span><span class="n">θ</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Rectangular bend</span>
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">0.609</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mf">1.241</span><span class="p">)</span>
+
+<span class="n">fodoaf</span> <span class="o">=</span> <span class="p">[</span><span class="n">qf</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">qd</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">d2</span><span class="p">]</span>  <span class="c1"># Forward arc FODO cell</span>
+
+<span class="n">electron</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Species</span><span class="p">(</span><span class="s2">"electron"</span><span class="p">)</span>
+<span class="n">pc_ref</span> <span class="o">=</span> <span class="mf">17.846262612447e9</span>  <span class="c1"># Reference momentum [eV/c]</span>
+
+<span class="n">cell_af</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Beamline</span><span class="p">(</span><span class="n">fodoaf</span><span class="p">,</span> <span class="n">species_ref</span><span class="o">=</span><span class="n">electron</span><span class="p">,</span> <span class="n">pc_ref</span><span class="o">=</span><span class="n">pc_ref</span><span class="p">)</span>
+<span class="n">cell_af</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Beamline:
+ species_ref = electron
+ pc_ref = 1.7846262612447e10
+
+  Index   Name   Kind         L [m]               s [m]                s_downstream [m]
+  1       qf     Quadrupole   0.5                 0.0f0                0.5
+  2       d1     Drift        0.609               0.5                  1.109
+  3       b      SBend        6.860161909351031   1.109                7.969161909351031
+  4       d2     Drift        1.241               7.969161909351031    9.210161909351031
+  5       qd     Quadrupole   0.5                 9.210161909351031    9.710161909351031
+  6       d1     Drift        0.609               9.710161909351031    10.319161909351031
+  7       b      SBend        6.860161909351031   10.319161909351031   17.179323818702063
+  8       d2     Drift        1.241               17.179323818702063   18.420323818702062
+</pre></div>
+</div>
+</div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">sb.elements():</span></code> block names each element after its variable (<code class="docutils literal notranslate"><span class="pre">qf.name</span></code>
+is <code class="docutils literal notranslate"><span class="pre">&quot;qf&quot;</span></code>). <code class="docutils literal notranslate"><span class="pre">fodoaf</span></code> is a
+plain Python list of the elements in the order of the cell, and the
+<code class="docutils literal notranslate"><span class="pre">Beamline</span></code> <code class="docutils literal notranslate"><span class="pre">cell_af</span></code> places
+them along a reference trajectory for an electron with the reference momentum <code class="docutils literal notranslate"><span class="pre">pc_ref</span></code>. A
+<code class="docutils literal notranslate"><span class="pre">Beamline</span></code> is what SciBmad analyzes and tracks through. The same element can be placed in many
+beamlines and many times in one: changing a parameter of <code class="docutils literal notranslate"><span class="pre">qf</span></code> changes it everywhere it is placed.
+For more details, see <a class="reference internal" href="../element.html"><span class="std std-doc">Defining a LatElement</span></a> and
+<a class="reference internal" href="../beamline.html"><span class="std std-doc">Defining a Beamline</span></a>.</p>
+<p>The periodic optics of the cell are computed with <code class="docutils literal notranslate"><span class="pre">twiss</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">cell_af</span><span class="p">)</span>
+<span class="n">tw</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Twiss:
+summ:
+ q1     = 0.359444785563771
+ q2     = 0.3597536991315494
+ etac   = 0.000627421951546712
+ alphac = 0.0006274227714175842
+
+df:
+9×26 DataFrame
+ Row │ index  name  kind        s         beta1     phi1        dx        x            beta2     p ⋯
+     │                          [m]       [m]       [2π]        [m]       [m]          [m]       [ ⋯
+─────┼──────────────────────────────────────────────────────────────────────────────────────────────
+   1 │     1  qf    Quadrupole   0.0      43.8974   0.0         0.384121  0.0           2.38487  0 ⋯
+   2 │     2  d1    Drift        0.5      43.8974   0.00178278  0.383709  0.0           2.38488  0
+   3 │     3  b     SBend        1.109    38.6861   0.00413489  0.359635  0.0           2.97825  0
+   4 │     4  d2    Drift        7.96916   3.9665   0.0975364   0.170101  1.38778e-17  33.6911   0
+   5 │     5  qd    Quadrupole   9.21016   2.3903   0.163559    0.150579  1.38778e-17  43.958    0 ⋯
+   6 │     6  d1    Drift        9.71016   2.3903   0.197669    0.150175  1.45775e-17  43.9581   0
+   7 │     7  b     SBend       10.3192    2.98364  0.234285    0.15876   1.62961e-17  38.7397   0
+   8 │     8  d2    Drift       17.1793   33.6451   0.354304    0.33709   4.16334e-17   3.96185  0
+   9 │    -1  END   ---         18.4203   43.8974   0.359445    0.384121  4.16334e-17   2.38487  0 ⋯
+                                                                                  17 columns omitted
+</pre></div>
+</div>
+</div>
+</div>
+<p>The output shows first the summary values for the cell. <code class="docutils literal notranslate"><span class="pre">q1</span></code> and <code class="docutils literal notranslate"><span class="pre">q2</span></code> are the phase advances
+through the periodic cell, in units of 2π. The numbers 1 and 2 refer to the two transverse normal
+modes, which are the horizontal and the vertical motion when there is no coupling, as here. (In
+Bmad these are the modes <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>.) <code class="docutils literal notranslate"><span class="pre">etac</span></code> and <code class="docutils literal notranslate"><span class="pre">alphac</span></code> are the slip factor and the momentum
+compaction. The table has one row per location: here the beginning of every element (each element
+is integrated in one step) and the end of the cell. The columns are the position <code class="docutils literal notranslate"><span class="pre">s</span></code>, the beta
+functions, the phase advances <code class="docutils literal notranslate"><span class="pre">phi1</span></code> and <code class="docutils literal notranslate"><span class="pre">phi2</span></code> (in units of 2π), the dispersion <code class="docutils literal notranslate"><span class="pre">dx</span></code>, and so on.</p>
+<p>The columns are read at a location, which can be given by an element (placed once) or by its
+index in the beamline (counted from 1, as in Julia). <code class="docutils literal notranslate"><span class="pre">-1</span></code> is the end of the
+beamline. For example, at the end of the cell:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tw</span><span class="o">.</span><span class="n">alpha1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tw</span><span class="o">.</span><span class="n">dx</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tw</span><span class="o">.</span><span class="n">phi1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(43.89736698694267, -4.421086555611658, 0.3841212309718349, 0.359444785563771)
+</pre></div>
+</div>
+</div>
+</div>
+<p>Several placements, or several elements, give a vector:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">[[</span><span class="n">d1</span><span class="p">]]</span>  <span class="c1"># At the beginning of both placements of d1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>array([43.89736699,  2.39029577])
+</pre></div>
+</div>
+</div>
+</div>
+<p>All the ways to give a location are described in <a class="reference internal" href="../twiss.html"><span class="std std-doc">Twiss</span></a>. The whole table is
+<code class="docutils literal notranslate"><span class="pre">tw.df</span></code>, a <a class="reference external" href="https://dataframes.juliadata.org/stable/"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, from which any columns can be
+selected:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span><span class="o">.</span><span class="n">df</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"s"</span><span class="p">,</span> <span class="s2">"beta1"</span><span class="p">,</span> <span class="s2">"alpha1"</span><span class="p">,</span> <span class="s2">"phi1"</span><span class="p">,</span> <span class="s2">"dx"</span><span class="p">]]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div><div style = "float: left;"><span>9×6 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "columnLabelRow"><th class = "stubheadLabel" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">name</th><th style = "text-align: left;">s</th><th style = "text-align: left;">beta1</th><th style = "text-align: left;">alpha1</th><th style = "text-align: left;">phi1</th><th style = "text-align: left;">dx</th></tr><tr class = "columnLabelRow"><th class = "stubheadLabel" style = "font-weight: bold; text-align: right;"></th><th title = "String" style = "text-align: left;">String</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: left;">qf</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">43.8974</td><td style = "text-align: right;">-4.42109</td><td style = "text-align: right;">0.0</td><td style = "text-align: right;">0.384121</td></tr><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: left;">d1</td><td style = "text-align: right;">0.5</td><td style = "text-align: right;">43.8974</td><td style = "text-align: right;">4.42109</td><td style = "text-align: right;">0.00178278</td><td style = "text-align: right;">0.383709</td></tr><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">3</td><td style = "text-align: left;">b</td><td style = "text-align: right;">1.109</td><td style = "text-align: right;">38.6861</td><td style = "text-align: right;">4.13605</td><td style = "text-align: right;">0.00413489</td><td style = "text-align: right;">0.359635</td></tr><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">4</td><td style = "text-align: left;">d2</td><td style = "text-align: right;">7.96916</td><td style = "text-align: right;">3.9665</td><td style = "text-align: right;">0.925475</td><td style = "text-align: right;">0.0975364</td><td style = "text-align: right;">0.170101</td></tr><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">5</td><td style = "text-align: left;">qd</td><td style = "text-align: right;">9.21016</td><td style = "text-align: right;">2.3903</td><td style = "text-align: right;">0.344629</td><td style = "text-align: right;">0.163559</td><td style = "text-align: right;">0.150579</td></tr><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">6</td><td style = "text-align: left;">d1</td><td style = "text-align: right;">9.71016</td><td style = "text-align: right;">2.3903</td><td style = "text-align: right;">-0.344629</td><td style = "text-align: right;">0.197669</td><td style = "text-align: right;">0.150175</td></tr><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">7</td><td style = "text-align: left;">b</td><td style = "text-align: right;">10.3192</td><td style = "text-align: right;">2.98364</td><td style = "text-align: right;">-0.62967</td><td style = "text-align: right;">0.234285</td><td style = "text-align: right;">0.15876</td></tr><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">8</td><td style = "text-align: left;">d2</td><td style = "text-align: right;">17.1793</td><td style = "text-align: right;">33.6451</td><td style = "text-align: right;">-3.84024</td><td style = "text-align: right;">0.354304</td><td style = "text-align: right;">0.33709</td></tr><tr class = "dataRow"><td class = "rowLabel" style = "font-weight: bold; text-align: right;">9</td><td style = "text-align: left;">END</td><td style = "text-align: right;">18.4203</td><td style = "text-align: right;">43.8974</td><td style = "text-align: right;">-4.42109</td><td style = "text-align: right;">0.359445</td><td style = "text-align: right;">0.384121</td></tr></tbody></table></div></div></div>
+</div>
+<p>To plot the optics, use a plotting package such as
+Matplotlib, with the columns as arrays:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.figure</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">),</span> <span class="n">layout</span><span class="o">=</span><span class="s2">"constrained"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">beta1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"β₁"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">beta2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"β₂"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"β [m]"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper center"</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"s [m]"</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"η [m]"</span><span class="p">)</span>
+<span class="n">fig</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Figure size 700x450 with 2 Axes&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<p>The curves are drawn through the rows of the table. With more integration steps per element
+(<code class="docutils literal notranslate"><span class="pre">b.n_steps</span> <span class="pre">=</span> <span class="pre">10</span></code>, see <a class="reference internal" href="../tracking-methods.html#track-steps"><span class="std std-ref">Tracking Methods</span></a>), the table has more rows and the curves
+follow the optics inside the elements.</p>
+<section id="matching">
+<h3>Matching<a class="headerlink" href="#matching" title="Link to this heading">¶</a></h3>
+<p>Given our arbitrary choice of quadrupole strengths, the phase advance through our FODO cell is
+not 90°. In order to determine which strengths produce the desired phase advance, the optimizer
+of SciBmad, <code class="docutils literal notranslate"><span class="pre">sb.match</span></code>, can be used. It needs to know the targets (what should be
+achieved) and the
+knobs (what may be changed).</p>
+<p>The targets are written with the quantities of <code class="docutils literal notranslate"><span class="pre">twiss</span></code>. A <code class="docutils literal notranslate"><span class="pre">TwissExpr</span></code> gives access to all of them
+in the same way as the result of <code class="docutils literal notranslate"><span class="pre">twiss</span></code> does, but computes nothing until it is needed:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw_af</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">TwissExpr</span><span class="p">(</span><span class="n">cell_af</span><span class="p">)</span>
+<span class="n">tw_af</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TwissExpr of a Beamline with 8 elements
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tw_af.q1</span></code> is the horizontal phase advance through the cell (in units of 2π), and a target is
+written with <code class="docutils literal notranslate"><span class="pre">==</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">tw_af</span><span class="o">.</span><span class="n">q1</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">,</span> <span class="n">tw_af</span><span class="o">.</span><span class="n">q2</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">]</span>
+<span class="n">targets</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[Target: q1 == 0.25, Target: q2 == 0.25]
+</pre></div>
+</div>
+</div>
+</div>
+<p>The knobs are the parameters to vary, given with <code class="docutils literal notranslate"><span class="pre">sb.Knob</span></code>. Here they are the
+strengths <code class="docutils literal notranslate"><span class="pre">Kn1</span></code> of
+<code class="docutils literal notranslate"><span class="pre">qf</span></code> and <code class="docutils literal notranslate"><span class="pre">qd</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">vary</span> <span class="o">=</span> <span class="p">[</span><span class="n">sb</span><span class="o">.</span><span class="n">Knob</span><span class="p">(</span><span class="n">qf</span><span class="p">,</span> <span class="s2">"Kn1"</span><span class="p">),</span> <span class="n">sb</span><span class="o">.</span><span class="n">Knob</span><span class="p">(</span><span class="n">qd</span><span class="p">,</span> <span class="s2">"Kn1"</span><span class="p">)]</span>
+<span class="n">vary</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[qf.Kn1, qd.Kn1]
+</pre></div>
+</div>
+</div>
+</div>
+<p>Optimization involves the minimization of a merit function, which <code class="docutils literal notranslate"><span class="pre">match</span></code> evaluates
+as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathcal{M} = \sum_i \left( w_i \, \delta D_i \right)^2\]</div>
+</div>
+<p>where the sum is over the targets, <span class="math notranslate nohighlight">\(w_i\)</span> are their weights (1 by default) and <span class="math notranslate nohighlight">\(\delta D_i\)</span> is the
+difference of the value of target <span class="math notranslate nohighlight">\(i\)</span> from its goal. For <code class="docutils literal notranslate"><span class="pre">tw_af.q1</span> <span class="pre">==</span> <span class="pre">0.25</span></code>, this is the value of
+<code class="docutils literal notranslate"><span class="pre">tw_af.q1</span></code> (computed from the lattice) minus 0.25. A target counts as met when <span class="math notranslate nohighlight">\(\delta D_i\)</span> is within
+its tolerance, <code class="docutils literal notranslate"><span class="pre">1e-8</span></code> by default. Weights and tolerances are set by writing a target as, e.g.,
+<code class="docutils literal notranslate"><span class="pre">sb.Target(tw_af.q1,</span> <span class="pre">0.25,</span> <span class="pre">weight=10,</span> <span class="pre">tol=1e-10)</span></code>.
+Weights can have a large effect on optimizations
+when the targets cannot all be met. Often the best way to choose them is by trial and error: is
+the optimization converging well or not?</p>
+<p>Now the match is run:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sb</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">vary</span><span class="o">=</span><span class="n">vary</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Match converged (all targets met): 4 iterations, 5 evaluations, 1.07 s
+ Target  value  goal     met
+ q1      0.25   == 0.25  yes
+ q2      0.25   == 0.25  yes
+ Knob    before  after          lower  upper
+ qf.Kn1  0.4     0.3128085745   -Inf   Inf
+ qd.Kn1  -0.4    -0.3126434013  -Inf   Inf
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">match</span></code> reports whether the match converged, the value of each target and its goal,
+and the
+values of the knobs before and after. The knobs are now set to their new values:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">qf</span><span class="o">.</span><span class="n">Kn1</span><span class="p">,</span> <span class="n">qd</span><span class="o">.</span><span class="n">Kn1</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.31280857446978005, -0.31264340129643536)
+</pre></div>
+</div>
+</div>
+</div>
+<p>and the phase advances through the cell are 90°:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tw</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">twiss</span><span class="p">(</span><span class="n">cell_af</span><span class="p">)</span>
+<span class="n">tw</span><span class="o">.</span><span class="n">q1</span><span class="p">,</span> <span class="n">tw</span><span class="o">.</span><span class="n">q2</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.250000000002662, 0.2500000000026622)
+</pre></div>
+</div>
+</div>
+</div>
+<p>Most optimizers need the derivatives of the targets with respect to the knobs. Other codes, such
+as Tao, compute them with finite differences, which are approximate, need a step size, and need
+one more calculation for each knob. SciBmad computes the exact derivatives with respect to all
+knobs at once, with automatic differentiation (see
+<a class="reference internal" href="../optimize.html"><span class="std std-doc">Matching and Optimization</span></a>). <code class="docutils literal notranslate"><span class="pre">match</span></code> takes Gauss-Newton steps (the
+smallest
+change of the knobs that meets the targets to first order), and shorter or damped steps where those
+do not improve the match. It finds a nearby solution, and converges to a local optimum. For a global search, see
+<a class="reference internal" href="../optimize.html"><span class="std std-doc">Using Other Optimizers</span></a>.</p>
+<p>There is no need to save the optimized lattice to a file: the strengths of <code class="docutils literal notranslate"><span class="pre">qf</span></code> and <code class="docutils literal notranslate"><span class="pre">qd</span></code> have
+been changed, and every beamline in which they are placed now has them. In your lattice file,
+keep the <code class="docutils literal notranslate"><span class="pre">match</span></code> call after the definitions. It runs each time the file is included,
+so the file
+records how the strengths were found.</p>
+</section>
+</section>
+<section id="exercises">
+<h2>Exercises<a class="headerlink" href="#exercises" title="Link to this heading">¶</a></h2>
+<ol class="arabic">
+<li><p><strong>Reverse arc FODO:</strong> Construct the reverse arc FODO cell <code class="docutils literal notranslate"><span class="pre">fodoar</span></code> without sextupoles, with
+the elements in the order of the figure of the reverse arc cell, and determine the quadrupole
+strengths for a 90° phase advance.</p></li>
+<li><p><strong>Forward straight section FODO:</strong> Replace the bends in the forward cell by a drift (empty
+space) of length 5.855 m, named <code class="docutils literal notranslate"><span class="pre">db</span></code>. This length is chosen to produce the same straight
+section length as in the RHIC tunnel. Additionally, use new horizontally focusing and
+defocusing quadrupoles <code class="docutils literal notranslate"><span class="pre">qfss</span></code> and <code class="docutils literal notranslate"><span class="pre">qdss</span></code>. Which quadrupole strengths lead to 90° phase advance
+in both planes? Name the line <code class="docutils literal notranslate"><span class="pre">fodossf</span></code>.</p></li>
+<li><p><strong>Reverse straight section FODO:</strong> Replace the bends in the reverse cell by the drift <code class="docutils literal notranslate"><span class="pre">db</span></code>, and
+use the quadrupoles <code class="docutils literal notranslate"><span class="pre">qfss</span></code> and <code class="docutils literal notranslate"><span class="pre">qdss</span></code>. Which quadrupole strengths lead to 90° phase advance in
+both planes? Name the line <code class="docutils literal notranslate"><span class="pre">fodossr</span></code>. These quadrupole strengths should be exactly the same as
+for <code class="docutils literal notranslate"><span class="pre">fodossf</span></code>.</p></li>
+<li><p><strong>Analytical FODO cell:</strong> Take a FODO model with the same total length as constructed above,
+but with zero length quadrupoles and no bends. Calculate by hand the quadrupole strengths that
+lead to a 90° phase advance in <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>. What are the beta functions at the thin
+quadrupoles? How do the quadrupole strengths and beta functions compare to above? (A thin
+quadrupole is a <code class="docutils literal notranslate"><span class="pre">Multipole</span></code> with an integrated strength <code class="docutils literal notranslate"><span class="pre">Kn1L</span></code>; you can check your answer with
+<code class="docutils literal notranslate"><span class="pre">twiss</span></code>.)</p></li>
+<li><p><strong>Forward and reverse cells:</strong> Check that your forward and reverse arc FODO cells, which both
+start with focusing quadrupoles, have different periodic beta and alpha functions. Check also
+that both cells, for the same phase advance of 90°, have exactly the same quadrupole strengths.
+Explain why this is so.</p></li>
+<li><p><strong>Arc and chord lengths:</strong> What is the difference between the arc length <code class="docutils literal notranslate"><span class="pre">L</span></code> of the bends and
+their chord length? Check with the geometry: the chord of an arc of length <span class="math notranslate nohighlight">\(L\)</span> and radius
+<span class="math notranslate nohighlight">\(\rho = L/\theta\)</span> is <span class="math notranslate nohighlight">\(2\rho\sin(\theta/2)\)</span>. The curvature of the reference trajectory in a bend is
+<code class="docutils literal notranslate"><span class="pre">b.g_ref</span></code> (in 1/m).</p></li>
+<li><p><strong>Finding elements:</strong> What do the following lines give? See
+<a class="reference internal" href="../beamline.html#search-name"><span class="std std-ref">Searching by Name</span></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>   <span class="n">cell_af</span><span class="p">[</span><span class="s2">"Quadrupole::*"</span><span class="p">]</span>
+   <span class="p">[</span><span class="n">ele</span><span class="o">.</span><span class="n">Kn1</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">cell_af</span><span class="p">[</span><span class="s2">"q*"</span><span class="p">]]</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Targets and knobs:</strong> A target and a knob are objects of their own. Look at their
+documentation with <code class="docutils literal notranslate"><span class="pre">help(sb.Target)</span></code> and <code class="docutils literal notranslate"><span class="pre">help(sb.Knob)</span></code>
+, and find out how to give a knob lower
+and upper bounds.</p></li>
+<li><p><strong>Fewer targets:</strong> Run the match with only the target <code class="docutils literal notranslate"><span class="pre">tw_af.q1</span> <span class="pre">==</span> <span class="pre">0.25</span></code>, starting from
+<code class="docutils literal notranslate"><span class="pre">qf.Kn1</span> <span class="pre">=</span> <span class="pre">0.4</span></code> and <code class="docutils literal notranslate"><span class="pre">qd.Kn1</span> <span class="pre">=</span> <span class="pre">-0.4</span></code> again. Is the match successful? What is the vertical phase
+advance afterwards? With more knobs than targets, many solutions exist, and
+<code class="docutils literal notranslate"><span class="pre">match</span></code> returns one
+near the starting point.</p></li>
+</ol>
+<p>The solutions of exercises 1 to 3 are in the lattice file of this chapter,
+<a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl/tree/main/docs/src/ring-design/lattices/ch01_fodo.py"><code class="docutils literal notranslate"><span class="pre">lattices/ch01_fodo.py</span></code></a>.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="dispersion-suppressor.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">2. Dispersion Suppressor</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Ring Design Tutorial</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, SciBmad Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">1. FODO Cells</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#example-forward-arc-fodo-cell">Example: Forward Arc FODO Cell</a><ul>
+<li><a class="reference internal" href="#matching">Matching</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exercises">Exercises</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script>window.SCIBMAD_DOCS_LANGUAGE = 'python';</script>
+    <script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=552d2a3d"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/language-switch.js?v=f13d272b"></script>
+    <script src="../_static/topbar-github.js?v=c13617d6"></script>
+    <script src="../_static/sidebar-current.js?v=23c44312"></script>
+    </body>
+</html>
