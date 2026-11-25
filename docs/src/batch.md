@@ -20,6 +20,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Basics
 
 In SciBmad, it is possible to not only CPU/GPU parallelize over particles in a bunch, but
@@ -41,11 +49,25 @@ fodo = Beamline([qf, d, qd, d], E_ref=18e9,
         species_ref=Species("electron"))
 ```
 
+```{code-cell} python
+with sb.elements():
+    qf = sb.Quadrupole(Kn1=sb.DefExpr(lambda c: c.K1), L=0.4)
+    d = sb.Drift(L=0.5)
+    qd = sb.Quadrupole(Kn1=sb.DefExpr(lambda c: -c.K1), L=0.4)
+
+fodo = sb.Beamline([qf, d, qd, d], E_ref=18e9,
+                   species_ref=sb.Species("electron"))
+```
+
 We can then set the variable `K1` of `fodo.context` to be a `BatchParam` with 10 different
 quadrupole strengths
 
 ```{code-cell} julia
 fodo.context.K1 = BatchParam(collect(0.1:0.05:0.55))
+```
+
+```{code-cell} python
+fodo.context.K1 = sb.BatchParam(np.linspace(0.1, 0.55, 10))
 ```
 
 Now when we call `track` with this `Beamline`, the 1st particle will see `K1=0.1`, the 2nd
@@ -56,6 +78,12 @@ particle coordinates be the same, and observe the difference in the output $x$-c
 v0 = repeat([1e-3 0 0 0 0 1e-3], 10, 1)
 res = track(fodo, v0=v0)
 res.x[turn=1] # output x-coordinates
+```
+
+```{code-cell} python
+v0 = np.tile([1e-3, 0, 0, 0, 0, 1e-3], (10, 1))
+res = sb.track(fodo, v0=v0)
+res.x(turn=1)  # output x-coordinates
 ```
 
 In one parallelized tracking run, we have effectively simulated 10 different beamlines. This
@@ -74,6 +102,11 @@ n_particles = 2
 fodo.context.K1 = BatchParam(repeat(collect(0.1:0.05:0.55), inner=n_particles))
 ```
 
+```{code-cell} python
+n_particles = 2
+fodo.context.K1 = sb.BatchParam(np.repeat(np.linspace(0.1, 0.55, 10), n_particles))
+```
+
 If there are more particles than values in a `BatchParam`, the values start over: with the
 20 values above, particle 21 would see `K1=0.1` again. Each `BatchParam` starts over on its
 own, so `BatchParam`s of different lengths can be used together. With the setting
@@ -86,6 +119,12 @@ And `track` again:
 v0 = repeat([1e-3 0 0 0 0 1e-3], n_particles*10, 1)
 res = track(fodo, v0=v0)
 res.x[turn=1] # output x-coordinates
+```
+
+```{code-cell} python
+v0 = np.tile([1e-3, 0, 0, 0, 0, 1e-3], (n_particles*10, 1))
+res = sb.track(fodo, v0=v0)
+res.x(turn=1)  # output x-coordinates
 ```
 
 `twiss` computes the optics of one value of the batch at a time, chosen with its keyword
@@ -130,5 +169,21 @@ fodo.context.K1 = BatchParam(CuArray(K1))
 v0 = CUDA.rand(Float64, n_particles_per_beamline * n_quad_strengths, 6) .* 1e-5
 
 res = track(fodo, v0=v0, spin=true)
+```
+
+```python
+gpu = sb.device("cuda")
+
+# (100 quad strengths x 1,000 particles per quad strength) = 100,000 particles tracked in total
+n_particles_per_beamline = 1000
+n_quad_strengths = 100
+
+K1 = np.repeat(np.linspace(0.1, 0.55, n_quad_strengths), n_particles_per_beamline)
+fodo.context.K1 = sb.BatchParam(gpu.asarray(K1))
+
+# Random initial phase space coordinates:
+v0 = gpu.asarray(np.random.rand(n_particles_per_beamline * n_quad_strengths, 6) * 1e-5)
+
+res = sb.track(fodo, v0=v0, spin=True)
 ```
 

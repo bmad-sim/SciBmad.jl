@@ -20,6 +20,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Basics
 
 The `track` function can be used for all particle tracking, including spin tracking with
@@ -60,6 +68,26 @@ v0 = [1e-3 0 0 0 0 0;
 res = track(fodo, v0=v0, n_turns=10)
 ```
 
+```{code-cell} python
+with sb.elements():
+    qf = sb.Quadrupole(Kn1=0.36, L=0.5)
+    bpm1 = sb.BPM()
+    sf = sb.Sextupole(Kn2=1.2, L=0.2)
+    d = sb.Drift(L=0.1)
+    b = sb.SBend(L=1.2, angle=np.pi/132)
+    qd = sb.Quadrupole(Kn1=-0.36, L=0.5)
+    bpm2 = sb.BPM()
+    sd = sb.Sextupole(Kn2=-1.2, L=0.2)
+
+fodo = sb.Beamline([qf, bpm1, sf, b, d, qd, bpm2, sd, b, d],
+                   species_ref=sb.Species("electron"), pc_ref=18e9)
+
+v0 = np.array([[1e-3, 0, 0, 0, 0, 0],
+               [1e-3, 0, 0, 0, 0, 1e-3]])
+res = sb.track(fodo, v0=v0, n_turns=10)
+res
+```
+
 The outputted structure is a `TrackResult`, which contains quite a lot of information
 about the tracking. First, `config` is a `TrackConfig` structure that contains all the
 configuration settings we may have provided to `track`, for example `n_turns`. For a
@@ -69,7 +97,18 @@ The integer value `start` specifies the beamline index of the element where trac
 
 The four vectors `s`, `index`, `name`, and `kind` specify each of the locations in the beamline where phase space coordinates were saved (the s-positions, and the containing elements' beamline indexes, names, and kinds). By default, the phase space coordinates are only saved at the end of the beamline, as in the above example. Further down on this page we discuss saving coordinates at different locations in the beamline.
 
+:::{only} julia
 Next, we have the `TrackColumn`s: `state`, `x`, `px`, `y`, `py`, `z`, `pz`, and `v`. All `TrackColumn`s store the particle data at every selected location and turn. If only one location is saved, then all `TrackColumn`s can be indexed using the syntax `x[turn=n, particle=i]` where `turn` and `particle` can be integers, ranges/vectors of indexes, or colons `:` which specifies all. Both `turn` and `particle` default to a colon `:`.
+:::
+:::{only} python
+Next, we have the `TrackColumn`s: `state`, `x`, `px`, `y`, `py`, `z`, `pz`, and `v`. All
+`TrackColumn`s store the particle data at every selected location and turn. If only one location is
+saved, then all `TrackColumn`s are read with the syntax `x(turn=n, particle=i)` (in Julia
+`x[turn=n, particle=i]`: Python has no keywords in indexing), where `turn` and `particle` can be
+integers, ranges/lists of numbers, or `...` which specifies all. Both `turn` and `particle` default
+to all. Particles are numbered from 1, as in Julia, and turn 0 holds the initial coordinates. The
+values are NumPy arrays.
+:::
 
 ```{code-cell} julia
 res.x[turn=3]               # x of all particles after turn 3
@@ -78,10 +117,25 @@ res.v[turn=3, particle=1]   # all six coordinates x, px, y, py, z, pz
 res.x[]                     # [particle, saved turn]
 ```
 
+```{code-cell} python
+print(res.x(turn=3))               # x of all particles after turn 3
+print(res.x(turn=3, particle=1))   # x of particle 1
+print(res.v(turn=3, particle=1))   # all six coordinates x, px, y, py, z, pz
+res.x()                            # [particle, saved turn]
+```
+
+:::{only} julia
 The saved turn `k` in `res.x[]` is the turn `res.turns[k]`: here the saved turns 1 to 11 are
 the turns 0 to 10.
+:::
+:::{only} python
+`res.x()` (without a location or keywords) is the array of all saved values, whose saved turn
+`k` (a NumPy index, from 0) is the turn `res.turns[k]`: here the saved turns 0 to 10 are the
+turns 0 to 10.
+:::
 
-The values of `state` are 8-bit integers that correspond to the following constants defined in `BeamTracking`:
+The values of `state` are 8-bit integers that correspond to the following constants defined in
+`BeamTracking`{pytext}` (sb.BeamTracking in Python)`:
 
 ```julia
 const STATE_PREBORN                 = 0x0
@@ -96,7 +150,21 @@ const STATE_LOST_Z                  = 0x8
 const STATE_IMPLICIT_NONCONVERGENCE = 0x9
 ```
 
-Therefore, if a particle's state is `0x1`, that means it is alive and well! Once a particle
+```python
+sb.BeamTracking.STATE_PREBORN                  # 0
+sb.BeamTracking.STATE_ALIVE                    # 1
+sb.BeamTracking.STATE_LOST                     # 2
+sb.BeamTracking.STATE_LOST_NEG_X               # 3
+sb.BeamTracking.STATE_LOST_POS_X               # 4
+sb.BeamTracking.STATE_LOST_NEG_Y               # 5
+sb.BeamTracking.STATE_LOST_POS_Y               # 6
+sb.BeamTracking.STATE_LOST_PZ                  # 7
+sb.BeamTracking.STATE_LOST_Z                   # 8
+sb.BeamTracking.STATE_IMPLICIT_NONCONVERGENCE  # 9
+```
+
+Therefore, if a particle's state is {jl}`0x1`{py}`1`, that means it is alive and well! Once a
+particle
 is "lost" in tracking, its phase space coordinates are frozen at the point where it is lost.
 `STATE_PREBORN` marks a location the particle has not reached yet (see
 [Starting at a Different Location](#track.start)).
@@ -116,10 +184,12 @@ The particle data can also be saved at other locations given to `track` through 
 
 - s-ranges as a tuple from start to stop, e.g. `(0., 1.23)` saves the coordinates for all integration steps between `s=0` and `s=1.23`
 - Beamline element indexes as integers or index ranges (only at the beginning of the element).
-  The end of the beamline is the index `length(fodo) + 1`, one more than the number of elements
+  The end of the beamline is the index {jl}`length(fodo) + 1`{py}`len(fodo) + 1`, one more than the
+  number of elements
 - `LatElement`s themselves (only at the beginning of each placement of the element)
 - Element names, as in [Searching by Name](#search:name), e.g. `"bpm*"`
-- A colon `:` for every integration step
+- {jltext}`A colon `{jl}`:`{pytext}`An ellipsis `{py}`...`{pytext}` (or slice(None))` for every
+  integration step
 
 For example, to save the phase space coordinates at the entrance of the BPMs in the above line, use:
 
@@ -127,13 +197,29 @@ For example, to save the phase space coordinates at the entrance of the BPMs in 
 res = track(fodo, v0=v0, n_turns=10, at=[bpm1, bpm2])
 ```
 
-When there is more than one location saved, indexing for all `TrackColumn`s requires specifying which location(s) the data should be indexed at as the first indexing argument, using any of the location indexing formats passable to `at` (element, element index, array of elements/indexes, s-ranges, colon).
+```{code-cell} python
+res = sb.track(fodo, v0=v0, n_turns=10, at=[bpm1, bpm2])
+res
+```
+
+When there is more than one location saved, indexing for all `TrackColumn`s requires specifying
+which location(s) the data should be indexed at as the first indexing argument, using any of the
+location indexing formats passable to `at` (element, element index, array of elements/indexes,
+s-ranges, {jltext}`colon`{pytext}`...`).
 
 ```{code-cell} julia
 res.x[bpm2, turn=10]          # x at bpm2 (the exit of qd) after turn 10
 ```
 
-If the end of a beamline is saved, then `end` can be specified as the location for that point. A location that is several places (e.g. `[[d]]` for every placement of element `d`, `[qd, :]` for all integration steps through `qd`, an s-range) gives one value per place, in the index after the particle. All of this is the exact same indexing scheme as for the columns of `twiss` (see [Twiss](twiss.md)).
+```{code-cell} python
+res.x(bpm2, turn=10)          # x at bpm2 (the exit of qd) after turn 10
+```
+
+If the end of a beamline is saved, then {jl}`end`{py}`-1` can be specified as the location for that
+point. A location that is several places (e.g. `[[d]]` for every placement of element `d`,
+{jl}`[qd, :]`{py}`(qd, ...)` for all integration steps through `qd`, an s-range) gives one value per
+place, in the index after the particle. All of this is the exact same indexing scheme as for the
+columns of `twiss` (see [Twiss](twiss.md)).
 
 The s, and the beamline index, name and kind of the element of every saved location are in `res.s`, `res.index`, `res.name` and `res.kind`, so that for example the orbit through the beamline can be plotted:
 
@@ -142,6 +228,13 @@ res = track(fodo, v0=v0, n_turns=1, at=:) # : = Every integration step
 
 using CairoMakie
 lines(res.s, res.x[:, turn=1, particle=1]) # x vs. s for every integration step 
+```
+
+```python
+res = sb.track(fodo, v0=v0, n_turns=1, at=...)  # ... = Every integration step
+
+import matplotlib.pyplot as plt
+plt.plot(res.s, res.x(..., turn=1, particle=1))  # x vs. s for every integration step
 ```
 
 (track.start)=
@@ -157,11 +250,17 @@ res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], start=qd)
 res.x[qf, particle=1]       # [NaN, NaN (not reached in turns 0 and 1), x in turn 2]
 ```
 
+```{code-cell} python
+res = sb.track(fodo, v0=v0, n_turns=2, at=[qf, qd], start=qd)
+res.x(qf, particle=1)       # [NaN, NaN (not reached in turns 0 and 1), x in turn 2]
+```
+
 Eventually when backwards tracking is supported by SciBmad, there will be an option to track backwards to the beginning of the beamline from any given `start`.
 
 ## Saving the Reference Time/Energy
 
-The reference time and energy at the chosen locations can be saved too, with `save_reference=true`:
+The reference time and energy at the chosen locations can be saved too, with
+{jl}`save_reference=true`{py}`save_reference=True`:
 they are then `res.t_ref` (in seconds) and `res.beta_gamma_ref` (the reference energy as
 $\beta\gamma$), one value per location and turn. This extra save makes the tracking slightly slower, so it is off by default:
 
@@ -170,9 +269,15 @@ res = track(fodo, v0=v0, n_turns=2, at=[qf, qd], save_reference=true)
 res.t_ref[qd]               # at the beginning of qd, for every saved turn
 ```
 
+```{code-cell} python
+res = sb.track(fodo, v0=v0, n_turns=2, at=[qf, qd], save_reference=True)
+res.t_ref[qd]               # at the beginning of qd, for every saved turn
+```
+
 ## Spin Tracking
 
-To do spin tracking, simply set `spin=true`. This will initialize all particles with their
+To do spin tracking, simply set {jl}`spin=true`{py}`spin=True`. This will initialize all particles
+with their
 own spin [quaternion](https://en.wikipedia.org/wiki/Quaternion), each of which will be
 tracked along with the particle. A quaternion is essentially a rotation matrix - by tracking
 quaternions instead of spin 3-vectors, we can track one particle once and then observe the
@@ -183,7 +288,14 @@ v0 = [1e-3 0 0 0 0 1e-3]
 res = track(fodo, v0=v0, n_turns=10, spin=true)
 ```
 
-The spin quaternions are then `res.q`, for example `res.q[turn=5, particle=1]` (its four
+```{code-cell} python
+v0 = [[1e-3, 0, 0, 0, 0, 1e-3]]
+res = sb.track(fodo, v0=v0, n_turns=10, spin=True)
+res
+```
+
+The spin quaternions are then `res.q`, for example
+{jl}`res.q[turn=5, particle=1]`{py}`res.q(turn=5, particle=1)` (its four
 components): the rotation of the spin from the start of the tracking through turn 5.
 
 To compute a particle's spin 3-vector at each turn given some initial spin direction, we can
@@ -194,10 +306,20 @@ s0 = [0, 1, 0] # initial vertical spin vector
 s = track_spin(res.q, s0)
 ```
 
+```{code-cell} python
+s0 = [0, 1, 0]  # initial vertical spin vector
+s = sb.track_spin(res.q, s0)
+s
+```
+
 `s` is read just like `res.q`, but with the three components of the spin vector:
 
 ```{code-cell} julia
 s[turn=10, particle=1]      # the spin of particle 1 after turn 10
+```
+
+```{code-cell} python
+s(turn=10, particle=1)      # the spin of particle 1 after turn 10
 ```
 
 If you'd like to initialize different initial spin directions for each particle (perhaps
@@ -232,6 +354,14 @@ res = track(fodo, v0=v0, n_turns=5)
 res2 = track(fodo, bunch=res.bunch, n_turns=5)
 ```
 
+```{code-cell} python
+res = sb.track(fodo, v0=v0, n_turns=5)
+
+# track 5 more turns:
+res2 = sb.track(fodo, bunch=res.bunch, n_turns=5)
+res2
+```
+
 The `Bunch` is tracked in place, so afterwards `res.bunch` and `res2.bunch` are the same
 `Bunch`, after all 10 turns. The saved coordinates in `res` and `res2` are not changed.
 
@@ -252,6 +382,11 @@ res = track(fodo, v0=v0, species=Species("muon"), n_turns=10)
 res.v[turn=10, particle=1]
 ```
 
+```{code-cell} python
+res = sb.track(fodo, v0=v0, species=sb.Species("muon"), n_turns=10)
+res.v(turn=10, particle=1)
+```
+
 A particle with the opposite charge, such as a positron in an electron ring, is bent the other
 way by the dipoles and is quickly lost, just as it would be in the real ring.
 
@@ -264,6 +399,13 @@ executed **every integration step**, and allow users to inject their own code in
 tracking if desired. An element with `n_slices` slices of `n_steps` steps each (see
 [Integration Steps and Slices](#track.steps)) executes them `n_slices*n_steps` times, and
 elements without integration steps (patches, maps, and elements tracked with `SaganCavity`) once. For example, `twiss` uses callbacks to compute its results at every integration step, inside of elements.
+
+:::{only} python
+Callbacks run inside SciBmad's compiled tracking kernels (also on GPUs), for every particle and
+integration step, so they must be Julia functions. From Python, define one with
+`sb.julia.seval("function mycallback(i, coords, p) ... end")`, which returns the Julia function.
+This is the one part of SciBmad that needs Julia code.
+:::
 
 Callbacks are required to have the function signature defined below
 
@@ -324,6 +466,12 @@ v0 = zeros(Float32, 1, 6) # 1 32-bit particle
 res = track(fodo, v0=v0)
 ```
 
+```{code-cell} python
+v0 = np.zeros((1, 6), dtype=np.float32)  # 1 32-bit particle
+res = sb.track(fodo, v0=v0)
+res
+```
+
 :::{note}
 When 32-bit floats are used for the particle coordinates, _all_ numbers in the tracking (e.g. magnet strengths, lengths, and time-dependent parameters) are 32-bit floats too.
 :::
@@ -338,6 +486,7 @@ the keyword argument `use_explicit_SIMD=false`.
 
 ### Multithreading
 
+:::{only} julia
 SciBmad tracking is also compatible with CPU multithreading. To do so, Julia must be started
 with threads. In a terminal:
 
@@ -348,13 +497,26 @@ $ julia --threads=auto
 where `auto` will infer a number of threads to use based on your system, or alternatively an
 integer number of threads may be specified. To check in a Julia session that multiple
 threads are available, run the command
+:::
+:::{only} python
+SciBmad tracking is also compatible with CPU multithreading. To do so, Julia must be started
+with threads: call `sb.init(threads="auto")` before anything else of SciBmad is used (or set
+the environment variable `SCIBMAD_THREADS=auto`, or run `python -m scibmad config --threads auto`
+once), where `auto` will infer a number of threads to use based on your system, or
+alternatively an integer number of threads may be given. To check that multiple threads are
+available, run the command
+:::
 
 ```julia
 println(Threads.nthreads())
 ```
 
+```python
+print(sb.julia.Threads.nthreads())
+```
+
 If this number is > 1, then you are ready to do multithreaded tracking. Simply set the
-`track` configuration setting `use_cpu_multithreading=true`.
+`track` configuration setting {jl}`use_cpu_multithreading=true`{py}`use_cpu_multithreading=True`.
 
 :::{note}
 There is a cost to launching threads on the CPU. Using multithreading with a small number of
@@ -375,7 +537,9 @@ meantime)
 
 **All SciBmad tracking is fully GPU parallelized and branchless.** To do particle tracking
 on the GPU, either initialize a `Bunch` with the corresponding device `GPUArray`, or provide
-the `GPUArray` to `track`. For example, to do GPU-parallelized spin tracking on a CUDA GPU,
+the `GPUArray` to
+`track`{pytext}` (in Python, sb.device("cuda").asarray(...) copies a NumPy array to a CUDA GPU; also "metal", "amdgpu" and "oneapi"; the first use installs the Julia package of that GPU kind, once)`.
+For example, to do GPU-parallelized spin tracking on a CUDA GPU,
 
 ```julia
 using CUDA
@@ -386,6 +550,17 @@ n_particles = 100000
 v0 = CUDA.rand(Float64, n_particles, 6) .* 1e-5
 
 res = track(fodo, v0=v0, spin=true, n_turns=100)
+```
+
+```python
+gpu = sb.device("cuda")
+
+n_particles = 100000
+
+# Random initial phase space coordinates:
+v0 = gpu.asarray(np.random.rand(n_particles, 6) * 1e-5)
+
+res = sb.track(fodo, v0=v0, spin=True, n_turns=100)
 ```
 
 :::{note}
@@ -403,6 +578,12 @@ the tracking, including spin tracking, will then be done in 32-bit:
 using Metal
 v0 = MtlArray(rand(Float32, n_particles, 6) .* 1f-5)
 res = track(fodo, v0=v0, spin=true, n_turns=100)
+```
+
+```python
+gpu = sb.device("metal")
+v0 = gpu.asarray(np.random.rand(n_particles, 6) * 1e-5, dtype=np.float32)
+res = sb.track(fodo, v0=v0, spin=True, n_turns=100)
 ```
 
 ### Multiple GPUs

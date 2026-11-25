@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Introduction
 
 In this chapter an interaction region (IR) with a low-beta interaction point (IP) will be
@@ -67,6 +75,10 @@ crossing angle. A discussion of this is beyond the scope of this tutorial.
 include("lattices/05-ring.jl");
 ```
 
+```{code-cell} python
+from lattices.ch05_ring import *
+```
+
 2. Define the drifts and quadrupoles of the IR, with the dimensions of the figure above. The
    strengths are to be determined: start with the straight section strengths. Define also the
    IP itself, as a `Marker`. Markers have zero length and no effect on the orbit or spin.
@@ -91,6 +103,25 @@ include("lattices/05-ring.jl");
 end;
 ```
 
+```{code-cell} python
+with sb.elements():
+    qef1 = sb.Quadrupole(L=0.5, Kn1=k_ss)
+    qef2 = sb.Quadrupole(L=0.5, Kn1=-k_ss)
+    def1 = sb.Drift(L=20.46)
+    qef3 = sb.Quadrupole(L=1.6, Kn1=k_ss)
+    def2 = sb.Drift(L=3.76)
+    qef4 = sb.Quadrupole(L=1.2, Kn1=-k_ss)
+    def3 = sb.Drift(L=5.8)
+    ip6 = sb.Marker()
+    der3 = sb.Drift(L=5.3)
+    qer4 = sb.Quadrupole(L=1.8, Kn1=-k_ss)
+    der2 = sb.Drift(L=0.5)
+    qer3 = sb.Quadrupole(L=1.4, Kn1=k_ss)
+    der1 = sb.Drift(L=23.82)
+    qer2 = sb.Quadrupole(L=0.5, Kn1=k_ss)
+    qer1 = sb.Quadrupole(L=0.5, Kn1=-k_ss)
+```
+
 3. Define the upstream and downstream lines. The IP is at the end of `ipf`. (It is not repeated
    at the beginning of `ipr`, so that it is placed once in the ring.)
 
@@ -101,6 +132,13 @@ ir_f = Beamline(ipf, species_ref=electron, pc_ref=pc_ref)
 ir_r = Beamline(ipr, species_ref=electron, pc_ref=pc_ref)
 ```
 
+```{code-cell} python
+ipf = [qef1, d1, db, d2, qef2, d1, db, d2, def1, qef3, def2, qef4, def3, ip6]
+ipr = [der3, qer4, der2, qer3, der1, qer2, d2, db, d1, qer1, d2, db, d1]
+ir_f = sb.Beamline(ipf, species_ref=electron, pc_ref=pc_ref)
+ir_r = sb.Beamline(ipr, species_ref=electron, pc_ref=pc_ref)
+```
+
 4. IPF follows a straight section cell, so it starts with the periodic lattice functions of the
    forward straight section cell. IPR starts with the lattice functions at the end of IPF:
 
@@ -109,10 +147,19 @@ tw_ipf = TwissExpr(ir_f, a_initial=tw_ssf.a[end])
 tw_ipr = TwissExpr(ir_r, a_initial=tw_ipf.a[end])
 ```
 
+```{code-cell} python
+tw_ipf = sb.TwissExpr(ir_f, a_initial=tw_ssf.a[-1])
+tw_ipr = sb.TwissExpr(ir_r, a_initial=tw_ipf.a[-1])
+```
+
    With the straight section strengths, the beta functions at the IP are far from the goal:
 
 ```{code-cell} julia
 value([tw_ipf.beta1[end], tw_ipf.beta2[end]])
+```
+
+```{code-cell} python
+sb.value([tw_ipf.beta1[-1], tw_ipf.beta2[-1]])
 ```
 
 5. Match IPF. The beta functions here range from 0.06 m at the IP to several hundred meters in
@@ -126,6 +173,13 @@ match!(vary=[@knob(qef1.Kn1), @knob(qef2.Kn1), @knob(qef3.Kn1), @knob(qef4.Kn1)]
                 tw_ipf.alpha1[end] == 0, tw_ipf.alpha2[end] == 0])
 ```
 
+```{code-cell} python
+sb.match(vary=[sb.Knob(q, "Kn1") for q in (qef1, qef2, qef3, qef4)],
+         targets=[np.log(tw_ipf.beta1[-1]) == np.log(0.6),
+                  np.log(tw_ipf.beta2[-1]) == np.log(0.06),
+                  tw_ipf.alpha1[-1] == 0, tw_ipf.alpha2[-1] == 0])
+```
+
 6. Match IPR to the periodic lattice functions of the reverse straight section cell, which
    follows it:
 
@@ -135,6 +189,14 @@ match!(vary=[@knob(qer1.Kn1), @knob(qer2.Kn1), @knob(qer3.Kn1), @knob(qer4.Kn1)]
                 log(tw_ipr.beta2[end]) == log(tw_ssr.beta2[begin]),
                 tw_ipr.alpha1[end] == tw_ssr.alpha1[begin],
                 tw_ipr.alpha2[end] == tw_ssr.alpha2[begin]])
+```
+
+```{code-cell} python
+sb.match(vary=[sb.Knob(q, "Kn1") for q in (qer1, qer2, qer3, qer4)],
+         targets=[np.log(tw_ipr.beta1[-1]) == np.log(tw_ssr.beta1[sb.begin]),
+                  np.log(tw_ipr.beta2[-1]) == np.log(tw_ssr.beta2[sb.begin]),
+                  tw_ipr.alpha1[-1] == tw_ssr.alpha1[sb.begin],
+                  tw_ipr.alpha2[-1] == tw_ssr.alpha2[sb.begin]])
 ```
 
 7. Add the IR into the ring. It replaces the last three straight section cells of sextant 5 and
@@ -150,6 +212,16 @@ tw = twiss(ring)
 tw.beta1[ip6], tw.beta2[ip6], tw.alpha1[ip6], tw.alpha2[ip6]
 ```
 
+```{code-cell} python
+sextant5 = fodossf*4 + ss_to_arcf + fodoaf*20 + arc_to_ssf + fodossf + ipf
+sextant7 = ipr + fodossr + ss_to_arcr + fodoar*20 + arc_to_ssr + fodossr*4
+
+ring = sb.Beamline(sextant1 + sextant3 + sextant5 + sextant7 + sextant9 + sextant11,
+                   species_ref=electron, pc_ref=pc_ref)
+tw = sb.twiss(ring)
+tw.beta1[ip6], tw.beta2[ip6], tw.alpha1[ip6], tw.alpha2[ip6]
+```
+
    The periodic lattice functions of the whole ring have the IP values: the IR is matched into
    the rest of the ring. The beta functions around the IP:
 
@@ -162,6 +234,20 @@ rows = (s0 - 120, s0 + 120) # An s-range around the IP
 lines!(ax, tw.s[rows] .- s0, tw.beta1[rows], label="β₁")
 lines!(ax, tw.s[rows] .- s0, tw.beta2[rows], label="β₂")
 axislegend(ax, position=:ct)
+fig
+```
+
+```{code-cell} python
+from matplotlib.figure import Figure
+s0 = tw.s[ip6]
+fig = Figure(figsize=(8, 3.5), layout="constrained")
+ax = fig.subplots()
+rows = slice(s0 - 120, s0 + 120)  # An s-range around the IP
+ax.plot(tw.s[rows] - s0, tw.beta1[rows], label="β₁")
+ax.plot(tw.s[rows] - s0, tw.beta2[rows], label="β₂")
+ax.set_xlabel("s - s(IP6) [m]")
+ax.set_ylabel("β [m]")
+ax.legend(loc="upper center")
 fig
 ```
 

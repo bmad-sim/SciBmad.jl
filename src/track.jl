@@ -168,14 +168,15 @@ function Base.show(io::IO, ::MIME"text/plain", res::TrackResult)
   dims(x) = "[" * join(("1:$n" for n in size(x)), ", ") * "]"
   rows = Tuple{String,String}[
     ("s, index, name, kind", "the saved locations: " * _track_locations_string(res)),
-    ("state", "particle state codes, e.g. state[" * loc * "turn=n, particle=i]"),
-    ("x, px, y, py, z, pz", "the coordinates, e.g. x[" * loc * "turn=n, particle=i]"),
-    ("v", "all six coordinates, e.g. v[" * loc * "turn=n, particle=i]")]
+    ("state", "particle state codes, e.g. " * _kwindex(io, "state", loc * "turn=n, particle=i")),
+    ("x, px, y, py, z, pz", "the coordinates, e.g. " *
+                            _kwindex(io, "x", loc * "turn=n, particle=i")),
+    ("v", "all six coordinates, e.g. " * _kwindex(io, "v", loc * "turn=n, particle=i"))]
   isnothing(data.q) ||
     push!(rows, ("q", "spin quaternions (track_spin turns them into spin 3-vectors)"))
   isnothing(data.t_ref) ||
-    push!(rows, ("t_ref, beta_gamma_ref", "reference time and energy, e.g. t_ref[" * loc *
-                 "turn=n]"))
+    push!(rows, ("t_ref, beta_gamma_ref", "reference time and energy, e.g. " *
+                 _kwindex(io, "t_ref", loc * "turn=n")))
   push!(rows, ("data", "the internal, low-level data arrays:"))
   order = (state="[particle, location, saved turn]",
            v="[particle, coordinate, location, saved turn]",
@@ -268,8 +269,13 @@ end
 function Base.show(io::IO, c::TrackColumn)
   single = length(getfield(c.res, :index)) == 1
   loc = single ? "" : "location, "
-  print(io, "TrackColumn `", c.name, "` (read it with `$(c.name)["* loc * "turn=n, particle=i]`)")
+  print(io, "TrackColumn `", c.name, "` (read it with `",
+        _kwindex(io, String(c.name), loc * "turn=n, particle=i"), "`)")
 end
+
+# Indexing with keywords in the hints of the displays: `x[turn=n]`, or `x(turn=n)` for Python
+# (Python has no keywords in indexing; its interface shows values with `:python => true`)
+_kwindex(io, name, args) = get(io, :python, false)::Bool ? "$name($args)" : "$name[$args]"
 
 # The saved array of the quantity name, and the coordinate (for x, ..., pz)
 function _track_raw(data, name)

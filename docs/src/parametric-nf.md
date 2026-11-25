@@ -20,6 +20,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 Everything that `twiss` computes can also be computed as a function of parameters of the
 lattice: for example how the tunes depend on magnet strengths, or how the beta functions depend
 on a length. These dependences are computed exactly, by automatic differentiation, and not by
@@ -48,7 +56,25 @@ fodo = Beamline([qf, sf, b, d, qd, sd, b, d],
         species_ref=Species("electron"), pc_ref=18e9)
 ```
 
-We first construct a `TwissExpr`, which is basically a lazily-evaluated `twiss` call. It takes the same arguments as `twiss`, except  `at`, `cols`, `base_cols`, `as_taylor_series` and `GTPSA_descriptor`, which are determined automatically given what you request. `TwissExpr` quantities are read identically as the summary values and columns of a `twiss` result are read(see [Twiss](twiss.md)), but nothing is computed yet. The parameters are given as knobs, e.g. `@knob(qf.Kn1)` for the strength of `qf`:
+```{code-cell} python
+with sb.elements():
+    qf = sb.Quadrupole(Kn1=0.36, L=0.5)
+    sf = sb.Sextupole(Kn2=1.2, L=0.2)
+    d = sb.Drift(L=0.1)
+    b = sb.SBend(L=1.2, angle=np.pi/132)
+    qd = sb.Quadrupole(Kn1=-0.36, L=0.5)
+    sd = sb.Sextupole(Kn2=-1.2, L=0.2)
+
+fodo = sb.Beamline([qf, sf, b, d, qd, sd, b, d],
+                   species_ref=sb.Species("electron"), pc_ref=18e9)
+```
+
+We first construct a `TwissExpr`, which is basically a lazily-evaluated `twiss` call. It takes the
+same arguments as `twiss`, except `at`, `cols`, `base_cols`, `as_taylor_series` and
+`GTPSA_descriptor`, which are determined automatically given what you request. `TwissExpr`
+quantities are read identically as the summary values and columns of a `twiss` result are read(see
+[Twiss](twiss.md)), but nothing is computed yet. The parameters are given as knobs, e.g.
+{jl}`@knob(qf.Kn1)`{py}`sb.Knob(qf, "Kn1")` for the strength of `qf`:
 
 ```{code-cell} julia
 tw = TwissExpr(fodo)
@@ -56,13 +82,25 @@ kf = @knob(qf.Kn1)
 kd = @knob(qd.Kn1)
 ```
 
-`SciBmad.value_and_jacobian` computes the values of the quantities and their derivatives with
+```{code-cell} python
+tw = sb.TwissExpr(fodo)
+kf = sb.Knob(qf, "Kn1")
+kd = sb.Knob(qd, "Kn1")
+```
+
+{jl}`SciBmad.value_and_jacobian`{py}`sb.value_and_jacobian` computes the values of the quantities
+and their derivatives with
 respect to the knobs. It is not exported, because `DifferentiationInterface` exports a function of
 the same name. The Jacobian has one row per quantity and one column per knob:
 
 ```{code-cell} julia
 v, J = SciBmad.value_and_jacobian([tw.q1, tw.q2], [kf, kd])
 J # [dq1/dkf dq1/dkd; dq2/dkf dq2/dkd]
+```
+
+```{code-cell} python
+v, J = sb.value_and_jacobian([tw.q1, tw.q2], [kf, kd])
+J  # [[dq1/dkf, dq1/dkd], [dq2/dkf, dq2/dkd]]
 ```
 
 The same works for any column, at any location. For example, how the beta function and the
@@ -73,11 +111,21 @@ v, J = SciBmad.value_and_jacobian([tw.beta1[qd], tw.dx[qd]], [kf, kd])
 J # [dbeta1/dkf dbeta1/dkd; ddx/dkf ddx/dkd]
 ```
 
+```{code-cell} python
+v, J = sb.value_and_jacobian([tw.beta1[qd], tw.dx[qd]], [kf, kd])
+J  # [[dbeta1/dkf, dbeta1/dkd], [ddx/dkf, ddx/dkd]]
+```
+
 And how the chromaticities depend on the sextupole strengths:
 
 ```{code-cell} julia
 v, J = SciBmad.value_and_jacobian([tw.dq1, tw.dq2], [@knob(sf.Kn2), @knob(sd.Kn2)])
 J # [ddq1/dksf ddq1/dksd; ddq2/dksf ddq2/dksd]
+```
+
+```{code-cell} python
+v, J = sb.value_and_jacobian([tw.dq1, tw.dq2], [sb.Knob(sf, "Kn2"), sb.Knob(sd, "Kn2")])
+J  # [[ddq1/dksf, ddq1/dksd], [ddq2/dksf, ddq2/dksd]]
 ```
 
 No truncation order has to be chosen: each quantity knows the order it needs, here the second
@@ -95,11 +143,19 @@ tune with respect to the strength of `qf`:
 value(deriv(deriv(tw.q1, kf), kf)) # -5.5676
 ```
 
+```{code-cell} python
+sb.value(sb.deriv(sb.deriv(tw.q1, kf), kf))  # -5.5676
+```
+
 Or how the first δ-derivative of the resonance driving term $h_{2000}$ at the beginning depends
 on the strength of `sf` (the `h` terms are complex numbers):
 
 ```{code-cell} julia
 value(deriv(tw.dh2000[1], @knob(sf.Kn2))) # 1.209 - 0.1048im
+```
+
+```{code-cell} python
+sb.value(sb.deriv(tw.dh2000[1], sb.Knob(sf, "Kn2")))  # 1.209 - 0.1048j
 ```
 
 These expressions are also what is matched in [Matching and Optimization](optimize.md).
@@ -122,6 +178,11 @@ quadrupole strengths) to order 1, and a maximum total order of 2:
 dnf = Descriptor([1, 1, 1, 1, 1, 1], 2, [1, 1], 1)
 ```
 
+```{code-cell} python
+dnf = sb.Descriptor([1, 1, 1, 1, 1, 1], 2, [1, 1], 1)
+dnf
+```
+
 The tunes and the beta functions come from the first-order terms of the map in the phase space
 variables. Their first-order dependence on a parameter is therefore in terms of total order 2:
 one variable times one parameter. Higher orders work too, but take longer to compute.
@@ -134,10 +195,21 @@ qf.Kn1 = 0.36 + dk[1]
 qd.Kn1 = -0.36 + dk[2]
 ```
 
+```{code-cell} python
+dk = sb.params(dnf)
+qf.Kn1 = 0.36 + dk[0]
+qd.Kn1 = -0.36 + dk[1]
+```
+
 and `twiss` is given the Descriptor with `GTPSA_descriptor`:
 
 ```{code-cell} julia
 twp = twiss(fodo, GTPSA_descriptor=dnf)
+```
+
+```{code-cell} python
+twp = sb.twiss(fodo, GTPSA_descriptor=dnf)
+twp
 ```
 
 With parameters in the Descriptor, `twiss` returns its results as Taylor series
@@ -148,20 +220,34 @@ With parameters in the Descriptor, `twiss` returns its results as Taylor series
 grad(twp.q1) # [dq1/dkf, dq1/dkd], as above
 ```
 
+```{code-cell} python
+sb.grad(twp.q1)  # [dq1/dkf, dq1/dkd], as above
+```
+
 ```{code-cell} julia
 grad(twp.beta1[qd]) # [dbeta1/dkf, dbeta1/dkd]
 ```
 
+```{code-cell} python
+sb.grad(twp.beta1[qd])  # [dbeta1/dkf, dbeta1/dkd]
+```
+
 Afterwards, the strengths of `qf` and `qd` are still Taylor series, even if numbers are set back
-into them. Before using the beamline again, call `scalarize!`. It replaces every Taylor series
+into them. Before using the beamline again, call {jl}`scalarize!`{py}`sb.scalarize`. It replaces
+every Taylor series
 in the beamline by its value (its 0th order part):
 
 ```{code-cell} julia
 scalarize!(fodo)
 ```
 
+```{code-cell} python
+sb.scalarize(fodo)
+```
+
 :::{warning}
 Mixing Taylor series of two different Descriptors aborts the Julia process, with an error of
-the GTPSA C library. For example, `twiss(fodo)` above, before `scalarize!`, would abort Julia,
+the GTPSA C library. For example, `twiss(fodo)` above, before {jl}`scalarize!`{py}`scalarize`, would
+abort Julia{pytext}` (and Python with it)`,
 because `twiss` uses its own Descriptor.
 :::

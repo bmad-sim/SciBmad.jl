@@ -20,6 +20,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 Every element has a `tracking_method`, which sets how particles are pushed through it. When
 you construct an element with one of the element kinds, a default tracking method is chosen
 for you (see the table of [Element Kinds](#element.kinds)), for example `MatrixKick()` for a
@@ -30,6 +38,11 @@ A bare `LatElement()` has no tracking method, so you must set one yourself befor
 ```{code-cell} julia
 qf = Quadrupole(L=0.5, Kn1=0.36, tracking_method=DriftKick(order=6))
 qf.tracking_method = MatrixKick()
+```
+
+```{code-cell} python
+qf = sb.Quadrupole(L=0.5, Kn1=0.36, tracking_method=sb.DriftKick(order=6))
+qf.tracking_method = sb.MatrixKick()
 ```
 
 Since any element can contain any combination of parameters, not every tracking method can
@@ -43,9 +56,21 @@ bl = Beamline([d], species_ref=Species("electron"), pc_ref=1e9)
 track(bl, v0=zeros(1, 6))
 ```
 
+```{code-cell} python
+:tags: [raises-exception]
+d = sb.Drift(L=1.0, Ksol=0.1)
+bl = sb.Beamline([d], species_ref=sb.Species("electron"), pc_ref=1e9)
+sb.track(bl, v0=np.zeros((1, 6)))
+```
+
 ```{code-cell} julia
 d.tracking_method = SolenoidKick()
 track(bl, v0=[1e-3 0 0 0 0 0]).v[turn=1, particle=1]
+```
+
+```{code-cell} python
+d.tracking_method = sb.SolenoidKick()
+sb.track(bl, v0=[[1e-3, 0, 0, 0, 0, 0]]).v(turn=1, particle=1)
 ```
 
 (track.steps)=
@@ -68,6 +93,10 @@ and a few other settings, are set in the element's `UniversalParams`:
 
 ```{code-cell} julia
 sf = Sextupole(L=0.2, Kn2=1.2, n_steps=4, rad_damping=true)
+```
+
+```{code-cell} python
+sf = sb.Sextupole(L=0.2, Kn2=1.2, n_steps=4, rad_damping=True)
 ```
 
 Patches, maps, and elements tracked with `SaganCavity` (see [Sagan Cavity](#track.sagan) below,

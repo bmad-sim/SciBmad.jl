@@ -19,11 +19,21 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Introduction
 
 SciBmad computes the most important quantities of polarization analysis, such as the invariant spin
-field and the amplitude-dependent spin tune (with `twiss(…; spin=true)`, see [Twiss](#twiss.spin)),
-and tracks spins (with `track(…; spin=true)`). In this chapter, we will ramp the energy of a storage
+field and the amplitude-dependent spin tune (with
+{jl}`twiss(…; spin=true)`{py}`sb.twiss(…, spin=True)`, see [Twiss](#twiss.spin)),
+and tracks spins (with {jl}`track(…; spin=true)`{py}`sb.track(…, spin=True)`). In this chapter, we
+will ramp the energy of a storage
 ring through a spin-orbit resonance, calculate the polarization transmission, and compare it with
 the resonance strength computed from the invariant spin field, with the Froissart-Stora formula.
 
@@ -45,11 +55,22 @@ tw = twiss(ring, spin=true)
 tw.q1, tw.q2, tw.qspin
 ```
 
+```{code-cell} python
+from lattices.ch15_spin import *
+tw = sb.twiss(ring, spin=True)
+tw.q1, tw.q2, tw.qspin
+```
+
    The spin tune is the fractional part of $G\gamma = 51.82$ (with the sign convention of SciBmad,
    $-0.18$). The resonance is at
 
 ```{code-cell} julia
 κ = 60 - tw.q2
+```
+
+```{code-cell} python
+κ = 60 - tw.q2
+κ
 ```
 
 2. Ramp $G\gamma$ from $\kappa - 0.1$ to $\kappa + 0.1$ in 5000 turns. The reference energy is made
@@ -65,6 +86,15 @@ E_end = (κ + 0.1)/G*m
 ring.E_ref = E_start + (E_end - E_start)/(n_turns*T)*Time()
 ```
 
+```{code-cell} python
+γ = κ/G
+T = ring.line[-1].s_downstream/(np.sqrt(1 - 1/γ**2)*sb.C_LIGHT)  # Revolution time [s]
+n_turns = 5000
+E_start = (κ - 0.1)/G*m
+E_end = (κ + 0.1)/G*m
+ring.E_ref = E_start + (E_end - E_start)/(n_turns*T)*sb.Time()
+```
+
 3. Track one proton with a vertical amplitude through the ramp, with spin. The ring has no RF
    cavities, so the energy of the particle is ramped with the reference energy
    (`ramp_particle_energy_without_rf=true`):
@@ -73,6 +103,13 @@ ring.E_ref = E_start + (E_end - E_start)/(n_turns*T)*Time()
 y0 = 1e-5
 res = track(ring, v0=[0 0 y0 0 0 0], spin=true, n_turns=n_turns,
             ramp_particle_energy_without_rf=true)
+```
+
+```{code-cell} python
+y0 = 1e-5
+res = sb.track(ring, v0=[[0, 0, y0, 0, 0, 0]], spin=True, n_turns=n_turns,
+               ramp_particle_energy_without_rf=True)
+res
 ```
 
 4. Plot the vertical component of the spin, for a spin that is vertical at the start, against the
@@ -88,10 +125,25 @@ lines!(ax, res.turns, s_y)
 fig
 ```
 
+```{code-cell} python
+s = sb.track_spin(res.q, [0, 1, 0])
+s_y = s(turn=..., particle=1)[1, :]
+from matplotlib.figure import Figure
+fig = Figure(figsize=(7, 3.5), layout="constrained")
+ax = fig.subplots()
+ax.plot(res.turns, s_y)
+ax.set(xlabel="turn", ylabel="S_y")
+fig
+```
+
    The vertical spin is partially flipped: it tends to a value of
 
 ```{code-cell} julia
 s_y[end]
+```
+
+```{code-cell} python
+s_y[-1]
 ```
 
 5. The resonance strength $\epsilon$ is computed from the invariant spin field $\hat{n}$ (see
@@ -111,8 +163,18 @@ twn = twiss(ring, spin=true, order=1, as_taylor_series=true, at=[1],
             cols=["nx", "ny", "nz", "beta2", "alpha2"])
 ```
 
+```{code-cell} python
+Δ = 0.05
+ring.E_ref = (κ + Δ)/G*m
+twn = sb.twiss(ring, spin=True, order=1, as_taylor_series=True, at=[1],
+               cols=["nx", "ny", "nz", "beta2", "alpha2"])
+twn
+```
+
    The derivatives of $\hat{n}$ with respect to $y$ and $p_y$ are coefficients of the Taylor series:
-   `t[[0,0,1,0,0,0]]` is the coefficient of $y$. A particle with the vertical action $J_2$ is at
+   `t[[0,0,1,0,0,0]]` is the coefficient of
+   $y${pytext}` (the exponents of the six variables, as in Julia)`. A particle with the vertical
+   action $J_2$ is at
    $y = \sqrt{2J_2\beta_2}\cos\phi$, $p_y = -\sqrt{2J_2/\beta_2}\,(\sin\phi + \alpha_2\cos\phi)$. Its
    action is that of the tracked particle, which started at $y = y_0$, $p_y = 0$. The tilt of
    $\hat{n}$, averaged over the phase $\phi$:
@@ -129,6 +191,19 @@ tilt = [sqrt(sum(abs2, dn_dy .* (sqrt(2J2*β2)*cos(ϕ)) .-
 ϵ = Δ*sum(tilt)/36
 ```
 
+```{code-cell} python
+β2, α2 = sb.scalar(twn.beta2[1]), sb.scalar(twn.alpha2[1])
+J2 = y0**2*(1 + α2**2)/(2*β2)
+n = [twn.nx[1], twn.ny[1], twn.nz[1]]
+dn_dy = np.array([t[[0, 0, 1, 0, 0, 0]] for t in n])
+dn_dpy = np.array([t[[0, 0, 0, 1, 0, 0]] for t in n])
+tilt = [np.sqrt(np.sum((dn_dy*(np.sqrt(2*J2*β2)*np.cos(ϕ)) -
+                        dn_dpy*(np.sqrt(2*J2/β2)*(np.sin(ϕ) + α2*np.cos(ϕ))))**2))
+        for ϕ in np.linspace(0, 2*np.pi, 37)[:36]]
+ϵ = Δ*sum(tilt)/36
+ϵ
+```
+
 6. The Froissart-Stora formula gives the vertical spin long after crossing an isolated resonance with
    a constant speed, for a spin that was vertical long before:
 
@@ -143,6 +218,11 @@ tilt = [sqrt(sum(abs2, dn_dy .* (sqrt(2J2*β2)*cos(ϕ)) .-
 ```{code-cell} julia
 α̃ = 0.2/n_turns/(2pi)
 2*exp(-pi*ϵ^2/(2α̃)) - 1
+```
+
+```{code-cell} python
+α̃ = 0.2/n_turns/(2*np.pi)
+2*np.exp(-np.pi*ϵ**2/(2*α̃)) - 1
 ```
 
    This agrees with the tracking above to the accuracy of the approximations: the resonance is

@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Introduction
 
 The periodic beta functions in the arcs are different from the periodic beta functions in the
@@ -44,6 +52,10 @@ matching section is left as an exercise.
 include("lattices/02-dispersion-suppressor.jl");
 ```
 
+```{code-cell} python
+from lattices.ch02_dispersion_suppressor import *
+```
+
 2. Define four quadrupoles for matching to the straight section. Because this is the forward
    matching section (F), and these are the 2nd and 3rd special focusing and defocusing quadrupoles,
    they are named `qff2`, `qdf2`, `qff3`, and `qdf3`. They start with the strength of the straight
@@ -60,9 +72,21 @@ k_ss = qfss.Kn1 # The straight section strength, to start with
 end;
 ```
 
+```{code-cell} python
+k_ss = qfss.Kn1  # The straight section strength, to start with
+
+with sb.elements():
+    qff2 = sb.Quadrupole(L=0.5, Kn1=k_ss)
+    qdf2 = sb.Quadrupole(L=0.5, Kn1=-k_ss)
+    qff3 = sb.Quadrupole(L=0.5, Kn1=k_ss)
+    qdf3 = sb.Quadrupole(L=0.5, Kn1=-k_ss)
+```
+
 3. Define the matching section `mssf` of the figure, with the straight section drifts `db`, and the
    line `arc_to_ssf` from the end of the arc to the straight section, which contains the
-   dispersion suppressor and the matching section. In Julia, `[a; b]` joins the vectors `a` and `b`:
+   dispersion suppressor and the matching section. In
+   {jltext}`Julia, `{jl}`[a; b]`{jltext}` joins the vectors `{pytext}`Python, `{py}`a + b`{pytext}` joins the lists `{jl}`a`{py}`a`
+   and {jl}`b`{py}`b`:
 
 ```{code-cell} julia
 mssf = [qff2, d1, db, d2, qdf2, d1, db, d2, qff3, d1, db, d2, qdf3, d1, db, d2]
@@ -71,10 +95,19 @@ line_f = Beamline(arc_to_ssf, species_ref=electron, pc_ref=pc_ref)
 tw_f = TwissExpr(line_f, a_initial=tw_af.a[end])
 ```
 
+```{code-cell} python
+mssf = [qff2, d1, db, d2, qdf2, d1, db, d2, qff3, d1, db, d2, qdf3, d1, db, d2]
+arc_to_ssf = dispsupf + mssf
+line_f = sb.Beamline(arc_to_ssf, species_ref=electron, pc_ref=pc_ref)
+tw_f = sb.TwissExpr(line_f, a_initial=tw_af.a[-1])
+tw_f
+```
+
 4. The last four quadrupoles need to be matched so that at the end of `arc_to_ssf` the Twiss
    parameters are equal to the periodic ones of the straight section FODO cells. These are
    computed by the `TwissExpr` `tw_ssf` of the straight section cell (chapter 1, exercise 2): its
-   Twiss parameters at the beginning of the cell are `tw_ssf.beta1[begin]` and so on. The targets
+   Twiss parameters at the beginning of the cell are
+   {jl}`tw_ssf.beta1[begin]`{py}`tw_ssf.beta1[sb.begin]` and so on. The targets
    therefore compare two quantities, one of each `TwissExpr`:
 
 ```{code-cell} julia
@@ -82,17 +115,29 @@ targets = [tw_f.beta1[end] == tw_ssf.beta1[begin], tw_f.alpha1[end] == tw_ssf.al
            tw_f.beta2[end] == tw_ssf.beta2[begin], tw_f.alpha2[end] == tw_ssf.alpha2[begin]]
 ```
 
+```{code-cell} python
+targets = [tw_f.beta1[-1] == tw_ssf.beta1[sb.begin], tw_f.alpha1[-1] == tw_ssf.alpha1[sb.begin],
+           tw_f.beta2[-1] == tw_ssf.beta2[sb.begin], tw_f.alpha2[-1] == tw_ssf.alpha2[sb.begin]]
+targets
+```
+
    No number has to be copied from one lattice to another: if the straight section cells change,
    these targets follow.
 
 5. Run the match. A matching problem like this one can have several solutions: the knobs that make
    the targets hold are not unique. Which solution is found depends on the starting point and on
-   the method of the optimizer. From the strengths of the straight section, `match!` finds the
+   the method of the optimizer. From the strengths of the straight section,
+   {jl}`match!`{py}`sb.match` finds the
    solution of the Bmad version of this tutorial:
 
 ```{code-cell} julia
 match!(vary=[@knob(qff2.Kn1), @knob(qdf2.Kn1), @knob(qff3.Kn1), @knob(qdf3.Kn1)],
        targets=targets)
+```
+
+```{code-cell} python
+sb.match(vary=[sb.Knob(q, "Kn1") for q in (qff2, qdf2, qff3, qdf3)],
+         targets=targets)
 ```
 
    The Levenberg-Marquardt method finds another solution (exercise 3).
@@ -112,10 +157,29 @@ lines!(ax2, s, value(tw_f.dx[:]))
 fig
 ```
 
+```{code-cell} python
+from matplotlib.figure import Figure
+s = sb.value(tw_f.s[:])
+fig = Figure(figsize=(7, 3.5), layout="constrained")
+ax, ax2 = fig.subplots(2, 1)
+ax.plot(s, sb.value(tw_f.beta1[:]), label="β₁")
+ax.plot(s, sb.value(tw_f.beta2[:]), label="β₂")
+ax.set_ylabel("β [m]")
+ax.legend(loc="upper left")
+ax2.plot(s, sb.value(tw_f.dx[:]))
+ax2.set_xlabel("s [m]")
+ax2.set_ylabel("η [m]")
+fig
+```
+
    and at the end, together with the periodic values of the straight section:
 
 ```{code-cell} julia
 value([tw_f.beta1[end], tw_ssf.beta1[begin], tw_f.alpha2[end], tw_ssf.alpha2[begin]])
+```
+
+```{code-cell} python
+sb.value([tw_f.beta1[-1], tw_ssf.beta1[sb.begin], tw_f.alpha2[-1], tw_ssf.alpha2[sb.begin]])
 ```
 
 ## Exercises
@@ -129,13 +193,17 @@ value([tw_f.beta1[end], tw_ssf.beta1[begin], tw_f.alpha2[end], tw_ssf.alpha2[beg
 2. **Weights:** Optimization success or failure can depend heavily on the relative weights of the
    targets. As an example of this, start again with the unoptimized quadrupoles, and this time give
    the first target the weight `1e5`, by writing it as
-   `Target(tw_f.beta1[end] - tw_ssf.beta1[begin], 0; weight=1e5)`. With this, how well does the
+   {jl}`Target(tw_f.beta1[end] - tw_ssf.beta1[begin], 0; weight=1e5)`{py}`sb.Target(tw_f.beta1[-1] - tw_ssf.beta1[sb.begin], 0, weight=1e5)`.
+   With this, how well does the
    optimization do?
 
 3. **Several solutions:** Start again with the unoptimized quadrupoles, and run the match with
-   the Levenberg-Marquardt method (`solver=:levenberg_marquardt`). Check that the solution is
+   the Levenberg-Marquardt method
+   ({jl}`solver=:levenberg_marquardt`{py}`solver="levenberg_marquardt"`). Check that the solution is
    different, and that it meets the targets. Compare the maximum beta functions in the matching
-   section for both solutions, for example with `value(maximum(tw_f.beta1["qff2:qdf3"]))`. Which
+   section for both solutions, for example with
+   {jl}`value(maximum(tw_f.beta1["qff2:qdf3"]))`{py}`sb.value(sb.maximum(tw_f.beta1["qff2:qdf3"]))`.
+   Which
    would you choose?
 
 The solution of exercise 1 is in the lattice file of this chapter,

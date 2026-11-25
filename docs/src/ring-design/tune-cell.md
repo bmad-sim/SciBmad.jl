@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Introduction
 
 In order to adjust the tunes of the ring, the phase advance per FODO cell in one of the straight
@@ -55,6 +63,11 @@ include("lattices/06-interaction-region.jl");
 twiss(ring, at=[]) # The tunes before
 ```
 
+```{code-cell} python
+from lattices.ch06_interaction_region import *
+sb.twiss(ring, at=[])  # The tunes before
+```
+
 2. Define the new quadrupoles, starting with the strengths of those they replace:
 
 ```{code-cell} julia
@@ -66,6 +79,16 @@ twiss(ring, at=[]) # The tunes before
   qff3_2 = Quadrupole(L=0.5, Kn1=qff3.Kn1)
   qdf3_2 = Quadrupole(L=0.5, Kn1=qdf3.Kn1)
 end;
+```
+
+```{code-cell} python
+with sb.elements():
+    qfss_2 = sb.Quadrupole(L=0.5, Kn1=qfss.Kn1)
+    qdss_2 = sb.Quadrupole(L=0.5, Kn1=qdss.Kn1)
+    qff2_2 = sb.Quadrupole(L=0.5, Kn1=qff2.Kn1)
+    qdf2_2 = sb.Quadrupole(L=0.5, Kn1=qdf2.Kn1)
+    qff3_2 = sb.Quadrupole(L=0.5, Kn1=qff3.Kn1)
+    qdf3_2 = sb.Quadrupole(L=0.5, Kn1=qdf3.Kn1)
 ```
 
 3. Define the lines of the tune cell, and put them into the sextants 1 and 3. The dispersion
@@ -89,6 +112,22 @@ ring = Beamline([sextant1; sextant3; sextant5; sextant7; sextant9; sextant11],
                 species_ref=electron, pc_ref=pc_ref)
 ```
 
+```{code-cell} python
+fodossf_2 = [qfss_2, d1, db, d2, qdss_2, d1, db, d2]
+fodossr_2 = [qfss_2, d2, db, d1, qdss_2, d2, db, d1]
+mssf_2 = [qff2_2, d1, db, d2, qdf2_2, d1, db, d2, qff3_2, d1, db, d2, qdf3_2, d1, db, d2]
+mdcr_2 = [qfss_2, d2, db, d1, qdf3_2, d2, db, d1, qff3_2, d2, db, d1, qdf2_2, d2, db, d1]
+dispcrer_2 = [qff2_2, d2, bh, d1, qdf1, d2, bh, d1, qff1, d2, bh, d1, qd, d2, bh, d1]
+arc_to_ssf_2 = dispsupf + mssf_2
+ss_to_arcr_2 = mdcr_2 + dispcrer_2
+
+sextant1 = fodossf*4 + ss_to_arcf + fodoaf*20 + arc_to_ssf_2 + fodossf_2*4
+sextant3 = fodossr_2*4 + ss_to_arcr_2 + fodoar*20 + arc_to_ssr + fodossr*4
+
+ring = sb.Beamline(sextant1 + sextant3 + sextant5 + sextant7 + sextant9 + sextant11,
+                   species_ref=electron, pc_ref=pc_ref)
+```
+
 4. The targets need three `TwissExpr`s: of the new straight section cell (its periodic Twiss
    parameters), of the line from the arc into the new straight section (the first half of the tune
    cell), and of the ring (its tunes):
@@ -102,7 +141,17 @@ tw_2 = TwissExpr(line_2, a_initial=tw_af.a[end])
 tw_ring = TwissExpr(ring)
 ```
 
-   All three depend on the knobs, and `match!` computes each of them once per evaluation.
+```{code-cell} python
+cell_ss2 = sb.Beamline(fodossf_2, species_ref=electron, pc_ref=pc_ref)
+line_2 = sb.Beamline(arc_to_ssf_2, species_ref=electron, pc_ref=pc_ref)
+
+tw_ss2 = sb.TwissExpr(cell_ss2)
+tw_2 = sb.TwissExpr(line_2, a_initial=tw_af.a[-1])
+tw_ring = sb.TwissExpr(ring)
+```
+
+   All three depend on the knobs, and {jl}`match!`{py}`sb.match` computes each of them once per
+   evaluation.
 
 5. Run the match:
 
@@ -114,6 +163,15 @@ match!(vary=[@knob(qfss_2.Kn1), @knob(qdss_2.Kn1), @knob(qff2_2.Kn1), @knob(qdf2
                 tw_2.beta2[end] == tw_ss2.beta2[begin],
                 tw_2.alpha2[end] == tw_ss2.alpha2[begin],
                 tw_ring.q1 == 54.08, tw_ring.q2 == 54.14])
+```
+
+```{code-cell} python
+sb.match(vary=[sb.Knob(q, "Kn1") for q in (qfss_2, qdss_2, qff2_2, qdf2_2, qff3_2, qdf3_2)],
+         targets=[tw_2.beta1[-1] == tw_ss2.beta1[sb.begin],
+                  tw_2.alpha1[-1] == tw_ss2.alpha1[sb.begin],
+                  tw_2.beta2[-1] == tw_ss2.beta2[sb.begin],
+                  tw_2.alpha2[-1] == tw_ss2.alpha2[sb.begin],
+                  tw_ring.q1 == 54.08, tw_ring.q2 == 54.14])
 ```
 
    The tunes of the ring are now 54.08 and 54.14, and the beta functions are only changed in the
@@ -128,6 +186,20 @@ rows = (0.0, 1300.0) # The sextants 1 and 3
 lines!(ax, tw.s[rows], tw.beta1[rows], label="β₁")
 lines!(ax, tw.s[rows], tw.beta2[rows], label="β₂")
 axislegend(ax, position=:rt)
+fig
+```
+
+```{code-cell} python
+tw = sb.twiss(ring)
+from matplotlib.figure import Figure
+fig = Figure(figsize=(8, 3), layout="constrained")
+ax = fig.subplots()
+rows = slice(0.0, 1300.0)  # The sextants 1 and 3
+ax.plot(tw.s[rows], tw.beta1[rows], label="β₁")
+ax.plot(tw.s[rows], tw.beta2[rows], label="β₂")
+ax.set_xlabel("s [m]")
+ax.set_ylabel("β [m]")
+ax.legend(loc="upper right")
 fig
 ```
 

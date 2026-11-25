@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ```{figure} figures/fodoaf.svg
 :width: 95%
 
@@ -106,8 +114,33 @@ pc_ref = 17.846262612447e9 # Reference momentum [eV/c]
 cell_af = Beamline(fodoaf, species_ref=electron, pc_ref=pc_ref)
 ```
 
-The `@elements` block names each element after its variable (`qf.name` is `"qf"`). `fodoaf` is a
-plain Julia vector of the elements in the order of the cell, and the `Beamline` `cell_af` places
+```{code-cell} python
+import numpy as np
+import scibmad as sb
+
+θ = np.pi/132  # Bend angle of the arc bends [rad]: 264 of them make 2π
+Lc = 6.86      # Chord length of the arc bends [m]
+
+with sb.elements():
+    qf = sb.Quadrupole(L=0.5, Kn1=0.4)
+    qd = sb.Quadrupole(L=0.5, Kn1=-0.4)
+    b = sb.SBend(L=Lc*θ/(2*np.sin(θ/2)), angle=θ, e1=θ/2, e2=θ/2)  # Rectangular bend
+    d1 = sb.Drift(L=0.609)
+    d2 = sb.Drift(L=1.241)
+
+fodoaf = [qf, d1, b, d2, qd, d1, b, d2]  # Forward arc FODO cell
+
+electron = sb.Species("electron")
+pc_ref = 17.846262612447e9  # Reference momentum [eV/c]
+
+cell_af = sb.Beamline(fodoaf, species_ref=electron, pc_ref=pc_ref)
+cell_af
+```
+
+The {jl}`@elements`{py}`with sb.elements():` block names each element after its variable (`qf.name`
+is `"qf"`). `fodoaf` is a
+plain {jltext}`Julia vector`{pytext}`Python list` of the elements in the order of the cell, and the
+`Beamline` `cell_af` places
 them along a reference trajectory for an electron with the reference momentum `pc_ref`. A
 `Beamline` is what SciBmad analyzes and tracks through. The same element can be placed in many
 beamlines and many times in one: changing a parameter of `qf` changes it everywhere it is placed.
@@ -120,6 +153,11 @@ The periodic optics of the cell are computed with `twiss`:
 tw = twiss(cell_af)
 ```
 
+```{code-cell} python
+tw = sb.twiss(cell_af)
+tw
+```
+
 The output shows first the summary values for the cell. `q1` and `q2` are the phase advances
 through the periodic cell, in units of 2π. The numbers 1 and 2 refer to the two transverse normal
 modes, which are the horizontal and the vertical motion when there is no coupling, as here. (In
@@ -129,16 +167,25 @@ is integrated in one step) and the end of the cell. The columns are the position
 functions, the phase advances `phi1` and `phi2` (in units of 2π), the dispersion `dx`, and so on.
 
 The columns are read at a location, which can be given by an element (placed once) or by its
-index in the beamline. `end` is the end of the beamline. For example, at the end of the cell:
+index in the beamline{pytext}` (counted from 1, as in Julia)`. {jl}`end`{py}`-1` is the end of the
+beamline. For example, at the end of the cell:
 
 ```{code-cell} julia
 tw.beta1[end], tw.alpha1[end], tw.dx[end], tw.phi1[end]
+```
+
+```{code-cell} python
+tw.beta1[-1], tw.alpha1[-1], tw.dx[-1], tw.phi1[-1]
 ```
 
 Several placements, or several elements, give a vector:
 
 ```{code-cell} julia
 tw.beta1[[d1]] # At the beginning of both placements of d1
+```
+
+```{code-cell} python
+tw.beta1[[d1]]  # At the beginning of both placements of d1
 ```
 
 All the ways to give a location are described in [Twiss](../twiss.md). The whole table is
@@ -149,7 +196,12 @@ selected:
 tw.df[:, [:name, :s, :beta1, :alpha1, :phi1, :dx]]
 ```
 
-To plot the optics, use a plotting package such as [Makie](https://docs.makie.org/stable/):
+```{code-cell} python
+tw.df[:, ["name", "s", "beta1", "alpha1", "phi1", "dx"]]
+```
+
+To plot the optics, use a plotting package such as
+{jltext}`[Makie](https://docs.makie.org/stable/)`{pytext}`Matplotlib, with the columns as arrays`:
 
 ```{code-cell} julia
 using CairoMakie
@@ -164,6 +216,21 @@ lines!(ax2, tw.s, tw.dx)
 fig
 ```
 
+```{code-cell} python
+from matplotlib.figure import Figure
+
+fig = Figure(figsize=(7, 4.5), layout="constrained")
+ax, ax2 = fig.subplots(2, 1)
+ax.plot(tw.s, tw.beta1, label="β₁")
+ax.plot(tw.s, tw.beta2, label="β₂")
+ax.set_ylabel("β [m]")
+ax.legend(loc="upper center")
+ax2.plot(tw.s, tw.dx)
+ax2.set_xlabel("s [m]")
+ax2.set_ylabel("η [m]")
+fig
+```
+
 The curves are drawn through the rows of the table. With more integration steps per element
 (`b.n_steps = 10`, see [Tracking Methods](#track.steps)), the table has more rows and the curves
 follow the optics inside the elements.
@@ -172,7 +239,8 @@ follow the optics inside the elements.
 
 Given our arbitrary choice of quadrupole strengths, the phase advance through our FODO cell is
 not 90°. In order to determine which strengths produce the desired phase advance, the optimizer
-of SciBmad, `match!`, can be used. It needs to know the targets (what should be achieved) and the
+of SciBmad, {jl}`match!`{py}`sb.match`, can be used. It needs to know the targets (what should be
+achieved) and the
 knobs (what may be changed).
 
 The targets are written with the quantities of `twiss`. A `TwissExpr` gives access to all of them
@@ -182,6 +250,11 @@ in the same way as the result of `twiss` does, but computes nothing until it is 
 tw_af = TwissExpr(cell_af)
 ```
 
+```{code-cell} python
+tw_af = sb.TwissExpr(cell_af)
+tw_af
+```
+
 `tw_af.q1` is the horizontal phase advance through the cell (in units of 2π), and a target is
 written with `==`:
 
@@ -189,14 +262,26 @@ written with `==`:
 targets = [tw_af.q1 == 0.25, tw_af.q2 == 0.25]
 ```
 
-The knobs are the parameters to vary, given with `@knob`. Here they are the strengths `Kn1` of
+```{code-cell} python
+targets = [tw_af.q1 == 0.25, tw_af.q2 == 0.25]
+targets
+```
+
+The knobs are the parameters to vary, given with {jl}`@knob`{py}`sb.Knob`. Here they are the
+strengths `Kn1` of
 `qf` and `qd`:
 
 ```{code-cell} julia
 vary = [@knob(qf.Kn1), @knob(qd.Kn1)]
 ```
 
-Optimization involves the minimization of a merit function, which `match!` evaluates as
+```{code-cell} python
+vary = [sb.Knob(qf, "Kn1"), sb.Knob(qd, "Kn1")]
+vary
+```
+
+Optimization involves the minimization of a merit function, which {jl}`match!`{py}`match` evaluates
+as
 
 $$
 \mathcal{M} = \sum_i \left( w_i \, \delta D_i \right)^2
@@ -206,7 +291,8 @@ where the sum is over the targets, $w_i$ are their weights (1 by default) and $\
 difference of the value of target $i$ from its goal. For `tw_af.q1 == 0.25`, this is the value of
 `tw_af.q1` (computed from the lattice) minus 0.25. A target counts as met when $\delta D_i$ is within
 its tolerance, `1e-8` by default. Weights and tolerances are set by writing a target as, e.g.,
-`Target(tw_af.q1, 0.25; weight=10, tol=1e-10)`. Weights can have a large effect on optimizations
+{jl}`Target(tw_af.q1, 0.25; weight=10, tol=1e-10)`{py}`sb.Target(tw_af.q1, 0.25, weight=10, tol=1e-10)`.
+Weights can have a large effect on optimizations
 when the targets cannot all be met. Often the best way to choose them is by trial and error: is
 the optimization converging well or not?
 
@@ -216,10 +302,19 @@ Now the match is run:
 match!(vary=vary, targets=targets)
 ```
 
-`match!` reports whether the match converged, the value of each target and its goal, and the
+```{code-cell} python
+sb.match(vary=vary, targets=targets)
+```
+
+{jl}`match!`{py}`match` reports whether the match converged, the value of each target and its goal,
+and the
 values of the knobs before and after. The knobs are now set to their new values:
 
 ```{code-cell} julia
+qf.Kn1, qd.Kn1
+```
+
+```{code-cell} python
 qf.Kn1, qd.Kn1
 ```
 
@@ -230,18 +325,25 @@ tw = twiss(cell_af)
 tw.q1, tw.q2
 ```
 
+```{code-cell} python
+tw = sb.twiss(cell_af)
+tw.q1, tw.q2
+```
+
 Most optimizers need the derivatives of the targets with respect to the knobs. Other codes, such
 as Tao, compute them with finite differences, which are approximate, need a step size, and need
 one more calculation for each knob. SciBmad computes the exact derivatives with respect to all
 knobs at once, with automatic differentiation (see
-[Matching and Optimization](../optimize.md)). `match!` takes Gauss-Newton steps (the smallest
+[Matching and Optimization](../optimize.md)). {jl}`match!`{py}`match` takes Gauss-Newton steps (the
+smallest
 change of the knobs that meets the targets to first order), and shorter or damped steps where those
 do not improve the match. It finds a nearby solution, and converges to a local optimum. For a global search, see
 [Using Other Optimizers](../optimize.md).
 
 There is no need to save the optimized lattice to a file: the strengths of `qf` and `qd` have
 been changed, and every beamline in which they are placed now has them. In your lattice file,
-keep the `match!` call after the definitions. It runs each time the file is included, so the file
+keep the {jl}`match!`{py}`match` call after the definitions. It runs each time the file is included,
+so the file
 records how the strengths were found.
 
 ## Exercises
@@ -285,14 +387,27 @@ records how the strengths were found.
    [ele.Kn1 for ele in cell_af["q*"]]
    ```
 
+   ```python
+      cell_af["Quadrupole::*"]
+      [ele.Kn1 for ele in cell_af["q*"]]
+   ```
+
 8. **Targets and knobs:** A target and a knob are objects of their own. Look at their
-   documentation with `?Target` and `?Knob` in the REPL, and find out how to give a knob lower
+   documentation with {jl}`?Target`{py}`help(sb.Target)` and {jl}`?Knob`{py}`help(sb.Knob)`
+   {jltext}`in the REPL`, and find out how to give a knob lower
    and upper bounds.
 
 9. **Fewer targets:** Run the match with only the target `tw_af.q1 == 0.25`, starting from
    `qf.Kn1 = 0.4` and `qd.Kn1 = -0.4` again. Is the match successful? What is the vertical phase
-   advance afterwards? With more knobs than targets, many solutions exist, and `match!` returns one
+   advance afterwards? With more knobs than targets, many solutions exist, and
+   {jl}`match!`{py}`match` returns one
    near the starting point.
 
+:::{only} julia
 The solutions of exercises 1 to 3 are in the lattice file of this chapter,
 [`lattices/01-fodo.jl`](https://github.com/bmad-sim/SciBmad.jl/tree/main/docs/src/ring-design/lattices/01-fodo.jl).
+:::
+:::{only} python
+The solutions of exercises 1 to 3 are in the lattice file of this chapter,
+[`lattices/ch01_fodo.py`](https://github.com/bmad-sim/SciBmad.jl/tree/main/docs/src/ring-design/lattices/ch01_fodo.py).
+:::

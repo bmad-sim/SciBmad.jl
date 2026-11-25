@@ -503,7 +503,8 @@ function match!(; vary, targets=Target[], minimize=LatticeExpr[], minimize_weigh
 end
 function match!(bl::Beamline; vary, targets=Target[], minimize=LatticeExpr[],
                 minimize_weight=1, twiss=(;), kwargs...)
-  tw = TwissExpr(bl; twiss...)
+  # (`twiss` may also be a Dict, e.g. from Python, whose keys are strings)
+  tw = TwissExpr(bl; (Symbol(k) => v for (k, v) in pairs(twiss))...)
   targets isa Function && (targets = targets(tw))
   minimize isa Function && (minimize = minimize(tw))
   return match!(MatchProblem(; vary, targets, minimize, minimize_weight); kwargs...)

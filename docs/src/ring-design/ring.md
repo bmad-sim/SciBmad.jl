@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Ring Construction
 
 ```{figure} figures/ring.png
@@ -55,6 +63,10 @@ Start with the lattice of [chapter 3](match-to-straight.md):
 include("lattices/03-match-to-straight.jl");
 ```
 
+```{code-cell} python
+from lattices.ch03_match_to_straight import *
+```
+
 As an example, the forward line to connect the straight section to the arc, `ss_to_arcf`, will be
 constructed. Following the figure of the sextant, both the matching section to the dispersion
 creator (`mdcf`) and the dispersion creator itself (`dispcref`) need to be constructed. By the
@@ -71,18 +83,37 @@ dispcref = [qfr2, d1, bh, d2, qdr1, d1, bh, d2, qfr1, d1, bh, d2, qd, d1, bh, d2
 ss_to_arcf = [mdcf; dispcref];
 ```
 
+```{code-cell} python
+# Match the forward straight section to the dispersion creator (reverse quadrupoles)
+mdcf = [qfss, d1, db, d2, qdr3, d1, db, d2, qfr3, d1, db, d2, qdr2, d1, db, d2]
+
+# Forward dispersion creator (reverse quadrupoles)
+dispcref = [qfr2, d1, bh, d2, qdr1, d1, bh, d2, qfr1, d1, bh, d2, qd, d1, bh, d2]
+
+ss_to_arcf = mdcf + dispcref
+```
+
 Note that the elements in a forward line keep the forward order of the drifts (`d1` after a
 quadrupole, `d2` before it); only the quadrupoles come from the reverse sextant.
 
 After matching the straight sections to the arcs, it is now time to construct the full ring. The
-reverse line `ss_to_arcr` is constructed in the same way (exercise 1). In Julia,
-`repeat(fodoaf, 20)` repeats the cell 20 times, and `[a; b; c]` joins the lines `a`, `b` and `c`:
+reverse line `ss_to_arcr` is constructed in the same way (exercise 1). In
+{jltext}`Julia`{pytext}`Python`,
+{jl}`repeat(fodoaf, 20)`{py}`fodoaf*20` repeats the cell 20 times, and
+{jl}`[a; b; c]`{py}`a + b + c` joins the lines `a`, `b` and `c`:
 
 ```{code-cell} julia
 :tags: [remove-cell]
 mdcr = [qfss, d2, db, d1, qdf3, d2, db, d1, qff3, d2, db, d1, qdf2, d2, db, d1]
 dispcrer = [qff2, d2, bh, d1, qdf1, d2, bh, d1, qff1, d2, bh, d1, qd, d2, bh, d1]
 ss_to_arcr = [mdcr; dispcrer];
+```
+
+```{code-cell} python
+:tags: [remove-cell]
+mdcr = [qfss, d2, db, d1, qdf3, d2, db, d1, qff3, d2, db, d1, qdf2, d2, db, d1]
+dispcrer = [qff2, d2, bh, d1, qdf1, d2, bh, d1, qff1, d2, bh, d1, qd, d2, bh, d1]
+ss_to_arcr = mdcr + dispcrer
 ```
 
 ```{code-cell} julia
@@ -97,10 +128,28 @@ ring = Beamline([sextant1; sextant3; sextant5; sextant7; sextant9; sextant11],
                 species_ref=electron, pc_ref=pc_ref)
 ```
 
+```{code-cell} python
+sextant1 = fodossf*4 + ss_to_arcf + fodoaf*20 + arc_to_ssf + fodossf*4
+sextant3 = fodossr*4 + ss_to_arcr + fodoar*20 + arc_to_ssr + fodossr*4
+sextant5 = fodossf*4 + ss_to_arcf + fodoaf*20 + arc_to_ssf + fodossf*4
+sextant7 = fodossr*4 + ss_to_arcr + fodoar*20 + arc_to_ssr + fodossr*4
+sextant9 = fodossf*4 + ss_to_arcf + fodoaf*20 + arc_to_ssf + fodossf*4
+sextant11 = fodossr*4 + ss_to_arcr + fodoar*20 + arc_to_ssr + fodossr*4
+
+ring = sb.Beamline(sextant1 + sextant3 + sextant5 + sextant7 + sextant9 + sextant11,
+                   species_ref=electron, pc_ref=pc_ref)
+ring
+```
+
 The optics of the whole ring:
 
 ```{code-cell} julia
 tw = twiss(ring)
+```
+
+```{code-cell} python
+tw = sb.twiss(ring)
+tw
 ```
 
 ```{code-cell} julia
@@ -116,11 +165,29 @@ linkxaxes!(ax, ax2)
 fig
 ```
 
+```{code-cell} python
+from matplotlib.figure import Figure
+fig = Figure(figsize=(8, 4.5), layout="constrained")
+ax, ax2 = fig.subplots(2, 1, sharex=True)
+ax.plot(tw.s, tw.beta1, label="β₁")
+ax.plot(tw.s, tw.beta2, label="β₂")
+ax.set_ylabel("β [m]")
+ax.legend(loc="upper right")
+ax2.plot(tw.s, tw.dx)
+ax2.set_xlabel("s [m]")
+ax2.set_ylabel("η [m]")
+fig
+```
+
 The beta functions are periodic in the cells of the arcs and of the straight sections, and the
 dispersion is zero in the straight sections:
 
 ```{code-cell} julia
 maximum(abs, tw.dx[1:33]) # Through the first straight section: the elements 1 to 32 [m]
+```
+
+```{code-cell} python
+np.max(np.abs(tw.dx[1:34]))  # Through the first straight section: the elements 1 to 32 [m]
 ```
 
 Here `1:33` are beamline indexes: the beginnings of the elements 1 to 32 of the ring, and of the

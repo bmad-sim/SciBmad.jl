@@ -89,7 +89,7 @@ jobs:
         run: |
           using Pkg
           Pkg.precompile()
-          @time using SciBmad, NonlinearSolve, Statistics
+          @time using SciBmad, NonlinearSolve, Statistics, PythonCall
       - name: Clear locks left by the precompile
         # A precompile process that dies leaves a `.ji.pidfile` behind in the
         # depot, and loading a package whose lock is held blocks until the lock
@@ -98,6 +98,11 @@ jobs:
         run: find ~/.julia/compiled -name '*.pidfile' -print -delete || true
       - name: Build documentation
         run: python docs/build.py
+        env:
+          # The Python version of the docs needs PySciBmad 0.8, which is in the PySciBmad PR
+          # https://github.com/bmad-sim/PySciBmad/pull/7: remove this once it is merged (the
+          # default is then the PySciBmad repository's main branch).
+          PYSCIBMAD: git+https://github.com/bmad-sim/PySciBmad.git@pyscibmad-0.8
       - name: Deploy PR preview
         if: github.event_name == 'pull_request'
         uses: rossjrw/pr-preview-action@v1

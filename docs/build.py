@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Build and combine SciBmad documentation."""
 
+import os
 import subprocess
 import shutil
+import sys
 from pathlib import Path
 
 # Every Julia subprocess below is launched with `--startup-file=no`. A personal
@@ -59,7 +61,7 @@ result = subprocess.run(
 if result.returncode != 0:
     exit(1)
 
-# Build Sphinx
+# Build Sphinx: the Julia version of the site
 print("\nBuilding Sphinx documentation...")
 result = subprocess.run(
     ["sphinx-build", "-b", "html", "src", "build/html"],
@@ -67,6 +69,31 @@ result = subprocess.run(
 )
 if result.returncode != 0:
     exit(1)
+
+# The Python version of the site (build/html/python), from the same pages: every Julia example
+# has a Python version (docs/_ext/dual_language.py), which runs in a Python kernel with the Python
+# package scibmad. It runs SciBmad in the docs Julia environment, so that both versions document
+# this checkout. SCIBMAD_DOCS_LANGUAGES=julia skips it; PYSCIBMAD gives the pip requirement of
+# scibmad (default: the PySciBmad repository; e.g. a local clone, `-e ../PySciBmad`).
+if "python" in os.environ.get("SCIBMAD_DOCS_LANGUAGES", "julia,python").split(","):
+    try:
+        import scibmad  # noqa: F401
+    except ImportError:
+        spec = os.environ.get("PYSCIBMAD", "git+https://github.com/bmad-sim/PySciBmad.git")
+        print(f"\nInstalling the Python package scibmad ({spec})...")
+        result = subprocess.run([sys.executable, "-m", "pip", "install", *spec.split()])
+        if result.returncode != 0:
+            exit(1)
+    print("\nBuilding the Python version of the Sphinx documentation...")
+    env = dict(os.environ, SCIBMAD_JULIA=shutil.which("julia") or "julia",
+               SCIBMAD_PROJECT=str(docs_dir.resolve()), SCIBMAD_THREADS="auto")
+    result = subprocess.run(
+        ["sphinx-build", "-b", "html", "-D", "docs_language=python",
+         "-d", "build/doctrees-python", "src", "build/html/python"],
+        cwd=docs_dir, env=env
+    )
+    if result.returncode != 0:
+        exit(1)
 
 # Combine into gh-pages
 print("\nCombining documentation...")

@@ -20,10 +20,23 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 To construct a `LatElement`,
 
 ```{code-cell} julia
 ele = LatElement()
+```
+
+```{code-cell} python
+ele = sb.LatElement()
+ele
 ```
 
 As you can see, the `LatElement` by default comes with a "parameter group" structure
@@ -38,6 +51,12 @@ ele.kind = "MyElementKind"
 ele.L = 123
 ```
 
+```{code-cell} python
+ele.name = "ele"
+ele.kind = "MyElementKind"
+ele.L = 123
+```
+
 Alternatively, we could have set these parameters as keyword arguments during
 `LatElement` construction:
 
@@ -45,9 +64,15 @@ Alternatively, we could have set these parameters as keyword arguments during
 ele = LatElement(name="ele", kind="MyElementKind", L=123)
 ```
 
+```{code-cell} python
+ele = sb.LatElement(name="ele", kind="MyElementKind", L=123)
+ele
+```
+
 It would often be convenient if we can make the variable symbol (`ele` in this case)
 automatically fill in the `name` field for each element. We can do exactly this by wrapping
-all element definitions in a `@elements` block:
+all element definitions in
+{jltext}`a `{jl}`@elements`{jltext}` block`{pytext}`a `{py}`with sb.elements():`{pytext}` block`:
 
 ```{code-cell} julia
 @elements begin
@@ -56,6 +81,14 @@ all element definitions in a `@elements` block:
 end
 println(ele1.name)
 println(ele2.name)
+```
+
+```{code-cell} python
+with sb.elements():
+    ele1 = sb.LatElement()
+    ele2 = sb.LatElement()
+print(ele1.name)
+print(ele2.name)
 ```
 
 In SciBmad, every element kind (`Quadrupole`, `Sextupole`, `Multipole`, etc.) is the same
@@ -72,12 +105,25 @@ println(qf.kind, ": ", qf.tracking_method)
 println(sf.kind, ": ", sf.tracking_method)
 ```
 
+```{code-cell} python
+with sb.elements():
+    qf = sb.Quadrupole(L=0.5)
+    sf = sb.Sextupole(L=0.2)
+print(qf.kind, ": ", qf.tracking_method, sep="")
+print(sf.kind, ": ", sf.tracking_method, sep="")
+```
+
 Because every element is a `LatElement`, any element can have any combination of
 parameters. For example, there is nothing stopping you from adding a multipole to a drift:
 
 ```{code-cell} julia
 d = Drift(L = 1.2)
 d.Ks21 = -200 # Set 21st order skew multipole
+```
+
+```{code-cell} python
+d = sb.Drift(L=1.2)
+d.Ks21 = -200  # Set 21st order skew multipole
 ```
 
 This flexibility makes it easy to adjust the design on the fly. For example, in the Electron
@@ -126,7 +172,7 @@ through it.
 SciBmad supports a continually-growing list of parameters to define accelerator elements.
 To see a full list of the parameters you can set, look at the docstring for the
 `LatElement` type, reproduced below. In a Julia session it can be retrieved with
-`Docs.doc(LatElement)`.
+`Docs.doc(LatElement)`{pytext}`, in Python with `{py}`help(sb.LatElement)`.
 
 ```{docstring} LatElement
 ```
@@ -137,7 +183,10 @@ They are all documented below.
 (pgs)=
 ## Parameter Groups
 
-Parameter groups are automatically added to an element when a corresponding property is set. Parameter groups can be removed from an element as a whole by setting that parameter group to `nothing`; for example, to remove `MapParams` from an element named `ele`, do `ele.MapParams = nothing`.
+Parameter groups are automatically added to an element when a corresponding property is set.
+Parameter groups can be removed from an element as a whole by setting that parameter group to
+{jl}`nothing`{py}`None`; for example, to remove `MapParams` from an element named `ele`, do
+{jl}`ele.MapParams = nothing`{py}`ele.MapParams = None`.
 
 (alignment.params)=
 (alignment:params)=

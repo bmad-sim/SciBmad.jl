@@ -19,6 +19,14 @@ ENV["COLUMNS"] = 100
 ENV["LINES"] = 30
 ```
 
+```{code-cell} python
+:tags: [remove-cell]
+import numpy as np
+import scibmad as sb
+sb.options.display_width = 100
+sb.options.display_height = 30
+```
+
 ## Phase Space
 
 ```{figure} figures/local-coords.svg
@@ -99,15 +107,34 @@ end
 lat = Beamline([b, q], species_ref=Species("positron"), E_ref=10e6)
 ```
 
+```{code-cell} python
+import numpy as np
+import scibmad as sb
+
+with sb.elements():
+    b = sb.SBend(L=0.5, angle=0.5)  # g_ref = 1/bending radius = 1 1/m
+    q = sb.Quadrupole(L=0.6, Kn1=10.0)
+lat = sb.Beamline([b, q], species_ref=sb.Species("positron"), E_ref=10e6)
+```
+
 A particle is tracked through it with `track`, starting with $y$ = 1 cm, $p_x$ = 0.06 and
 $p_z$ = −0.2, with spin tracking turned on (`spin=true`). The coordinates are saved at every
-integration step (`at=:`), and, with more integration steps, also inside the elements:
+integration step ({jl}`at=:`{py}`at=...`), and, with more integration steps, also inside the
+elements:
 
 ```{code-cell} julia
 b.n_steps = 20
 q.n_steps = 20
 v0 = [0 0.06 0.01 0 0 -0.2] # x, px, y, py, z, pz
 res = track(lat, v0=v0, spin=true, at=:)
+```
+
+```{code-cell} python
+b.n_steps = 20
+q.n_steps = 20
+v0 = [[0, 0.06, 0.01, 0, 0, -0.2]]  # x, px, y, py, z, pz
+res = sb.track(lat, v0=v0, spin=True, at=...)
+res
 ```
 
 The result holds the particle at the saved locations: for example its coordinates at the end of
@@ -117,12 +144,21 @@ the beamline after the first (and only) turn:
 res.v[end, turn=1, particle=1]
 ```
 
+```{code-cell} python
+res.v(-1, turn=1, particle=1)
+```
+
 Spin tracking tracks the rotation of the spin as a quaternion, so that the spin can be computed
 afterwards for any initial spin. With the initial spin along $x$:
 
 ```{code-cell} julia
 s = track_spin(res.q, [1, 0, 0])
 s[end, turn=1, particle=1] # The spin (x, y, z) at the end
+```
+
+```{code-cell} python
+s = sb.track_spin(res.q, [1, 0, 0])
+s(-1, turn=1, particle=1)  # The spin (x, y, z) at the end
 ```
 
 The orbit, with $p_x$ = 0.06 at the start and changed to $p_x$ = 0.1:
@@ -136,6 +172,20 @@ lines!(ax, res.s, 1e3 .* res.y[:, turn=1, particle=1], label="y")
 res2 = track(lat, v0=[0 0.1 0.01 0 0 -0.2], spin=true, at=:)
 lines!(ax, res2.s, 1e3 .* res2.x[:, turn=1, particle=1], label="x (px = 0.1)", linestyle=:dash)
 axislegend(ax, position=:lt)
+fig
+```
+
+```{code-cell} python
+from matplotlib.figure import Figure
+fig = Figure(figsize=(7, 3.5), layout="constrained")
+ax = fig.subplots()
+ax.plot(res.s, 1e3*res.x(..., turn=1, particle=1), label="x")
+ax.plot(res.s, 1e3*res.y(..., turn=1, particle=1), label="y")
+res2 = sb.track(lat, v0=[[0, 0.1, 0.01, 0, 0, -0.2]], spin=True, at=...)
+ax.plot(res2.s, 1e3*res2.x(..., turn=1, particle=1), label="x (px = 0.1)", linestyle="--")
+ax.set_xlabel("s [m]")
+ax.set_ylabel("[mm]")
+ax.legend(loc="upper left")
 fig
 ```
 
